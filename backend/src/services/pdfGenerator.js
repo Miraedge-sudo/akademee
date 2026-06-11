@@ -10,9 +10,25 @@ exports.generateReportCard = (data = {}) => {
 
       doc.fontSize(20).text('Report Card', { align: 'center' });
       doc.moveDown();
-      doc.fontSize(12).text(`Student ID: ${data.studentId || 'N/A'}`);
+      
+      if (data.student) {
+        doc.fontSize(12).text(`Name: ${data.student.first_name} ${data.student.last_name}`);
+        doc.text(`Student ID: ${data.student.student_id}`);
+      } else {
+        doc.fontSize(12).text(`Student ID: ${data.studentId || 'N/A'}`);
+      }
+      
       doc.moveDown();
-      doc.text('This is a scaffold PDF. Replace with real data.');
+      
+      // Add grades if available
+      if (data.grades && data.grades.length > 0) {
+        doc.fontSize(14).text('Grades:');
+        data.grades.forEach((grade) => {
+          doc.fontSize(11).text(`${grade.subject}: ${grade.grade}`);
+        });
+      } else {
+        doc.fontSize(12).text('No grades available.');
+      }
 
       doc.end();
     } catch (err) {
