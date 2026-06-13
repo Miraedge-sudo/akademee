@@ -1,0 +1,20 @@
+{
+  "navbar": {
+    "dashboard": "Tableau de bord",
+    "search": "Recherche Rapide"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "students": "Students",
+    "classes": "Classes",
+    "grades": "Grade Reports",
+    "finance": "Finance",
+    "settings": "Settings"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "back": "Back"
+  }
+}

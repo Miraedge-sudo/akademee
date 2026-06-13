@@ -1,2 +1,58 @@
-@import 'tailwindcss'
+@import "tailwindcss";
 
+@theme {
+  /* Fonts */
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+
+  /* Teal palette */
+  --color-teal-50: #E1F5EE;
+  --color-teal-100: #C8F0E4;
+  --color-teal-200: #9FE1CB;
+  --color-teal-400: #5DCAA5;
+  --color-teal-600: #1D9E75;
+  --color-teal-700: #178060;
+  --color-teal-800: #0F6E56;
+  --color-teal-900: #085041;
+  --color-teal-950: #04342C;
+
+  /* Surface (neutral) palette */
+  --color-surface-50: #F7F8F6;
+  --color-surface-100: #EEF0EC;
+  --color-surface-200: #D8DBD5;
+  --color-surface-300: #BFC4BB;
+  --color-surface-400: #9BA59C;
+  --color-surface-500: #6E7A70;
+  --color-surface-600: #5C665E;
+  --color-surface-700: #434D45;
+  --color-surface-800: #2A3029;
+  --color-surface-900: #1A1F1B;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+}
+
+/* ── Dark mode variant ── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Base styles ── */
+@layer base {
+  html {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    @apply bg-surface-50 text-surface-800 transition-colors duration-200;
+  }
+
+  .dark body {
+    @apply bg-surface-900 text-surface-100;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+  }
+}

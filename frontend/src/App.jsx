@@ -1,13 +1,12 @@
-
-import './App.css'
+import "./App.css";
+import Navbar from "./app/layout/Navbar";
 
 function App() {
-
   return (
-    <div className='h-screen bg-cyan-400 text-black flex items-center justify-center '>
-      Welcome to Akademee
+    <div>
+      <Navbar />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
