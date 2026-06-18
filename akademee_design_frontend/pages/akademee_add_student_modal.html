@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Akademee — Add Student Modal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --teal-900:#085041;--teal-800:#0F6E56;--teal-600:#1D9E75;
+  --teal-400:#5DCAA5;--teal-200:#9FE1CB;--teal-100:#C8F0E4;--teal-50:#E1F5EE;
+  --white:#FFFFFF;--gray-50:#F7F8F6;--gray-100:#EEF0EC;--gray-200:#D8DBD5;
+  --gray-300:#BFC4BB;--gray-400:#9BA59C;--gray-500:#6E7A70;--gray-600:#5C665E;
+  --gray-700:#434D45;--gray-800:#2A3029;--gray-900:#1A1F1B;
+  --red-50:#FEF2F2;--red-500:#EF4444;--red-700:#B91C1C;
+  --amber-50:#FFFBEB;--amber-500:#F59E0B;
+  --font-display:'Playfair Display',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --radius-sm:6px;--radius-md:10px;--radius-lg:14px;--radius-xl:20px;
+  --drawer-w:520px;
+  --tr:0.28s cubic-bezier(0.4,0,0.2,1);
+}
+
+html,body{height:100%;font-family:var(--font-body);background:var(--gray-50);color:var(--gray-800);-webkit-font-smoothing:antialiased;}
+
+/* ── PAGE CONTEXT (students list behind) ── */
+.page-context{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;background:var(--gray-50);padding:40px 20px;
+  flex-direction:column;gap:16px;
+}
+.context-label{font-size:13px;color:var(--gray-400);text-align:center;}
+.open-btn{
+  height:46px;padding:0 28px;
+  background:var(--teal-900);color:var(--teal-50);
+  border:none;border-radius:var(--radius-md);
+  font-family:var(--font-body);font-size:14.5px;font-weight:600;
+  cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+  transition:background 0.15s,transform 0.1s;
+  box-shadow:0 4px 16px rgba(8,80,65,0.25);
+}
+.open-btn:hover{background:var(--teal-800);}
+.open-btn:active{transform:scale(0.98);}
+.open-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;}
+
+/* ── OVERLAY ── */
+.overlay{
+  position:fixed;inset:0;background:rgba(15,18,15,0.5);
+  z-index:200;opacity:0;pointer-events:none;
+  transition:opacity var(--tr);
+  backdrop-filter:blur(3px);
+}
+.overlay.show{opacity:1;pointer-events:all;}
+
+/* ── DRAWER ── */
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;
+  width:var(--drawer-w);max-width:100vw;
+  background:var(--white);z-index:201;
+  display:flex;flex-direction:column;
+  transform:translateX(100%);
+  transition:transform var(--tr);
+  box-shadow:-8px 0 40px rgba(0,0,0,0.12);
+}
+.drawer.open{transform:translateX(0);}
+
+/* ── DRAWER HEADER ── */
+.drawer-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:64px;
+  border-bottom:1px solid var(--gray-100);
+  flex-shrink:0;background:var(--white);
+}
+
+.drawer-title-wrap{}
+.drawer-eyebrow{font-size:10.5px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--teal-600);margin-bottom:2px;}
+.drawer-title{font-family:var(--font-display);font-size:20px;font-weight:500;color:var(--gray-800);}
+
+.drawer-close{
+  width:36px;height:36px;border:none;background:var(--gray-100);
+  border-radius:var(--radius-sm);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--gray-500);transition:background 0.15s,color 0.15s;flex-shrink:0;
+}
+.drawer-close:hover{background:var(--gray-200);color:var(--gray-800);}
+.drawer-close svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;}
+
+/* ── DRAWER BODY ── */
+.drawer-body{
+  flex:1;overflow-y:auto;padding:0;
+  scrollbar-width:thin;scrollbar-color:var(--gray-200) transparent;
+}
+.drawer-body::-webkit-scrollbar{width:4px;}
+.drawer-body::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:2px;}
+
+/* ── FORM SECTIONS ── */
+.form-section{padding:22px 24px;border-bottom:1px solid var(--gray-100);}
+.form-section:last-child{border-bottom:none;}
+
+.section-head{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:18px;
+}
+.section-icon{
+  width:32px;height:32px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.section-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.icon-teal{background:var(--teal-50);color:var(--teal-700);}
+.icon-blue{background:#EFF6FF;color:#1D4ED8;}
+.icon-amber{background:#FFFBEB;color:#B45309;}
+.icon-purple{background:#F3F0FF;color:#5B21B6;}
+
+.section-label{font-size:13px;font-weight:600;color:var(--gray-700);}
+
+/* ── FIELDS ── */
+.field{margin-bottom:16px;}
+.field:last-child{margin-bottom:0;}
+
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+.field label{
+  display:flex;align-items:center;gap:4px;
+  font-size:12.5px;font-weight:500;color:var(--gray-600);
+  margin-bottom:6px;
+}
+.req{color:var(--teal-600);font-size:13px;line-height:1;}
+.opt-tag{
+  font-size:10px;font-weight:400;color:var(--gray-400);
+  background:var(--gray-100);padding:1px 6px;border-radius:10px;
+  margin-left:4px;
+}
+
+.field input,.field select,.field textarea{
+  width:100%;height:40px;
+  padding:0 12px;
+  border:1.5px solid var(--gray-200);border-radius:var(--radius-md);
+  background:var(--gray-50);
+  font-family:var(--font-body);font-size:13.5px;color:var(--gray-800);
+  outline:none;appearance:none;
+  transition:border-color 0.15s,background 0.15s,box-shadow 0.15s;
+}
+.field textarea{height:auto;padding:10px 12px;resize:none;}
+.field input::placeholder,.field textarea::placeholder{color:var(--gray-400);}
+.field select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239BA59C' stroke-width='2' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+  padding-right:32px;cursor:pointer;
+}
+.field select option{color:var(--gray-800);}
+
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--teal-600);background:var(--white);
+  box-shadow:0 0 0 3px rgba(29,158,117,0.1);
+}
+
+/* Error state */
+.field input.error,.field select.error{
+  border-color:var(--red-500);
+  box-shadow:0 0 0 3px rgba(239,68,68,0.08);
+}
+.field-error{font-size:11.5px;color:var(--red-700);margin-top:5px;display:flex;align-items:center;gap:4px;}
+.field-error svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;flex-shrink:0;}
+
+/* ── PHOTO UPLOAD ── */
+.photo-upload{
+  display:flex;align-items:center;gap:16px;
+  padding:16px;
+  border:1.5px dashed var(--gray-200);
+  border-radius:var(--radius-lg);
+  cursor:pointer;
+  transition:border-color 0.2s,background 0.2s;
+}
+.photo-upload:hover{border-color:var(--teal-400);background:var(--teal-50);}
+
+.photo-av{
+  width:60px;height:60px;border-radius:50%;
+  background:var(--teal-50);border:2px dashed var(--teal-200);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:background 0.2s;
+}
+.photo-av svg{width:24px;height:24px;fill:none;stroke:var(--teal-400);stroke-width:1.5;stroke-linecap:round;}
+.photo-upload:hover .photo-av{background:var(--teal-100);}
+
+.photo-info{}
+.photo-title{font-size:13.5px;font-weight:500;color:var(--gray-700);}
+.photo-sub{font-size:12px;color:var(--gray-400);margin-top:2px;}
+
+/* ── ID FIELD ── */
+.id-field-wrap{position:relative;}
+.id-field-wrap input{padding-right:80px;}
+.id-auto-badge{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  font-size:10.5px;font-weight:600;color:var(--teal-700);
+  background:var(--teal-50);border:1px solid var(--teal-100);
+  padding:2px 8px;border-radius:10px;cursor:pointer;
+  transition:background 0.15s;white-space:nowrap;
+}
+.id-auto-badge:hover{background:var(--teal-100);}
+
+/* ── GENDER TOGGLE ── */
+.gender-toggle{display:flex;gap:8px;}
+.gender-btn{
+  flex:1;height:40px;border:1.5px solid var(--gray-200);
+  border-radius:var(--radius-md);background:var(--gray-50);
+  font-family:var(--font-body);font-size:13px;font-weight:500;
+  color:var(--gray-600);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:border-color 0.15s,background 0.15s,color 0.15s;
+}
+.gender-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;}
+.gender-btn:hover{border-color:var(--teal-400);background:var(--teal-50);color:var(--teal-700);}
+.gender-btn.active{border-color:var(--teal-600);background:var(--teal-50);color:var(--teal-800);font-weight:600;}
+
+/* ── RELATIONSHIP SELECT (pills) ── */
+.rel-pills{display:flex;gap:7px;flex-wrap:wrap;}
+.rel-pill{
+  height:34px;padding:0 14px;
+  border:1.5px solid var(--gray-200);border-radius:20px;
+  background:var(--white);font-family:var(--font-body);font-size:12.5px;
+  font-weight:500;color:var(--gray-500);cursor:pointer;
+  transition:all 0.15s;
+}
+.rel-pill:hover{border-color:var(--teal-400);color:var(--teal-700);}
+.rel-pill.active{border-color:var(--teal-600);background:var(--teal-50);color:var(--teal-800);}
+
+/* ── FEE STATUS ── */
+.fee-status-row{display:flex;gap:8px;}
+.fee-status-card{
+  flex:1;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);
+  padding:12px;cursor:pointer;text-align:center;
+  transition:border-color 0.15s,background 0.15s;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.fee-status-card:hover{border-color:var(--gray-400);}
+.fee-status-dot{width:10px;height:10px;border-radius:50%;margin-bottom:4px;}
+.fee-status-name{font-size:12px;font-weight:600;color:var(--gray-700);}
+.fee-status-desc{font-size:10.5px;color:var(--gray-400);}
+.fee-status-card.paid{border-color:var(--teal-600);background:var(--teal-50);}
+.fee-status-card.paid .fee-status-dot{background:var(--teal-600);}
+.fee-status-card.paid .fee-status-name{color:var(--teal-800);}
+.fee-status-card.partial{border-color:var(--amber-500);background:var(--amber-50);}
+.fee-status-card.partial .fee-status-dot{background:var(--amber-500);}
+.fee-status-card.partial .fee-status-name{color:#92400E;}
+.fee-status-card.unpaid .fee-status-name{color:var(--gray-500);}
+
+/* ── FIELD HINT ── */
+.field-hint{font-size:11.5px;color:var(--gray-400);margin-top:5px;}
+
+/* ── DRAWER FOOTER ── */
+.drawer-footer{
+  display:flex;align-items:center;gap:10px;
+  padding:16px 24px;
+  border-top:1px solid var(--gray-100);
+  flex-shrink:0;background:var(--white);
+}
+
+.btn-cancel{
+  height:44px;padding:0 20px;
+  background:var(--white);color:var(--gray-600);
+  border:1.5px solid var(--gray-200);border-radius:var(--radius-md);
+  font-family:var(--font-body);font-size:14px;font-weight:500;
+  cursor:pointer;transition:border-color 0.15s,background 0.15s;
+  white-space:nowrap;
+}
+.btn-cancel:hover{border-color:var(--gray-400);background:var(--gray-50);}
+
+.btn-save{
+  flex:1;height:44px;
+  background:var(--teal-900);color:var(--teal-50);
+  border:none;border-radius:var(--radius-md);
+  font-family:var(--font-body);font-size:14.5px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:background 0.15s,transform 0.1s;
+}
+.btn-save:hover{background:var(--teal-800);}
+.btn-save:active{transform:scale(0.99);}
+.btn-save svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;}
+
+.btn-save-draft{
+  height:44px;padding:0 16px;
+  background:var(--white);color:var(--gray-500);
+  border:1.5px solid var(--gray-200);border-radius:var(--radius-md);
+  font-family:var(--font-body);font-size:13px;font-weight:500;
+  cursor:pointer;transition:border-color 0.15s;white-space:nowrap;
+}
+.btn-save-draft:hover{border-color:var(--gray-400);color:var(--gray-700);}
+
+/* ── SUCCESS TOAST ── */
+.toast{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--gray-900);color:var(--white);
+  padding:14px 20px;border-radius:var(--radius-md);
+  display:flex;align-items:center;gap:10px;
+  font-size:14px;font-weight:500;
+  box-shadow:0 8px 24px rgba(0,0,0,0.2);
+  z-index:300;transition:transform 0.3s,opacity 0.3s;opacity:0;
+  white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.toast-dot{width:8px;height:8px;border-radius:50%;background:var(--teal-400);flex-shrink:0;}
+
+/* ── PROGRESS BAR (top of drawer) ── */
+.drawer-progress{
+  height:3px;background:var(--gray-100);flex-shrink:0;
+}
+.drawer-progress-fill{
+  height:100%;background:var(--teal-600);
+  width:0%;transition:width 0.3s ease;border-radius:0 2px 2px 0;
+}
+
+/* ── STEP TABS ── */
+.step-tabs{
+  display:flex;padding:0 24px;
+  border-bottom:1px solid var(--gray-100);
+  background:var(--gray-50);flex-shrink:0;
+  overflow-x:auto;scrollbar-width:none;gap:0;
+}
+.step-tabs::-webkit-scrollbar{display:none;}
+
+.step-tab{
+  display:flex;align-items:center;gap:7px;
+  padding:12px 14px;font-size:12.5px;font-weight:500;
+  color:var(--gray-400);border-bottom:2px solid transparent;
+  cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;
+  flex-shrink:0;
+}
+.step-tab:hover{color:var(--gray-700);}
+.step-tab.active{color:var(--teal-700);border-bottom-color:var(--teal-600);}
+.step-tab.done{color:var(--teal-600);}
+
+.step-tab-num{
+  width:20px;height:20px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;flex-shrink:0;
+  background:var(--gray-200);color:var(--gray-500);
+  transition:background 0.15s,color 0.15s;
+}
+.step-tab.active .step-tab-num{background:var(--teal-600);color:var(--white);}
+.step-tab.done .step-tab-num{background:var(--teal-100);color:var(--teal-700);}
+
+/* ── FORM PANELS ── */
+.form-panel{display:none;}
+.form-panel.active{display:block;}
+
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .drawer{
+    top:auto;left:0;right:0;bottom:0;width:100%;
+    border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+    max-height:92vh;
+    transform:translateY(100%);
+  }
+  .drawer.open{transform:translateY(0);}
+  .field-row,.field-row-3{grid-template-columns:1fr;}
+  .fee-status-row{flex-wrap:wrap;}
+  .fee-status-card{min-width:calc(50% - 4px);}
+  .drawer-footer{flex-wrap:wrap;}
+  .btn-save-draft{width:100%;order:-1;}
+
+  /* Mobile drag handle */
+  .drawer-handle{
+    width:40px;height:4px;border-radius:2px;background:var(--gray-200);
+    margin:10px auto 0;
+  }
+}
+
+@media(min-width:641px){.drawer-handle{display:none;}}
+</style>
+</head>
+<body>
+
+<!-- PAGE CONTEXT -->
+<div class="page-context">
+  <p class="context-label">Click the button below to open the Add Student drawer</p>
+  <button class="open-btn" onclick="openDrawer()">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add student
+  </button>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+<!-- DRAWER -->
+<div class="drawer" id="drawer">
+
+  <div class="drawer-handle"></div>
+
+  <!-- Header -->
+  <div class="drawer-header">
+    <div class="drawer-title-wrap">
+      <div class="drawer-eyebrow">Academic · 2025–2026</div>
+      <div class="drawer-title">Add new student</div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()" aria-label="Close">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <!-- Progress -->
+  <div class="drawer-progress">
+    <div class="drawer-progress-fill" id="progress-fill"></div>
+  </div>
+
+  <!-- Step tabs -->
+  <div class="step-tabs">
+    <div class="step-tab active" id="tab-1" onclick="goPanel(1)">
+      <div class="step-tab-num">1</div>
+      Personal
+    </div>
+    <div class="step-tab" id="tab-2" onclick="goPanel(2)">
+      <div class="step-tab-num">2</div>
+      Academic
+    </div>
+    <div class="step-tab" id="tab-3" onclick="goPanel(3)">
+      <div class="step-tab-num">3</div>
+      Guardian
+    </div>
+    <div class="step-tab" id="tab-4" onclick="goPanel(4)">
+      <div class="step-tab-num">4</div>
+      Fees
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="drawer-body" id="drawer-body">
+
+    <!-- ── PANEL 1: Personal ── -->
+    <div class="form-panel active" id="panel-1">
+
+      <!-- Photo -->
+      <div class="form-section">
+        <div class="section-head">
+          <div class="section-icon icon-teal">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <span class="section-label">Personal information</span>
+        </div>
+
+        <div class="photo-upload" onclick="triggerPhoto()">
+          <div class="photo-av" id="photo-av">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="photo-info">
+            <div class="photo-title">Upload student photo <span class="opt-tag">Optional</span></div>
+            <div class="photo-sub">JPG or PNG · Max 2MB · Passport size recommended</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Name & DOB -->
+      <div class="form-section">
+        <div class="field field-row">
+          <div class="field">
+            <label>First name <span class="req">*</span></label>
+            <input type="text" id="f-firstname" placeholder="e.g. Alice" oninput="updatePreview()"/>
+            <div class="field-error" id="err-firstname" style="display:none;">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              First name is required
+            </div>
+          </div>
+          <div class="field">
+            <label>Last name <span class="req">*</span></label>
+            <input type="text" id="f-lastname" placeholder="e.g. Ngo" oninput="updatePreview()"/>
+            <div class="field-error" id="err-lastname" style="display:none;">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Last name is required
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Gender <span class="req">*</span></label>
+          <div class="gender-toggle">
+            <button class="gender-btn" id="g-male" onclick="setGender('male')" type="button">
+              <svg viewBox="0 0 24 24"><circle cx="10" cy="14" r="5"/><path d="M19 5l-5.196 5.196M19 5h-4M19 5v4"/></svg>
+              Male
+            </button>
+            <button class="gender-btn" id="g-female" onclick="setGender('female')" type="button">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><line x1="12" y1="13" x2="12" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+              Female
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Date of birth <span class="req">*</span></label>
+          <input type="date" id="f-dob"/>
+          <div class="field-hint">Student's age will be calculated automatically.</div>
+        </div>
+
+        <div class="field">
+          <label>Nationality <span class="opt-tag">Optional</span></label>
+          <select>
+            <option value="">Select nationality</option>
+            <option selected>Cameroonian</option>
+            <option>Nigerian</option>
+            <option>Ghanaian</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── PANEL 2: Academic ── -->
+    <div class="form-panel" id="panel-2">
+      <div class="form-section">
+        <div class="section-head">
+          <div class="section-icon icon-blue">
+            <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <span class="section-label">Academic information</span>
+        </div>
+
+        <div class="field">
+          <label>Student ID</label>
+          <div class="id-field-wrap">
+            <input type="text" id="f-studentid" placeholder="STU-249" value="STU-249"/>
+            <span class="id-auto-badge" onclick="regenId()">↻ Auto</span>
+          </div>
+          <div class="field-hint">Auto-generated. You can edit it if needed.</div>
+        </div>
+
+        <div class="field">
+          <label>Class <span class="req">*</span></label>
+          <select id="f-class">
+            <option value="">Select a class</option>
+            <optgroup label="Junior Secondary">
+              <option>Form 1A</option>
+              <option>Form 1B</option>
+              <option>Form 2A</option>
+              <option>Form 2B</option>
+              <option>Form 3A</option>
+              <option>Form 3B</option>
+              <option>Form 4</option>
+            </optgroup>
+            <optgroup label="Senior Secondary">
+              <option>Form 5</option>
+              <option>Lower 6th — Science</option>
+              <option>Lower 6th — Arts</option>
+              <option>Lower 6th — Commercial</option>
+              <option>Upper 6th — Science</option>
+              <option>Upper 6th — Arts</option>
+              <option>Upper 6th — Commercial</option>
+            </optgroup>
+          </select>
+          <div class="field-error" id="err-class" style="display:none;">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Please select a class
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Academic year</label>
+          <input type="text" value="2025 – 2026" readonly style="background:var(--gray-100);color:var(--gray-500);cursor:not-allowed;"/>
+          <div class="field-hint">Current active academic year. Managed in Settings → Academic Year.</div>
+        </div>
+
+        <div class="field">
+          <label>Previous school <span class="opt-tag">Optional</span></label>
+          <input type="text" placeholder="e.g. Government Bilingual College Douala"/>
+        </div>
+
+        <div class="field">
+          <label>Enrolment type</label>
+          <div class="rel-pills">
+            <button class="rel-pill active" onclick="selPill(this,'enrol')" type="button">New student</button>
+            <button class="rel-pill" onclick="selPill(this,'enrol')" type="button">Transfer in</button>
+            <button class="rel-pill" onclick="selPill(this,'enrol')" type="button">Repeating</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── PANEL 3: Guardian ── -->
+    <div class="form-panel" id="panel-3">
+      <div class="form-section">
+        <div class="section-head">
+          <div class="section-icon icon-purple">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <span class="section-label">Parent / Guardian</span>
+        </div>
+
+        <div class="field">
+          <label>Relationship to student <span class="req">*</span></label>
+          <div class="rel-pills">
+            <button class="rel-pill active" onclick="selPill(this,'rel')" type="button">Father</button>
+            <button class="rel-pill" onclick="selPill(this,'rel')" type="button">Mother</button>
+            <button class="rel-pill" onclick="selPill(this,'rel')" type="button">Guardian</button>
+            <button class="rel-pill" onclick="selPill(this,'rel')" type="button">Other</button>
+          </div>
+        </div>
+
+        <div class="field field-row">
+          <div class="field">
+            <label>First name <span class="req">*</span></label>
+            <input type="text" id="g-firstname" placeholder="e.g. Paul"/>
+          </div>
+          <div class="field">
+            <label>Last name <span class="req">*</span></label>
+            <input type="text" id="g-lastname" placeholder="e.g. Ngo"/>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Phone number <span class="req">*</span></label>
+          <input type="tel" id="g-phone" placeholder="+237 6XX XXX XXX"/>
+        </div>
+
+        <div class="field">
+          <label>Email address <span class="opt-tag">Optional</span></label>
+          <input type="email" id="g-email" placeholder="parent@email.com"/>
+          <div class="field-hint">Used to send report cards and notifications.</div>
+        </div>
+
+        <div class="field">
+          <label>Home address <span class="opt-tag">Optional</span></label>
+          <textarea rows="2" placeholder="Street, neighbourhood, city…"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Occupation <span class="opt-tag">Optional</span></label>
+          <input type="text" placeholder="e.g. Teacher, Engineer, Trader…"/>
+        </div>
+
+      </div>
+
+      <!-- Second guardian (collapsible) -->
+      <div class="form-section" style="background:var(--gray-50);">
+        <button type="button" onclick="toggleSecondGuardian()" style="display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--gray-500);padding:0;width:100%;" id="sec-guardian-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add a second guardian (optional)
+        </button>
+
+        <div id="second-guardian" style="display:none;margin-top:16px;">
+          <div class="field field-row">
+            <div class="field">
+              <label>First name</label>
+              <input type="text" placeholder="e.g. Marie"/>
+            </div>
+            <div class="field">
+              <label>Last name</label>
+              <input type="text" placeholder="e.g. Ngo"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Phone number</label>
+            <input type="tel" placeholder="+237 6XX XXX XXX"/>
+          </div>
+          <div class="field">
+            <label>Relationship</label>
+            <div class="rel-pills">
+              <button class="rel-pill active" onclick="selPill(this,'rel2')" type="button">Mother</button>
+              <button class="rel-pill" onclick="selPill(this,'rel2')" type="button">Father</button>
+              <button class="rel-pill" onclick="selPill(this,'rel2')" type="button">Guardian</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── PANEL 4: Fees ── -->
+    <div class="form-panel" id="panel-4">
+      <div class="form-section">
+        <div class="section-head">
+          <div class="section-icon icon-amber">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <span class="section-label">School fees</span>
+        </div>
+
+        <div class="field">
+          <label>Annual fee amount (FCFA) <span class="req">*</span></label>
+          <input type="number" id="f-fee" placeholder="120 000" min="0" step="1000" oninput="updateFeeCalc()"/>
+        </div>
+
+        <div class="field">
+          <label>Amount paid so far (FCFA)</label>
+          <input type="number" id="f-paid" placeholder="0" min="0" step="1000" oninput="updateFeeCalc()"/>
+          <div class="field-hint" id="fee-balance">Enter amounts above to calculate the balance.</div>
+        </div>
+
+        <div class="field">
+          <label>Payment status</label>
+          <div class="fee-status-row">
+            <div class="fee-status-card" id="fs-paid" onclick="selFeeStatus('paid')">
+              <div class="fee-status-dot" style="background:var(--teal-600)"></div>
+              <div class="fee-status-name">Paid</div>
+              <div class="fee-status-desc">Fully settled</div>
+            </div>
+            <div class="fee-status-card partial" id="fs-partial" onclick="selFeeStatus('partial')">
+              <div class="fee-status-dot" style="background:var(--amber-500)"></div>
+              <div class="fee-status-name">Partial</div>
+              <div class="fee-status-desc">Partly paid</div>
+            </div>
+            <div class="fee-status-card" id="fs-unpaid" onclick="selFeeStatus('unpaid')">
+              <div class="fee-status-dot" style="background:var(--gray-300)"></div>
+              <div class="fee-status-name">Unpaid</div>
+              <div class="fee-status-desc">Nothing paid</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Payment deadline <span class="opt-tag">Optional</span></label>
+          <input type="date"/>
+        </div>
+
+        <div class="field">
+          <label>Notes <span class="opt-tag">Optional</span></label>
+          <textarea rows="3" placeholder="e.g. Scholarship student, instalment arrangement agreed with parent…"></textarea>
+        </div>
+
+      </div>
+
+      <!-- Summary card -->
+      <div class="form-section" style="background:var(--gray-50);">
+        <div style="background:var(--white);border:1px solid var(--gray-100);border-radius:var(--radius-lg);padding:16px 18px;">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--gray-400);margin-bottom:14px;">Student summary</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:13.5px;">
+              <span style="color:var(--gray-500);">Full name</span>
+              <span style="font-weight:500;color:var(--gray-800);" id="sum-name">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13.5px;">
+              <span style="color:var(--gray-500);">Student ID</span>
+              <span style="font-weight:500;color:var(--gray-800);">STU-249</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13.5px;">
+              <span style="color:var(--gray-500);">Class</span>
+              <span style="font-weight:500;color:var(--gray-800);" id="sum-class">—</span>
+            </div>
+            <div style="height:1px;background:var(--gray-100);margin:2px 0;"></div>
+            <div style="display:flex;justify-content:space-between;font-size:13.5px;">
+              <span style="color:var(--gray-500);">Academic year</span>
+              <span style="font-weight:500;color:var(--gray-800);">2025 – 2026</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="drawer-footer">
+    <button class="btn-cancel" onclick="closeDrawer()">Cancel</button>
+    <button class="btn-save-draft" onclick="saveDraft()">Save draft</button>
+    <button class="btn-save" onclick="saveStudent()">
+      <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      Save student
+    </button>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toast-msg">Student saved successfully</span>
+</div>
+
+<script>
+let currentPanel = 1;
+let gender = null;
+let feeStatus = 'partial';
+let idCounter = 249;
+
+// ── DRAWER ──
+function openDrawer(){
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('drawer').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeDrawer(){
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('drawer').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// ── PANELS ──
+function goPanel(n){
+  document.getElementById('panel-'+currentPanel).classList.remove('active');
+  document.getElementById('tab-'+currentPanel).classList.remove('active');
+
+  // Mark previous as done
+  if(n > currentPanel){
+    for(let i=1;i<n;i++){
+      document.getElementById('tab-'+i).classList.add('done');
+      document.getElementById('tab-'+i).classList.remove('active');
+    }
+  }
+
+  currentPanel = n;
+  document.getElementById('panel-'+n).classList.add('active');
+  document.getElementById('tab-'+n).classList.add('active');
+  document.getElementById('tab-'+n).classList.remove('done');
+
+  // Progress
+  document.getElementById('progress-fill').style.width = (n/4*100)+'%';
+
+  // Scroll to top of body
+  document.getElementById('drawer-body').scrollTop = 0;
+
+  // Update summary
+  updateSummary();
+}
+
+// ── GENDER ──
+function setGender(g){
+  gender = g;
+  document.getElementById('g-male').classList.toggle('active', g==='male');
+  document.getElementById('g-female').classList.toggle('active', g==='female');
+}
+
+// ── PILLS ──
+function selPill(el, group){
+  el.closest('.form-panel,.form-section').querySelectorAll('.rel-pill').forEach(p=>{
+    if(p.onclick.toString().includes("'"+group+"'")) p.classList.remove('active');
+  });
+  // Simpler approach: find siblings
+  const parent = el.parentElement;
+  parent.querySelectorAll('.rel-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── FEE STATUS ──
+function selFeeStatus(s){
+  feeStatus = s;
+  ['paid','partial','unpaid'].forEach(fs=>{
+    document.getElementById('fs-'+fs).classList.remove('paid','partial','unpaid');
+  });
+  document.getElementById('fs-'+s).classList.add(s);
+}
+
+// ── FEE CALC ──
+function updateFeeCalc(){
+  const total = parseFloat(document.getElementById('f-fee').value)||0;
+  const paid  = parseFloat(document.getElementById('f-paid').value)||0;
+  const balance = total - paid;
+  const hint = document.getElementById('fee-balance');
+  if(total > 0){
+    hint.textContent = `Balance due: ${balance.toLocaleString()} FCFA`;
+    hint.style.color = balance > 0 ? '#B45309' : 'var(--teal-600)';
+    // Auto-set status
+    if(balance <= 0){ selFeeStatus('paid'); }
+    else if(paid > 0){ selFeeStatus('partial'); }
+    else { selFeeStatus('unpaid'); }
+  } else {
+    hint.textContent = 'Enter amounts above to calculate the balance.';
+    hint.style.color = '';
+  }
+}
+
+// ── PHOTO ──
+function triggerPhoto(){ /* file picker in real app */ }
+
+// ── ID REGEN ──
+function regenId(){
+  idCounter++;
+  document.getElementById('f-studentid').value = 'STU-'+idCounter;
+}
+
+// ── PREVIEW UPDATE ──
+function updatePreview(){
+  const fn = document.getElementById('f-firstname').value;
+  const ln = document.getElementById('f-lastname').value;
+  const name = [fn,ln].filter(Boolean).join(' ') || '—';
+  const sumName = document.getElementById('sum-name');
+  if(sumName) sumName.textContent = name;
+}
+
+// ── CLASS UPDATE ──
+document.addEventListener('change', e=>{
+  if(e.target.id==='f-class'){
+    const s = document.getElementById('sum-class');
+    if(s) s.textContent = e.target.value || '—';
+  }
+});
+
+function updateSummary(){
+  const fn = document.getElementById('f-firstname').value;
+  const ln = document.getElementById('f-lastname').value;
+  const name = [fn,ln].filter(Boolean).join(' ') || '—';
+  const cls = document.getElementById('f-class').value || '—';
+  const sn = document.getElementById('sum-name');
+  const sc = document.getElementById('sum-class');
+  if(sn) sn.textContent = name;
+  if(sc) sc.textContent = cls;
+}
+
+// ── SECOND GUARDIAN ──
+function toggleSecondGuardian(){
+  const el = document.getElementById('second-guardian');
+  const btn = document.getElementById('sec-guardian-btn');
+  const open = el.style.display === 'none';
+  el.style.display = open ? 'block' : 'none';
+  btn.querySelector('svg').style.transform = open ? 'rotate(45deg)' : '';
+}
+
+// ── VALIDATION ──
+function validate(){
+  let ok = true;
+  const fn = document.getElementById('f-firstname');
+  const ln = document.getElementById('f-lastname');
+  const cl = document.getElementById('f-class');
+
+  [['f-firstname','err-firstname'],['f-lastname','err-lastname']].forEach(([id,eid])=>{
+    const el = document.getElementById(id);
+    const err = document.getElementById(eid);
+    if(!el.value.trim()){
+      el.classList.add('error'); err.style.display='flex'; ok=false;
+    } else {
+      el.classList.remove('error'); err.style.display='none';
+    }
+  });
+
+  if(!cl.value){
+    cl.classList.add('error');
+    const e = document.getElementById('err-class');
+    if(e) e.style.display='flex';
+    ok=false;
+  } else {
+    cl.classList.remove('error');
+    const e = document.getElementById('err-class');
+    if(e) e.style.display='none';
+  }
+
+  return ok;
+}
+
+// ── SAVE — creates student via tenant-scoped API ──
+async function saveStudent(){
+  if(!validate()){
+    goPanel(1);
+    showToast('Please fill in all required fields', true);
+    return;
+  }
+  const btn = document.querySelector('.btn-save');
+  btn.innerHTML = 'Saving...';
+  btn.disabled = true;
+
+  try {
+    await AkademeeConfig.load();
+    const payload = {
+      firstName: document.getElementById('f-firstname').value.trim(),
+      lastName: document.getElementById('f-lastname').value.trim(),
+      className: document.getElementById('f-class').value,
+      studentNumber: document.getElementById('f-studentid').value.trim(),
+      dateOfBirth: document.getElementById('f-dob').value || undefined,
+      gender: gender || 'male',
+      feeStatus: typeof AkademeeStudents !== 'undefined'
+        ? AkademeeStudents.feeStatusFromUi(feeStatus)
+        : feeStatus,
+    };
+
+    const subdomain = AkademeeConfig.getSubdomainFromHost();
+    const response = await fetch(`${AkademeeConfig.apiBaseUrl}/api/students`, {
+      method: 'POST',
+      headers: AkademeeConfig.getAuthHeaders(subdomain),
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Save failed');
+    }
+
+    const studentId = data.data.id;
+    const gFirst = document.getElementById('g-firstname')?.value.trim();
+    const gLast = document.getElementById('g-lastname')?.value.trim();
+    if (gFirst && studentId) {
+      const relPill = document.querySelector('#panel-3 .rel-pill.active');
+      const relText = (relPill?.textContent || 'guardian').toLowerCase();
+      const relationship = relText.includes('father') ? 'father' : relText.includes('mother') ? 'mother' : 'guardian';
+      await fetch(`${AkademeeConfig.apiBaseUrl}/api/guardians`, {
+        method: 'POST',
+        headers: AkademeeConfig.getAuthHeaders(subdomain),
+        body: JSON.stringify({
+          studentId,
+          firstName: gFirst,
+          lastName: gLast,
+          phone: document.getElementById('g-phone')?.value.trim(),
+          email: document.getElementById('g-email')?.value.trim(),
+          relationship,
+        }),
+      });
+    }
+
+    closeDrawer();
+    const fn = payload.firstName;
+    const ln = payload.lastName;
+    showToast(`${fn} ${ln} added successfully`);
+    setTimeout(() => { window.location.href = 'akademee_students.html'; }, 900);
+  } catch (error) {
+    showToast(error.message, true);
+  }
+
+  btn.innerHTML = 'Save student';
+  btn.disabled = false;
+}
+
+function saveDraft(){
+  showToast('Draft saved — you can continue later');
+}
+
+// ── TOAST ──
+function showToast(msg, isError=false){
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.querySelector('.toast-dot').style.background = isError ? '#EF4444' : 'var(--teal-400)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+// ── SPIN ANIM ──
+const s=document.createElement('style');
+s.textContent='@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+document.head.appendChild(s);
+</script>
+<script src="../js/akademee-config.js"></script>
+<script src="../js/akademee-students.js"></script>
+<script>
+AkademeeConfig.load().then(() => {
+  AkademeeConfig.consumeAuthHash();
+  if (!AkademeeConfig.getSession()) {
+    window.location.href = 'akademee_login.html?redirect=dashboard';
+  }
+});
+</script>
+</body>
+</html>

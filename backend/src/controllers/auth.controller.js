@@ -1,0 +1,107 @@
+/**
+ * Authentication Controller
+ */
+
+const authService = require('../services/auth.service');
+const response = require('../utils/response');
+
+class AuthController {
+  async register(req, res, next) {
+    try {
+      const { email, password, firstName, lastName, schoolName } = req.body;
+
+      const user = await authService.register({
+        email,
+        password,
+        firstName,
+        lastName,
+        schoolName,
+      });
+
+      response.success(res, 'Registration successful', user, 201);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async login(req, res, next) {
+    try {
+      const { subdomain, email, password } = req.body;
+
+      const result = await authService.login(subdomain, email, password);
+
+      response.success(res, 'Login successful', result);
+    } catch (error) {
+      if (
+        error.message === 'Invalid email or password' ||
+        error.message === 'School account is inactive'
+      ) {
+        return response.error(res, error.message, null, 401);
+      }
+      next(error);
+    }
+  }
+
+  async refreshToken(req, res, next) {
+    try {
+      const { refreshToken } = req.body;
+
+      const { token, newRefreshToken } = await authService.refreshToken(refreshToken);
+
+      response.success(res, 'Token refreshed', { token, refreshToken: newRefreshToken });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async logout(req, res, next) {
+    try {
+      response.success(res, 'Logout successful');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async verifyEmail(req, res, next) {
+    try {
+      const { token } = req.body;
+
+      await authService.verifyEmail(token);
+
+      response.success(res, 'Email verified successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async verifySchool(req, res, next) {
+    try {
+      const { subdomain } = req.body;
+
+      if (!subdomain) {
+        return response.error(res, 'Subdomain is required', 400);
+      }
+
+      const result = await authService.verifySchool(subdomain);
+
+      response.success(res, 'School verified', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getCurrentUser(req, res, next) {
+    try {
+      const userId = req.user.userId;
+      const schoolId = req.user.schoolId;
+
+      const user = await authService.getCurrentUser(userId, schoolId);
+
+      response.success(res, 'User retrieved successfully', user);
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
+module.exports = new AuthController();

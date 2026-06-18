@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Akademee</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background: #f7f8f6;
+        color: #2a3029;
+      }
+      p { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <p>Loading your campus…</p>
+    <script src="js/akademee-config.js"></script>
+    <script>
+      (async function routeBySubdomain() {
+        await AkademeeConfig.load();
+        const subdomain = AkademeeConfig.getSubdomainFromHost();
+
+        if (!subdomain) {
+          window.location.replace('/akademee_register_v2.html');
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `${AkademeeConfig.apiBaseUrl}/api/website/public?subdomain=${encodeURIComponent(subdomain)}`,
+            { headers: { 'X-School-Subdomain': subdomain } }
+          );
+          const payload = await response.json();
+
+          if (payload.success && payload.data?.urls?.websiteUrl) {
+            const target = new URL(payload.data.urls.websiteUrl);
+            window.location.replace(target.pathname);
+            return;
+          }
+        } catch (error) {
+          console.error(error);
+        }
+
+        window.location.replace('/pages/akademee_vitrine_modern.html');
+      })();
+    </script>
+  </body>
+</html>

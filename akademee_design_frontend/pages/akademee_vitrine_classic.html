@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Grace Bilingual Academy — Douala</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#B8953A;
+  --gold-light:#D4AF62;
+  --gold-pale:#F5EDD6;
+  --gold-muted:rgba(184,149,58,0.15);
+  --ink:#1A1710;
+  --ink-mid:#2E2B22;
+  --ink-soft:#4A4535;
+  --gray:#8A8470;
+  --cream:#FAF8F3;
+  --cream-dark:#F0EBE0;
+  --white:#FFFFFF;
+  --border:rgba(184,149,58,0.2);
+  --font-serif:'Cormorant Garamond',Georgia,serif;
+  --font-sans:'Jost',system-ui,sans-serif;
+  --max:1160px;
+}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-sans);background:var(--cream);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+a{text-decoration:none;color:inherit;}
+img{display:block;max-width:100%;}
+.container{width:100%;max-width:var(--max);margin:0 auto;padding:0 28px;}
+
+/* ─── DECORATIVE ELEMENTS ─── */
+.ornament{
+  display:flex;align-items:center;gap:12px;
+  font-family:var(--font-sans);font-size:10px;font-weight:500;
+  letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);
+}
+.ornament::before,.ornament::after{
+  content:'';flex:1;height:1px;background:var(--gold-light);opacity:0.5;
+}
+
+/* ─── TOPBAR ─── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  transition:background 0.35s,box-shadow 0.35s,padding 0.35s;
+  padding:20px 0;
+}
+.topbar.scrolled{
+  background:rgba(26,23,16,0.97);
+  backdrop-filter:blur(10px);
+  box-shadow:0 1px 0 rgba(184,149,58,0.2);
+  padding:12px 0;
+}
+
+.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:24px;}
+
+/* Logo */
+.nav-logo{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.nav-crest{
+  width:48px;height:48px;border-radius:50%;
+  background:var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--gold-light);
+  flex-shrink:0;
+  transition:transform 0.2s;
+}
+.nav-crest:hover{transform:scale(1.05);}
+.nav-crest svg{width:24px;height:24px;fill:none;stroke:var(--ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.nav-school{text-align:center;}
+.nav-school-name{font-family:var(--font-serif);font-size:15px;font-weight:600;color:var(--white);letter-spacing:0.3px;line-height:1.2;}
+.nav-school-sub{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-light);font-weight:400;margin-top:2px;}
+
+/* Nav links */
+.nav-links{display:flex;align-items:center;gap:0;list-style:none;}
+.nav-links li a{
+  font-size:11.5px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.7);padding:8px 16px;
+  position:relative;transition:color 0.2s;
+}
+.nav-links li a::after{
+  content:'';position:absolute;bottom:4px;left:16px;right:16px;
+  height:1px;background:var(--gold-light);transform:scaleX(0);
+  transition:transform 0.2s;transform-origin:center;
+}
+.nav-links li a:hover{color:var(--white);}
+.nav-links li a:hover::after{transform:scaleX(1);}
+
+/* Nav CTA */
+.nav-cta-area{display:flex;align-items:center;gap:10px;}
+.btn-ghost-gold{
+  height:36px;padding:0 18px;
+  border:1px solid rgba(184,149,58,0.5);border-radius:2px;
+  font-family:var(--font-sans);font-size:11px;font-weight:500;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-light);
+  background:transparent;cursor:pointer;
+  transition:border-color 0.2s,background 0.2s,color 0.2s;
+  display:inline-flex;align-items:center;
+}
+.btn-ghost-gold:hover{border-color:var(--gold);background:var(--gold-muted);color:var(--white);}
+.btn-gold{
+  height:36px;padding:0 18px;
+  background:var(--gold);border:none;border-radius:2px;
+  font-family:var(--font-sans);font-size:11px;font-weight:600;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--ink);
+  cursor:pointer;transition:background 0.2s,transform 0.1s;
+  display:inline-flex;align-items:center;gap:7px;
+}
+.btn-gold:hover{background:var(--gold-light);}
+.btn-gold:active{transform:scale(0.98);}
+.btn-gold svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;}
+
+/* Hamburger */
+.ham{display:none;width:40px;height:40px;border:none;background:none;cursor:pointer;flex-direction:column;align-items:flex-end;justify-content:center;gap:5px;border-radius:2px;}
+.ham span{display:block;height:1.5px;background:white;transition:all 0.2s;border-radius:1px;}
+.ham span:nth-child(1){width:24px;}
+.ham span:nth-child(2){width:18px;}
+.ham span:nth-child(3){width:24px;}
+
+/* Mobile nav */
+.mob-nav{display:none;position:fixed;inset:0;top:0;background:var(--ink);z-index:99;flex-direction:column;padding:100px 32px 40px;}
+.mob-nav.open{display:flex;}
+.mob-nav a{font-family:var(--font-serif);font-size:28px;font-style:italic;color:rgba(255,255,255,0.8);padding:12px 0;border-bottom:1px solid rgba(184,149,58,0.15);transition:color 0.2s;}
+.mob-nav a:hover{color:var(--gold-light);}
+.mob-nav-cta{display:flex;flex-direction:column;gap:10px;margin-top:32px;}
+.mob-nav-cta .btn-gold,.mob-nav-cta .btn-ghost-gold{height:52px;justify-content:center;font-size:12px;}
+
+/* ─── HERO ─── */
+.hero{
+  position:relative;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+
+/* Dark textured background */
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(10,9,6,0.72) 0%,
+      rgba(10,9,6,0.55) 40%,
+      rgba(10,9,6,0.78) 80%,
+      rgba(10,9,6,0.92) 100%
+    ),
+    repeating-linear-gradient(
+      0deg,transparent,transparent 2px,rgba(184,149,58,0.02) 2px,rgba(184,149,58,0.02) 4px
+    ),
+    linear-gradient(135deg,#2A2510 0%,#1A1608 30%,#0A0904 60%,#1E1C0E 100%);
+}
+
+/* Subtle pattern overlay */
+.hero-pattern{
+  position:absolute;inset:0;z-index:1;opacity:0.06;
+  background-image:
+    radial-gradient(circle at 25% 25%, var(--gold) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, var(--gold) 0%, transparent 50%);
+}
+
+/* Gold frame lines */
+.hero-frame{
+  position:absolute;inset:40px;z-index:2;
+  border:1px solid rgba(184,149,58,0.2);
+  pointer-events:none;
+}
+.hero-frame::before{
+  content:'';position:absolute;inset:8px;
+  border:1px solid rgba(184,149,58,0.1);
+}
+
+/* Corner ornaments */
+.hero-corner{
+  position:absolute;width:32px;height:32px;z-index:3;
+}
+.hero-corner.tl{top:32px;left:32px;border-top:2px solid var(--gold);border-left:2px solid var(--gold);}
+.hero-corner.tr{top:32px;right:32px;border-top:2px solid var(--gold);border-right:2px solid var(--gold);}
+.hero-corner.bl{bottom:32px;left:32px;border-bottom:2px solid var(--gold);border-left:2px solid var(--gold);}
+.hero-corner.br{bottom:32px;right:32px;border-bottom:2px solid var(--gold);border-right:2px solid var(--gold);}
+
+.hero-content{
+  position:relative;z-index:4;
+  text-align:center;padding:120px 24px 80px;
+  max-width:860px;margin:0 auto;
+}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:10px;
+  border:1px solid rgba(184,149,58,0.35);
+  padding:7px 20px;margin-bottom:28px;
+  font-size:10px;font-weight:500;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--gold-light);
+}
+.hero-badge-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);}
+
+.hero-title{
+  font-family:var(--font-serif);
+  font-size:clamp(46px,8vw,88px);
+  font-weight:700;color:var(--white);
+  line-height:1.05;letter-spacing:-0.5px;
+  margin-bottom:8px;
+}
+
+.hero-title-italic{
+  font-style:italic;font-weight:400;
+  color:var(--gold-light);display:block;
+  font-size:0.85em;
+}
+
+.hero-divider{
+  display:flex;align-items:center;gap:16px;
+  margin:24px auto;width:fit-content;
+}
+.hero-divider-line{width:60px;height:1px;background:var(--gold);opacity:0.5;}
+.hero-divider-diamond{
+  width:8px;height:8px;background:var(--gold);
+  transform:rotate(45deg);flex-shrink:0;
+}
+
+.hero-subtitle{
+  font-size:clamp(14px,1.8vw,17px);font-weight:300;
+  letter-spacing:0.8px;color:rgba(255,255,255,0.6);
+  line-height:1.8;max-width:560px;margin:0 auto 36px;
+}
+
+.hero-actions{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;}
+
+.btn-hero-gold{
+  height:54px;padding:0 36px;
+  background:var(--gold);border:none;border-radius:2px;
+  font-family:var(--font-sans);font-size:11.5px;font-weight:600;
+  letter-spacing:2px;text-transform:uppercase;color:var(--ink);
+  cursor:pointer;display:inline-flex;align-items:center;gap:10px;
+  transition:background 0.2s,transform 0.1s;
+}
+.btn-hero-gold:hover{background:var(--gold-light);}
+.btn-hero-gold:active{transform:scale(0.98);}
+.btn-hero-gold svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;}
+
+.btn-hero-outline{
+  height:54px;padding:0 36px;
+  background:transparent;border:1px solid rgba(255,255,255,0.3);border-radius:2px;
+  font-family:var(--font-sans);font-size:11.5px;font-weight:500;
+  letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.8);
+  cursor:pointer;display:inline-flex;align-items:center;gap:10px;
+  transition:border-color 0.2s,background 0.2s,color 0.2s;
+}
+.btn-hero-outline:hover{border-color:var(--gold);background:var(--gold-muted);color:var(--white);}
+
+/* Hero stats strip */
+.hero-stats{
+  position:absolute;bottom:0;left:0;right:0;z-index:4;
+  background:rgba(184,149,58,0.08);
+  border-top:1px solid rgba(184,149,58,0.2);
+  backdrop-filter:blur(8px);
+}
+
+.hero-stats-inner{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  max-width:var(--max);margin:0 auto;
+}
+
+.hero-stat{
+  padding:22px 28px;text-align:center;
+  border-right:1px solid rgba(184,149,58,0.15);
+}
+.hero-stat:last-child{border-right:none;}
+
+.hero-stat-num{
+  font-family:var(--font-serif);font-size:36px;font-weight:700;
+  color:var(--gold-light);line-height:1;margin-bottom:4px;
+}
+.hero-stat-lbl{
+  font-size:10px;font-weight:500;letter-spacing:1.5px;
+  text-transform:uppercase;color:rgba(255,255,255,0.45);
+}
+
+/* Scroll indicator */
+.scroll-ind{
+  position:absolute;bottom:110px;left:50%;transform:translateX(-50%);
+  z-index:4;display:flex;flex-direction:column;align-items:center;gap:6px;
+  animation:bounce 2s ease-in-out infinite;
+}
+.scroll-ind span{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.3);}
+.scroll-ind svg{width:18px;height:18px;fill:none;stroke:rgba(184,149,58,0.5);stroke-width:1.5;stroke-linecap:round;}
+
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
+
+/* ─── MARQUEE ─── */
+.marquee-strip{
+  background:var(--gold);padding:12px 0;overflow:hidden;
+  border-top:1px solid var(--gold-light);border-bottom:1px solid var(--gold-light);
+}
+.marquee-track{display:flex;gap:0;animation:marquee 30s linear infinite;white-space:nowrap;}
+.marquee-item{
+  display:flex;align-items:center;gap:14px;padding:0 28px;
+  font-size:10.5px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink);flex-shrink:0;
+}
+.marquee-sep{font-size:16px;color:rgba(26,23,16,0.35);}
+@keyframes marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* ─── ABOUT ─── */
+.about{padding:110px 0;background:var(--cream);}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:90px;align-items:center;}
+
+.about-left{}
+.about-eyebrow{margin-bottom:16px;}
+.about-title{
+  font-family:var(--font-serif);
+  font-size:clamp(30px,4vw,48px);
+  font-weight:600;color:var(--ink);
+  line-height:1.15;margin-bottom:20px;
+}
+.about-title em{font-style:italic;color:var(--gold);}
+.about-body{font-size:15px;color:var(--ink-soft);line-height:1.85;margin-bottom:16px;font-weight:300;}
+
+.about-quote{
+  margin:28px 0;padding:20px 24px;
+  border-left:3px solid var(--gold);
+  background:rgba(184,149,58,0.05);
+}
+.about-quote p{
+  font-family:var(--font-serif);font-size:20px;font-style:italic;
+  color:var(--ink-mid);line-height:1.5;
+}
+.about-quote cite{font-size:12px;color:var(--gray);letter-spacing:0.5px;margin-top:8px;display:block;font-style:normal;}
+
+.btn-text-gold{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:11.5px;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;color:var(--gold);border:none;background:none;
+  cursor:pointer;font-family:var(--font-sans);
+  padding-bottom:2px;border-bottom:1px solid rgba(184,149,58,0.35);
+  transition:border-color 0.2s,color 0.2s;
+}
+.btn-text-gold:hover{border-color:var(--gold);}
+.btn-text-gold svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;}
+
+/* About right — stacked image collage with frame */
+.about-right{position:relative;}
+.about-img-frame{
+  position:relative;
+  padding:16px;
+  border:1px solid var(--border);
+}
+.about-img-frame::before{
+  content:'';position:absolute;inset:-8px;
+  border:1px solid rgba(184,149,58,0.1);pointer-events:none;
+}
+.about-img-main{
+  aspect-ratio:4/5;background:linear-gradient(135deg,#2A2510,#1A1608);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:10px;
+}
+.about-img-main svg{width:48px;height:48px;fill:none;stroke:rgba(184,149,58,0.2);stroke-width:1.2;stroke-linecap:round;}
+.about-img-main span{font-size:11px;color:rgba(184,149,58,0.2);letter-spacing:1px;}
+
+.about-badge{
+  position:absolute;bottom:-20px;left:-20px;
+  background:var(--gold);padding:20px 24px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.2);
+}
+.about-badge-num{font-family:var(--font-serif);font-size:40px;font-weight:700;color:var(--ink);line-height:1;}
+.about-badge-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(26,23,16,0.65);margin-top:3px;}
+
+/* ─── PILLARS ─── */
+.pillars{padding:90px 0;background:var(--ink);}
+
+.pillars-head{text-align:center;margin-bottom:60px;}
+.section-orn{margin-bottom:16px;}
+.section-title-light{
+  font-family:var(--font-serif);
+  font-size:clamp(28px,4vw,44px);
+  font-weight:600;color:var(--white);
+  line-height:1.2;
+}
+.section-title-light em{font-style:italic;color:var(--gold-light);}
+
+.pillars-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(184,149,58,0.15);}
+
+.pillar{
+  background:var(--ink-mid);
+  padding:36px 28px;
+  transition:background 0.2s;
+  position:relative;overflow:hidden;
+}
+.pillar::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--gold);transform:scaleX(0);transition:transform 0.3s;transform-origin:left;
+}
+.pillar:hover{background:rgba(26,23,16,0.5);}
+.pillar:hover::before{transform:scaleX(1);}
+
+.pillar-num{
+  font-family:var(--font-serif);font-size:52px;font-weight:700;
+  color:rgba(184,149,58,0.12);line-height:1;margin-bottom:16px;
+  transition:color 0.2s;
+}
+.pillar:hover .pillar-num{color:rgba(184,149,58,0.22);}
+
+.pillar-icon{
+  width:42px;height:42px;margin-bottom:16px;
+  border:1px solid rgba(184,149,58,0.25);
+  display:flex;align-items:center;justify-content:center;
+}
+.pillar-icon svg{width:20px;height:20px;fill:none;stroke:var(--gold);stroke-width:1.8;stroke-linecap:round;}
+.pillar-name{font-family:var(--font-serif);font-size:20px;font-weight:600;color:var(--white);margin-bottom:10px;}
+.pillar-desc{font-size:13.5px;color:rgba(255,255,255,0.45);line-height:1.65;font-weight:300;}
+
+/* ─── STATS ─── */
+.stats{padding:0;background:var(--cream-dark);}
+.stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-left:1px solid var(--border);
+}
+.stat-box{
+  padding:56px 36px;text-align:center;
+  border-right:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+.stat-box::after{
+  content:'';position:absolute;
+  top:50%;left:0;right:0;height:1px;
+  background:var(--gold);opacity:0;transform:scaleX(0);
+  transition:opacity 0.2s,transform 0.3s;transform-origin:center;
+}
+.stat-box:hover::after{opacity:0.3;transform:scaleX(0.6);}
+.stat-num{
+  font-family:var(--font-serif);font-size:clamp(40px,5vw,64px);
+  font-weight:700;color:var(--ink);line-height:1;margin-bottom:8px;
+}
+.stat-num sup{font-size:0.45em;vertical-align:super;}
+.stat-lbl{font-size:10.5px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--gray);}
+.stat-sep{width:24px;height:1px;background:var(--gold);margin:10px auto 0;opacity:0.4;}
+
+/* ─── CLASSES ─── */
+.classes{padding:110px 0;background:var(--cream);}
+.classes-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:52px;gap:20px;}
+.section-title-dark{
+  font-family:var(--font-serif);
+  font-size:clamp(28px,4vw,44px);
+  font-weight:600;color:var(--ink);line-height:1.2;
+}
+.section-title-dark em{font-style:italic;color:var(--gold);}
+.view-all-link{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--gold);white-space:nowrap;border-bottom:1px solid rgba(184,149,58,0.3);
+  padding-bottom:2px;transition:border-color 0.2s;
+}
+.view-all-link:hover{border-color:var(--gold);}
+.view-all-link svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;}
+
+.classes-list{display:flex;flex-direction:column;gap:1px;background:var(--border);}
+
+.class-row{
+  background:var(--cream);
+  display:flex;align-items:center;gap:0;
+  padding:0;cursor:pointer;
+  transition:background 0.15s;
+  position:relative;overflow:hidden;
+}
+.class-row::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--gold);transform:scaleY(0);transition:transform 0.25s;transform-origin:center;
+}
+.class-row:hover{background:rgba(184,149,58,0.04);}
+.class-row:hover::before{transform:scaleY(1);}
+
+.class-level-tag{
+  width:110px;flex-shrink:0;
+  padding:24px 20px;
+  text-align:center;
+  border-right:1px solid var(--border);
+}
+.class-level-label{
+  font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold);
+}
+.class-level-num{
+  font-family:var(--font-serif);font-size:28px;font-weight:700;color:var(--ink);line-height:1;margin-top:3px;
+}
+
+.class-info{flex:1;padding:24px 32px;border-right:1px solid var(--border);}
+.class-name{font-family:var(--font-serif);font-size:20px;font-weight:600;color:var(--ink);margin-bottom:5px;}
+.class-desc{font-size:13.5px;color:var(--gray);font-weight:300;line-height:1.5;}
+
+.class-meta{
+  width:180px;flex-shrink:0;
+  padding:24px 28px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.class-meta-item{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--gray);}
+.class-meta-item svg{width:13px;height:13px;fill:none;stroke:var(--gold);stroke-width:2;stroke-linecap:round;flex-shrink:0;}
+
+.class-arrow{
+  width:56px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border-left:1px solid var(--border);
+}
+.class-arrow svg{width:18px;height:18px;fill:none;stroke:var(--gold);stroke-width:1.5;stroke-linecap:round;opacity:0.5;transition:opacity 0.2s,transform 0.2s;}
+.class-row:hover .class-arrow svg{opacity:1;transform:translateX(3px);}
+
+/* ─── GALLERY ─── */
+.gallery{padding:0;background:var(--ink);}
+.gallery-header{
+  padding:80px 28px 56px;text-align:center;
+}
+
+.gallery-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr;
+  grid-template-rows:280px 280px;
+  gap:2px;
+}
+
+.gal-item{
+  overflow:hidden;position:relative;cursor:pointer;
+}
+.gal-item:hover .gal-overlay{opacity:1;}
+.gal-item:first-child{grid-row:1/3;}
+
+.gal-ph{
+  width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;
+}
+.gal-ph svg{width:32px;height:32px;fill:none;stroke:rgba(184,149,58,0.18);stroke-width:1.2;stroke-linecap:round;}
+.gal-ph span{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(184,149,58,0.18);}
+
+.gp1{background:linear-gradient(135deg,#1A1608,#2A2010);}
+.gp2{background:linear-gradient(135deg,#221D0A,#1A1608);}
+.gp3{background:linear-gradient(135deg,#2A2510,#1A1708);}
+.gp4{background:linear-gradient(135deg,#1A1608,#261F08);}
+.gp5{background:linear-gradient(135deg,#201B06,#1A1608);}
+
+.gal-overlay{
+  position:absolute;inset:0;
+  background:rgba(26,23,16,0.7);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity 0.2s;
+}
+.gal-overlay-text{font-family:var(--font-serif);font-size:18px;font-style:italic;color:var(--gold-light);}
+
+/* ─── TESTIMONIAL ─── */
+.testi{
+  padding:110px 0;background:var(--cream-dark);
+  position:relative;overflow:hidden;
+}
+.testi::before{
+  content:'\201C';position:absolute;top:-60px;left:20px;
+  font-family:var(--font-serif);font-size:480px;font-weight:700;
+  color:rgba(184,149,58,0.05);line-height:1;pointer-events:none;
+}
+.testi-inner{max-width:740px;margin:0 auto;text-align:center;position:relative;}
+.testi-stars{display:flex;justify-content:center;gap:6px;margin-bottom:24px;}
+.testi-stars span{color:var(--gold);font-size:16px;}
+.testi-quote{
+  font-family:var(--font-serif);
+  font-size:clamp(20px,3vw,28px);
+  font-style:italic;color:var(--ink);
+  line-height:1.6;margin-bottom:32px;font-weight:400;
+}
+.testi-divider{width:40px;height:1px;background:var(--gold);margin:0 auto 24px;}
+.testi-author-wrap{display:flex;align-items:center;justify-content:center;gap:14px;}
+.testi-av{
+  width:48px;height:48px;border-radius:50%;
+  background:var(--gold);display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-serif);font-size:18px;font-weight:700;color:var(--ink);
+}
+.testi-name{font-size:15px;font-weight:500;color:var(--ink);font-family:var(--font-serif);}
+.testi-role{font-size:11px;color:var(--gray);letter-spacing:0.5px;margin-top:2px;}
+
+/* ─── CONTACT ─── */
+.contact{padding:0;background:var(--ink);}
+
+.contact-split{display:grid;grid-template-columns:1fr 1fr;min-height:520px;}
+
+.contact-left{
+  padding:80px 60px;
+  border-right:1px solid rgba(184,149,58,0.15);
+  display:flex;flex-direction:column;justify-content:center;
+}
+.contact-orn{margin-bottom:20px;}
+.contact-title{
+  font-family:var(--font-serif);font-size:clamp(28px,3.5vw,44px);
+  font-weight:600;color:var(--white);line-height:1.15;margin-bottom:10px;
+}
+.contact-title em{font-style:italic;color:var(--gold-light);}
+.contact-sub{font-size:14px;color:rgba(255,255,255,0.45);font-weight:300;line-height:1.7;margin-bottom:40px;}
+
+.contact-items{display:flex;flex-direction:column;gap:22px;}
+.contact-item{display:flex;align-items:flex-start;gap:14px;}
+.contact-icon{
+  width:38px;height:38px;border:1px solid rgba(184,149,58,0.3);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+}
+.contact-icon svg{width:17px;height:17px;fill:none;stroke:var(--gold);stroke-width:1.8;stroke-linecap:round;}
+.contact-label{font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:4px;}
+.contact-value{font-size:14.5px;color:rgba(255,255,255,0.75);font-weight:300;}
+
+.contact-right{
+  background:linear-gradient(135deg,rgba(184,149,58,0.06),rgba(184,149,58,0.02));
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;
+  padding:40px;
+  border-top:none;
+}
+.map-ph{
+  width:100%;max-width:380px;aspect-ratio:4/3;
+  border:1px solid rgba(184,149,58,0.2);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;
+  background:rgba(26,23,16,0.5);
+}
+.map-ph svg{width:32px;height:32px;fill:none;stroke:rgba(184,149,58,0.3);stroke-width:1.5;stroke-linecap:round;}
+.map-ph p{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:rgba(184,149,58,0.3);}
+
+/* ─── FOOTER ─── */
+.footer{background:rgba(10,9,6,0.98);border-top:1px solid rgba(184,149,58,0.12);}
+.footer-main{padding:70px 0 48px;}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:52px;}
+.footer-brand-name{
+  font-family:var(--font-serif);font-size:22px;font-weight:600;
+  color:var(--white);margin-bottom:8px;
+}
+.footer-brand-sub{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+.footer-desc{font-size:13.5px;color:rgba(255,255,255,0.35);line-height:1.7;font-weight:300;max-width:260px;}
+.footer-divider-gold{width:32px;height:1px;background:var(--gold);opacity:0.4;margin:16px 0;}
+
+.footer-col-title{
+  font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:18px;
+}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:11px;}
+.footer-links li a{font-size:13.5px;color:rgba(255,255,255,0.4);font-weight:300;transition:color 0.15s;}
+.footer-links li a:hover{color:var(--gold-light);}
+
+.footer-bottom{
+  border-top:1px solid rgba(184,149,58,0.1);
+  padding:20px 0;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.footer-copy{font-size:12px;color:rgba(255,255,255,0.2);font-weight:300;}
+.powered{
+  font-size:11.5px;color:rgba(255,255,255,0.2);
+  display:flex;align-items:center;gap:6px;
+}
+.powered strong{color:var(--gold);font-weight:500;}
+
+/* ─── STICKY MOBILE BAR ─── */
+.sticky-bar{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:90;
+  background:rgba(26,23,16,0.98);
+  border-top:1px solid rgba(184,149,58,0.2);
+  padding:10px 20px max(10px,env(safe-area-inset-bottom));
+  gap:10px;
+  backdrop-filter:blur(10px);
+}
+
+/* ─── REVEAL ─── */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity 0.6s ease,transform 0.6s ease;}
+.reveal.visible{opacity:1;transform:none;}
+.reveal-delay-1{transition-delay:0.1s;}
+.reveal-delay-2{transition-delay:0.2s;}
+.reveal-delay-3{transition-delay:0.3s;}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:1024px){
+  .about-grid{gap:52px;}
+  .pillars-grid{grid-template-columns:repeat(2,1fr);}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:36px;}
+  .contact-left{padding:60px 40px;}
+}
+
+@media(max-width:768px){
+  .nav-links,.nav-cta-area{display:none;}
+  .ham{display:flex;}
+  .hero-corner{display:none;}
+  .hero-frame{inset:20px;}
+  .hero-stats-inner{grid-template-columns:repeat(2,1fr);}
+  .hero-stat{padding:16px 20px;}
+  .hero-stat-num{font-size:28px;}
+  .about-grid{grid-template-columns:1fr;gap:48px;}
+  .about-right{display:none;}
+  .pillars-grid{grid-template-columns:1fr 1fr;}
+  .classes-head{flex-direction:column;align-items:flex-start;}
+  .class-meta,.class-arrow{display:none;}
+  .gallery-grid{grid-template-columns:1fr 1fr;grid-template-rows:200px 200px 200px;}
+  .gal-item:first-child{grid-row:auto;}
+  .contact-split{grid-template-columns:1fr;}
+  .contact-left{padding:52px 28px;}
+  .contact-right{min-height:280px;}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:32px;}
+  .footer-bottom{flex-direction:column;align-items:flex-start;gap:8px;}
+  .sticky-bar{display:flex;}
+  body{padding-bottom:80px;}
+}
+
+@media(max-width:480px){
+  .container{padding:0 18px;}
+  .pillars-grid{grid-template-columns:1fr;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .gallery-grid{grid-template-columns:1fr;grid-template-rows:auto;}
+  .gal-item{aspect-ratio:16/9;}
+  .footer-grid{grid-template-columns:1fr;}
+  .hero-stats-inner{grid-template-columns:repeat(2,1fr);}
+  .class-level-tag{width:80px;padding:20px 12px;}
+  .class-info{padding:20px 18px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<header class="topbar" id="topbar">
+  <div class="container">
+    <div class="nav-inner">
+
+      <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#classes">Academics</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+      </ul>
+
+      <a class="nav-logo" href="#">
+        <div class="nav-crest">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div class="nav-school">
+          <div class="nav-school-name">Grace Bilingual Academy</div>
+          <div class="nav-school-sub">Est. 1998 · Douala</div>
+        </div>
+      </a>
+
+      <div class="nav-cta-area">
+        <a class="btn-ghost-gold" href="#contact">Contact us</a>
+        <a class="btn-gold" href="/login">
+          <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Student portal
+        </a>
+      </div>
+
+      <button class="ham" id="ham" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile nav -->
+<div class="mob-nav" id="mob-nav">
+  <a href="#about" onclick="toggleMenu()">About</a>
+  <a href="#classes" onclick="toggleMenu()">Academics</a>
+  <a href="#gallery" onclick="toggleMenu()">Gallery</a>
+  <a href="#contact" onclick="toggleMenu()">Contact</a>
+  <div class="mob-nav-cta">
+    <a class="btn-gold" href="/login" style="justify-content:center;">Student portal</a>
+    <a class="btn-ghost-gold" href="/login" style="justify-content:center;">Parent login</a>
+  </div>
+</div>
+
+<!-- ─── HERO ─── -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-pattern"></div>
+  <div class="hero-frame"></div>
+  <div class="hero-corner tl"></div>
+  <div class="hero-corner tr"></div>
+  <div class="hero-corner bl"></div>
+  <div class="hero-corner br"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      Anglophone · Bilingual · Excellence
+      <div class="hero-badge-dot"></div>
+    </div>
+
+    <h1 class="hero-title">
+      Grace Bilingual<br>
+      <span class="hero-title-italic">Academy</span>
+    </h1>
+
+    <div class="hero-divider">
+      <div class="hero-divider-line"></div>
+      <div class="hero-divider-diamond"></div>
+      <div class="hero-divider-line"></div>
+    </div>
+
+    <p class="hero-subtitle">
+      Shaping the leaders of tomorrow through academic rigour,<br>
+      bilingual excellence, and a century of tradition — in the heart of Douala.
+    </p>
+
+    <div class="hero-actions">
+      <a class="btn-hero-gold" href="#contact">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.95a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Enrol now
+      </a>
+      <a class="btn-hero-outline" href="#about">
+        Discover our heritage
+      </a>
+    </div>
+  </div>
+
+  <div class="scroll-ind">
+    <span>Scroll</span>
+    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stats-inner">
+      <div class="hero-stat">
+        <div class="hero-stat-num">248</div>
+        <div class="hero-stat-lbl">Students enrolled</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">32</div>
+        <div class="hero-stat-lbl">Qualified teachers</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">94%</div>
+        <div class="hero-stat-lbl">GCE pass rate 2025</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">27</div>
+        <div class="hero-stat-lbl">Years of excellence</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── MARQUEE ─── -->
+<div class="marquee-strip">
+  <div class="marquee-track">
+    <div class="marquee-item">Academic Excellence <span class="marquee-sep">✦</span></div>
+    <div class="marquee-item">Bilingual Education <span class="marquee-sep">✦</span></div>
+    <div class="marquee-item">GCE Ordinary Level <span class="marquee-sep">✦</span></div>
+    <div class="marquee-item">GCE Advanced Level <span class="marquee-sep">✦</span></div>
+    <div class="marquee-item">Est. 1998 · Douala <span class="marquee-sep">✦</span></div>
+    <div class="marquee-item">94% Pass Rate 2025 <span class="marquee-sep">✦</span></div>
+    <div class="marquee-item">Top 5 in Douala <span class="marquee-sep">✦</span></div>
+    <div class="marquee-item">Academic Excellence <span class="marquee-sep">✦</span></div>
+    <div class="marquee-item">Bilingual Education <span class="marquee-sep">✦</span></div>
+    <div class="marquee-item">GCE Ordinary Level <span class="marquee-sep">✦</span></div>
+    <div class="marquee-item">GCE Advanced Level <span class="marquee-sep">✦</span></div>
+    <div class="marquee-item">Est. 1998 · Douala <span class="marquee-sep">✦</span></div>
+    <div class="marquee-item">94% Pass Rate 2025 <span class="marquee-sep">✦</span></div>
+    <div class="marquee-item">Top 5 in Douala <span class="marquee-sep">✦</span></div>
+  </div>
+</div>
+
+<!-- ─── ABOUT ─── -->
+<section class="about reveal" id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-left">
+        <div class="about-eyebrow">
+          <div class="ornament">Our heritage</div>
+        </div>
+        <h2 class="about-title">A legacy built on<br><em>discipline & vision</em></h2>
+        <p class="about-body">Founded in 1998, Grace Bilingual Academy has grown from a small institution of 40 students to one of Douala's most respected secondary schools. For over two decades, we have upheld a singular commitment: delivering world-class education through bilingual instruction, rigorous academics, and the development of character.</p>
+        <div class="about-quote">
+          <p>"We do not simply teach subjects — we shape citizens who will lead Cameroon and the world."</p>
+          <cite>— The Principal, Grace Bilingual Academy</cite>
+        </div>
+        <p class="about-body">Our 32 qualified educators bring expertise across sciences, arts, and commercial streams, guiding students through GCE Ordinary and Advanced Level examinations with a consistent 94% pass rate.</p>
+        <button class="btn-text-gold">
+          Our full story
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+      <div class="about-right">
+        <div class="about-img-frame">
+          <div class="about-img-main">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>School photo</span>
+          </div>
+        </div>
+        <div class="about-badge">
+          <div class="about-badge-num">A+</div>
+          <div class="about-badge-lbl">GCE Results 2025</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PILLARS ─── -->
+<section class="pillars reveal">
+  <div class="container">
+    <div class="pillars-head">
+      <div class="section-orn"><div class="ornament" style="color:var(--gold-light)">Our foundations</div></div>
+      <h2 class="section-title-light">What makes us <em>exceptional</em></h2>
+    </div>
+    <div class="pillars-grid">
+      <div class="pillar">
+        <div class="pillar-num">01</div>
+        <div class="pillar-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="pillar-name">Excellence</div>
+        <div class="pillar-desc">Highest academic standards maintained across all year groups, from Form 1 through Upper Sixth.</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-num">02</div>
+        <div class="pillar-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+        <div class="pillar-name">Bilingualism</div>
+        <div class="pillar-desc">English and French instruction throughout — preparing students for a truly globalised world.</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-num">03</div>
+        <div class="pillar-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="pillar-name">Community</div>
+        <div class="pillar-desc">A welcoming, family-centred school where every student is known, supported, and celebrated.</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-num">04</div>
+        <div class="pillar-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+        <div class="pillar-name">Achievement</div>
+        <div class="pillar-desc">94% GCE pass rate, top 5 school in Douala — a proven track record of student success.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── STATS ─── -->
+<section class="stats reveal">
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-num">248</div>
+      <div class="stat-lbl">Students enrolled</div>
+      <div class="stat-sep"></div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">32</div>
+      <div class="stat-lbl">Qualified teachers</div>
+      <div class="stat-sep"></div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">94<sup>%</sup></div>
+      <div class="stat-lbl">GCE pass rate</div>
+      <div class="stat-sep"></div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">27</div>
+      <div class="stat-lbl">Years of excellence</div>
+      <div class="stat-sep"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CLASSES ─── -->
+<section class="classes reveal" id="classes">
+  <div class="container">
+    <div class="classes-head">
+      <div>
+        <div class="ornament" style="margin-bottom:14px;">Academic programme</div>
+        <h2 class="section-title-dark">Our classes &amp; <em>levels</em></h2>
+      </div>
+      <a class="view-all-link" href="#">
+        Full curriculum
+        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+
+    <div class="classes-list">
+      <div class="class-row">
+        <div class="class-level-tag"><div class="class-level-label">Junior</div><div class="class-level-num">1–2</div></div>
+        <div class="class-info">
+          <div class="class-name">Form 1 &amp; Form 2</div>
+          <div class="class-desc">Foundation years introducing the anglophone curriculum. Core subjects: English Language, French, Mathematics, Science, History &amp; Geography.</div>
+        </div>
+        <div class="class-meta">
+          <div class="class-meta-item"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Ages 12–13</div>
+          <div class="class-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>2 classes</div>
+        </div>
+        <div class="class-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+      <div class="class-row">
+        <div class="class-level-tag"><div class="class-level-label">Junior</div><div class="class-level-num">3–4</div></div>
+        <div class="class-info">
+          <div class="class-name">Form 3 &amp; Form 4</div>
+          <div class="class-desc">GCE O/L preparation begins. Science and Arts streams introduced. Elective subjects added to core curriculum.</div>
+        </div>
+        <div class="class-meta">
+          <div class="class-meta-item"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Ages 14–15</div>
+          <div class="class-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>2 classes</div>
+        </div>
+        <div class="class-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+      <div class="class-row">
+        <div class="class-level-tag"><div class="class-level-label">O Level</div><div class="class-level-num">5</div></div>
+        <div class="class-info">
+          <div class="class-name">Form 5 — GCE Ordinary Level</div>
+          <div class="class-desc">Examination year. Intensive preparation for the General Certificate of Education Ordinary Level. Dedicated subject teachers and mock exams.</div>
+        </div>
+        <div class="class-meta">
+          <div class="class-meta-item"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Age 16</div>
+          <div class="class-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>1 class</div>
+        </div>
+        <div class="class-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+      <div class="class-row">
+        <div class="class-level-tag"><div class="class-level-label">A Level</div><div class="class-level-num">L6</div></div>
+        <div class="class-info">
+          <div class="class-name">Lower Sixth Form</div>
+          <div class="class-desc">Advanced Level entry year. Science, Arts and Commercial streams. Students select 3–4 principal subjects for A/L examination.</div>
+        </div>
+        <div class="class-meta">
+          <div class="class-meta-item"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Age 17</div>
+          <div class="class-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>3 streams</div>
+        </div>
+        <div class="class-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+      <div class="class-row">
+        <div class="class-level-tag"><div class="class-level-label">A Level</div><div class="class-level-num">U6</div></div>
+        <div class="class-info">
+          <div class="class-name">Upper Sixth Form</div>
+          <div class="class-desc">GCE Advanced Level examination. University entrance preparation. Pastoral care and career guidance throughout.</div>
+        </div>
+        <div class="class-meta">
+          <div class="class-meta-item"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Age 18</div>
+          <div class="class-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>3 streams</div>
+        </div>
+        <div class="class-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── GALLERY ─── -->
+<section class="gallery reveal" id="gallery">
+  <div class="gallery-header">
+    <div class="ornament" style="color:var(--gold-light);justify-content:center;margin-bottom:14px;">Campus life</div>
+    <h2 class="section-title-light">Life at Grace Bilingual</h2>
+  </div>
+  <div class="gallery-grid">
+    <div class="gal-item"><div class="gal-ph gp1"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Campus</span></div><div class="gal-overlay"><span class="gal-overlay-text">Campus entrance</span></div></div>
+    <div class="gal-item"><div class="gal-ph gp2"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Library</span></div><div class="gal-overlay"><span class="gal-overlay-text">The library</span></div></div>
+    <div class="gal-item"><div class="gal-ph gp3"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Students</span></div><div class="gal-overlay"><span class="gal-overlay-text">Our students</span></div></div>
+    <div class="gal-item"><div class="gal-ph gp4"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg><span>Graduation</span></div><div class="gal-overlay"><span class="gal-overlay-text">Graduation day</span></div></div>
+    <div class="gal-item"><div class="gal-ph gp5"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Sports</span></div><div class="gal-overlay"><span class="gal-overlay-text">Sports day</span></div></div>
+  </div>
+</section>
+
+<!-- ─── TESTIMONIAL ─── -->
+<section class="testi reveal">
+  <div class="container">
+    <div class="testi-inner">
+      <div class="testi-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+      <p class="testi-quote">"Grace Bilingual Academy did not just educate my children — it built them. The discipline, the values, and the academic rigour are truly exceptional. My daughter passed her A/Levels with distinction."</p>
+      <div class="testi-divider"></div>
+      <div class="testi-author-wrap">
+        <div class="testi-av">MF</div>
+        <div>
+          <div class="testi-name">Marie-France Biyong</div>
+          <div class="testi-role">Parent · Form 4 &amp; Upper Sixth · Douala</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CONTACT ─── */
+<section class="contact reveal" id="contact">
+  <div class="contact-split">
+    <div class="contact-left">
+      <div class="contact-orn"><div class="ornament" style="color:var(--gold)">Visit us</div></div>
+      <h2 class="contact-title">Come visit our <em>campus</em></h2>
+      <p class="contact-sub">Our admissions office is open Monday to Friday. We welcome prospective families to tour the campus and meet our team.</p>
+      <div class="contact-items">
+        <div class="contact-item">
+          <div class="contact-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div><div class="contact-label">Address</div><div class="contact-value">Rue de la Paix, Akwa<br>Douala, Littoral Region</div></div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.95a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+          <div><div class="contact-label">Phone</div><div class="contact-value" data-site="phone">+237 6XX XXX XXX</div></div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+          <div><div class="contact-label">Email</div><div class="contact-value" data-site="email">info@yourschool.cm</div></div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div><div class="contact-label">Office hours</div><div class="contact-value">Monday – Friday · 7:30 AM – 4:00 PM</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="contact-right">
+      <div class="map-ph">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <p>Grace Bilingual · Douala</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer class="footer">
+  <div class="footer-main">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand-name">Grace Bilingual Academy</div>
+          <div class="footer-brand-sub">Est. 1998 · Douala, Cameroon</div>
+          <div class="footer-divider-gold"></div>
+          <p class="footer-desc">Shaping leaders through academic rigour, bilingual excellence, and a tradition of achievement since 1998.</p>
+        </div>
+        <div>
+          <p class="footer-col-title">Navigate</p>
+          <ul class="footer-links">
+            <li><a href="#about">About us</a></li>
+            <li><a href="#classes">Academics</a></li>
+            <li><a href="#gallery">Gallery</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer-col-title">Portals</p>
+          <ul class="footer-links">
+            <li><a href="/login">Student portal</a></li>
+            <li><a href="/login">Parent login</a></li>
+            <li><a href="/login">Teacher login</a></li>
+            <li><a href="/dashboard">Administration</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer-col-title">Academic</p>
+          <ul class="footer-links">
+            <li><a href="#">Timetable</a></li>
+            <li><a href="#">Fees structure</a></li>
+            <li><a href="#">GCE results</a></li>
+            <li><a href="#">Admissions</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="footer-bottom">
+      <p class="footer-copy">© 2026 Grace Bilingual Academy. All rights reserved.</p>
+      <div class="powered">Managed with <strong>Akademee</strong> · akademee.cm</div>
+    </div>
+  </div>
+</footer>
+
+<!-- Sticky bar mobile -->
+<div class="sticky-bar">
+  <a class="btn-gold" href="/login" style="flex:1;justify-content:center;height:46px;font-size:11px;letter-spacing:1.5px;">Student portal</a>
+  <a class="btn-ghost-gold" href="#contact" style="flex:1;justify-content:center;height:46px;font-size:11px;letter-spacing:1.5px;">Contact us</a>
+</div>
+
+<script>
+window.addEventListener('scroll',()=>{
+  document.getElementById('topbar').classList.toggle('scrolled',window.scrollY>60);
+});
+
+function toggleMenu(){
+  const m=document.getElementById('mob-nav');
+  const h=document.getElementById('ham');
+  const open=m.classList.toggle('open');
+  h.querySelectorAll('span')[0].style.transform=open?'rotate(45deg) translate(5px,5px)':'';
+  h.querySelectorAll('span')[1].style.opacity=open?'0':'1';
+  h.querySelectorAll('span')[2].style.transform=open?'rotate(-45deg) translate(5px,-5px)':'';
+  document.body.style.overflow=open?'hidden':'';
+}
+
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+<script src="../js/akademee-config.js"></script>
+<script src="../js/akademee-vitrine.js"></script>
+</body>
+</html>

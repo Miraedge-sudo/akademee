@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Akademee — Verify your school email</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;font-family:'DM Sans',system-ui,sans-serif;background:linear-gradient(160deg,#f7f8f6 0%,#e1f5ee 100%);color:#2a3029;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{max-width:520px;width:100%;background:#fff;border-radius:20px;padding:40px 36px;box-shadow:0 12px 40px rgba(8,80,65,.1);text-align:center}
+.icon{width:64px;height:64px;border-radius:50%;background:#e1f5ee;color:#085041;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;transition:all .4s}
+.icon.success{background:#085041;color:#fff;transform:scale(1.05)}
+h1{font-family:'Playfair Display',serif;font-size:28px;margin-bottom:10px}
+p{font-size:14px;color:#6e7a70;line-height:1.65;margin-bottom:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 26px;border-radius:10px;font-weight:600;font-size:14px;border:none;cursor:pointer;text-decoration:none;margin:6px;transition:filter .15s}
+.btn-primary{background:#085041;color:#fff}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.btn-ghost{background:#eef0ec;color:#434d45}
+.msg{font-size:14px;padding:14px 16px;border-radius:10px;margin-bottom:18px;display:none;line-height:1.5}
+.msg.ok{display:block;background:#e1f5ee;color:#085041;border:1px solid #c8f0e4}
+.msg.err{display:block;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.msg.pending{display:block;background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.checkmark{width:32px;height:32px}
+.spinner{width:28px;height:28px;border:3px solid #c8f0e4;border-top-color:#085041;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="icon" id="icon">
+    <svg id="icon-mail" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><polyline points="22,6 12,13 2,6"/></svg>
+    <svg id="icon-check" class="checkmark" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    <div id="icon-spin" class="spinner" style="display:none"></div>
+  </div>
+  <h1 id="title">Verify your school</h1>
+  <p id="desc">We sent a verification link to your school and admin email. Open the link to activate your account, then continue to website setup.</p>
+  <div class="msg" id="status"></div>
+  <a class="btn btn-primary" id="onboard-btn" href="#" style="display:none">Continue to website setup →</a>
+  <button class="btn btn-ghost" id="resend-btn" type="button">Resend verification email</button>
+  <a class="btn btn-ghost" id="login-btn" href="akademee_login.html?redirect=onboarding" style="display:none">Sign in to continue</a>
+</div>
+<script src="../js/akademee-config.js"></script>
+<script>
+(async function () {
+  await AkademeeConfig.load();
+  AkademeeConfig.consumeAuthHash();
+
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  const status = document.getElementById('status');
+  const onboardBtn = document.getElementById('onboard-btn');
+  const loginBtn = document.getElementById('login-btn');
+  const subdomain = AkademeeConfig.getSubdomainFromHost();
+
+  function showVerified(data, already) {
+    document.getElementById('icon-mail').style.display = 'none';
+    document.getElementById('icon-check').style.display = 'block';
+    document.getElementById('icon').classList.add('success');
+    document.getElementById('title').textContent = already ? 'Already verified' : 'Account verified successfully!';
+    document.getElementById('desc').textContent = already
+      ? `${data.schoolName} is ready. Continue customizing your landing page.`
+      : `${data.schoolName} has been verified. You can now set up your campus website and sign in to your dashboard.`;
+
+    status.className = 'msg ok';
+    status.textContent = already
+      ? 'Your school email was already verified.'
+      : '✓ Your school account is verified successfully. Redirecting to onboarding in a few seconds…';
+
+    const onboardingUrl = data.onboardingUrl || 'akademee_onboarding_v2.html';
+    onboardBtn.href = onboardingUrl;
+    onboardBtn.style.display = 'inline-flex';
+
+    const session = AkademeeConfig.getSession();
+    if (session) {
+      setTimeout(() => { window.location.href = onboardingUrl; }, 2800);
+    } else {
+      status.textContent += ' Please sign in to continue setup.';
+      loginBtn.style.display = 'inline-flex';
+      loginBtn.href = AkademeeConfig.formatLoginUrl(data.subdomain || subdomain, 'onboarding');
+    }
+  }
+
+  if (token) {
+    document.getElementById('icon-spin').style.display = 'block';
+    document.getElementById('icon-mail').style.display = 'none';
+    document.getElementById('title').textContent = 'Verifying…';
+
+    try {
+      const res = await fetch(`${AkademeeConfig.apiBaseUrl}/api/schools/verify-email?token=${encodeURIComponent(token)}`);
+      const data = await res.json();
+      document.getElementById('icon-spin').style.display = 'none';
+
+      if (data.success) {
+        showVerified(data.data, data.data.alreadyVerified);
+        history.replaceState(null, '', window.location.pathname);
+      } else {
+        status.className = 'msg err';
+        status.textContent = data.message || 'Verification failed.';
+        document.getElementById('icon-mail').style.display = 'block';
+        document.getElementById('title').textContent = 'Verification failed';
+      }
+    } catch (e) {
+      document.getElementById('icon-spin').style.display = 'none';
+      document.getElementById('icon-mail').style.display = 'block';
+      status.className = 'msg err';
+      status.textContent = 'Could not reach the server. Is the backend running?';
+    }
+  } else if (AkademeeConfig.getSession()) {
+    status.className = 'msg pending';
+    status.textContent = 'Check your inbox for the verification link. Once verified, you will be redirected to onboarding automatically.';
+    onboardBtn.href = 'akademee_onboarding_v2.html';
+    onboardBtn.style.display = 'none';
+  } else {
+    status.className = 'msg pending';
+    status.textContent = 'Register your school first, then open the verification link from your email on this subdomain.';
+    loginBtn.style.display = 'inline-flex';
+  }
+
+  document.getElementById('resend-btn').addEventListener('click', async () => {
+    if (!AkademeeConfig.getSession()) {
+      alert('Register your school first, or sign in from your school subdomain.');
+      return;
+    }
+    const res = await fetch(`${AkademeeConfig.apiBaseUrl}/api/schools/resend-verification`, {
+      method: 'POST',
+      headers: AkademeeConfig.getAuthHeaders(subdomain),
+    });
+    const data = await res.json();
+    alert(data.success ? 'Verification email sent. Check your inbox.' : (data.message || 'Could not send email.'));
+  });
+})();
+</script>
+</body>
+</html>

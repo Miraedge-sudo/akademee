@@ -1,0 +1,1883 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Akademee — Register your school</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --teal-950: #04342c;
+        --teal-900: #085041;
+        --teal-800: #0f6e56;
+        --teal-600: #1d9e75;
+        --teal-400: #5dcaa5;
+        --teal-200: #9fe1cb;
+        --teal-100: #c8f0e4;
+        --teal-50: #e1f5ee;
+        --white: #ffffff;
+        --gray-50: #f7f8f6;
+        --gray-100: #eef0ec;
+        --gray-200: #d8dbd5;
+        --gray-400: #9ba59c;
+        --gray-500: #6e7a70;
+        --gray-600: #5c665e;
+        --gray-700: #434d45;
+        --gray-800: #2a3029;
+        --font-display: "Playfair Display", Georgia, serif;
+        --font-body: "DM Sans", system-ui, sans-serif;
+        --radius-sm: 6px;
+        --radius-md: 10px;
+        --radius-lg: 16px;
+        --radius-xl: 22px;
+      }
+      html,
+      body {
+        min-height: 100%;
+        font-family: var(--font-body);
+        background: var(--white);
+        color: var(--gray-800);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ══════════════════════════════
+   LAYOUT
+══════════════════════════════ */
+      .page {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* ══════════════════════════════
+   LEFT PANEL
+══════════════════════════════ */
+      .left {
+        width: 52%;
+        flex-shrink: 0;
+        background: var(--teal-900);
+        display: flex;
+        flex-direction: column;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* Subtle grid texture */
+      .left::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+      }
+
+      /* Glow blob */
+      .left::after {
+        content: "";
+        position: absolute;
+        width: 500px;
+        height: 500px;
+        bottom: -150px;
+        right: -150px;
+        background: radial-gradient(
+          circle,
+          rgba(29, 158, 117, 0.25) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+
+      .left-inner {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 44px 52px;
+      }
+
+      /* Logo */
+      .lp-logo {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 52px;
+      }
+      .lp-logo-mark {
+        width: 36px;
+        height: 36px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .lp-logo-mark svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: white;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .lp-logo-name {
+        font-family: var(--font-display);
+        font-size: 20px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      /* Problem statement */
+      .lp-problem {
+        margin-bottom: 36px;
+      }
+      .lp-problem-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--teal-400);
+        margin-bottom: 16px;
+      }
+      .lp-problem-label span {
+        width: 20px;
+        height: 1px;
+        background: var(--teal-400);
+      }
+
+      .lp-headline {
+        font-family: var(--font-display);
+        font-size: clamp(28px, 3.2vw, 40px);
+        font-weight: 700;
+        color: var(--white);
+        line-height: 1.18;
+        margin-bottom: 16px;
+      }
+      .lp-headline em {
+        font-style: italic;
+        font-weight: 400;
+        color: var(--teal-400);
+      }
+
+      .lp-body {
+        font-size: 15px;
+        color: rgba(255, 255, 255, 0.55);
+        line-height: 1.75;
+        font-weight: 400;
+        max-width: 400px;
+      }
+
+      /* Benefits */
+      .lp-benefits {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 36px;
+      }
+
+      .benefit {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 16px 18px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: var(--radius-md);
+        transition: background 0.2s;
+      }
+      .benefit:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .benefit-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-sm);
+        background: rgba(29, 158, 117, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .benefit-icon svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: var(--teal-400);
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .benefit-text {
+      }
+      .benefit-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--white);
+        margin-bottom: 3px;
+      }
+      .benefit-desc {
+        font-size: 12.5px;
+        color: rgba(255, 255, 255, 0.45);
+        line-height: 1.5;
+      }
+
+      /* Testimonial */
+      .lp-testimonial {
+        margin-top: auto;
+        padding: 20px 22px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-lg);
+        position: relative;
+      }
+
+      .quote-mark {
+        font-family: var(--font-display);
+        font-size: 64px;
+        line-height: 0.6;
+        color: var(--teal-600);
+        position: absolute;
+        top: 16px;
+        left: 18px;
+        font-style: italic;
+      }
+
+      .lp-quote {
+        font-family: var(--font-display);
+        font-size: 15.5px;
+        font-style: italic;
+        color: rgba(255, 255, 255, 0.85);
+        line-height: 1.6;
+        margin-bottom: 16px;
+        padding-top: 20px;
+      }
+
+      .lp-author {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .author-av {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--teal-700);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--teal-200);
+        flex-shrink: 0;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .author-name {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--white);
+      }
+      .author-role {
+        font-size: 11.5px;
+        color: rgba(255, 255, 255, 0.4);
+        margin-top: 1px;
+      }
+
+      /* Stats row */
+      .lp-stats {
+        display: flex;
+        gap: 0;
+        margin-top: 28px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .lp-stat {
+        flex: 1;
+        text-align: center;
+        padding: 0 12px;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .lp-stat:last-child {
+        border-right: none;
+      }
+      .lp-stat:first-child {
+        padding-left: 0;
+        text-align: left;
+      }
+      .lp-stat:last-child {
+        padding-right: 0;
+        text-align: right;
+      }
+
+      .stat-num {
+        font-family: var(--font-display);
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--white);
+        line-height: 1;
+      }
+      .stat-lbl {
+        font-size: 10.5px;
+        color: rgba(255, 255, 255, 0.35);
+        margin-top: 3px;
+        font-weight: 500;
+      }
+
+      /* ══════════════════════════════
+   RIGHT PANEL
+══════════════════════════════ */
+      .right {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: var(--gray-50);
+        min-width: 0;
+      }
+
+      /* Top nav */
+      .right-topnav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 44px;
+        background: var(--white);
+        border-bottom: 1px solid var(--gray-100);
+        flex-shrink: 0;
+      }
+      .right-topnav-label {
+        font-size: 13.5px;
+        color: var(--gray-400);
+      }
+      .right-topnav-label a {
+        color: var(--teal-600);
+        font-weight: 500;
+        text-decoration: none;
+      }
+      .right-topnav-label a:hover {
+        text-decoration: underline;
+      }
+
+      /* Step indicator */
+      .step-indicator {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 20px 44px 0;
+      }
+      .si-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .si-bubble {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11.5px;
+        font-weight: 600;
+        border: 2px solid var(--gray-200);
+        color: var(--gray-400);
+        background: var(--white);
+        transition: all 0.2s;
+        flex-shrink: 0;
+      }
+      .si-bubble.active {
+        background: var(--teal-900);
+        border-color: var(--teal-900);
+        color: var(--white);
+      }
+      .si-bubble.done {
+        background: var(--teal-600);
+        border-color: var(--teal-600);
+        color: var(--white);
+      }
+      .si-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--gray-400);
+        white-space: nowrap;
+      }
+      .si-label.active {
+        color: var(--teal-800);
+      }
+      .si-label.done {
+        color: var(--teal-600);
+      }
+      .si-line {
+        width: 24px;
+        height: 1.5px;
+        background: var(--gray-200);
+        border-radius: 1px;
+        flex-shrink: 0;
+      }
+      .si-line.done {
+        background: var(--teal-400);
+      }
+
+      /* Form area */
+      .right-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 32px 44px 60px;
+      }
+      .right-body::-webkit-scrollbar {
+        width: 4px;
+      }
+      .right-body::-webkit-scrollbar-thumb {
+        background: var(--gray-200);
+        border-radius: 2px;
+      }
+
+      /* Card */
+      .form-card {
+        background: var(--white);
+        border: 1px solid var(--gray-100);
+        border-radius: var(--radius-xl);
+        padding: 32px 36px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        max-width: 480px;
+      }
+
+      .card-eye {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--teal-600);
+        margin-bottom: 6px;
+      }
+      .card-title {
+        font-family: var(--font-display);
+        font-size: 24px;
+        font-weight: 500;
+        color: var(--gray-800);
+        margin-bottom: 6px;
+      }
+      .card-desc {
+        font-size: 13.5px;
+        color: var(--gray-400);
+        line-height: 1.6;
+        margin-bottom: 28px;
+      }
+
+      /* Fields */
+      .field {
+        margin-bottom: 18px;
+      }
+      .field label {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--gray-600);
+        margin-bottom: 6px;
+      }
+      .req {
+        color: var(--teal-600);
+      }
+      .opt {
+        font-size: 11px;
+        color: var(--gray-400);
+        font-weight: 400;
+        margin-left: 3px;
+      }
+
+      .input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .input-icon {
+        position: absolute;
+        left: 13px;
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: var(--gray-400);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        pointer-events: none;
+      }
+
+      .field input,
+      .field select {
+        width: 100%;
+        height: 44px;
+        padding: 0 14px 0 40px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        background: var(--gray-50);
+        font-family: var(--font-body);
+        font-size: 14px;
+        color: var(--gray-800);
+        outline: none;
+        appearance: none;
+        transition:
+          border-color 0.15s,
+          background 0.15s,
+          box-shadow 0.15s;
+      }
+      .field input:focus,
+      .field select:focus {
+        border-color: var(--teal-600);
+        background: var(--white);
+        box-shadow: 0 0 0 3.5px rgba(29, 158, 117, 0.1);
+      }
+      .field input::placeholder {
+        color: var(--gray-400);
+      }
+      .field input.no-icon,
+      .field select.no-icon {
+        padding-left: 14px;
+      }
+
+      .field select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239BA59C' stroke-width='2' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        padding-right: 36px;
+        cursor: pointer;
+      }
+
+      .suffix-input {
+        position: absolute;
+        right: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        padding: 0 13px;
+        font-size: 12.5px;
+        color: var(--gray-500);
+        background: var(--gray-100);
+        border-left: 1.5px solid var(--gray-200);
+        border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      .field input.has-suffix {
+        padding-right: 130px;
+      }
+
+      .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .field-hint {
+        font-size: 11.5px;
+        color: var(--gray-400);
+        margin-top: 5px;
+      }
+
+      /* Password toggle */
+      .pwd-toggle {
+        position: absolute;
+        right: 13px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--gray-400);
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .pwd-toggle svg {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+      }
+      .field input.has-toggle {
+        padding-right: 44px;
+      }
+
+      /* Pwd strength */
+      .pwd-strength {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        margin-top: 8px;
+      }
+      .pwd-bar {
+        height: 3px;
+        flex: 1;
+        border-radius: 2px;
+        background: var(--gray-200);
+        transition: background 0.2s;
+      }
+      .pwd-strength-lbl {
+        font-size: 11px;
+        color: var(--gray-400);
+        min-width: 40px;
+        transition: color 0.2s;
+      }
+
+      /* Plan cards */
+      .plan-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 4px;
+      }
+      .plan-card {
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: 14px 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+        position: relative;
+      }
+      .plan-card:hover {
+        border-color: var(--teal-400);
+        background: var(--teal-50);
+      }
+      .plan-card.selected {
+        border-color: var(--teal-600);
+        background: var(--teal-50);
+      }
+      .plan-radio {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 2px solid var(--gray-300);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.15s;
+      }
+      .plan-card.selected .plan-radio {
+        border-color: var(--teal-600);
+        background: var(--teal-600);
+      }
+      .plan-card.selected .plan-radio::after {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--white);
+        display: block;
+      }
+      .plan-info {
+        flex: 1;
+      }
+      .plan-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--gray-800);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .plan-badge {
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 20px;
+      }
+      .badge-free {
+        background: var(--teal-50);
+        color: var(--teal-800);
+      }
+      .badge-pop {
+        background: #fff8ec;
+        color: #92400e;
+        border: 1px solid #fad27a;
+      }
+      .badge-pro {
+        background: var(--teal-900);
+        color: var(--teal-100);
+      }
+      .plan-desc {
+        font-size: 12px;
+        color: var(--gray-400);
+        margin-top: 2px;
+      }
+      .plan-price {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--teal-800);
+        white-space: nowrap;
+      }
+      .plan-price span {
+        font-size: 11px;
+        font-weight: 400;
+        color: var(--gray-400);
+      }
+
+      /* Divider */
+      .or-divider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 20px 0;
+        font-size: 12px;
+        color: var(--gray-400);
+      }
+      .or-line {
+        flex: 1;
+        height: 1px;
+        background: var(--gray-100);
+      }
+
+      /* Buttons */
+      .btn-next {
+        width: 100%;
+        height: 46px;
+        background: var(--teal-900);
+        color: var(--teal-50);
+        border: none;
+        border-radius: var(--radius-md);
+        font-family: var(--font-body);
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 24px;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+        letter-spacing: 0.1px;
+      }
+      .btn-next:hover {
+        background: var(--teal-800);
+      }
+      .btn-next:active {
+        transform: scale(0.99);
+      }
+      .btn-next svg {
+        width: 17px;
+        height: 17px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+      }
+
+      .btn-back {
+        width: 100%;
+        height: 44px;
+        background: var(--white);
+        color: var(--gray-600);
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        font-family: var(--font-body);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 10px;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+      }
+      .btn-back:hover {
+        border-color: var(--gray-400);
+        background: var(--gray-50);
+      }
+      .btn-back svg {
+        width: 15px;
+        height: 15px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+      }
+
+      /* Confirm block */
+      .confirm-block {
+        background: var(--gray-50);
+        border: 1px solid var(--gray-100);
+        border-radius: var(--radius-md);
+        padding: 16px 18px;
+        margin-bottom: 14px;
+      }
+      .confirm-block-title {
+        font-size: 10.5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--gray-400);
+        margin-bottom: 12px;
+      }
+      .confirm-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--gray-100);
+        font-size: 13.5px;
+      }
+      .confirm-row:last-child {
+        border-bottom: none;
+      }
+      .confirm-row .cl {
+        color: var(--gray-500);
+      }
+      .confirm-row .cv {
+        color: var(--gray-800);
+        font-weight: 500;
+      }
+      .confirm-row .cv.url {
+        color: var(--teal-700);
+        font-size: 13px;
+      }
+
+      /* Launch banner */
+      .launch-banner {
+        background: var(--teal-900);
+        border-radius: var(--radius-md);
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .launch-icon {
+        width: 36px;
+        height: 36px;
+        background: var(--teal-800);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .launch-icon svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: var(--teal-200);
+        stroke-width: 2;
+        stroke-linecap: round;
+      }
+      .launch-text-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--teal-100);
+      }
+      .launch-text-sub {
+        font-size: 11.5px;
+        color: var(--teal-400);
+        margin-top: 2px;
+      }
+
+      /* Terms note */
+      .terms-note {
+        font-size: 11.5px;
+        color: var(--gray-400);
+        text-align: center;
+        margin-top: 16px;
+        line-height: 1.6;
+      }
+      .terms-note a {
+        color: var(--teal-600);
+        text-decoration: none;
+      }
+      .terms-note a:hover {
+        text-decoration: underline;
+      }
+
+      /* Step panels */
+      .sp {
+        display: none;
+      }
+      .sp.on {
+        display: block;
+      }
+
+      /* ══════════════════════════════
+   RESPONSIVE
+══════════════════════════════ */
+      @media (max-width: 960px) {
+        .left {
+          display: none;
+        }
+        .right {
+          width: 100%;
+        }
+        .right-topnav,
+        .right-body,
+        .step-indicator {
+          padding-left: 28px;
+          padding-right: 28px;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .right-topnav,
+        .right-body,
+        .step-indicator {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+        .form-card {
+          padding: 24px 20px;
+          border-radius: var(--radius-lg);
+        }
+        .field-row {
+          grid-template-columns: 1fr;
+        }
+        .plan-price {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <!-- ══ LEFT ══ -->
+      <div class="left">
+        <div class="left-inner">
+          <div class="lp-logo">
+            <div class="lp-logo-mark">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+            </div>
+            <span class="lp-logo-name">Akademee</span>
+          </div>
+
+          <div class="lp-problem">
+            <div class="lp-problem-label">
+              <span></span>
+              Why we built this
+              <span></span>
+            </div>
+            <h2 class="lp-headline">
+              School management<br />
+              shouldn't feel like<br />
+              <em>a second job.</em>
+            </h2>
+            <p class="lp-body">
+              Too many Cameroonian school directors spend their evenings buried
+              in paper registers, manual grade sheets, and handwritten receipts.
+              Akademee was built to change that — giving your school a complete
+              digital campus in minutes, not months.
+            </p>
+          </div>
+
+          <div class="lp-benefits">
+            <div class="benefit">
+              <div class="benefit-icon">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+              </div>
+              <div class="benefit-text">
+                <div class="benefit-title">Bulletins in seconds, not days</div>
+                <div class="benefit-desc">
+                  Grades, coefficients & GCE sequences calculated automatically.
+                  PDF bulletins generated with one click.
+                </div>
+              </div>
+            </div>
+            <div class="benefit">
+              <div class="benefit-icon">
+                <svg viewBox="0 0 24 24">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </div>
+              <div class="benefit-text">
+                <div class="benefit-title">Every role, one platform</div>
+                <div class="benefit-desc">
+                  Admins, teachers, students and parents — each with their own
+                  portal, on any device.
+                </div>
+              </div>
+            </div>
+            <div class="benefit">
+              <div class="benefit-icon">
+                <svg viewBox="0 0 24 24">
+                  <line x1="12" y1="1" x2="12" y2="23" />
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+              </div>
+              <div class="benefit-text">
+                <div class="benefit-title">Fee tracking without the chase</div>
+                <div class="benefit-desc">
+                  Know exactly who has paid, who hasn't, and send reminders —
+                  all from your dashboard.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial -->
+          <div class="lp-testimonial">
+            <div class="quote-mark">"</div>
+            <p class="lp-quote">
+              Before Akademee, I spent every Sunday preparing attendance sheets
+              and grade reports by hand. Now it takes me 10 minutes. My teachers
+              are less stressed, and parents actually trust us more.
+            </p>
+            <div class="lp-author">
+              <div class="author-av">EK</div>
+              <div>
+                <div class="author-name">Emmanuel Kouam</div>
+                <div class="author-role">
+                  Principal · Collège Lumière, Bafoussam
+                </div>
+              </div>
+            </div>
+
+            <div class="lp-stats">
+              <div class="lp-stat">
+                <div class="stat-num">127</div>
+                <div class="stat-lbl">Schools</div>
+              </div>
+              <div class="lp-stat">
+                <div class="stat-num">31K</div>
+                <div class="stat-lbl">Students managed</div>
+              </div>
+              <div class="lp-stat">
+                <div class="stat-num">94%</div>
+                <div class="stat-lbl">Admin time saved</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ RIGHT ══ -->
+      <div class="right">
+        <!-- Top nav -->
+        <div class="right-topnav">
+          <div style="display: flex; align-items: center; gap: 9px">
+            <div
+              style="
+                width: 28px;
+                height: 28px;
+                background: var(--teal-900);
+                border-radius: 5px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+              >
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+            </div>
+            <span
+              style="
+                font-family: var(--font-display);
+                font-size: 16px;
+                color: var(--gray-800);
+              "
+              >Akademee</span
+            >
+          </div>
+          <a class="nav-link" href="pages/akademee_login.html"
+            >Already registered? <span>Sign in</span></a
+          >
+        </div>
+
+        <!-- Step indicator -->
+        <div class="step-indicator" id="step-ind">
+          <div class="si-item">
+            <div class="si-bubble active" id="si1">1</div>
+            <div class="si-label active" id="sl1">School</div>
+          </div>
+          <div class="si-line" id="sline1"></div>
+          <div class="si-item">
+            <div class="si-bubble" id="si2">2</div>
+            <div class="si-label" id="sl2">Admin</div>
+          </div>
+          <div class="si-line" id="sline2"></div>
+          <div class="si-item">
+            <div class="si-bubble" id="si3">3</div>
+            <div class="si-label" id="sl3">Plan</div>
+          </div>
+          <div class="si-line" id="sline3"></div>
+          <div class="si-item">
+            <div class="si-bubble" id="si4">4</div>
+            <div class="si-label" id="sl4">Confirm</div>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="right-body">
+          <!-- ── STEP 1 — School ── -->
+          <div class="sp on" id="p1">
+            <div class="form-card">
+              <div class="card-eye">Step 1 of 4</div>
+              <div class="card-title">Your school</div>
+              <div class="card-desc">
+                Tell us about your institution — this creates your unique campus
+                on Akademee.
+              </div>
+
+              <div class="field">
+                <label>School name <span class="req">*</span></label>
+                <div class="input-wrap">
+                  <svg class="input-icon" viewBox="0 0 24 24">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                  </svg>
+                  <input
+                    type="text"
+                    id="f-school"
+                    placeholder="Grace Bilingual Academy"
+                    oninput="onSchoolName()"
+                  />
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Campus subdomain <span class="req">*</span></label>
+                <div class="input-wrap">
+                  <svg class="input-icon" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path
+                      d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+                    />
+                  </svg>
+                  <input
+                    type="text"
+                    id="f-subdomain"
+                    class="has-suffix"
+                    placeholder="grace-bilingual"
+                    oninput="onSubdomain()"
+                  />
+                  <div class="suffix-input" data-domain-suffix id="domain-suffix">.lvh.me:3000</div>
+                </div>
+                <div class="field-hint" id="subdomain-hint">
+                  Your campus will be at
+                  <strong id="sub-preview">yourschool.lvh.me:3000</strong>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <label>City <span class="req">*</span></label>
+                  <div class="input-wrap">
+                    <svg class="input-icon" viewBox="0 0 24 24">
+                      <path
+                        d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                      />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    <input type="text" id="f-city" placeholder="Douala" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Region</label>
+                  <div class="input-wrap">
+                    <svg class="input-icon" viewBox="0 0 24 24">
+                      <path
+                        d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                      />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    <select class="no-icon" id="f-region" style="padding-left: 40px">
+                      <option value="">Select region</option>
+                      <option>Littoral</option>
+                      <option>Centre</option>
+                      <option>Ouest</option>
+                      <option>Sud-Ouest</option>
+                      <option>Nord-Ouest</option>
+                      <option>Adamaoua</option>
+                      <option>Est</option>
+                      <option>Nord</option>
+                      <option>Extrême-Nord</option>
+                      <option>Sud</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>School email <span class="req">*</span></label>
+                <div class="input-wrap">
+                  <svg class="input-icon" viewBox="0 0 24 24">
+                    <path
+                      d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                    />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
+                  <input type="email" id="f-school-email" placeholder="info@yourschool.cm" />
+                </div>
+              </div>
+
+              <button class="btn-next" onclick="goTo(2, true)">
+                Continue — Admin account
+                <svg viewBox="0 0 24 24">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- ── STEP 2 — Admin ── -->
+          <div class="sp" id="p2">
+            <div class="form-card">
+              <div class="card-eye">Step 2 of 4</div>
+              <div class="card-title">Admin account</div>
+              <div class="card-desc">
+                This will be the primary administrator account for your campus.
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <label>First name <span class="req">*</span></label>
+                  <div class="input-wrap">
+                    <svg class="input-icon" viewBox="0 0 24 24">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <input type="text" id="f-firstname" placeholder="Jean" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Last name <span class="req">*</span></label>
+                  <div class="input-wrap">
+                    <svg class="input-icon" viewBox="0 0 24 24">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <input type="text" id="f-lastname" placeholder="Dupont" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Email address <span class="req">*</span></label>
+                <div class="input-wrap">
+                  <svg class="input-icon" viewBox="0 0 24 24">
+                    <path
+                      d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                    />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
+                  <input type="email" id="f-admin-email" placeholder="admin@yourschool.cm" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Phone number <span class="opt">(optional)</span></label>
+                <div class="input-wrap">
+                  <svg class="input-icon" viewBox="0 0 24 24">
+                    <path
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.95a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
+                    />
+                  </svg>
+                  <input type="tel" id="f-phone" placeholder="+237 6XX XXX XXX" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Password <span class="req">*</span></label>
+                <div class="input-wrap">
+                  <svg class="input-icon" viewBox="0 0 24 24">
+                    <rect x="3" y="11" width="18" height="11" rx="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <input
+                    type="password"
+                    id="pwd"
+                    class="has-toggle"
+                    placeholder="Min. 8 characters"
+                    oninput="checkPwd()"
+                  />
+                  <button
+                    class="pwd-toggle"
+                    type="button"
+                    onclick="togglePwd('pwd', 'eye1')"
+                  >
+                    <svg id="eye1" viewBox="0 0 24 24">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="pwd-strength">
+                  <div class="pwd-bar" id="pb1"></div>
+                  <div class="pwd-bar" id="pb2"></div>
+                  <div class="pwd-bar" id="pb3"></div>
+                  <div class="pwd-bar" id="pb4"></div>
+                  <span class="pwd-strength-lbl" id="plbl"></span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Confirm password <span class="req">*</span></label>
+                <div class="input-wrap">
+                  <svg class="input-icon" viewBox="0 0 24 24">
+                    <rect x="3" y="11" width="18" height="11" rx="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <input
+                    type="password"
+                    id="pwd2"
+                    class="has-toggle"
+                    placeholder="Repeat password"
+                  />
+                  <button
+                    class="pwd-toggle"
+                    type="button"
+                    onclick="togglePwd('pwd2', 'eye2')"
+                  >
+                    <svg id="eye2" viewBox="0 0 24 24">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <button class="btn-next" onclick="goTo(3, true)">
+                Continue — Choose a plan
+                <svg viewBox="0 0 24 24">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </button>
+              <button class="btn-back" onclick="goTo(1)">
+                <svg viewBox="0 0 24 24">
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+                Back
+              </button>
+            </div>
+          </div>
+
+          <!-- ── STEP 3 — Plan ── -->
+          <div class="sp" id="p3">
+            <div class="form-card">
+              <div class="card-eye">Step 3 of 4</div>
+              <div class="card-title">Choose your plan</div>
+              <div class="card-desc">
+                Start free and upgrade whenever your school is ready. No credit
+                card required to start.
+              </div>
+
+              <div class="plan-cards">
+                <div class="plan-card" id="plan-free" onclick="selPlan('free')">
+                  <div class="plan-radio"></div>
+                  <div class="plan-info">
+                    <div class="plan-name">
+                      Free
+                      <span class="plan-badge badge-free">Forever free</span>
+                    </div>
+                    <div class="plan-desc">
+                      Up to 50 students · Grades, attendance, basic reports
+                    </div>
+                  </div>
+                  <div class="plan-price">0 FCFA <span>/ mo</span></div>
+                </div>
+
+                <div
+                  class="plan-card selected"
+                  id="plan-basic"
+                  onclick="selPlan('basic')"
+                >
+                  <div class="plan-radio"></div>
+                  <div class="plan-info">
+                    <div class="plan-name">
+                      Basic
+                      <span class="plan-badge badge-pop">Most popular</span>
+                    </div>
+                    <div class="plan-desc">
+                      Up to 300 students · Full grades, PDF bulletins, finance
+                      module
+                    </div>
+                  </div>
+                  <div class="plan-price">15 000 <span>/ mo</span></div>
+                </div>
+
+                <div
+                  class="plan-card"
+                  id="plan-premium"
+                  onclick="selPlan('premium')"
+                >
+                  <div class="plan-radio"></div>
+                  <div class="plan-info">
+                    <div class="plan-name">
+                      Premium <span class="plan-badge badge-pro">Pro</span>
+                    </div>
+                    <div class="plan-desc">
+                      Unlimited students · All features + priority support +
+                      custom branding
+                    </div>
+                  </div>
+                  <div class="plan-price">35 000 <span>/ mo</span></div>
+                </div>
+              </div>
+
+              <div class="card-eye" style="margin-top: 28px">Website template</div>
+              <div class="card-desc" style="margin-bottom: 16px">
+                Your public school website will be live at your campus subdomain.
+              </div>
+
+              <div class="plan-cards">
+                <div class="plan-card selected" id="tpl-modern" onclick="selTemplate('modern')">
+                  <div class="plan-radio"></div>
+                  <div class="plan-info">
+                    <div class="plan-name">Modern</div>
+                    <div class="plan-desc">Clean, vibrant layout for contemporary schools</div>
+                  </div>
+                </div>
+                <div class="plan-card" id="tpl-classic" onclick="selTemplate('classic')">
+                  <div class="plan-radio"></div>
+                  <div class="plan-info">
+                    <div class="plan-name">Classic</div>
+                    <div class="plan-desc">Traditional, professional design emphasizing trust</div>
+                  </div>
+                </div>
+                <div class="plan-card" id="tpl-minimal" onclick="selTemplate('minimal')">
+                  <div class="plan-radio"></div>
+                  <div class="plan-info">
+                    <div class="plan-name">Minimal</div>
+                    <div class="plan-desc">Editorial typography with a clean, premium feel</div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                class="btn-next"
+                onclick="goTo(4, true)"
+                style="margin-top: 28px"
+              >
+                Review & create campus
+                <svg viewBox="0 0 24 24">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </button>
+              <button class="btn-back" onclick="goTo(2)">
+                <svg viewBox="0 0 24 24">
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+                Back
+              </button>
+            </div>
+          </div>
+
+          <!-- ── STEP 4 — Confirm ── -->
+          <div class="sp" id="p4">
+            <div class="form-card">
+              <div class="card-eye">Step 4 of 4</div>
+              <div class="card-title">Almost there 🎉</div>
+              <div class="card-desc">
+                Review your details before we create your campus. You can edit
+                everything later.
+              </div>
+
+              <div class="launch-banner">
+                <div class="launch-icon">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                </div>
+                <div>
+                  <div class="launch-text-title">
+                    Your campus will be live immediately
+                  </div>
+                  <div class="launch-text-sub" id="launch-url">
+                    yourschool.lvh.me:3000
+                  </div>
+                </div>
+              </div>
+
+              <div class="confirm-block">
+                <div class="confirm-block-title">School details</div>
+                <div class="confirm-row">
+                  <span class="cl">School name</span
+                  ><span class="cv" id="c-school">Grace Bilingual Academy</span>
+                </div>
+                <div class="confirm-row">
+                  <span class="cl">Campus URL</span
+                  ><span class="cv url" id="c-url"
+                    >yourschool.lvh.me:3000</span
+                  >
+                </div>
+                <div class="confirm-row">
+                  <span class="cl">City</span
+                  ><span class="cv" id="c-city">Douala</span>
+                </div>
+                <div class="confirm-row">
+                  <span class="cl">Website template</span
+                  ><span class="cv" id="c-template">Modern</span>
+                </div>
+              </div>
+
+              <div class="confirm-block">
+                <div class="confirm-block-title">Administrator</div>
+                <div class="confirm-row">
+                  <span class="cl">Name</span
+                  ><span class="cv" id="c-admin-name">Jean Dupont</span>
+                </div>
+                <div class="confirm-row">
+                  <span class="cl">Email</span
+                  ><span class="cv" id="c-admin-email">admin@yourschool.cm</span>
+                </div>
+                <div class="confirm-row">
+                  <span class="cl">Role</span
+                  ><span class="cv" style="color: var(--teal-700)"
+                    >Administrator</span
+                  >
+                </div>
+              </div>
+
+              <div class="confirm-block">
+                <div class="confirm-block-title">Subscription</div>
+                <div class="confirm-row">
+                  <span class="cl">Plan</span
+                  ><span class="cv" id="c-plan">Basic — 15 000 FCFA/mo</span>
+                </div>
+                <div class="confirm-row">
+                  <span class="cl">Billing</span
+                  ><span class="cv">Monthly · FCFA</span>
+                </div>
+              </div>
+
+              <button class="btn-next" onclick="handleCreate()" id="create-btn">
+                <svg viewBox="0 0 24 24">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                Create my campus
+              </button>
+              <button class="btn-back" onclick="goTo(3)">
+                <svg viewBox="0 0 24 24">
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+                Back
+              </button>
+
+              <div class="terms-note">
+                By creating your campus you agree to our
+                <a href="#">Terms of Service</a> and
+                <a href="#">Privacy Policy</a>.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/akademee-config.js"></script>
+    <script>
+      let cur = 1;
+      let selectedPlan = "basic";
+      let selectedTemplate = "modern";
+
+      const PLANS = {
+        free: "Free — 0 FCFA/mo",
+        basic: "Basic — 15 000 FCFA/mo",
+        premium: "Premium — 35 000 FCFA/mo",
+      };
+
+      const TEMPLATES = {
+        modern: "Modern",
+        classic: "Classic",
+        minimal: "Minimal",
+      };
+
+      function campusUrl(subdomain) {
+        return AkademeeConfig.formatCampusUrl(subdomain || "yourschool");
+      }
+
+      function validateStep(step) {
+        if (step === 1) {
+          const required = [
+            ["f-school", "School name"],
+            ["f-subdomain", "Campus subdomain"],
+            ["f-city", "City"],
+            ["f-school-email", "School email"],
+          ];
+          for (const [id, label] of required) {
+            if (!document.getElementById(id).value.trim()) {
+              alert(`Please enter ${label} before continuing.`);
+              return false;
+            }
+          }
+        }
+
+        if (step === 2) {
+          const required = [
+            ["f-firstname", "First name"],
+            ["f-lastname", "Last name"],
+            ["f-admin-email", "Admin email"],
+            ["pwd", "Password"],
+            ["pwd2", "Confirm password"],
+          ];
+          for (const [id, label] of required) {
+            if (!document.getElementById(id).value.trim()) {
+              alert(`Please enter ${label} before continuing.`);
+              return false;
+            }
+          }
+          if (document.getElementById("pwd").value !== document.getElementById("pwd2").value) {
+            alert("Passwords do not match.");
+            return false;
+          }
+          if (document.getElementById("pwd").value.length < 8) {
+            alert("Password must be at least 8 characters.");
+            return false;
+          }
+        }
+
+        if (step === 3) {
+          if (!selectedPlan) {
+            alert("Please select a plan before continuing.");
+            return false;
+          }
+          if (!selectedTemplate) {
+            alert("Please select a website template before continuing.");
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      function goTo(n, validate = false) {
+        if (validate && n > cur && !validateStep(cur)) {
+          return;
+        }
+
+        document.getElementById("p" + cur).classList.remove("on");
+        cur = n;
+        document.getElementById("p" + n).classList.add("on");
+
+        for (let i = 1; i <= 4; i++) {
+          const b = document.getElementById("si" + i);
+          const l = document.getElementById("sl" + i);
+          b.className =
+            "si-bubble" + (i < n ? " done" : i === n ? " active" : "");
+          l.className =
+            "si-label" + (i < n ? " done" : i === n ? " active" : "");
+          if (i < n) b.innerHTML = "✓";
+          else b.textContent = i;
+          if (i <= 3)
+            document.getElementById("sline" + i).className =
+              "si-line" + (i < n ? " done" : "");
+        }
+
+        if (n === 4) updateConfirm();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function onSchoolName() {
+        const v = document.getElementById("f-school").value;
+        if (v && !document.getElementById("f-subdomain").value) {
+          const slug = v
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "");
+          document.getElementById("f-subdomain").value = slug;
+          onSubdomain();
+        }
+      }
+
+      function onSubdomain() {
+        const v = document.getElementById("f-subdomain").value || "yourschool";
+        document.getElementById("sub-preview").textContent = campusUrl(v);
+      }
+
+      function selPlan(p) {
+        ["free", "basic", "premium"].forEach((x) => {
+          document
+            .getElementById("plan-" + x)
+            .classList.toggle("selected", x === p);
+        });
+        selectedPlan = p;
+      }
+
+      function selTemplate(code) {
+        ["modern", "classic", "minimal"].forEach((x) => {
+          document
+            .getElementById("tpl-" + x)
+            .classList.toggle("selected", x === code);
+        });
+        selectedTemplate = code;
+      }
+
+      function checkPwd() {
+        const v = document.getElementById("pwd").value;
+        let s = 0;
+        if (v.length >= 8) s++;
+        if (/[A-Z]/.test(v)) s++;
+        if (/[0-9]/.test(v)) s++;
+        if (/[^A-Za-z0-9]/.test(v)) s++;
+        const colors = ["", "#E24B4A", "#F59E0B", "#1D9E75", "#085041"];
+        const labels = ["", "Weak", "Fair", "Good", "Strong"];
+        for (let i = 1; i <= 4; i++) {
+          document.getElementById("pb" + i).style.background =
+            i <= s ? colors[s] : "var(--gray-200)";
+        }
+        const lbl = document.getElementById("plbl");
+        lbl.textContent = labels[s] || "";
+        lbl.style.color = colors[s] || "var(--gray-400)";
+      }
+
+      function togglePwd(inputId, iconId) {
+        const inp = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        if (inp.type === "password") {
+          inp.type = "text";
+          icon.innerHTML =
+            '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+        } else {
+          inp.type = "password";
+          icon.innerHTML =
+            '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+        }
+      }
+
+      function updateConfirm() {
+        const school = document.getElementById("f-school").value || "Your School";
+        const sub = document.getElementById("f-subdomain").value || "yourschool";
+        const city = document.getElementById("f-city").value || "";
+        const region = document.getElementById("f-region").value || "";
+        const firstName = document.getElementById("f-firstname").value || "";
+        const lastName = document.getElementById("f-lastname").value || "";
+        const adminEmail = document.getElementById("f-admin-email").value || "";
+        const url = campusUrl(sub);
+
+        document.getElementById("c-school").textContent = school;
+        document.getElementById("c-url").textContent = url;
+        document.getElementById("launch-url").textContent = url;
+        document.getElementById("c-city").textContent = region ? `${city}, ${region}` : city;
+        document.getElementById("c-template").textContent = TEMPLATES[selectedTemplate];
+        document.getElementById("c-admin-name").textContent = `${firstName} ${lastName}`.trim();
+        document.getElementById("c-admin-email").textContent = adminEmail;
+        document.getElementById("c-plan").textContent = PLANS[selectedPlan];
+      }
+
+      async function handleCreate() {
+        if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
+          return;
+        }
+
+        const btn = document.getElementById("create-btn");
+        const payload = {
+          schoolName: document.getElementById("f-school").value.trim(),
+          subdomain: document.getElementById("f-subdomain").value.trim(),
+          city: document.getElementById("f-city").value.trim(),
+          region: document.getElementById("f-region").value.trim(),
+          email: document.getElementById("f-school-email").value.trim(),
+          firstName: document.getElementById("f-firstname").value.trim(),
+          lastName: document.getElementById("f-lastname").value.trim(),
+          adminEmail: document.getElementById("f-admin-email").value.trim(),
+          phone: document.getElementById("f-phone").value.trim(),
+          password: document.getElementById("pwd").value,
+          confirmPassword: document.getElementById("pwd2").value,
+          planId: selectedPlan,
+          templateCode: selectedTemplate,
+        };
+
+        btn.innerHTML =
+          '<svg style="animation:spin 0.9s linear infinite;width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Creating your campus...';
+        btn.disabled = true;
+
+        try {
+          const response = await fetch(`${AkademeeConfig.apiBaseUrl}/api/schools/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            if (!data.data.verificationEmailSent && data.data.devVerifyUrl) {
+              alert(
+                "Campus created! SMTP is not configured.\n\nUse this link to verify your school:\n" +
+                  data.data.devVerifyUrl
+              );
+            }
+            AkademeeConfig.redirectToOnboarding(data.data);
+            return;
+          }
+
+          const details = data.errors?.map((e) => e.message).join("\n");
+          alert("Error creating campus:\n\n" + (details || data.message || "Unknown error"));
+        } catch (error) {
+          console.error("Error:", error);
+          alert(`Connection error. Make sure the backend is running on ${AkademeeConfig.apiBaseUrl}`);
+        }
+
+        btn.innerHTML =
+          '<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Create my campus';
+        btn.disabled = false;
+      }
+
+      const s = document.createElement("style");
+      s.textContent =
+        "@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}";
+      document.head.appendChild(s);
+
+      AkademeeConfig.load().then(() => {
+        AkademeeConfig.applyDomainSuffix();
+        onSubdomain();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Akademee — Sign In</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      a{
+        text-decoration: none;
+        color: white;
+      }
+
+      :root {
+        --teal-950: #04342c;
+        --teal-900: #085041;
+        --teal-800: #0f6e56;
+        --teal-600: #1d9e75;
+        --teal-400: #5dcaa5;
+        --teal-200: #9fe1cb;
+        --teal-100: #c8f0e4;
+        --teal-50: #e1f5ee;
+        --gray-50: #f7f8f6;
+        --gray-100: #eef0ec;
+        --gray-200: #d8dbd5;
+        --gray-400: #9ba59c;
+        --gray-600: #5c665e;
+        --gray-800: #2a3029;
+        --white: #ffffff;
+        --font-display: "Playfair Display", Georgia, serif;
+        --font-body: "DM Sans", system-ui, sans-serif;
+        --radius-sm: 6px;
+        --radius-md: 10px;
+        --radius-lg: 16px;
+      }
+
+      html,
+      body {
+        height: 100%;
+        font-family: var(--font-body);
+        background: var(--gray-50);
+        color: var(--gray-800);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .page {
+        display: flex;
+        min-height: 100vh;
+        align-items: stretch;
+      }
+
+      /* ── LEFT PANEL ─────────────────────────────────── */
+      .left {
+        width: 420px;
+        flex-shrink: 0;
+        background: var(--teal-900);
+        display: flex;
+        flex-direction: column;
+        padding: 48px 44px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .left::before {
+        content: "";
+        position: absolute;
+        top: -80px;
+        right: -80px;
+        width: 280px;
+        height: 280px;
+        border-radius: 50%;
+        background: var(--teal-800);
+        opacity: 0.5;
+      }
+
+      .left::after {
+        content: "";
+        position: absolute;
+        bottom: -60px;
+        left: -60px;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: var(--teal-950);
+        opacity: 0.6;
+      }
+
+      .left-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+      }
+
+      .logo-mark {
+        width: 38px;
+        height: 38px;
+        background: var(--teal-600);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .logo-mark svg {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: var(--teal-50);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .logo-name {
+        font-family: var(--font-display);
+        font-size: 22px;
+        color: var(--teal-100);
+        letter-spacing: -0.2px;
+      }
+
+      .left-middle {
+        margin: auto 0;
+        padding: 40px 0;
+      }
+
+      .tagline {
+        font-family: var(--font-display);
+        font-size: 30px;
+        color: var(--white);
+        line-height: 1.35;
+        margin-bottom: 12px;
+      }
+
+      .tagline em {
+        font-style: normal;
+        color: var(--teal-400);
+      }
+
+      .tagline-sub {
+        font-size: 14px;
+        color: var(--teal-200);
+        line-height: 1.6;
+        max-width: 300px;
+      }
+
+      .features {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+        margin-top: 32px;
+      }
+
+      .features li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13.5px;
+        color: var(--teal-200);
+      }
+
+      .features li::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--teal-400);
+        flex-shrink: 0;
+      }
+
+      .left-footer {
+        font-size: 11.5px;
+        color: var(--teal-400);
+        opacity: 0.7;
+        letter-spacing: 0.2px;
+      }
+
+      /* ── RIGHT PANEL ────────────────────────────────── */
+      .right {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 32px;
+        background: var(--white);
+      }
+
+      .form-card {
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .form-header {
+        margin-bottom: 32px;
+      }
+
+      .form-eyebrow {
+        font-size: 11.5px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--teal-600);
+        margin-bottom: 8px;
+      }
+
+      .form-title {
+        font-family: var(--font-display);
+        font-size: 28px;
+        font-weight: 500;
+        color: var(--gray-800);
+        margin-bottom: 6px;
+      }
+
+      .form-desc {
+        font-size: 14px;
+        color: var(--gray-400);
+        line-height: 1.55;
+      }
+
+      .field {
+        margin-bottom: 20px;
+      }
+
+      .field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--gray-600);
+        margin-bottom: 7px;
+      }
+
+      .input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .input-icon {
+        position: absolute;
+        left: 13px;
+        width: 16px;
+        height: 16px;
+        stroke: var(--gray-400);
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        pointer-events: none;
+      }
+
+      .field input {
+        width: 100%;
+        height: 44px;
+        padding: 0 14px 0 40px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        background: var(--gray-50);
+        font-family: var(--font-body);
+        font-size: 14px;
+        color: var(--gray-800);
+        outline: none;
+        transition:
+          border-color 0.15s,
+          background 0.15s,
+          box-shadow 0.15s;
+      }
+
+      .field input::placeholder {
+        color: var(--gray-400);
+      }
+
+      .field input:focus {
+        border-color: var(--teal-600);
+        background: var(--white);
+        box-shadow: 0 0 0 3.5px rgba(29, 158, 117, 0.13);
+      }
+
+      .field input.has-suffix {
+        padding-right: 130px;
+      }
+
+      .input-suffix {
+        position: absolute;
+        right: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        padding: 0 13px;
+        font-size: 12.5px;
+        color: var(--gray-400);
+        background: var(--gray-100);
+        border-left: 1.5px solid var(--gray-200);
+        border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+
+      .field input.has-toggle {
+        padding-right: 44px;
+      }
+
+      .toggle-btn {
+        position: absolute;
+        right: 12px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        color: var(--gray-400);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .toggle-btn svg {
+        width: 17px;
+        height: 17px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .field-footer {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 6px;
+      }
+
+      .field-footer a {
+        font-size: 12.5px;
+        color: var(--teal-600);
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .field-footer a:hover {
+        text-decoration: underline;
+      }
+
+      .btn-primary {
+        width: 100%;
+        height: 46px;
+        background: var(--teal-900);
+        color: var(--teal-50);
+        border: none;
+        border-radius: var(--radius-md);
+        font-family: var(--font-body);
+        font-size: 14.5px;
+        font-weight: 500;
+        cursor: pointer;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+        letter-spacing: 0.1px;
+      }
+
+      .btn-primary:hover {
+        background: var(--teal-800);
+      }
+      .btn-primary:active {
+        transform: scale(0.99);
+      }
+
+      .btn-primary svg {
+        width: 17px;
+        height: 17px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .sep {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 22px 0;
+      }
+
+      .sep-line {
+        flex: 1;
+        height: 1px;
+        background: var(--gray-100);
+      }
+
+      .sep span {
+        font-size: 12px;
+        color: var(--gray-400);
+      }
+
+      .register-cta {
+        text-align: center;
+        font-size: 13.5px;
+        color: var(--gray-400);
+      }
+
+      .register-cta a {
+        color: var(--teal-600);
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .register-cta a:hover {
+        text-decoration: underline;
+      }
+
+      /* ── RESPONSIVE ─────────────────────────────────── */
+      @media (max-width: 768px) {
+        .page {
+          flex-direction: column;
+        }
+        .left {
+          width: 100%;
+          padding: 32px 28px;
+        }
+        .left-middle {
+          padding: 24px 0;
+        }
+        .tagline {
+          font-size: 24px;
+        }
+        .features {
+          display: none;
+        }
+        .right {
+          padding: 36px 24px;
+        }
+        .form-card {
+          max-width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <!-- LEFT PANEL -->
+      <div class="left">
+        <div class="left-content">
+          <div class="logo">
+            <div class="logo-mark">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+            </div>
+            <span class="logo-name">Akademee</span>
+          </div>
+
+          <div class="left-middle">
+            <h1 class="tagline">
+              Manage your school<br />
+              <em>simply, from anywhere.</em>
+            </h1>
+            <p class="tagline-sub">
+              The all-in-one school management platform built for Cameroonian
+              anglophone schools.
+            </p>
+            <ul class="features">
+              <li>Automatic grades &amp; report cards</li>
+              <li>Daily attendance tracking</li>
+              <li>School fees &amp; payment receipts</li>
+              <li>Student &amp; teacher portals</li>
+              <li>PDF bulletin generation</li>
+            </ul>
+          </div>
+
+          <p class="left-footer">
+            MVP · Anglophone System · Cameroon &nbsp;·&nbsp; v2.0
+          </p>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="right">
+        <div class="form-card">
+          <div class="form-header">
+            <p class="form-eyebrow">School Portal</p>
+            <h2 class="form-title">Welcome back</h2>
+            <p class="form-desc">
+              Enter your school details to access your campus.
+            </p>
+          </div>
+
+          <!-- School subdomain -->
+          <div class="field">
+            <label for="subdomain">School subdomain</label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+              <input
+                id="subdomain"
+                type="text"
+                class="has-suffix"
+                placeholder="grace-bilingual"
+                autocomplete="off"
+              />
+              <span class="input-suffix" data-domain-suffix id="domain-suffix">.lvh.me:3000</span>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="field">
+            <label for="email">Email address</label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24">
+                <path
+                  d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+              <input
+                id="email"
+                type="email"
+                placeholder="admin@yourschool.cm"
+                autocomplete="email"
+              />
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <input
+                id="password"
+                type="password"
+                class="has-toggle"
+                placeholder="••••••••"
+                autocomplete="current-password"
+              />
+              <button
+                class="toggle-btn"
+                onclick="togglePwd()"
+                type="button"
+                aria-label="Toggle password visibility"
+              >
+                <svg id="eye-icon" viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+            <div class="field-footer">
+              <a href="#">Forgot password?</a>
+            </div>
+          </div>
+
+          <button class="btn-primary" type="button" id="signin-btn" onclick="handleLogin()">
+            <svg viewBox="0 0 24 24">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+              <polyline points="10 17 15 12 10 7" />
+              <line x1="15" y1="12" x2="3" y2="12" />
+            </svg>
+            Sign in to your school
+          </button>
+
+          <div class="sep">
+            <div class="sep-line"></div>
+            <span>or</span>
+            <div class="sep-line"></div>
+          </div>
+
+          <p class="register-cta">
+            New to Akademee? <a href="../akademee_register_v2.html">Register your school</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/akademee-config.js"></script>
+    <script>
+      function togglePwd() {
+        const inp = document.getElementById("password");
+        const icon = document.getElementById("eye-icon");
+        if (inp.type === "password") {
+          inp.type = "text";
+          icon.innerHTML =
+            '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+        } else {
+          inp.type = "password";
+          icon.innerHTML =
+            '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+        }
+      }
+
+      async function handleLogin() {
+        const btn = document.getElementById("signin-btn");
+        const subdomain = document.getElementById("subdomain").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        if (!subdomain || !email || !password) {
+          alert("Please fill in all fields");
+          return;
+        }
+
+        btn.innerHTML =
+          '<svg style="animation:spin 0.9s linear infinite;width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Signing in...';
+        btn.disabled = true;
+
+        try {
+          const response = await fetch(`${AkademeeConfig.apiBaseUrl}/api/auth/login`, {
+            method: "POST",
+            headers: AkademeeConfig.getAuthHeaders(subdomain),
+            body: JSON.stringify({ subdomain, email, password }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            AkademeeConfig.saveSession(data.data.token, data.data.user);
+            const redirect = new URLSearchParams(window.location.search).get('redirect');
+            if (redirect === 'onboarding') {
+              window.location.href = 'akademee_onboarding_v2.html';
+              return;
+            }
+            if (redirect === 'dashboard') {
+              window.location.href = 'akademee_layout.html';
+              return;
+            }
+            AkademeeConfig.redirectToDashboard(data.data);
+            return;
+          }
+
+          alert(data.message || "Invalid email or password");
+        } catch (error) {
+          console.error("Error:", error);
+          alert(`Connection error. Make sure the backend is running on ${AkademeeConfig.apiBaseUrl}`);
+        }
+
+        btn.innerHTML =
+          '<svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg> Sign in to your school';
+        btn.disabled = false;
+      }
+
+      const s = document.createElement("style");
+      s.textContent =
+        "@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}";
+      document.head.appendChild(s);
+
+      AkademeeConfig.load().then(() => {
+        AkademeeConfig.consumeAuthHash();
+        AkademeeConfig.applyDomainSuffix();
+
+        const params = new URLSearchParams(window.location.search);
+        const hostSubdomain = AkademeeConfig.getSubdomainFromHost();
+        const subdomainParam = params.get("subdomain") || hostSubdomain;
+
+        if (subdomainParam) {
+          document.getElementById("subdomain").value = subdomainParam;
+        }
+      });
+    </script>
+  </body>
+</html>

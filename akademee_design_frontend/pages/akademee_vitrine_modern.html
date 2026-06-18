@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Grace Bilingual Academy — Douala</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* School primary — admin-configurable */
+  --primary:      #085041;
+  --primary-mid:  #1D9E75;
+  --primary-light:#E1F5EE;
+  --primary-text: #C8F0E4;
+
+  --white:   #FFFFFF;
+  --gray-50: #F7F8F6;
+  --gray-100:#EEF0EC;
+  --gray-200:#D8DBD5;
+  --gray-400:#9BA59C;
+  --gray-600:#5C665E;
+  --gray-800:#2A3029;
+  --gray-900:#181C19;
+
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --max-w: 1140px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--gray-800);
+  background: var(--white);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+img { display: block; max-width: 100%; }
+a   { text-decoration: none; color: inherit; }
+
+.container {
+  width: 100%; max-width: var(--max-w);
+  margin: 0 auto; padding: 0 24px;
+}
+
+/* ═══════════════════════════════════════
+   TOPBAR / NAV
+═══════════════════════════════════════ */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  transition: box-shadow 0.2s;
+}
+
+.topbar.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.07); }
+
+.topbar-inner {
+  display: flex; align-items: center;
+  height: 68px; gap: 32px;
+}
+
+.nav-logo { display: flex; align-items: center; gap: 11px; flex-shrink: 0; }
+
+.nav-logo-mark {
+  width: 38px; height: 38px;
+  background: var(--primary);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.nav-logo-mark svg {
+  width: 20px; height: 20px;
+  fill: none; stroke: #C8F0E4;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.nav-school-name {
+  font-family: var(--font-display);
+  font-size: 17px; font-weight: 500;
+  color: var(--gray-900);
+  line-height: 1.2;
+}
+
+.nav-school-sub {
+  font-size: 11px; color: var(--gray-400);
+  font-weight: 400;
+}
+
+.nav-links {
+  display: flex; align-items: center; gap: 4px;
+  flex: 1; justify-content: center;
+  list-style: none;
+}
+
+.nav-links li a {
+  font-size: 14px; font-weight: 500;
+  color: var(--gray-600); padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+}
+
+.nav-links li a:hover { color: var(--primary); background: var(--primary-light); }
+
+.nav-cta {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+
+.btn-outline {
+  height: 38px; padding: 0 18px;
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body); font-size: 13.5px; font-weight: 500;
+  color: var(--primary); background: transparent;
+  cursor: pointer; transition: background 0.15s, color 0.15s;
+  display: inline-flex; align-items: center;
+}
+
+.btn-outline:hover { background: var(--primary-light); }
+
+.btn-solid {
+  height: 38px; padding: 0 18px;
+  border: none; border-radius: var(--radius-md);
+  font-family: var(--font-body); font-size: 13.5px; font-weight: 500;
+  color: var(--white); background: var(--primary);
+  cursor: pointer; transition: background 0.15s;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+
+.btn-solid:hover { background: var(--primary-mid); }
+.btn-solid svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.hamburger {
+  display: none; width: 40px; height: 40px;
+  border: none; background: none; cursor: pointer;
+  flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  border-radius: var(--radius-sm);
+}
+
+.hamburger span {
+  display: block; width: 22px; height: 2px;
+  background: var(--gray-700); border-radius: 2px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+/* Mobile menu */
+.mobile-menu {
+  display: none;
+  position: fixed; inset: 0; top: 68px;
+  background: var(--white); z-index: 99;
+  padding: 20px 24px;
+  flex-direction: column; gap: 4px;
+  border-top: 1px solid var(--gray-100);
+}
+
+.mobile-menu.open { display: flex; }
+
+.mobile-menu a {
+  font-size: 16px; font-weight: 500; color: var(--gray-700);
+  padding: 14px 12px; border-radius: var(--radius-md);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.mobile-menu a:hover { color: var(--primary); background: var(--primary-light); }
+
+.mobile-menu-cta { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.mobile-menu-cta .btn-solid, .mobile-menu-cta .btn-outline { height: 48px; justify-content: center; font-size: 15px; }
+
+/* ═══════════════════════════════════════
+   HERO — ASYMMETRIC SPLIT
+═══════════════════════════════════════ */
+.hero {
+  padding-top: 68px;
+  min-height: 100vh;
+  display: flex; align-items: center;
+  background: var(--white);
+  position: relative; overflow: hidden;
+}
+
+.hero-bg-shape {
+  position: absolute; top: 0; right: 0;
+  width: 52%; height: 100%;
+  background: var(--primary);
+  clip-path: polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%);
+  z-index: 0;
+}
+
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px; align-items: center;
+  position: relative; z-index: 1;
+  padding: 80px 0;
+  width: 100%; max-width: var(--max-w);
+  margin: 0 auto; padding-left: 24px; padding-right: 24px;
+}
+
+.hero-left {}
+
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--primary-light); color: var(--primary);
+  font-size: 12px; font-weight: 600; letter-spacing: 0.8px;
+  text-transform: uppercase; padding: 6px 14px;
+  border-radius: 20px; margin-bottom: 20px;
+}
+
+.hero-eyebrow span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--primary-mid); flex-shrink: 0;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 5vw, 58px);
+  font-weight: 700; color: var(--gray-900);
+  line-height: 1.12; margin-bottom: 20px;
+}
+
+.hero-title em {
+  font-style: italic; color: var(--primary-mid);
+}
+
+.hero-desc {
+  font-size: 16px; color: var(--gray-600);
+  line-height: 1.7; margin-bottom: 32px;
+  max-width: 440px;
+}
+
+.hero-actions {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+
+.btn-hero-primary {
+  height: 52px; padding: 0 28px;
+  background: var(--primary); color: var(--white);
+  border: none; border-radius: var(--radius-md);
+  font-family: var(--font-body); font-size: 15px; font-weight: 600;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 9px;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn-hero-primary:hover { background: var(--primary-mid); }
+.btn-hero-primary:active { transform: scale(0.98); }
+
+.btn-hero-primary svg {
+  width: 18px; height: 18px; fill: none; stroke: currentColor;
+  stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.btn-hero-ghost {
+  height: 52px; padding: 0 24px;
+  background: transparent; color: var(--gray-700);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body); font-size: 15px; font-weight: 500;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 9px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.btn-hero-ghost:hover { border-color: var(--primary-mid); background: var(--primary-light); }
+
+.btn-hero-ghost svg {
+  width: 18px; height: 18px; fill: none; stroke: currentColor;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.hero-stats {
+  display: flex; gap: 28px; margin-top: 44px;
+  padding-top: 32px; border-top: 1px solid var(--gray-100);
+}
+
+.hero-stat-num {
+  font-family: var(--font-display);
+  font-size: 32px; font-weight: 700; color: var(--gray-900);
+  line-height: 1;
+}
+
+.hero-stat-lbl {
+  font-size: 13px; color: var(--gray-400); margin-top: 4px;
+}
+
+/* Hero right — image stack */
+.hero-right {
+  position: relative; display: flex;
+  align-items: center; justify-content: center;
+}
+
+.hero-img-main {
+  width: 100%; max-width: 460px;
+  aspect-ratio: 4/5;
+  border-radius: var(--radius-xl);
+  overflow: hidden; position: relative;
+  background: var(--primary-mid);
+}
+
+.hero-img-main img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+
+/* Placeholder image using CSS pattern */
+.img-placeholder {
+  width: 100%; height: 100%;
+  background:
+    linear-gradient(135deg, #0F6E56 0%, #085041 40%, #04342C 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px;
+}
+
+.img-placeholder svg {
+  width: 64px; height: 64px; opacity: 0.3;
+  fill: none; stroke: white;
+  stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.img-placeholder span { font-size: 13px; color: rgba(255,255,255,0.4); }
+
+.hero-img-badge {
+  position: absolute; bottom: -16px; left: -20px;
+  background: var(--white); border-radius: var(--radius-md);
+  padding: 14px 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  display: flex; align-items: center; gap: 12px;
+}
+
+.badge-icon {
+  width: 40px; height: 40px;
+  background: var(--primary-light);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.badge-icon svg {
+  width: 20px; height: 20px; fill: none;
+  stroke: var(--primary); stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+.badge-val { font-size: 20px; font-weight: 700; color: var(--gray-900); }
+.badge-lbl { font-size: 11.5px; color: var(--gray-400); margin-top: 1px; }
+
+.hero-img-tag {
+  position: absolute; top: 20px; right: -16px;
+  background: var(--primary); color: var(--primary-text);
+  border-radius: var(--radius-md); padding: 10px 16px;
+  font-size: 13px; font-weight: 600;
+  box-shadow: 0 4px 16px rgba(8,80,65,0.3);
+}
+
+/* ═══════════════════════════════════════
+   ABOUT
+═══════════════════════════════════════ */
+.about {
+  padding: 100px 0;
+  background: var(--gray-50);
+}
+
+.section-eyebrow {
+  font-size: 11.5px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--primary-mid);
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 700; color: var(--gray-900);
+  line-height: 1.2; margin-bottom: 16px;
+}
+
+.section-desc {
+  font-size: 16px; color: var(--gray-600);
+  line-height: 1.75; max-width: 560px;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px; align-items: center;
+}
+
+.about-text {}
+
+.about-values {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 14px; margin-top: 36px;
+}
+
+.value-card {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+  padding: 18px; transition: border-color 0.2s;
+}
+
+.value-card:hover { border-color: var(--primary-mid); }
+
+.value-icon {
+  width: 38px; height: 38px;
+  background: var(--primary-light);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+}
+
+.value-icon svg {
+  width: 19px; height: 19px; fill: none;
+  stroke: var(--primary); stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+.value-name { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 4px; }
+.value-desc { font-size: 12.5px; color: var(--gray-400); line-height: 1.5; }
+
+/* About right — image collage */
+.about-visual {
+  position: relative; height: 520px;
+}
+
+.about-img-1 {
+  position: absolute; top: 0; left: 0;
+  width: 62%; aspect-ratio: 4/3;
+  border-radius: var(--radius-lg); overflow: hidden;
+  background: var(--primary);
+}
+
+.about-img-2 {
+  position: absolute; bottom: 0; right: 0;
+  width: 54%; aspect-ratio: 3/4;
+  border-radius: var(--radius-lg); overflow: hidden;
+  background: var(--primary-mid);
+}
+
+.about-img-accent {
+  position: absolute; top: 50%; right: -8px;
+  transform: translateY(-50%);
+  background: var(--white); border-radius: var(--radius-md);
+  padding: 16px 20px; box-shadow: 0 8px 28px rgba(0,0,0,0.1);
+  text-align: center; z-index: 5;
+}
+
+.accent-num { font-family: var(--font-display); font-size: 36px; font-weight: 700; color: var(--primary); line-height: 1; }
+.accent-lbl { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+
+/* ═══════════════════════════════════════
+   STATS BAND
+═══════════════════════════════════════ */
+.stats-band {
+  background: var(--primary);
+  padding: 60px 0;
+}
+
+.stats-band-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+  text-align: center;
+}
+
+.stat-item {}
+
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 48px; font-weight: 700;
+  color: var(--white); line-height: 1;
+  margin-bottom: 8px;
+}
+
+.stat-num sup { font-size: 24px; vertical-align: super; }
+
+.stat-lbl {
+  font-size: 14px; color: var(--primary-text);
+  font-weight: 500; opacity: 0.8;
+}
+
+.stat-sep {
+  width: 1px; background: rgba(255,255,255,0.12);
+  align-self: stretch;
+}
+
+/* ═══════════════════════════════════════
+   CLASSES
+═══════════════════════════════════════ */
+.classes { padding: 100px 0; background: var(--white); }
+
+.classes-header {
+  display: flex; align-items: flex-end;
+  justify-content: space-between; margin-bottom: 48px; gap: 20px;
+}
+
+.view-all {
+  font-size: 14px; font-weight: 500; color: var(--primary-mid);
+  display: flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+
+.view-all svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.classes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.class-card {
+  border: 1.5px solid var(--gray-100);
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  background: var(--white);
+}
+
+.class-card:hover {
+  border-color: var(--primary-mid);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(8,80,65,0.08);
+}
+
+.class-level {
+  display: inline-flex; align-items: center;
+  background: var(--primary-light); color: var(--primary);
+  font-size: 11px; font-weight: 600; padding: 4px 10px;
+  border-radius: 20px; margin-bottom: 14px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.class-name {
+  font-family: var(--font-display);
+  font-size: 20px; font-weight: 500;
+  color: var(--gray-900); margin-bottom: 8px;
+}
+
+.class-desc {
+  font-size: 13px; color: var(--gray-400); line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.class-meta {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 12.5px; color: var(--gray-500);
+}
+
+.class-meta svg {
+  width: 13px; height: 13px; fill: none;
+  stroke: currentColor; stroke-width: 2; stroke-linecap: round;
+}
+
+/* ═══════════════════════════════════════
+   GALLERY
+═══════════════════════════════════════ */
+.gallery {
+  padding: 100px 0;
+  background: var(--gray-50);
+}
+
+.gallery-header { text-align: center; margin-bottom: 48px; }
+.gallery-header .section-desc { margin: 0 auto; }
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 240px 240px;
+  gap: 14px;
+}
+
+.gallery-item {
+  border-radius: var(--radius-lg); overflow: hidden;
+  background: var(--gray-200); position: relative;
+  transition: transform 0.2s;
+}
+
+.gallery-item:hover { transform: scale(1.01); }
+
+.gallery-item:first-child {
+  grid-row: 1 / 3; grid-column: 1;
+}
+
+.gallery-item:nth-child(4) { grid-column: 3; grid-row: 1 / 3; }
+
+.gallery-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 8px;
+}
+
+.gp-1 { background: linear-gradient(135deg, #085041, #1D9E75); }
+.gp-2 { background: linear-gradient(135deg, #0F6E56, #5DCAA5); }
+.gp-3 { background: linear-gradient(135deg, #04342C, #0F6E56); }
+.gp-4 { background: linear-gradient(135deg, #1D9E75, #9FE1CB); }
+.gp-5 { background: linear-gradient(135deg, #085041, #5DCAA5); }
+
+.gallery-placeholder svg {
+  width: 36px; height: 36px; opacity: 0.25;
+  fill: none; stroke: white; stroke-width: 1.5;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+.gallery-placeholder span { font-size: 12px; color: rgba(255,255,255,0.3); }
+
+/* ═══════════════════════════════════════
+   TESTIMONIAL
+═══════════════════════════════════════ */
+.testimonial {
+  padding: 100px 0;
+  background: var(--primary);
+  position: relative; overflow: hidden;
+}
+
+.testimonial::before {
+  content: '"';
+  position: absolute; top: -40px; left: 40px;
+  font-family: var(--font-display);
+  font-size: 320px; font-weight: 700;
+  color: rgba(255,255,255,0.04);
+  line-height: 1; pointer-events: none;
+}
+
+.testimonial-inner { max-width: 760px; margin: 0 auto; text-align: center; }
+
+.testimonial-quote {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 3vw, 28px);
+  font-style: italic; font-weight: 400;
+  color: var(--white); line-height: 1.55;
+  margin-bottom: 32px;
+}
+
+.testimonial-author {
+  display: flex; align-items: center;
+  justify-content: center; gap: 14px;
+}
+
+.testimonial-av {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--primary-mid);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 600; color: var(--primary-text);
+}
+
+.testimonial-name { font-size: 15px; font-weight: 600; color: var(--white); }
+.testimonial-role { font-size: 13px; color: var(--primary-text); opacity: 0.7; margin-top: 2px; }
+
+/* ═══════════════════════════════════════
+   CONTACT
+═══════════════════════════════════════ */
+.contact { padding: 100px 0; background: var(--white); }
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 80px; align-items: start;
+}
+
+.contact-info {}
+
+.contact-items { margin-top: 32px; display: flex; flex-direction: column; gap: 20px; }
+
+.contact-item {
+  display: flex; align-items: flex-start; gap: 14px;
+}
+
+.contact-icon {
+  width: 42px; height: 42px; flex-shrink: 0;
+  background: var(--primary-light);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.contact-icon svg {
+  width: 20px; height: 20px; fill: none;
+  stroke: var(--primary); stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+.contact-item-label { font-size: 12px; color: var(--gray-400); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+.contact-item-value { font-size: 15px; color: var(--gray-800); font-weight: 500; }
+
+/* Map placeholder */
+.map-box {
+  border-radius: var(--radius-lg); overflow: hidden;
+  background: var(--primary-light);
+  aspect-ratio: 16/10;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 12px;
+  border: 1.5px solid var(--primary-text);
+}
+
+.map-box svg { width: 40px; height: 40px; fill: none; stroke: var(--primary); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.map-box p { font-size: 14px; color: var(--primary); font-weight: 500; }
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+.footer {
+  background: var(--gray-900);
+  padding: 60px 0 0;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr 1fr 1fr;
+  gap: 48px; margin-bottom: 48px;
+}
+
+.footer-brand {}
+
+.footer-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+
+.footer-logo-mark {
+  width: 34px; height: 34px; background: var(--primary-mid);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.footer-logo-mark svg { width: 17px; height: 17px; fill: none; stroke: white; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.footer-logo-name { font-family: var(--font-display); font-size: 17px; color: white; }
+
+.footer-desc { font-size: 14px; color: #6B7280; line-height: 1.65; max-width: 280px; }
+
+.footer-col-title { font-size: 13px; font-weight: 600; color: white; letter-spacing: 0.3px; margin-bottom: 16px; }
+
+.footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+.footer-links li a { font-size: 14px; color: #6B7280; transition: color 0.15s; }
+.footer-links li a:hover { color: var(--primary-text); }
+
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 20px 0; display: flex;
+  align-items: center; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-copy { font-size: 13px; color: #4B5563; }
+
+.powered-by {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: #4B5563;
+  background: rgba(255,255,255,0.04);
+  padding: 5px 12px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.powered-by strong { color: var(--primary-text); font-weight: 600; }
+
+/* ═══════════════════════════════════════
+   STICKY CTA BANNER (mobile)
+═══════════════════════════════════════ */
+.sticky-cta {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--white);
+  border-top: 1px solid var(--gray-100);
+  padding: 12px 20px max(12px, env(safe-area-inset-bottom));
+  z-index: 90;
+  gap: 10px;
+}
+
+/* ═══════════════════════════════════════
+   SCROLL ANIMATIONS
+═══════════════════════════════════════ */
+.reveal {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .hero-inner { gap: 40px; }
+  .hero-bg-shape { width: 48%; }
+  .about-grid { gap: 48px; }
+  .stats-band-grid { gap: 20px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
+}
+
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-cta   { display: none; }
+  .hamburger { display: flex; }
+
+  .hero { min-height: auto; padding-top: 68px; }
+  .hero-bg-shape { display: none; }
+  .hero-inner {
+    grid-template-columns: 1fr; gap: 40px;
+    padding: 48px 20px 60px;
+    text-align: center;
+  }
+  .hero-desc { margin: 0 auto 28px; }
+  .hero-actions { justify-content: center; }
+  .hero-stats { justify-content: center; }
+  .hero-right { justify-content: center; }
+  .hero-img-main { max-width: 340px; aspect-ratio: 3/2; margin: 0 auto; }
+  .hero-img-tag { top: auto; bottom: -12px; right: 12px; }
+
+  .about { padding: 72px 0; }
+  .about-grid { grid-template-columns: 1fr; gap: 40px; }
+  .about-visual { height: 300px; }
+  .about-img-2 { width: 48%; }
+
+  .stats-band { padding: 48px 0; }
+  .stats-band-grid { grid-template-columns: repeat(2,1fr); gap: 32px; }
+  .stat-sep { display: none; }
+  .stat-num { font-size: 36px; }
+
+  .classes { padding: 72px 0; }
+  .classes-header { flex-direction: column; align-items: flex-start; }
+
+  .gallery { padding: 72px 0; }
+  .gallery-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+  }
+  .gallery-item:first-child { grid-row: auto; grid-column: auto; }
+  .gallery-item:nth-child(4) { grid-column: auto; grid-row: auto; }
+  .gallery-item { aspect-ratio: 4/3; }
+
+  .testimonial { padding: 72px 0; }
+  .testimonial::before { font-size: 160px; }
+
+  .contact { padding: 72px 0; }
+  .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+  .sticky-cta { display: flex; }
+  .hero-actions .btn-hero-primary,
+  .hero-actions .btn-hero-ghost { height: 46px; font-size: 14px; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 16px; }
+  .classes-grid { grid-template-columns: 1fr; }
+  .gallery-grid { grid-template-columns: 1fr; }
+  .gallery-item { aspect-ratio: 16/9; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .hero-stats { gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .about-values { grid-template-columns: 1fr; }
+  .stats-band-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<header class="topbar" id="topbar">
+  <div class="container">
+    <div class="topbar-inner">
+      <a class="nav-logo" href="#">
+        <div class="nav-logo-mark">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div>
+          <div class="nav-school-name">Grace Bilingual Academy</div>
+          <div class="nav-school-sub">Douala, Cameroon</div>
+        </div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#classes">Classes</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+
+      <div class="nav-cta">
+        <a class="btn-outline" href="/login">Parent login</a>
+        <a class="btn-solid" href="/login">
+          <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Student portal
+        </a>
+      </div>
+
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile menu -->
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#about"   onclick="toggleMenu()">About</a>
+  <a href="#classes" onclick="toggleMenu()">Classes</a>
+  <a href="#gallery" onclick="toggleMenu()">Gallery</a>
+  <a href="#contact" onclick="toggleMenu()">Contact</a>
+  <div class="mobile-menu-cta">
+    <a class="btn-solid" href="/login" style="justify-content:center;">Student portal</a>
+    <a class="btn-outline" href="/login" style="justify-content:center; height:48px;">Parent login</a>
+  </div>
+</div>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-bg-shape"></div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-eyebrow">
+        <span></span>
+        Anglophone · Bilingual · Excellence
+      </div>
+      <h1 class="hero-title">
+        Shaping the leaders<br>
+        of <em>tomorrow</em>,<br>
+        today.
+      </h1>
+      <p class="hero-desc">
+        Grace Bilingual Academy provides world-class education in the heart of Douala, combining the Cameroonian anglophone curriculum with a bilingual approach that prepares students for a global future.
+      </p>
+      <div class="hero-actions">
+        <a class="btn-hero-primary" href="#contact">
+          <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.95a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Enrol now
+        </a>
+        <a class="btn-hero-ghost" href="#about">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          Discover our school
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="hero-stat-num">248</div>
+          <div class="hero-stat-lbl">Students enrolled</div>
+        </div>
+        <div style="width:1px;background:var(--gray-200);"></div>
+        <div>
+          <div class="hero-stat-num">14</div>
+          <div class="hero-stat-lbl">Classes</div>
+        </div>
+        <div style="width:1px;background:var(--gray-200);"></div>
+        <div>
+          <div class="hero-stat-num">94%</div>
+          <div class="hero-stat-lbl">Pass rate 2025</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="hero-img-main">
+        <div class="img-placeholder">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>School photo</span>
+        </div>
+      </div>
+      <div class="hero-img-badge">
+        <div class="badge-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+        </div>
+        <div>
+          <div class="badge-val">Top 5</div>
+          <div class="badge-lbl">Schools in Douala</div>
+        </div>
+      </div>
+      <div class="hero-img-tag">Est. 1998</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STATS BAND ═══ -->
+<section class="stats-band reveal">
+  <div class="container">
+    <div class="stats-band-grid">
+      <div class="stat-item">
+        <div class="stat-num">248</div>
+        <div class="stat-lbl">Students enrolled</div>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat-item">
+        <div class="stat-num">32</div>
+        <div class="stat-lbl">Qualified teachers</div>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat-item">
+        <div class="stat-num">94<sup>%</sup></div>
+        <div class="stat-lbl">GCE pass rate 2025</div>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat-item">
+        <div class="stat-num">27</div>
+        <div class="stat-lbl">Years of excellence</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ABOUT ═══ -->
+<section class="about reveal" id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-text">
+        <p class="section-eyebrow">About us</p>
+        <h2 class="section-title">A legacy of academic excellence in Cameroon</h2>
+        <p class="section-desc" data-site="about-text">
+          Founded in 1998, Grace Bilingual Academy has grown to become one of Douala's most respected institutions. We combine rigorous academic standards with a nurturing environment where every student is empowered to reach their full potential.
+        </p>
+        <p class="section-desc" style="margin-top:14px;">
+          Our dedicated team of 32 qualified teachers delivers the Cameroonian anglophone curriculum from Form 1 through Upper Sixth, preparing students for GCE Ordinary and Advanced Level examinations.
+        </p>
+        <div class="about-values">
+          <div class="value-card about-value-card">
+            <div class="value-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="value-name">Excellence</div>
+            <div class="value-desc">Highest academic standards in every subject</div>
+          </div>
+          <div class="value-card about-value-card">
+            <div class="value-icon">
+              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="value-name">Community</div>
+            <div class="value-desc">A welcoming family-centred environment</div>
+          </div>
+          <div class="value-card about-value-card">
+            <div class="value-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div class="value-name">Bilingual</div>
+            <div class="value-desc">English & French instruction throughout</div>
+          </div>
+          <div class="value-card about-value-card">
+            <div class="value-icon">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div class="value-name">Achievement</div>
+            <div class="value-desc">94% GCE pass rate, consistently top 5 in Douala</div>
+          </div>
+        </div>
+      </div>
+      <div class="about-visual">
+        <div class="about-img-1">
+          <div class="img-placeholder gp-1">
+            <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <span>Classroom</span>
+          </div>
+        </div>
+        <div class="about-img-2">
+          <div class="img-placeholder gp-2">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <span>Students</span>
+          </div>
+        </div>
+        <div class="about-img-accent">
+          <div class="accent-num">A+</div>
+          <div class="accent-lbl">GCE results 2025</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CLASSES ═══ -->
+<section class="classes reveal" id="classes">
+  <div class="container">
+    <div class="classes-header">
+      <div>
+        <p class="section-eyebrow">Academics</p>
+        <h2 class="section-title">Our classes &amp; levels</h2>
+      </div>
+      <a class="view-all" href="#">
+        Full programme
+        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+    <div class="classes-grid">
+      <div class="class-card">
+        <div class="class-level">Junior</div>
+        <div class="class-name">Form 1 &amp; 2</div>
+        <div class="class-desc">Foundation years. Core subjects: English, French, Maths, Science, History.</div>
+        <div class="class-meta">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Ages 12–13
+        </div>
+      </div>
+      <div class="class-card">
+        <div class="class-level">Junior</div>
+        <div class="class-name">Form 3 &amp; 4</div>
+        <div class="class-desc">GCE O/L preparation begins. Science and Arts streams introduced.</div>
+        <div class="class-meta">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Ages 14–15
+        </div>
+      </div>
+      <div class="class-card">
+        <div class="class-level">O Level</div>
+        <div class="class-name">Form 5</div>
+        <div class="class-desc">GCE Ordinary Level examination year. Intensive exam preparation.</div>
+        <div class="class-meta">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Age 16
+        </div>
+      </div>
+      <div class="class-card">
+        <div class="class-level">A Level</div>
+        <div class="class-name">Lower Sixth</div>
+        <div class="class-desc">Advanced Level entry. Science, Arts and Commercial streams.</div>
+        <div class="class-meta">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Age 17
+        </div>
+      </div>
+      <div class="class-card">
+        <div class="class-level">A Level</div>
+        <div class="class-name">Upper Sixth</div>
+        <div class="class-desc">GCE Advanced Level examination. University entrance preparation.</div>
+        <div class="class-meta">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Age 18
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ GALLERY ═══ -->
+<section class="gallery reveal" id="gallery">
+  <div class="container">
+    <div class="gallery-header">
+      <p class="section-eyebrow">Gallery</p>
+      <h2 class="section-title">Life at Grace Bilingual</h2>
+      <p class="section-desc">A glimpse into our vibrant school community, classrooms, and campus.</p>
+    </div>
+    <div class="gallery-grid">
+      <div class="gallery-item"><div class="gallery-placeholder gp-1"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Campus entrance</span></div></div>
+      <div class="gallery-item"><div class="gallery-placeholder gp-2"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Classroom</span></div></div>
+      <div class="gallery-item"><div class="gallery-placeholder gp-3"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Students</span></div></div>
+      <div class="gallery-item"><div class="gallery-placeholder gp-4"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Sports day</span></div></div>
+      <div class="gallery-item"><div class="gallery-placeholder gp-5"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Graduation</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TESTIMONIAL ═══ -->
+<section class="testimonial reveal">
+  <div class="container">
+    <div class="testimonial-inner">
+      <p class="testimonial-quote">
+        "Grace Bilingual Academy gave my children not just an education, but the confidence and skills to succeed anywhere in the world. The teachers are exceptional and the environment is truly nurturing."
+      </p>
+      <div class="testimonial-author">
+        <div class="testimonial-av">MF</div>
+        <div>
+          <div class="testimonial-name">Marie-France Biyong</div>
+          <div class="testimonial-role">Parent · Form 4 &amp; Upper Sixth</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CONTACT ═══ -->
+<section class="contact reveal" id="contact">
+  <div class="container">
+    <div class="contact-grid">
+      <div class="contact-info">
+        <p class="section-eyebrow">Contact us</p>
+        <h2 class="section-title">Come visit our campus</h2>
+        <p class="section-desc">We welcome families and prospective students to visit Grace Bilingual Academy. Our admissions team is available Monday to Friday.</p>
+        <div class="contact-items">
+          <div class="contact-item">
+            <div class="contact-icon">
+              <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <div class="contact-item-label">Address</div>
+              <div class="contact-item-value" data-site="address">Douala, Littoral Region</div>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon">
+              <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.95a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div>
+              <div class="contact-item-label">Phone</div>
+              <div class="contact-item-value" data-site="phone">+237 6XX XXX XXX</div>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon">
+              <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div>
+              <div class="contact-item-label">Email</div>
+              <div class="contact-item-value" data-site="email">info@yourschool.cm</div>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <div class="contact-item-label">Office hours</div>
+              <div class="contact-item-value">Mon – Fri · 7:30 AM – 4:00 PM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="map-box">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <p data-site="map-label">School · City</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="footer-logo-mark">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <span class="footer-logo-name">Grace Bilingual Academy</span>
+        </div>
+        <p class="footer-desc">Shaping the leaders of tomorrow in the heart of Douala since 1998. Excellence, community, bilingualism.</p>
+      </div>
+      <div>
+        <p class="footer-col-title">Quick links</p>
+        <ul class="footer-links">
+          <li><a href="#about">About us</a></li>
+          <li><a href="#classes">Our classes</a></li>
+          <li><a href="#gallery">Gallery</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="footer-col-title">Portals</p>
+        <ul class="footer-links">
+          <li><a href="/login">Student portal</a></li>
+          <li><a href="/login">Parent login</a></li>
+          <li><a href="/login">Teacher login</a></li>
+          <li><a href="/dashboard">Admin dashboard</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="footer-col-title">Academic</p>
+        <ul class="footer-links">
+          <li><a href="#">Timetable</a></li>
+          <li><a href="#">Fees structure</a></li>
+          <li><a href="#">GCE results</a></li>
+          <li><a href="#">Admissions</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">© 2026 Grace Bilingual Academy. All rights reserved.</p>
+      <div class="powered-by">
+        Managed with <strong>Akademee</strong> · akademee.cm
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Sticky CTA (mobile) -->
+<div class="sticky-cta">
+  <a class="btn-solid" href="/login" style="flex:1;justify-content:center;height:46px;font-size:14.5px;">Student portal</a>
+  <a class="btn-outline" href="#contact" style="flex:1;justify-content:center;height:46px;font-size:14.5px;">Contact us</a>
+</div>
+
+<script>
+  // Navbar scroll effect
+  window.addEventListener('scroll', () => {
+    document.getElementById('topbar').classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  // Mobile menu toggle
+  function toggleMenu() {
+    const menu = document.getElementById('mobile-menu');
+    const ham  = document.getElementById('hamburger');
+    const open = menu.classList.toggle('open');
+    ham.querySelectorAll('span')[0].style.transform = open ? 'rotate(45deg) translate(5px,5px)' : '';
+    ham.querySelectorAll('span')[1].style.opacity   = open ? '0' : '1';
+    ham.querySelectorAll('span')[2].style.transform = open ? 'rotate(-45deg) translate(5px,-5px)' : '';
+    document.body.style.overflow = open ? 'hidden' : '';
+  }
+
+  // Scroll reveal
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+<script src="../js/akademee-config.js"></script>
+<script src="../js/akademee-vitrine.js"></script>
+</body>
+</html>

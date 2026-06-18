@@ -1,0 +1,1670 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Akademee — Students</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      a {
+        text-decoration: none;
+        color: white;
+      }
+
+      :root {
+        --teal-950: #04342c;
+        --teal-900: #085041;
+        --teal-800: #0f6e56;
+        --teal-700: #178060;
+        --teal-600: #1d9e75;
+        --teal-400: #5dcaa5;
+        --teal-200: #9fe1cb;
+        --teal-100: #c8f0e4;
+        --teal-50: #e1f5ee;
+        --gray-50: #f7f8f6;
+        --gray-100: #eef0ec;
+        --gray-200: #d8dbd5;
+        --gray-300: #bfc4bb;
+        --gray-400: #9ba59c;
+        --gray-500: #6e7a70;
+        --gray-600: #5c665e;
+        --gray-700: #434d45;
+        --gray-800: #2a3029;
+        --white: #ffffff;
+        --sidebar-w: 240px;
+        --sidebar-collapsed: 64px;
+        --navbar-h: 56px;
+        --font-display: "Playfair Display", Georgia, serif;
+        --font-body: "DM Sans", system-ui, sans-serif;
+        --radius-sm: 6px;
+        --radius-md: 10px;
+        --radius-lg: 14px;
+        --tr: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      html,
+      body {
+        height: 100%;
+        font-family: var(--font-body);
+        background: var(--gray-50);
+        color: var(--gray-800);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ═══ APP SHELL ═══ */
+      .app {
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* ═══ SIDEBAR ═══ */
+      .sidebar {
+        width: var(--sidebar-w);
+        height: 100vh;
+        background: var(--teal-900);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        transition:
+          transform var(--tr),
+          width var(--tr);
+        overflow: hidden;
+        position: relative;
+        z-index: 200;
+      }
+      .sidebar.collapsed {
+        width: var(--sidebar-collapsed);
+      }
+
+      .sidebar-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 16px;
+        height: var(--navbar-h);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+      .logo-mark {
+        width: 32px;
+        height: 32px;
+        background: var(--teal-600);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .logo-mark svg {
+        width: 17px;
+        height: 17px;
+        fill: none;
+        stroke: var(--teal-50);
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .logo-text {
+        font-family: var(--font-display);
+        font-size: 18px;
+        color: var(--teal-100);
+        white-space: nowrap;
+        transition: opacity var(--tr);
+      }
+      .sidebar.collapsed .logo-text {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .school-badge {
+        margin: 12px 10px;
+        background: rgba(255, 255, 255, 0.07);
+        border-radius: var(--radius-md);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        overflow: hidden;
+        flex-shrink: 0;
+        transition: padding var(--tr);
+      }
+      .sidebar.collapsed .school-badge {
+        padding: 10px;
+        justify-content: center;
+      }
+      .school-avatar {
+        width: 32px;
+        height: 32px;
+        background: var(--teal-700);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--teal-100);
+        flex-shrink: 0;
+      }
+      .school-info {
+        overflow: hidden;
+        transition: opacity var(--tr);
+      }
+      .sidebar.collapsed .school-info {
+        opacity: 0;
+        width: 0;
+      }
+      .school-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--teal-100);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .school-url {
+        font-size: 11px;
+        color: var(--teal-400);
+        white-space: nowrap;
+      }
+
+      .nav-section {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 8px 0;
+        scrollbar-width: none;
+      }
+      .nav-section::-webkit-scrollbar {
+        display: none;
+      }
+
+      .nav-group-label {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: var(--teal-400);
+        opacity: 0.6;
+        padding: 12px 20px 4px;
+        white-space: nowrap;
+        transition: opacity var(--tr);
+      }
+      .sidebar.collapsed .nav-group-label {
+        opacity: 0;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 0 12px;
+        height: 40px;
+        margin: 2px 8px;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        text-decoration: none;
+        color: var(--teal-200);
+        font-size: 13.5px;
+        font-weight: 400;
+        white-space: nowrap;
+        transition:
+          background var(--tr),
+          color 0.15s;
+        overflow: hidden;
+        position: relative;
+      }
+      .nav-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--white);
+      }
+      .nav-item.active {
+        background: var(--teal-600);
+        color: var(--white);
+        font-weight: 500;
+      }
+      .nav-item svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+      }
+      .nav-label {
+        transition: opacity var(--tr);
+        overflow: hidden;
+      }
+      .sidebar.collapsed .nav-label {
+        opacity: 0;
+        width: 0;
+      }
+      .nav-badge {
+        margin-left: auto;
+        background: var(--teal-400);
+        color: var(--teal-950);
+        font-size: 10.5px;
+        font-weight: 600;
+        padding: 1px 7px;
+        border-radius: 20px;
+        flex-shrink: 0;
+        transition: opacity var(--tr);
+      }
+      .sidebar.collapsed .nav-badge {
+        opacity: 0;
+      }
+
+      .sidebar-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        padding: 10px 8px;
+        flex-shrink: 0;
+      }
+      .user-item {
+        height: 48px;
+        gap: 10px;
+        cursor: default !important;
+      }
+      .user-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--teal-700);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--teal-100);
+        flex-shrink: 0;
+      }
+      .user-info {
+        overflow: hidden;
+        transition: opacity var(--tr);
+      }
+      .sidebar.collapsed .user-info {
+        opacity: 0;
+        width: 0;
+      }
+      .user-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--teal-100);
+        white-space: nowrap;
+      }
+      .user-role {
+        font-size: 11px;
+        color: var(--teal-400);
+      }
+
+      /* Overlay for mobile */
+      .overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 150;
+      }
+      .overlay.show {
+        display: block;
+      }
+
+      /* ═══ MAIN ═══ */
+      .main-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-width: 0;
+      }
+
+      /* ═══ NAVBAR ═══ */
+      .navbar {
+        height: var(--navbar-h);
+        background: var(--white);
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 12px;
+        flex-shrink: 0;
+      }
+      .collapse-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        color: var(--gray-500);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+        flex-shrink: 0;
+      }
+      .collapse-btn:hover {
+        background: var(--gray-100);
+      }
+      .collapse-btn svg {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+      }
+
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+        min-width: 0;
+      }
+      .bc-item {
+        font-size: 13px;
+        color: var(--gray-400);
+        white-space: nowrap;
+      }
+      .bc-item.current {
+        color: var(--gray-800);
+        font-weight: 500;
+      }
+      .bc-sep {
+        color: var(--gray-300);
+      }
+
+      .navbar-search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        padding: 0 12px;
+        height: 36px;
+        width: 200px;
+      }
+      .navbar-search svg {
+        width: 15px;
+        height: 15px;
+        fill: none;
+        stroke: var(--gray-400);
+        stroke-width: 2;
+        stroke-linecap: round;
+        flex-shrink: 0;
+      }
+      .navbar-search input {
+        border: none;
+        background: none;
+        outline: none;
+        font-family: var(--font-body);
+        font-size: 13px;
+        color: var(--gray-800);
+        width: 100%;
+      }
+      .navbar-search input::placeholder {
+        color: var(--gray-400);
+      }
+
+      .icon-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        color: var(--gray-500);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+        position: relative;
+      }
+      .icon-btn:hover {
+        background: var(--gray-100);
+      }
+      .icon-btn svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .notif-dot {
+        position: absolute;
+        top: 7px;
+        right: 7px;
+        width: 7px;
+        height: 7px;
+        background: #e24b4a;
+        border-radius: 50%;
+        border: 1.5px solid var(--white);
+      }
+
+      .user-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 10px 4px 4px;
+        border-radius: 40px;
+        border: 1px solid var(--gray-200);
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .user-pill:hover {
+        background: var(--gray-50);
+      }
+      .user-pill-avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--teal-700);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--teal-100);
+      }
+      .user-pill-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--gray-700);
+      }
+      .nav-divider {
+        width: 1px;
+        height: 20px;
+        background: var(--gray-200);
+      }
+
+      /* ═══ CONTENT ═══ */
+      .content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 20px 100px;
+      }
+      .content::-webkit-scrollbar {
+        width: 4px;
+      }
+      .content::-webkit-scrollbar-thumb {
+        background: var(--gray-200);
+        border-radius: 2px;
+      }
+
+      /* ── Page header ── */
+      .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        gap: 12px;
+      }
+      .page-title {
+        font-family: var(--font-display);
+        font-size: 22px;
+        font-weight: 500;
+        color: var(--gray-800);
+      }
+      .page-count {
+        font-size: 13px;
+        color: var(--gray-400);
+        margin-top: 2px;
+      }
+
+      .btn-primary {
+        height: 38px;
+        background: var(--teal-900);
+        color: var(--teal-50);
+        border: none;
+        border-radius: var(--radius-md);
+        font-family: var(--font-body);
+        font-size: 13.5px;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        transition: background 0.15s;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .btn-primary:hover {
+        background: var(--teal-800);
+      }
+      .btn-primary svg {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* ── Toolbar ── */
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--gray-50);
+        padding: 8px 0;
+      }
+      .search-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--white);
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        padding: 0 12px;
+        height: 40px;
+        flex: 1;
+        min-width: 180px;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+      .search-bar:focus-within {
+        border-color: var(--teal-600);
+        box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.1);
+      }
+      .search-bar svg {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: var(--gray-400);
+        stroke-width: 2;
+        stroke-linecap: round;
+        flex-shrink: 0;
+      }
+      .search-bar input {
+        border: none;
+        background: none;
+        outline: none;
+        font-family: var(--font-body);
+        font-size: 14px;
+        color: var(--gray-800);
+        width: 100%;
+      }
+      .search-bar input::placeholder {
+        color: var(--gray-400);
+      }
+
+      .filter-btn {
+        height: 40px;
+        padding: 0 14px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        background: var(--white);
+        font-family: var(--font-body);
+        font-size: 13.5px;
+        color: var(--gray-600);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+        white-space: nowrap;
+      }
+      .filter-btn:hover {
+        border-color: var(--gray-400);
+        background: var(--gray-50);
+      }
+      .filter-btn.active {
+        border-color: var(--teal-600);
+        background: var(--teal-50);
+        color: var(--teal-800);
+      }
+      .filter-btn svg {
+        width: 15px;
+        height: 15px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        flex-shrink: 0;
+      }
+
+      .filter-select {
+        height: 40px;
+        padding: 0 12px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        background: var(--white);
+        font-family: var(--font-body);
+        font-size: 13.5px;
+        color: var(--gray-700);
+        cursor: pointer;
+        outline: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239BA59C' stroke-width='2' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        padding-right: 30px;
+        min-width: 130px;
+      }
+      .filter-select:focus {
+        border-color: var(--teal-600);
+      }
+
+      /* ── Filter chips ── */
+      .filter-chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--teal-50);
+        color: var(--teal-800);
+        border: 1px solid var(--teal-100);
+        border-radius: 20px;
+        font-size: 12.5px;
+        font-weight: 500;
+        padding: 4px 10px 4px 12px;
+      }
+      .chip-remove {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--teal-200);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .chip-remove svg {
+        width: 9px;
+        height: 9px;
+        stroke: var(--teal-800);
+        fill: none;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+      }
+
+      /* ══════════════════════════════════
+   DESKTOP TABLE VIEW
+══════════════════════════════════ */
+      .table-wrap {
+        background: var(--white);
+        border: 1px solid var(--gray-100);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+      }
+
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .data-table th {
+        font-size: 11.5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--gray-400);
+        padding: 11px 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--gray-100);
+        background: var(--gray-50);
+        white-space: nowrap;
+      }
+      .data-table td {
+        padding: 13px 16px;
+        font-size: 13.5px;
+        color: var(--gray-700);
+        border-bottom: 1px solid var(--gray-50);
+        vertical-align: middle;
+      }
+      .data-table tr:last-child td {
+        border-bottom: none;
+      }
+      .data-table tr:hover td {
+        background: var(--gray-50);
+        cursor: pointer;
+      }
+
+      .student-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .av {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+      .av-teal {
+        background: var(--teal-50);
+        color: var(--teal-700);
+      }
+      .av-blue {
+        background: #eff6ff;
+        color: #1d4ed8;
+      }
+      .av-amber {
+        background: #fff8ec;
+        color: #b45309;
+      }
+      .av-purple {
+        background: #f3f0ff;
+        color: #5b21b6;
+      }
+      .av-pink {
+        background: #fff0f6;
+        color: #9d174d;
+      }
+
+      .s-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--gray-800);
+      }
+      .s-id {
+        font-size: 11.5px;
+        color: var(--gray-400);
+        margin-top: 1px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      .badge-active {
+        background: var(--teal-50);
+        color: var(--teal-800);
+      }
+      .badge-warning {
+        background: #fff8ec;
+        color: #92400e;
+      }
+      .badge-danger {
+        background: #fef2f2;
+        color: #991b1b;
+      }
+      .badge-gray {
+        background: var(--gray-100);
+        color: var(--gray-600);
+      }
+
+      .row-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .row-btn {
+        width: 30px;
+        height: 30px;
+        border: none;
+        background: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        color: var(--gray-400);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background 0.12s,
+          color 0.12s;
+      }
+      .row-btn:hover {
+        background: var(--gray-100);
+        color: var(--gray-800);
+      }
+      .row-btn svg {
+        width: 15px;
+        height: 15px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* ══════════════════════════════════
+   MOBILE CARD VIEW
+══════════════════════════════════ */
+      .cards-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .student-card {
+        background: var(--white);
+        border: 1px solid var(--gray-100);
+        border-radius: var(--radius-lg);
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+        text-decoration: none;
+        color: inherit;
+      }
+      .student-card:hover {
+        border-color: var(--teal-200);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+      .student-card:active {
+        background: var(--gray-50);
+      }
+
+      .card-av {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+
+      .card-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .card-name {
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--gray-800);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .card-meta {
+        font-size: 12.5px;
+        color: var(--gray-400);
+        margin-top: 3px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .card-meta-sep {
+        color: var(--gray-300);
+      }
+
+      .card-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      .card-chevron {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: var(--gray-300);
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* ── FAB ── */
+      .fab {
+        position: fixed;
+        bottom: 24px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        background: var(--teal-900);
+        color: var(--white);
+        border: none;
+        border-radius: 50%;
+        box-shadow: 0 4px 16px rgba(8, 80, 65, 0.35);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          transform 0.15s;
+        z-index: 100;
+      }
+      .fab:hover {
+        background: var(--teal-800);
+        transform: scale(1.05);
+      }
+      .fab:active {
+        transform: scale(0.97);
+      }
+      .fab svg {
+        width: 24px;
+        height: 24px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* ── Empty state ── */
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+      }
+      .empty-icon {
+        width: 56px;
+        height: 56px;
+        background: var(--gray-100);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+      }
+      .empty-icon svg {
+        width: 24px;
+        height: 24px;
+        fill: none;
+        stroke: var(--gray-400);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .empty-title {
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--gray-700);
+        margin-bottom: 6px;
+      }
+      .empty-desc {
+        font-size: 13.5px;
+        color: var(--gray-400);
+      }
+
+      /* ── Pagination ── */
+      .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-top: 1px solid var(--gray-100);
+      }
+      .pag-info {
+        font-size: 13px;
+        color: var(--gray-400);
+      }
+      .pag-btns {
+        display: flex;
+        gap: 4px;
+      }
+      .pag-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-sm);
+        background: var(--white);
+        font-family: var(--font-body);
+        font-size: 13px;
+        color: var(--gray-600);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.12s;
+      }
+      .pag-btn:hover {
+        background: var(--gray-50);
+      }
+      .pag-btn.active {
+        background: var(--teal-900);
+        color: var(--white);
+        border-color: var(--teal-900);
+        font-weight: 500;
+      }
+      .pag-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .pag-btn svg {
+        width: 14px;
+        height: 14px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* ── Bottom mobile nav ── */
+      .bottom-nav {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        border-top: 1px solid var(--gray-100);
+        padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+        z-index: 100;
+        grid-template-columns: repeat(5, 1fr);
+      }
+      .bn-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        padding: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        color: var(--gray-400);
+        font-size: 10.5px;
+        font-weight: 500;
+        transition: color 0.15s;
+        border-radius: var(--radius-sm);
+      }
+      .bn-item.active {
+        color: var(--teal-700);
+      }
+      .bn-item svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .bn-badge {
+        position: relative;
+      }
+      .bn-dot {
+        position: absolute;
+        top: -2px;
+        right: -4px;
+        width: 7px;
+        height: 7px;
+        background: #e24b4a;
+        border-radius: 50%;
+        border: 1.5px solid var(--white);
+      }
+
+      /* ══════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+══════════════════════════════════ */
+
+      /* Tablet (≤ 900px) */
+      @media (max-width: 900px) {
+        .col-hide-tablet {
+          display: none;
+        }
+        .navbar-search {
+          display: none;
+        }
+        .user-pill-name {
+          display: none;
+        }
+        .nav-divider {
+          display: none;
+        }
+      }
+
+      /* Mobile (≤ 640px) */
+      @media (max-width: 640px) {
+        .sidebar {
+          position: fixed;
+          left: 0;
+          top: 0;
+          transform: translateX(-100%);
+          width: var(--sidebar-w) !important;
+          box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+        }
+        .sidebar.mobile-open {
+          transform: translateX(0);
+        }
+
+        .app {
+          display: block;
+          height: 100vh;
+          overflow: hidden;
+          position: relative;
+        }
+        .main-area {
+          height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .col-hide-mobile {
+          display: none !important;
+        }
+
+        .content {
+          padding: 16px 12px 88px;
+        }
+
+        .page-header {
+          margin-bottom: 14px;
+        }
+        .page-title {
+          font-size: 20px;
+        }
+
+        .table-wrap {
+          display: none;
+        }
+        .cards-list {
+          display: flex;
+        }
+        .fab {
+          display: flex;
+        }
+        .bottom-nav {
+          display: grid;
+        }
+
+        .toolbar {
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          padding-bottom: 4px;
+          scrollbar-width: none;
+          gap: 8px;
+        }
+        .toolbar::-webkit-scrollbar {
+          display: none;
+        }
+        .filter-select {
+          min-width: 110px;
+          font-size: 13px;
+        }
+        .filter-btn span.label {
+          display: none;
+        }
+
+        .btn-primary.desktop-only {
+          display: none;
+        }
+      }
+
+      /* Larger than mobile, smaller than desktop (641–900) */
+      @media (min-width: 641px) and (max-width: 900px) {
+        .sidebar {
+          width: var(--sidebar-collapsed);
+        }
+        .sidebar .logo-text,
+        .sidebar .school-info,
+        .sidebar .nav-label,
+        .sidebar .nav-badge,
+        .sidebar .nav-group-label,
+        .sidebar .user-info {
+          opacity: 0;
+          width: 0;
+          pointer-events: none;
+        }
+        .sidebar .school-badge {
+          padding: 10px;
+          justify-content: center;
+        }
+        .table-wrap {
+          display: block;
+        }
+        .cards-list {
+          display: none;
+        }
+        .fab {
+          display: none;
+        }
+      }
+
+      /* Desktop (> 900px) */
+      @media (min-width: 901px) {
+        .table-wrap {
+          display: block;
+        }
+        .cards-list {
+          display: none;
+        }
+        .fab {
+          display: none;
+        }
+        .bottom-nav {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <!-- Overlay (mobile) -->
+      <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+      <!-- ═══ SIDEBAR ═══ -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+          <div class="logo-mark">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+          </div>
+          <span class="logo-text">Akademee</span>
+        </div>
+        <div class="school-badge">
+          <div class="school-avatar">GB</div>
+          <div class="school-info">
+            <div class="school-name">Grace Bilingual</div>
+            <div class="school-url">grace-bilingual.akademee.cm</div>
+          </div>
+        </div>
+        <nav class="nav-section">
+          <div class="nav-group-label">Overview</div>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+            </svg>
+            <span class="nav-label">Dashboard</span>
+          </a>
+          <div class="nav-group-label">Academic</div>
+          <a class="nav-item active" href="#">
+            <svg viewBox="0 0 24 24">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span class="nav-label">Students</span>
+            <span class="nav-badge">248</span>
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+            </svg>
+            <span class="nav-label">Classes</span>
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path
+                d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+              />
+            </svg>
+            <span class="nav-label">Subjects</span>
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <span class="nav-label">Teachers</span>
+          </a>
+          <div class="nav-group-label">Grades</div>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            <span class="nav-label">Grade Reports</span>
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+            <span class="nav-label">Report Cards</span>
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <span class="nav-label">Attendance</span>
+          </a>
+          <div class="nav-group-label">Finance</div>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            <span class="nav-label">Finance</span>
+            <span class="nav-badge">3</span>
+          </a>
+          <div class="nav-group-label">System</div>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+              />
+            </svg>
+            <span class="nav-label">Settings</span>
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="nav-item user-item">
+            <div class="user-avatar">JD</div>
+            <div class="user-info">
+              <div class="user-name">Jean Dupont</div>
+              <div class="user-role">Administrator</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ═══ MAIN AREA ═══ -->
+      <div class="main-area">
+        <!-- NAVBAR -->
+        <header class="navbar">
+          <button
+            class="collapse-btn"
+            onclick="toggleSidebar()"
+            aria-label="Menu"
+          >
+            <svg viewBox="0 0 24 24">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <div class="breadcrumb">
+            <span class="bc-item col-hide-mobile">Akademee</span>
+            <span class="bc-sep col-hide-mobile">/</span>
+            <span class="bc-item current">Students</span>
+          </div>
+          <div class="navbar-search">
+            <svg viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="text" placeholder="Quick search…" />
+          </div>
+          <button class="icon-btn">
+            <svg viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <span class="notif-dot"></span>
+          </button>
+          <span class="nav-divider"></span>
+          <div class="user-pill">
+            <div class="user-pill-avatar">JD</div>
+            <span class="user-pill-name">Jean Dupont</span>
+          </div>
+        </header>
+
+        <!-- CONTENT -->
+        <div class="content">
+          <!-- Page header -->
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Students</h1>
+              <p class="page-count">248 students · 14 classes · 2025–2026</p>
+            </div>
+            <button class="btn-primary desktop-only">
+              <a href="akademee_add_student_modal.html"
+                ><svg viewBox="0 0 24 24">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add student</a
+              >
+            </button>
+          </div>
+
+          <!-- Toolbar -->
+          <div class="toolbar">
+            <div class="search-bar">
+              <svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search by name or ID…"
+                id="search-input"
+                oninput="filterStudents()"
+              />
+            </div>
+            <select
+              class="filter-select"
+              id="class-filter"
+              onchange="filterStudents()"
+            >
+              <option value="">All classes</option>
+              <option>Form 1A</option>
+              <option>Form 1B</option>
+              <option>Form 2A</option>
+              <option>Form 2B</option>
+              <option>Form 3A</option>
+              <option>Form 3B</option>
+              <option>Form 4</option>
+              <option>Form 5</option>
+              <option>Lower 6th</option>
+              <option>Upper 6th</option>
+            </select>
+            <select
+              class="filter-select"
+              id="status-filter"
+              onchange="filterStudents()"
+            >
+              <option value="">All statuses</option>
+              <option>Active</option>
+              <option>Pending fees</option>
+              <option>Unpaid</option>
+            </select>
+            <button class="filter-btn col-hide-mobile">
+              <svg viewBox="0 0 24 24">
+                <polyline points="8 17 12 21 16 17" />
+                <line x1="12" y1="3" x2="12" y2="21" />
+              </svg>
+              <span class="label">Sort</span>
+            </button>
+          </div>
+
+          <!-- Active filters -->
+          <div class="filter-chips" id="filter-chips" style="display: none">
+            <div class="chip">
+              Form 3A
+              <button class="chip-remove">
+                <svg viewBox="0 0 10 10">
+                  <line x1="1" y1="1" x2="9" y2="9" />
+                  <line x1="9" y1="1" x2="1" y2="9" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- ── DESKTOP TABLE ── -->
+          <div class="table-wrap">
+            <table class="data-table" id="student-table">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Class</th>
+                  <th class="col-hide-tablet">Date of birth</th>
+                  <th>Status</th>
+                  <th class="col-hide-tablet">Enrolled</th>
+                  <th style="text-align: right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="table-body">
+                <!-- Rows injected by JS -->
+              </tbody>
+            </table>
+            <div class="pagination">
+              <span class="pag-info" id="pag-info">Showing 1–10 of 248</span>
+              <div class="pag-btns">
+                <button class="pag-btn" disabled>
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+                <button class="pag-btn active">1</button>
+                <button class="pag-btn">2</button>
+                <button class="pag-btn">3</button>
+                <span
+                  style="
+                    display: flex;
+                    align-items: center;
+                    padding: 0 4px;
+                    font-size: 13px;
+                    color: var(--gray-400);
+                  "
+                  >…</span
+                >
+                <button class="pag-btn">25</button>
+                <button class="pag-btn">
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── MOBILE CARDS ── -->
+          <div class="cards-list" id="cards-list">
+            <!-- Cards injected by JS -->
+          </div>
+        </div>
+        <!-- /content -->
+      </div>
+      <!-- /main-area -->
+
+      <!-- FAB (mobile) -->
+      <button class="fab" aria-label="Add student">
+        <a href="akademee_add_student_modal.html">
+          <svg viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </a>
+      </button>
+
+      <!-- Bottom nav (mobile) -->
+      <nav class="bottom-nav">
+        <a class="bn-item" href="#">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg>
+          Home
+        </a>
+        <a class="bn-item active" href="#">
+          <svg viewBox="0 0 24 24">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          Students
+        </a>
+        <a class="bn-item" href="#">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+          Grades
+        </a>
+        <a class="bn-item" href="#">
+          <div class="bn-badge">
+            <svg viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <span class="bn-dot"></span>
+          </div>
+          Alerts
+        </a>
+        <a class="bn-item" href="#">
+          <svg viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          Profile
+        </a>
+      </nav>
+    </div>
+
+    <script src="../js/akademee-config.js"></script>
+    <script src="../js/akademee-students.js"></script>
+    <script>
+      function filterStudents() {
+        AkademeeStudents.filterStudents();
+      }
+
+      function toggleSidebar() {
+        const sb = document.getElementById("sidebar");
+        const ov = document.getElementById("overlay");
+        const mobile = window.innerWidth <= 640;
+        if (mobile) {
+          sb.classList.toggle("mobile-open");
+          ov.classList.toggle("show");
+        } else {
+          sb.classList.toggle("collapsed");
+        }
+      }
+
+      function closeSidebar() {
+        document.getElementById("sidebar").classList.remove("mobile-open");
+        document.getElementById("overlay").classList.remove("show");
+      }
+
+      document.getElementById("search-input")?.addEventListener("input", filterStudents);
+      document.getElementById("class-filter")?.addEventListener("change", filterStudents);
+      document.getElementById("status-filter")?.addEventListener("change", filterStudents);
+
+      AkademeeStudents.init();
+    </script>
+  </body>
+</html>

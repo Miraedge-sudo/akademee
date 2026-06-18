@@ -1,0 +1,146 @@
+/**
+ * School Controller
+ */
+
+const response = require('../utils/response');
+const schoolService = require('../services/school.service');
+
+class SchoolController {
+  async createSchool(req, res, next) {
+    try {
+      const { name, email, phone, location, city, country } = req.body;
+
+      const school = await schoolService.createSchool({
+        name,
+        email,
+        phone,
+        location,
+        city,
+        country,
+      });
+
+      response.success(res, 'School created successfully', school, 201);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getSchool(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      const school = await schoolService.getSchool(id);
+
+      response.success(res, 'School retrieved successfully', school);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateSchool(req, res, next) {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+
+      const school = await schoolService.updateSchool(id, updateData);
+
+      response.success(res, 'School updated successfully', school);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getAllSchools(req, res, next) {
+    try {
+      const { limit = 10, offset = 0 } = req.query;
+
+      const schools = await schoolService.getAllSchools(parseInt(limit), parseInt(offset));
+
+      response.success(res, 'Schools retrieved successfully', schools);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async registerSchool(req, res, next) {
+    try {
+      const result = await schoolService.registerSchool(req.body);
+
+      response.success(res, 'School registered successfully', result, 201);
+    } catch (error) {
+      if (error.message.includes('already exists') || error.message.includes('already registered') || error.message.includes('already in use')) {
+        return response.error(res, error.message, null, 409);
+      }
+      next(error);
+    }
+  }
+
+  async checkSubdomain(req, res, next) {
+    try {
+      const { subdomain } = req.body;
+
+      const result = await schoolService.checkSubdomain(subdomain);
+
+      response.success(res, 'Subdomain availability checked', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getPlans(req, res, next) {
+    try {
+      const plans = [
+        {
+          id: 'free',
+          name: 'Free',
+          description: 'Up to 50 students · Grades, attendance, basic reports',
+          price: 0,
+          currency: 'FCFA',
+          features: ['Up to 50 students', 'Grades & attendance', 'Basic reports'],
+        },
+        {
+          id: 'basic',
+          name: 'Basic',
+          description: 'Up to 300 students · Full grades, PDF bulletins, finance module',
+          price: 15000,
+          currency: 'FCFA',
+          features: ['Up to 300 students', 'Full grades', 'PDF bulletins', 'Finance module'],
+        },
+        {
+          id: 'premium',
+          name: 'Premium',
+          description: 'Unlimited students · All features + priority support + custom branding',
+          price: 35000,
+          currency: 'FCFA',
+          features: ['Unlimited students', 'All features', 'Priority support', 'Custom branding'],
+        },
+      ];
+
+      response.success(res, 'Plans retrieved successfully', plans);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getTemplates(req, res, next) {
+    try {
+      const result = await schoolService.getTemplates();
+
+      response.success(res, 'Templates retrieved successfully', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /** Resend SMTP verification email for the authenticated school */
+  async resendVerification(req, res, next) {
+    try {
+      const result = await schoolService.resendVerificationEmail(req.schoolId);
+      response.success(res, 'Verification email processed', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
+module.exports = new SchoolController();
