@@ -4,8 +4,12 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 
 import enCommon from './locales/en/common.json';
 import enAuth from './locales/en/auth.json';
+import enOnboarding from './locales/en/onboarding.json';
+import enDashboard from './locales/en/dashboard.json';
 import frCommon from './locales/fr/common.json';
 import frAuth from './locales/fr/auth.json';
+import frOnboarding from './locales/fr/onboarding.json';
+import frDashboard from './locales/fr/dashboard.json';
 
 i18n
   .use(LanguageDetector)
@@ -14,10 +18,10 @@ i18n
     fallbackLng: 'en',
     interpolation: { escapeValue: false },
     resources: {
-      en: { common: enCommon, auth: enAuth },
-      fr: { common: frCommon, auth: frAuth },
+      en: { common: enCommon, auth: enAuth, onboarding: enOnboarding, dashboard: enDashboard },
+      fr: { common: frCommon, auth: frAuth, onboarding: frOnboarding, dashboard: frDashboard },
     },
-    ns: ['common', 'auth'],
+    ns: ['common', 'auth', 'onboarding', 'dashboard'],
     defaultNS: 'common',
   });
 

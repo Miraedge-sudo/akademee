@@ -1,0 +1,71 @@
+{
+  "firstTimeSetup": "First time setup",
+  "welcomeTitle1": "Let's build your",
+  "welcomeTitle2": "campus website.",
+  "steps": {
+    "logo": {
+      "title": "School identity",
+      "desc": "Upload your logo"
+    },
+    "hero": {
+      "title": "Photos",
+      "desc": "Add a cover image"
+    },
+    "content": {
+      "title": "About & content",
+      "desc": "Colour and description"
+    },
+    "review": {
+      "title": "Preview & publish",
+      "desc": "Review before going live"
+    }
+  },
+  "editLaterNote": "You can edit all of this later in Settings \u2192 Campus Website",
+  "stepLabel": "Step",
+  "of": "of",
+  "skipForNow": "Skip for now",
+  "continue": "Continue",
+  "back": "Back",
+  "logo": {
+    "heading": "Your school logo",
+    "subtitle": "Upload your logo, or we'll generate one from your school's initials.",
+    "uploading": "Uploading...",
+    "cta": "Click to upload your logo",
+    "specs": "PNG, JPG or SVG \u00b7 Max 2MB",
+    "hint": "No logo yet? We'll use your school's initials and chosen colour as a placeholder."
+  },
+  "hero": {
+    "heading": "Cover image",
+    "subtitle": "This will be the main banner of your campus website.",
+    "uploading": "Uploading...",
+    "cta": "Add hero photo",
+    "specs": "Recommended 1920\u00d7800px \u00b7 Max 5MB"
+  },
+  "content": {
+    "heading": "Present your school",
+    "subtitle": "Choose your brand colour and tell visitors about your school.",
+    "colorLabel": "School primary colour",
+    "taglineLabel": "Tagline / Slogan",
+    "taglinePlaceholder": "Shaping the leaders of tomorrow, today.",
+    "descLabel": "School description",
+    "descPlaceholder": "Tell families what makes your school special..."
+  },
+  "review": {
+    "heading": "Your site is ready \ud83c\udf89",
+    "subtitle": "Review your details before going live. You can edit everything later.",
+    "logo": "Logo",
+    "uploaded": "Uploaded",
+    "usingInitials": "Using initials placeholder",
+    "coverImage": "Cover image",
+    "notSet": "Not set",
+    "tagline": "Tagline",
+    "primaryColor": "Primary colour",
+    "saving": "Saving...",
+    "submit": "Finish & go to dashboard"
+  },
+  "errors": {
+    "logoUpload": "Error uploading logo",
+    "heroUpload": "Error uploading cover image",
+    "save": "Error saving"
+  }
+}

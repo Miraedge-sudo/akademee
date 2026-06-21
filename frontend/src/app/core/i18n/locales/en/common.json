@@ -1,15 +1,44 @@
 {
   "navbar": {
     "dashboard": "Dashboard",
-    "search": "Quick Search"
+    "search": "Quick Search",
+    "profile": "Profile",
+    "logout": "Log out",
+    "confirmLogoutTitle": "Log out",
+    "confirmLogoutMsg": "Are you sure you want to log out?",
+    "confirmLogout": "Log out"
   },
   "nav": {
     "dashboard": "Dashboard",
     "students": "Students",
     "classes": "Classes",
+    "subjects": "Subjects",
+    "teachers": "Teachers",
     "grades": "Grade Reports",
+    "gradeReports": "Grade Reports",
+    "reportCards": "Report Cards",
+    "attendance": "Attendance",
     "finance": "Finance",
-    "settings": "Settings"
+    "myClasses": "My Classes",
+    "gradeEntry": "Grade Entry",
+    "myGrades": "My Grades",
+    "myAttendance": "My Attendance",
+    "myFees": "My Fees",
+    "settings": "Settings",
+    "menu": "Menu",
+    "group": {
+      "overview": "Overview",
+      "academic": "Academic",
+      "grades": "Grades & Reports",
+      "finance": "Finance",
+      "system": "System"
+    }
+  },
+  "roles": {
+    "ADMIN": "Administrator",
+    "TEACHER": "Teacher",
+    "STUDENT": "Student",
+    "PARENT": "Parent"
   },
   "actions": {
     "save": "Save",

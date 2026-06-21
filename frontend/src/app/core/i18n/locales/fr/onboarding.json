@@ -1,0 +1,71 @@
+{
+  "firstTimeSetup": "Premi\u00e8re configuration",
+  "welcomeTitle1": "Construisons votre",
+  "welcomeTitle2": "site web d'\u00e9tablissement.",
+  "steps": {
+    "logo": {
+      "title": "Identit\u00e9 visuelle",
+      "desc": "T\u00e9l\u00e9chargez votre logo"
+    },
+    "hero": {
+      "title": "Photos",
+      "desc": "Ajoutez une image de couverture"
+    },
+    "content": {
+      "title": "\u00c0 propos & contenu",
+      "desc": "Couleur et description"
+    },
+    "review": {
+      "title": "Aper\u00e7u & publication",
+      "desc": "V\u00e9rifiez avant de publier"
+    }
+  },
+  "editLaterNote": "Vous pourrez modifier tout cela plus tard dans Param\u00e8tres \u2192 Site Web",
+  "stepLabel": "\u00c9tape",
+  "of": "sur",
+  "skipForNow": "Passer pour l'instant",
+  "continue": "Continuer",
+  "back": "Retour",
+  "logo": {
+    "heading": "Logo de votre \u00e9cole",
+    "subtitle": "T\u00e9l\u00e9chargez votre logo, ou nous en g\u00e9n\u00e9rerons un \u00e0 partir des initiales de votre \u00e9cole.",
+    "uploading": "T\u00e9l\u00e9chargement...",
+    "cta": "Cliquez pour t\u00e9l\u00e9charger votre logo",
+    "specs": "PNG, JPG ou SVG \u00b7 Max 2 Mo",
+    "hint": "Pas encore de logo ? Nous utiliserons les initiales de votre \u00e9cole et la couleur choisie comme placeholder."
+  },
+  "hero": {
+    "heading": "Image de couverture",
+    "subtitle": "Ce sera la banni\u00e8re principale de votre site d'\u00e9tablissement.",
+    "uploading": "T\u00e9l\u00e9chargement...",
+    "cta": "Ajouter une photo de couverture",
+    "specs": "Recommand\u00e9 1920\u00d7800px \u00b7 Max 5 Mo"
+  },
+  "content": {
+    "heading": "Pr\u00e9sentez votre \u00e9cole",
+    "subtitle": "Choisissez votre couleur de marque et parlez de votre \u00e9cole aux visiteurs.",
+    "colorLabel": "Couleur principale de l'\u00e9cole",
+    "taglineLabel": "Slogan / Devise",
+    "taglinePlaceholder": "Former les leaders de demain, aujourd'hui.",
+    "descLabel": "Description de l'\u00e9cole",
+    "descPlaceholder": "Dites aux familles ce qui rend votre \u00e9cole sp\u00e9ciale..."
+  },
+  "review": {
+    "heading": "Votre site est pr\u00eat \ud83c\udf89",
+    "subtitle": "V\u00e9rifiez les d\u00e9tails avant de publier. Vous pourrez tout modifier plus tard.",
+    "logo": "Logo",
+    "uploaded": "T\u00e9l\u00e9charg\u00e9",
+    "usingInitials": "Utilisation des initiales par d\u00e9faut",
+    "coverImage": "Image de couverture",
+    "notSet": "Non d\u00e9fini",
+    "tagline": "Slogan",
+    "primaryColor": "Couleur principale",
+    "saving": "Enregistrement...",
+    "submit": "Terminer & aller au tableau de bord"
+  },
+  "errors": {
+    "logoUpload": "Erreur lors du t\u00e9l\u00e9chargement du logo",
+    "heroUpload": "Erreur lors du t\u00e9l\u00e9chargement de l'image de couverture",
+    "save": "Erreur lors de l'enregistrement"
+  }
+}

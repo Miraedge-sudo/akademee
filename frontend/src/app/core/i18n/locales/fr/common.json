@@ -1,20 +1,49 @@
 {
   "navbar": {
     "dashboard": "Tableau de bord",
-    "search": "Recherche Rapide"
+    "search": "Recherche rapide",
+    "profile": "Profil",
+    "logout": "Déconnexion",
+    "confirmLogoutTitle": "Déconnexion",
+    "confirmLogoutMsg": "Êtes-vous sûr de vouloir vous déconnecter ?",
+    "confirmLogout": "Se déconnecter"
   },
   "nav": {
-    "dashboard": "Dashboard",
-    "students": "Students",
+    "dashboard": "Tableau de bord",
+    "students": "Élèves",
     "classes": "Classes",
-    "grades": "Grade Reports",
+    "subjects": "Matières",
+    "teachers": "Enseignants",
+    "grades": "Bulletins",
+    "gradeReports": "Relevés de notes",
+    "reportCards": "Bulletins scolaires",
+    "attendance": "Présences",
     "finance": "Finance",
-    "settings": "Settings"
+    "myClasses": "Mes Classes",
+    "gradeEntry": "Saisie des notes",
+    "myGrades": "Mes Notes",
+    "myAttendance": "Mes Présences",
+    "myFees": "Mes Frais",
+    "settings": "Paramètres",
+    "menu": "Menu",
+    "group": {
+      "overview": "Aperçu",
+      "academic": "Académique",
+      "grades": "Notes & Rapports",
+      "finance": "Finance",
+      "system": "Système"
+    }
+  },
+  "roles": {
+    "ADMIN": "Administrateur",
+    "TEACHER": "Enseignant",
+    "STUDENT": "Élève",
+    "PARENT": "Parent"
   },
   "actions": {
-    "save": "Save",
-    "cancel": "Cancel",
-    "continue": "Continue",
-    "back": "Back"
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "continue": "Continuer",
+    "back": "Retour"
   }
 }
