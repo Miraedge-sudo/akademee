@@ -90,7 +90,7 @@ export default function MobileBottomNav({ onOpenMenu }) {
             to={item.path}
             className={`flex-1 flex flex-col items-center justify-center h-16 gap-0.5 transition-colors ${
               active
-                ? "text-teal-600 dark:text-teal-400"
+                ? "text-primary-600 dark:text-primary-400"
                 : "text-surface-400 dark:text-surface-500 hover:text-surface-600 dark:hover:text-surface-300"
             }`}
           >

@@ -114,7 +114,7 @@ export default function Navbar({ onToggleSidebar }) {
           onClick={() => setDropdownOpen((prev) => !prev)}
           className="flex items-center gap-2 pl-1 pr-2.5 h-9 rounded-full border border-surface-200 dark:border-surface-600 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
         >
-          <div className="w-[26px] h-[26px] rounded-full bg-teal-700 flex items-center justify-center text-[11px] font-semibold text-teal-100">
+          <div className="w-[26px] h-[26px] rounded-full bg-primary-700 flex items-center justify-center text-[11px] font-semibold text-primary-100">
             {initials}
           </div>
           <span className="hidden md:inline text-sm font-medium text-surface-700 dark:text-surface-200">

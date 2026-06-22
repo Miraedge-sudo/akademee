@@ -58,8 +58,8 @@ export default function PublicWebsitePage() {
     );
   }
 
-  // Choisir le bon template selon school.template.code
-  const templateCode = school.template?.code || "modern";
+  // Choisir le bon template selon school.templateCode
+  const templateCode = school.templateCode || school.template?.code || "modern";
 
   return (
     <>

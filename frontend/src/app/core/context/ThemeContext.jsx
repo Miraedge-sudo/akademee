@@ -7,6 +7,10 @@ export function ThemeProvider({ children }) {
     return localStorage.getItem('akademee-theme') || 'light';
   });
 
+  const [primaryColor, setPrimaryColor] = useState(() => {
+    return localStorage.getItem('akademee-primary-color') || '#085041';
+  });
+
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'dark') {
@@ -17,12 +21,22 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('akademee-theme', theme);
   }, [theme]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--primary-color', primaryColor);
+    localStorage.setItem('akademee-primary-color', primaryColor);
+  }, [primaryColor]);
+
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
+  const updatePrimaryColor = (color) => {
+    setPrimaryColor(color);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, primaryColor, updatePrimaryColor }}>
       {children}
     </ThemeContext.Provider>
   );

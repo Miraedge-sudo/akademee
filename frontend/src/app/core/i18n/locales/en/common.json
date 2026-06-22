@@ -47,6 +47,88 @@
     "save": "Save",
     "cancel": "Cancel",
     "continue": "Continue",
-    "back": "Back"
+    "back": "Back",
+    "add": "Add",
+    "remove": "Remove",
+    "uploading": "Uploading...",
+    "loading": "Loading...",
+    "saving": "Saving..."
+  },
+  "websiteSettings": {
+    "title": "Site Vitrine — Configuration",
+    "subtitle": "Configure your school's public website — logo, colours, content & more",
+    "tabs": {
+      "identity": "Identity",
+      "content": "Content",
+      "template": "Template",
+      "stats": "Stats & Values",
+      "publish": "Publish"
+    },
+    "logo": {
+      "title": "School Logo",
+      "desc": "Upload your school logo. PNG, JPG or SVG — max 2MB.",
+      "upload": "Upload logo"
+    },
+    "color": {
+      "title": "Primary Colour",
+      "desc": "This colour will be used for buttons, links, and accents across your website."
+    },
+    "tagline": {
+      "title": "Tagline / Slogan",
+      "desc": "A short phrase that captures your school's spirit.",
+      "placeholder": "Shaping the leaders of tomorrow, today."
+    },
+    "description": {
+      "title": "School Description",
+      "desc": "Tell families what makes your school special.",
+      "placeholder": "Welcome to our school — a place where every child thrives..."
+    },
+    "hero": {
+      "title": "Cover Image (Hero)",
+      "desc": "The main banner of your campus website. Recommended 1920×800px — max 5MB.",
+      "upload": "Click to upload cover image"
+    },
+    "template": {
+      "title": "Website Template",
+      "desc": "Choose how your campus website looks. You can change this anytime."
+    },
+    "stats": {
+      "title": "School Statistics",
+      "desc": "Display key numbers on your website to impress visitors.",
+      "students": "Students enrolled",
+      "teachers": "Teachers",
+      "classes": "Classes"
+    },
+    "values": {
+      "title": "School Values",
+      "desc": "Add the core values that define your school's mission.",
+      "placeholder": "e.g. Excellence, Integrity, Community...",
+      "empty": "No values added yet. Type one above and click Add."
+    },
+    "publish": {
+      "title": "Publish Website",
+      "desc": "Make your campus website visible to the public."
+    },
+    "summary": {
+      "title": "Summary",
+      "logo": "Logo",
+      "uploaded": "Uploaded",
+      "notSet": "—",
+      "tagline": "Tagline",
+      "template": "Template",
+      "stats": "Stats",
+      "values": "Values",
+      "status": "Status",
+      "published": "Published",
+      "draft": "Draft"
+    },
+    "info": {
+      "title": "Your website URL",
+      "notAvailable": "Not available yet"
+    },
+    "saved": "Configuration saved successfully",
+    "preview": "Preview",
+    "unsaved": "You have unsaved changes",
+    "allSaved": "All changes saved"
   }
 }
