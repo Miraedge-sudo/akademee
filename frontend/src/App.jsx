@@ -6,6 +6,8 @@ import OnboardingPage from "./app/features/onboarding/pages/OnboardingPage";
 import AdminLayout from "./app/layout/AdminLayout";
 import ProtectedRoute from "./app/core/guards/ProtectedRoute";
 import DashboardPage from "./app/features/dashboard/pages/DashboardPage";
+import WebsiteSettingsPage from "./app/features/settings/pages/WebsiteSettingsPage";
+import PublicWebsitePage from "./app/features/website/pages/PublicWebsitePage";
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
+        {/* Vitrin website accessible without login */}
+        <Route path="/site" element={<PublicWebsitePage />} />
 
         {/* Protected dashboard routes — wrapped by AdminLayout */}
         <Route
@@ -26,6 +30,7 @@ function App() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="website" element={<WebsiteSettingsPage />} />
         </Route>
 
         {/* Default redirect */}

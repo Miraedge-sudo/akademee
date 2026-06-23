@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
 import api from "../../../core/api/axios";
 import { API_ENDPOINTS } from "../../../core/api/endpoints";
+import { useAuth } from "../../../core/hooks/useAuth";
 
 const STEPS = [
   { num: 1, key: "school" },
@@ -20,6 +21,7 @@ const PLANS = [
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("auth");
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
     schoolName: "",
@@ -73,7 +75,12 @@ export default function RegisterPage() {
     try {
       const response = await api.post(API_ENDPOINTS.SCHOOLS.REGISTER, formData);
       if (response.data.success) {
-        navigate("/onboarding");
+        // Store token
+        if (response.data.data?.token) {
+          localStorage.setItem("token", response.data.data.token);
+        }
+        // Reload page to let AuthContext detect the token and authenticate user
+        window.location.href = "/dashboard/website";
       }
     } catch (err) {
       setError(
