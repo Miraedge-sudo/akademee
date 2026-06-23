@@ -2,6 +2,7 @@ import { createContext, useState, useEffect, useContext } from "react";
 import api from "../api/axios";
 import { API_ENDPOINTS } from "../api/endpoints";
 import { ThemeContext } from "./ThemeContext";
+import { getTokenFromUrl, getSubdomain, saveSubdomain, clearSubdomain } from "../utils/subdomainHelper";
 
 export const AuthContext = createContext();
 
@@ -10,8 +11,18 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const { updatePrimaryColor } = useContext(ThemeContext);
+  const onboardingCompleted = user?.onboardingCompleted ?? false;
 
   const checkAuth = async () => {
+    // Check URL for token parameter (passed after subdomain redirect)
+    const urlToken = getTokenFromUrl();
+    if (urlToken) {
+      localStorage.setItem("token", urlToken);
+      // Clean URL — remove ?token=... without triggering a reload
+      const cleanUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+
     const token = localStorage.getItem("token");
     if (token) {
       try {
@@ -19,6 +30,14 @@ export function AuthProvider({ children }) {
         const userData = response.data.data;
         setUser(userData);
         setIsAuthenticated(true);
+
+        // Only persist subdomain after successful authentication —
+        // prevents public pages (login/register) from contaminating localStorage
+        // with a subdomain the user doesn't own.
+        const detectedSubdomain = getSubdomain();
+        if (detectedSubdomain) {
+          saveSubdomain(detectedSubdomain);
+        }
 
         // Load school primary color if available
         if (userData.school?.primaryColor) {
@@ -42,9 +61,13 @@ export function AuthProvider({ children }) {
       const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
       const data = response.data.data;
       const token = data.token;
-      const userData = data.user;
 
       localStorage.setItem("token", token);
+
+      // Fetch full user profile with onboarding status
+      const meResponse = await api.get(API_ENDPOINTS.AUTH.ME);
+      const userData = meResponse.data.data;
+
       setUser(userData);
       setIsAuthenticated(true);
 
@@ -53,7 +76,7 @@ export function AuthProvider({ children }) {
         updatePrimaryColor(userData.school.primaryColor);
       }
 
-      return { success: true };
+      return { success: true, onboardingCompleted: userData.onboardingCompleted };
     } catch (error) {
       console.error("Login error:", error);
       return {
@@ -65,6 +88,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem("token");
+    clearSubdomain();
     setUser(null);
     setIsAuthenticated(false);
     // Reset to default color
@@ -84,6 +108,7 @@ export function AuthProvider({ children }) {
         user,
         isAuthenticated,
         loading,
+        onboardingCompleted,
         login,
         logout,
         verifySchool,
