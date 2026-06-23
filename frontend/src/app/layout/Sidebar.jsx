@@ -123,7 +123,7 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
 
       <aside
         className={`
-          bg-teal-900 dark:bg-surface-950 flex flex-col flex-shrink-0 h-screen
+          bg-primary-900 dark:bg-surface-950 flex flex-col flex-shrink-0 h-screen
           transition-all duration-300 ease-out overflow-hidden
           fixed lg:sticky top-0 left-0 z-[200]
           ${collapsed ? "lg:w-16" : "lg:w-60"}
@@ -133,27 +133,27 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
       >
         {/* Logo */}
         <div className={`flex items-center gap-2.5 h-14 border-b border-white/[0.07] flex-shrink-0 overflow-hidden ${collapsed ? "lg:justify-center lg:px-0" : "px-4"}`}>
-          <div className="w-8 h-8 rounded-md bg-teal-600 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-md bg-primary-600 flex items-center justify-center flex-shrink-0">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[17px] h-[17px]">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
               <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
           </div>
-          <span className={`font-display text-lg text-teal-100 whitespace-nowrap transition-opacity ${collapsed ? "lg:opacity-0 lg:w-0 lg:hidden" : "opacity-100"}`}>
+          <span className={`font-display text-lg text-primary-100 whitespace-nowrap transition-opacity ${collapsed ? "lg:opacity-0 lg:w-0 lg:hidden" : "opacity-100"}`}>
             Akademee
           </span>
         </div>
 
         {/* School badge */}
         <div className={`m-2.5 bg-white/[0.07] rounded-md flex items-center gap-2.5 flex-shrink-0 transition-[padding] overflow-hidden ${collapsed ? "lg:p-2.5 lg:justify-center" : "p-2.5"}`}>
-          <div className="w-8 h-8 rounded-sm bg-teal-700 flex items-center justify-center text-[12px] font-semibold text-teal-100 flex-shrink-0">
+          <div className="w-8 h-8 rounded-sm bg-primary-700 flex items-center justify-center text-[12px] font-semibold text-primary-100 flex-shrink-0">
             {initials}
           </div>
           <div className={`overflow-hidden transition-opacity ${collapsed ? "lg:opacity-0 lg:w-0 lg:hidden" : "opacity-100"}`}>
-            <div className="text-[13px] font-semibold text-teal-100 whitespace-nowrap overflow-hidden text-ellipsis">
+            <div className="text-[13px] font-semibold text-primary-100 whitespace-nowrap overflow-hidden text-ellipsis">
               {user?.schoolName || "School"}
             </div>
-            <div className="text-[11px] text-teal-400 whitespace-nowrap">
+            <div className="text-[11px] text-primary-400 whitespace-nowrap">
               {user?.subdomain ? `${user.subdomain}.akademee.cm` : ""}
             </div>
           </div>
@@ -163,7 +163,7 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
         <nav className="flex-1 overflow-y-auto overflow-x-hidden py-2 scrollbar-none">
           {navGroups.map((group) => (
             <div key={group.group}>
-              <div className={`text-[10px] font-semibold tracking-wider uppercase text-teal-400/60 px-5 pt-3 pb-1 whitespace-nowrap transition-opacity ${collapsed ? "lg:opacity-0 lg:hidden" : "opacity-100"}`}>
+              <div className={`text-[10px] font-semibold tracking-wider uppercase text-primary-400/60 px-5 pt-3 pb-1 whitespace-nowrap transition-opacity ${collapsed ? "lg:opacity-0 lg:hidden" : "opacity-100"}`}>
                 {t(`nav.group.${group.group}`, group.group)}
               </div>
 
@@ -178,8 +178,8 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
                       group relative flex items-center gap-2.5 h-10 mx-2 px-3 rounded-md
                       text-[13.5px] whitespace-nowrap overflow-hidden transition-colors
                       ${isActive
-                        ? "bg-teal-600 text-white font-medium"
-                        : "text-teal-200 hover:bg-white/[0.08] hover:text-white"}
+                        ? "bg-primary-600 text-white font-medium"
+                        : "text-primary-200 hover:bg-white/[0.08] hover:text-white"}
                       ${collapsed ? "lg:justify-center lg:px-0" : ""}
                     `}
                   >
@@ -188,7 +188,7 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
                       {t(`nav.${item.key}`, item.key)}
                     </span>
                     {item.badge != null && (
-                      <span className={`ml-auto bg-teal-400 text-teal-950 text-[10.5px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 transition-opacity ${collapsed ? "lg:opacity-0 lg:hidden" : "opacity-100"}`}>
+                      <span className={`ml-auto bg-primary-400 text-primary-950 text-[10.5px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 transition-opacity ${collapsed ? "lg:opacity-0 lg:hidden" : "opacity-100"}`}>
                         {item.badge}
                       </span>
                     )}
@@ -209,14 +209,14 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
         {/* Footer — user */}
         <div className="border-t border-white/[0.07] p-2 flex-shrink-0">
           <div className={`flex items-center gap-2.5 h-12 px-3 rounded-md ${collapsed ? "lg:justify-center lg:px-0" : ""}`}>
-            <div className="w-[30px] h-[30px] rounded-full bg-teal-700 flex items-center justify-center text-[12px] font-semibold text-teal-100 flex-shrink-0">
+            <div className="w-[30px] h-[30px] rounded-full bg-primary-700 flex items-center justify-center text-[12px] font-semibold text-primary-100 flex-shrink-0">
               {userInitials || "U"}
             </div>
             <div className={`overflow-hidden transition-opacity ${collapsed ? "lg:opacity-0 lg:w-0 lg:hidden" : "opacity-100"}`}>
-              <div className="text-[13px] font-medium text-teal-100 whitespace-nowrap overflow-hidden text-ellipsis">
+              <div className="text-[13px] font-medium text-primary-100 whitespace-nowrap overflow-hidden text-ellipsis">
                 {(user?.firstName || '') + ' ' + (user?.lastName || '') || user?.email || 'User'}
               </div>
-              <div className="text-[11px] text-teal-400 whitespace-nowrap">
+              <div className="text-[11px] text-primary-400 whitespace-nowrap">
                 {t(`roles.${role}`, role)}
               </div>
             </div>

@@ -14,13 +14,20 @@ export const API_ENDPOINTS = {
     PLANS: "/api/schools/plans",
     TEMPLATES: "/api/schools/templates",
     VERIFY_EMAIL: "/api/schools/verify-email",
+    RESEND_VERIFICATION: "/api/schools/resend-verification",
     ONBOARDING: "/api/schools/onboarding",
     ONBOARDING_MEDIA: "/api/schools/onboarding/media",
-    RESEND_VERIFICATION: "/api/schools/resend-verification",
     LIST: "/api/schools",
     CREATE: "/api/schools",
     GET: (id) => `/api/schools/${id}`,
     UPDATE: (id) => `/api/schools/${id}`,
+  },
+
+  // Website public (site vitrine)
+  WEBSITE: {
+    PUBLIC: "/api/website/public",
+    DATA: "/api/website/data",
+    TEMPLATE_UPDATE: "/api/website/template/update",
   },
 
   // Students

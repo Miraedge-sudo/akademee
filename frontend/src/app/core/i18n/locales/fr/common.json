@@ -3,6 +3,9 @@
     "dashboard": "Tableau de bord",
     "search": "Recherche rapide",
     "profile": "Profil",
+    "settings": "Paramètres généraux",
+    "settingsGroup": "Paramètres",
+    "siteVitrine": "Site vitrine",
     "logout": "Déconnexion",
     "confirmLogoutTitle": "Déconnexion",
     "confirmLogoutMsg": "Êtes-vous sûr de vouloir vous déconnecter ?",
@@ -44,6 +47,88 @@
     "save": "Enregistrer",
     "cancel": "Annuler",
     "continue": "Continuer",
-    "back": "Retour"
+    "back": "Retour",
+    "add": "Ajouter",
+    "remove": "Supprimer",
+    "uploading": "Téléchargement...",
+    "loading": "Chargement...",
+    "saving": "Enregistrement..."
+  },
+  "websiteSettings": {
+    "title": "Site Vitrine — Configuration",
+    "subtitle": "Configurez le site public de votre école — logo, couleurs, contenu et plus",
+    "tabs": {
+      "identity": "Identité",
+      "content": "Contenu",
+      "template": "Template",
+      "stats": "Stats & Valeurs",
+      "publish": "Publication"
+    },
+    "logo": {
+      "title": "Logo de l'école",
+      "desc": "Téléchargez le logo de votre école. PNG, JPG ou SVG — max 2Mo.",
+      "upload": "Télécharger le logo"
+    },
+    "color": {
+      "title": "Couleur principale",
+      "desc": "Cette couleur sera utilisée pour les boutons, liens et accents sur votre site."
+    },
+    "tagline": {
+      "title": "Slogan",
+      "desc": "Une courte phrase qui capture l'esprit de votre école.",
+      "placeholder": "Former les leaders de demain, aujourd'hui."
+    },
+    "description": {
+      "title": "Description de l'école",
+      "desc": "Dites aux familles ce qui rend votre école spéciale.",
+      "placeholder": "Bienvenue dans notre école — un endroit où chaque enfant s'épanouit..."
+    },
+    "hero": {
+      "title": "Image de couverture (Hero)",
+      "desc": "La bannière principale de votre site. Recommandé 1920×800px — max 5Mo.",
+      "upload": "Cliquez pour télécharger l'image de couverture"
+    },
+    "template": {
+      "title": "Template du site",
+      "desc": "Choisissez l'apparence de votre site. Vous pouvez changer cela à tout moment."
+    },
+    "stats": {
+      "title": "Statistiques de l'école",
+      "desc": "Affichez des chiffres clés sur votre site pour impressionner les visiteurs.",
+      "students": "Élèves inscrits",
+      "teachers": "Enseignants",
+      "classes": "Classes"
+    },
+    "values": {
+      "title": "Valeurs de l'école",
+      "desc": "Ajoutez les valeurs fondamentales qui définissent la mission de votre école.",
+      "placeholder": "ex: Excellence, Intégrité, Communauté...",
+      "empty": "Aucune valeur ajoutée. Tapez-en une ci-dessus et cliquez sur Ajouter."
+    },
+    "publish": {
+      "title": "Publier le site",
+      "desc": "Rendez votre site visible au public."
+    },
+    "summary": {
+      "title": "Résumé",
+      "logo": "Logo",
+      "uploaded": "Téléchargé",
+      "notSet": "—",
+      "tagline": "Slogan",
+      "template": "Template",
+      "stats": "Stats",
+      "values": "Valeurs",
+      "status": "Statut",
+      "published": "Publié",
+      "draft": "Brouillon"
+    },
+    "info": {
+      "title": "URL de votre site",
+      "notAvailable": "Pas encore disponible"
+    },
+    "saved": "Configuration enregistrée avec succès",
+    "preview": "Aperçu",
+    "unsaved": "Vous avez des modifications non enregistrées",
+    "allSaved": "Toutes les modifications sont enregistrées"
   }
 }

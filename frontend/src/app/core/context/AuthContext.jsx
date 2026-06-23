@@ -1,6 +1,7 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useContext } from "react";
 import api from "../api/axios";
 import { API_ENDPOINTS } from "../api/endpoints";
+import { ThemeContext } from "./ThemeContext";
 
 export const AuthContext = createContext();
 
@@ -8,14 +9,21 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { updatePrimaryColor } = useContext(ThemeContext);
 
   const checkAuth = async () => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
         const response = await api.get(API_ENDPOINTS.AUTH.ME);
-        setUser(response.data.data);
+        const userData = response.data.data;
+        setUser(userData);
         setIsAuthenticated(true);
+
+        // Load school primary color if available
+        if (userData.school?.primaryColor) {
+          updatePrimaryColor(userData.school.primaryColor);
+        }
       } catch {
         localStorage.removeItem("token");
         setUser(null);
@@ -40,6 +48,11 @@ export function AuthProvider({ children }) {
       setUser(userData);
       setIsAuthenticated(true);
 
+      // Load school primary color if available
+      if (userData.school?.primaryColor) {
+        updatePrimaryColor(userData.school.primaryColor);
+      }
+
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);
@@ -54,6 +67,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("token");
     setUser(null);
     setIsAuthenticated(false);
+    // Reset to default color
+    updatePrimaryColor("#085041");
   };
 
   const verifySchool = async (subdomain) => {

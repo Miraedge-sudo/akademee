@@ -5,6 +5,17 @@
   --font-display: "Playfair Display", Georgia, serif;
   --font-sans: "DM Sans", system-ui, sans-serif;
 
+  /* Primary color (dynamic - set via CSS variable) */
+  --color-primary: var(--primary-color, #085041);
+  --color-primary-50: color-mix(in srgb, var(--primary-color, #085041) 5%, white);
+  --color-primary-100: color-mix(in srgb, var(--primary-color, #085041) 10%, white);
+  --color-primary-200: color-mix(in srgb, var(--primary-color, #085041) 20%, white);
+  --color-primary-400: color-mix(in srgb, var(--primary-color, #085041) 40%, white);
+  --color-primary-600: color-mix(in srgb, var(--primary-color, #085041) 60%, white);
+  --color-primary-700: color-mix(in srgb, var(--primary-color, #085041) 70%, white);
+  --color-primary-800: color-mix(in srgb, var(--primary-color, #085041) 80%, white);
+  --color-primary-900: color-mix(in srgb, var(--primary-color, #085041) 90%, white);
+
   /* Teal palette */
   --color-teal-50: #E1F5EE;
   --color-teal-100: #C8F0E4;
