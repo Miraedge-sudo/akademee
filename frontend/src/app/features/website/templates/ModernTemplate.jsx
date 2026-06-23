@@ -43,10 +43,12 @@ export default function ModernTemplate({ school }) {
   }, [mobileOpen]);
 
   const stats = s.websiteStats || {};
+  const examType = s.examType || 'GCE';
+  const examPassRate = s.examPassRate || '94%';
   const statItems = [
     { num: stats.studentsEnrolled || 248, lbl: "Students enrolled" },
     { num: stats.teachers || 32, lbl: "Qualified teachers" },
-    { num: stats.gcePassRate ? `${stats.gcePassRate}%` : "94%", lbl: "GCE pass rate 2025" },
+    { num: examPassRate, lbl: `${examType} pass rate 2025` },
     { num: stats.yearsOfOperation || s.yearFounded || 27, lbl: "Years of excellence" },
   ];
 
@@ -55,6 +57,14 @@ export default function ModernTemplate({ school }) {
     { label: "Community", description: "A welcoming family-centred environment" },
     { label: "Bilingual", description: "English & French instruction throughout" },
     { label: "Achievement", description: "94% GCE pass rate, consistently top results" },
+  ];
+
+  const classesConfig = s.classesConfig?.length > 0 ? s.classesConfig : [
+    {level:"Junior",name:"Form 1 & 2",desc:"Foundation years. Core subjects: English, French, Maths, Science, History.",age:"Ages 12–13"},
+    {level:"Junior",name:"Form 3 & 4",desc:"GCE O/L preparation begins. Science and Arts streams introduced.",age:"Ages 14–15"},
+    {level:"O Level",name:"Form 5",desc:"GCE Ordinary Level examination year. Intensive exam preparation.",age:"Age 16"},
+    {level:"A Level",name:"Lower Sixth",desc:"Advanced Level entry. Science, Arts and Commercial streams.",age:"Age 17"},
+    {level:"A Level",name:"Upper Sixth",desc:"GCE Advanced Level examination. University entrance preparation.",age:"Age 18"},
   ];
 
   const gallery = s.gallery || [];
@@ -165,27 +175,38 @@ export default function ModernTemplate({ school }) {
               </div>
             </div>
             <div className="relative flex items-center justify-center">
-              <div className="w-full max-w-[460px] aspect-[4/5] rounded-[28px] overflow-hidden relative"
-                style={{ background: s.heroImageUrl ? "transparent" : primaryMid }}>
-                {s.heroImageUrl ? (
-                  <img src={s.heroImageUrl} alt={s.schoolName} className="w-full h-full object-cover" />
+              <div className="w-full max-w-[460px] aspect-[4/5] rounded-[28px] overflow-hidden relative">
+                {/* Background image (hero2) */}
+                {s.heroImageUrl2 ? (
+                  <img src={s.heroImageUrl2} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-3"
-                    style={{ background: `linear-gradient(135deg,${primaryMid} 0%,${pc} 40%,#04342C 100%)` }}>
-                    <S d={I.building} className="w-16 h-16 opacity-30" color="white" />
-                    <span className="text-[13px] text-white/40">School photo</span>
-                  </div>
+                  <div className="absolute inset-0 w-full h-full"
+                    style={{ background: `linear-gradient(135deg,${primaryMid} 0%,${pc} 40%,#04342C 100%)` }} />
                 )}
-              </div>
-              <div className="absolute -bottom-4 -left-5 bg-white rounded-xl p-3.5 pr-[18px] shadow-[0_8px_32px_rgba(0,0,0,0.12)] flex items-center gap-3 max-md:hidden">
-                <div className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: primaryLight }}>
-                  <S d={I.grad} className="w-5 h-5" color={pc} />
+                {/* Foreground image (hero) */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {s.heroImageUrl ? (
+                    <img src={s.heroImageUrl} alt={s.schoolName} className="w-[85%] h-[85%] object-cover rounded-[20px] shadow-2xl" />
+                  ) : (
+                    <div className="w-[85%] h-[85%] flex flex-col items-center justify-center gap-3 rounded-[20px]"
+                      style={{ background: `linear-gradient(135deg,${pc},${primaryMid})` }}>
+                      <S d={I.building} className="w-16 h-16 opacity-30" color="white" />
+                      <span className="text-[13px] text-white/40">School photo</span>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <div className="text-xl font-bold text-[#2A3029]">Top 5</div>
-                  <div className="text-[11.5px] text-[#9BA59C]">Schools in Douala</div>
-                </div>
               </div>
+              {s.ranking && (
+                <div className="absolute -bottom-4 -left-5 bg-white rounded-xl p-3.5 pr-[18px] shadow-[0-8px_32px_rgba(0,0,0,0.12)] flex items-center gap-3 max-md:hidden">
+                  <div className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: primaryLight }}>
+                    <S d={I.grad} className="w-5 h-5" color={pc} />
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold text-[#2A3029]">{s.ranking}</div>
+                    <div className="text-[11.5px] text-[#9BA59C]">{s.rankingCity ? `Schools in ${s.rankingCity}` : 'Schools in your city'}</div>
+                  </div>
+                </div>
+              )}
               {s.yearFounded && (
                 <div className="absolute top-5 -right-4 rounded-xl px-4 py-2.5 text-[13px] font-semibold shadow-lg max-md:top-auto max-md:bottom-3 max-md:right-3" style={{ background: pc, color: primaryText }}>
                   Est. {s.yearFounded}
@@ -242,15 +263,19 @@ export default function ModernTemplate({ school }) {
                 )}
               </div>
               <div className="absolute bottom-0 right-0 w-[54%] aspect-[3/4] rounded-[20px] overflow-hidden" style={{ background: primaryMid }}>
-                {s.logoUrl ? <img src={s.logoUrl} alt="" className="w-full h-full object-cover" /> : (
+                {s.aboutPhotos && s.aboutPhotos.length > 1 ? (
+                  <img src={s.aboutPhotos[1].url} alt="" className="w-full h-full object-cover" />
+                ) : s.aboutPhotos && s.aboutPhotos.length > 0 ? (
+                  <img src={s.aboutPhotos[0].url} alt="" className="w-full h-full object-cover" />
+                ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <S d={I.users} className="w-10 h-10 opacity-25" color="white" />
                   </div>
                 )}
               </div>
               <div className="absolute top-1/2 -right-2 -translate-y-1/2 bg-white rounded-xl px-5 py-4 shadow-[0_8px_28px_rgba(0,0,0,0.1)] text-center z-10">
-                <div className="font-display text-[36px] font-bold leading-none" style={{ color: pc }}>A+</div>
-                <div className="text-[12px] text-[#9BA59C] mt-1">GCE results 2025</div>
+                <div className="font-display text-[36px] font-bold leading-none" style={{ color: pc }}>{examPassRate}</div>
+                <div className="text-[12px] text-[#9BA59C] mt-1">{examType} results 2025</div>
               </div>
             </div>
           </div>
@@ -270,13 +295,7 @@ export default function ModernTemplate({ school }) {
             </a>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {[
-              {level:"Junior",name:"Form 1 & 2",desc:"Foundation years. Core subjects: English, French, Maths, Science, History.",age:"Ages 12\u201313"},
-              {level:"Junior",name:"Form 3 & 4",desc:"GCE O/L preparation begins. Science and Arts streams introduced.",age:"Ages 14\u201315"},
-              {level:"O Level",name:"Form 5",desc:"GCE Ordinary Level examination year. Intensive exam preparation.",age:"Age 16"},
-              {level:"A Level",name:"Lower Sixth",desc:"Advanced Level entry. Science, Arts and Commercial streams.",age:"Age 17"},
-              {level:"A Level",name:"Upper Sixth",desc:"GCE Advanced Level examination. University entrance preparation.",age:"Age 18"},
-            ].map((cls,i) => (
+            {classesConfig.map((cls,i) => (
               <div key={i} className="border-[1.5px] border-[#EEF0EC] rounded-[20px] p-6 cursor-pointer bg-white transition-all hover:border-[var(--p)] hover:-translate-y-[3px] hover:shadow-[0_8px_24px_rgba(8,80,65,0.08)]">
                 <div className="inline-flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-[0.5px] mb-3.5" style={{ background: primaryLight, color: pc }}>{cls.level}</div>
                 <div className="font-display text-xl font-medium text-[#2A3029] mb-2">{cls.name}</div>

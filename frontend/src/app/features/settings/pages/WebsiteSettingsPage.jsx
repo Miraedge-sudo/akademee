@@ -74,13 +74,19 @@ export default function WebsiteSettingsPage() {
     templateCode: "modern",
     websiteStats: { studentsEnrolled: "", teachers: "", classes: "" },
     websiteValues: [],
+    examType: "GCE",
+    examPassRate: "",
+    ranking: "",
+    rankingCity: "",
+    aboutPhotos: [],
+    classesConfig: [],
     websitePublished: false,
   });
   const [originalData, setOriginalData] = useState(null);
   const [activeTab, setActiveTab] = useState("identity");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState({ logo: false, hero: false });
+  const [uploading, setUploading] = useState({ logo: false, hero: false, gallery: false });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [newValue, setNewValue] = useState("");
@@ -107,6 +113,13 @@ export default function WebsiteSettingsPage() {
           classes: result.websiteStats?.classes?.toString() || "",
         },
         websiteValues: Array.isArray(result.websiteValues) ? result.websiteValues : [],
+        examType: result.examType || "GCE",
+        examPassRate: result.examPassRate || "",
+        ranking: result.ranking || "",
+        rankingCity: result.rankingCity || "",
+        aboutPhotos: Array.isArray(result.aboutPhotos) ? result.aboutPhotos : [],
+        classesConfig: Array.isArray(result.classesConfig) ? result.classesConfig : [],
+        gallery: Array.isArray(result.gallery) ? result.gallery : [],
         websitePublished: result.websitePublished || false,
       });
       setOriginalData(result);
@@ -135,6 +148,83 @@ export default function WebsiteSettingsPage() {
     setData((prev) => ({
       ...prev,
       websiteStats: { ...prev.websiteStats, [field]: value },
+    }));
+  };
+
+  const handleClassChange = (idx, field, value) => {
+    setData((prev) => {
+      const newClasses = [...prev.classesConfig];
+      newClasses[idx] = { ...newClasses[idx], [field]: value };
+      return { ...prev, classesConfig: newClasses };
+    });
+  };
+
+  const addClass = () => {
+    setData((prev) => ({
+      ...prev,
+      classesConfig: [...prev.classesConfig, { level: '', name: '', desc: '', age: '' }],
+    }));
+  };
+
+  const removeClass = (idx) => {
+    setData((prev) => ({
+      ...prev,
+      classesConfig: prev.classesConfig.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const handleGalleryUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setUploading((prev) => ({ ...prev, gallery: true }));
+      const response = await uploadMedia(file, 'gallery');
+      setData((prev) => ({
+        ...prev,
+        gallery: [...(prev.gallery || []), { id: response.id, url: response.url, caption: '' }],
+      }));
+    } catch (err) {
+      console.error("Error uploading gallery photo:", err);
+      setError("Failed to upload photo");
+    } finally {
+      setUploading((prev) => ({ ...prev, gallery: false }));
+    }
+  };
+
+  const removeGalleryPhoto = (idx) => {
+    setData((prev) => ({
+      ...prev,
+      gallery: prev.gallery.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const handleAboutPhotoUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    try {
+      setUploading((prev) => ({ ...prev, aboutPhoto: true }));
+      const uploadPromises = files.map(file => uploadMedia(file, 'about'));
+      const responses = await Promise.all(uploadPromises);
+      
+      setData((prev) => ({
+        ...prev,
+        aboutPhotos: [...(prev.aboutPhotos || []), ...responses.map(r => ({ id: r.id, url: r.url }))],
+      }));
+    } catch (err) {
+      console.error("Error uploading about photos:", err);
+      setError("Failed to upload photos");
+    } finally {
+      setUploading((prev) => ({ ...prev, aboutPhoto: false }));
+      e.target.value = '';
+    }
+  };
+
+  const removeAboutPhoto = (idx) => {
+    setData((prev) => ({
+      ...prev,
+      aboutPhotos: prev.aboutPhotos.filter((_, i) => i !== idx),
     }));
   };
 
@@ -222,6 +312,13 @@ export default function WebsiteSettingsPage() {
         classes: parseInt(data.websiteStats.classes) || 0,
       },
       websiteValues: Array.isArray(data.websiteValues) ? data.websiteValues : [],
+      examType: data.examType,
+      examPassRate: data.examPassRate,
+      ranking: data.ranking,
+      rankingCity: data.rankingCity,
+      aboutPhotos: data.aboutPhotos,
+      classesConfig: data.classesConfig,
+      gallery: data.gallery,
       websitePublished: data.websitePublished,
       onboardingCompleted: true,
     };
@@ -694,6 +791,210 @@ export default function WebsiteSettingsPage() {
                   className="w-full h-10 px-3 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 text-sm outline-none focus:border-primary-600 transition-colors"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Exam & Ranking */}
+          <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-surface-800 dark:text-surface-100 mb-1">
+              {t("websiteSettings.exam.title", "Exam & Ranking")}
+            </h2>
+            <p className="text-xs text-surface-400 mb-4">
+              {t("websiteSettings.exam.desc", "Customize exam type and display ranking badge on your website.")}
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
+                  {t("websiteSettings.exam.type", "Exam type")}
+                </label>
+                <select
+                  value={data.examType}
+                  onChange={(e) => setData((prev) => ({ ...prev, examType: e.target.value }))}
+                  className="w-full h-10 px-3 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 text-sm outline-none focus:border-primary-600 transition-colors"
+                >
+                  <option value="GCE">GCE</option>
+                  <option value="Bacc">Baccalauréat</option>
+                  <option value="Licence">Licence</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
+                  {t("websiteSettings.exam.passRate", "Pass rate")}
+                </label>
+                <input
+                  type="text"
+                  value={data.examPassRate}
+                  onChange={(e) => setData((prev) => ({ ...prev, examPassRate: e.target.value }))}
+                  placeholder="e.g. 94%"
+                  className="w-full h-10 px-3 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 text-sm outline-none focus:border-primary-600 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
+                  {t("websiteSettings.exam.ranking", "Ranking (optional)")}
+                </label>
+                <input
+                  type="text"
+                  value={data.ranking}
+                  onChange={(e) => setData((prev) => ({ ...prev, ranking: e.target.value }))}
+                  placeholder="e.g. Top 5"
+                  className="w-full h-10 px-3 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 text-sm outline-none focus:border-primary-600 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
+                  {t("websiteSettings.exam.rankingCity", "City (optional)")}
+                </label>
+                <input
+                  type="text"
+                  value={data.rankingCity}
+                  onChange={(e) => setData((prev) => ({ ...prev, rankingCity: e.target.value }))}
+                  placeholder="e.g. Douala"
+                  className="w-full h-10 px-3 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 text-sm outline-none focus:border-primary-600 transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* About Us Photos */}
+          <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-surface-800 dark:text-surface-100 mb-1">
+              {t("websiteSettings.aboutPhotos.title", "About Us Photos")}
+            </h2>
+            <p className="text-xs text-surface-400 mb-4">
+              {t("websiteSettings.aboutPhotos.desc", "Upload photos to display in the About Us section (max 2 photos).")}
+            </p>
+            <div className="space-y-3">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => handleAboutPhotoUpload(e)}
+                disabled={(data.aboutPhotos || []).length >= 2}
+                className="w-full h-10 px-3 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 text-sm outline-none focus:border-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              {data.aboutPhotos && data.aboutPhotos.length > 0 && (
+                <div className="grid grid-cols-2 gap-3">
+                  {data.aboutPhotos.map((photo, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden">
+                      <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeAboutPhoto(idx)}
+                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Classes Configuration */}
+          <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-surface-800 dark:text-surface-100 mb-1">
+              {t("websiteSettings.classes.title", "Classes & Levels")}
+            </h2>
+            <p className="text-xs text-surface-400 mb-4">
+              {t("websiteSettings.classes.desc", "Customize the classes and levels displayed on your website.")}
+            </p>
+            <div className="space-y-3">
+              {data.classesConfig.map((cls, idx) => (
+                <div key={idx} className="flex gap-2 items-start">
+                  <input
+                    type="text"
+                    value={cls.level || ''}
+                    onChange={(e) => handleClassChange(idx, 'level', e.target.value)}
+                    placeholder="Level (e.g. Junior)"
+                    className="flex-1 h-10 px-3 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 text-sm outline-none focus:border-primary-600 transition-colors"
+                  />
+                  <input
+                    type="text"
+                    value={cls.name || ''}
+                    onChange={(e) => handleClassChange(idx, 'name', e.target.value)}
+                    placeholder="Name (e.g. Form 1 & 2)"
+                    className="flex-1 h-10 px-3 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 text-sm outline-none focus:border-primary-600 transition-colors"
+                  />
+                  <input
+                    type="text"
+                    value={cls.desc || ''}
+                    onChange={(e) => handleClassChange(idx, 'desc', e.target.value)}
+                    placeholder="Description"
+                    className="flex-1 h-10 px-3 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 text-sm outline-none focus:border-primary-600 transition-colors"
+                  />
+                  <input
+                    type="text"
+                    value={cls.age || ''}
+                    onChange={(e) => handleClassChange(idx, 'age', e.target.value)}
+                    placeholder="Age"
+                    className="w-24 h-10 px-3 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 text-sm outline-none focus:border-primary-600 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeClass(idx)}
+                    className="h-10 w-10 flex items-center justify-center rounded-lg border border-surface-200 dark:border-surface-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 dark:hover:border-red-700 transition-colors text-surface-400 hover:text-red-600 dark:hover:text-red-400"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addClass}
+                className="w-full h-10 border-2 border-dashed border-surface-200 dark:border-surface-600 rounded-lg text-surface-400 hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400 text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                {t("actions.add", "Add")}
+              </button>
+            </div>
+          </div>
+
+          {/* Gallery Upload */}
+          <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-surface-800 dark:text-surface-100 mb-1">
+              {t("websiteSettings.gallery.title", "Gallery Photos")}
+            </h2>
+            <p className="text-xs text-surface-400 mb-4">
+              {t("websiteSettings.gallery.desc", "Upload photos to display in the Life at our school section.")}
+            </p>
+            <div className="space-y-3">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleGalleryUpload(e)}
+                className="w-full h-10 px-3 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 text-sm outline-none focus:border-primary-600 transition-colors"
+              />
+              {data.gallery && data.gallery.length > 0 && (
+                <div className="grid grid-cols-3 gap-3">
+                  {data.gallery.map((photo, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden">
+                      <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryPhoto(idx)}
+                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
