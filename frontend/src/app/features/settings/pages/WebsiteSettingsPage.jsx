@@ -71,6 +71,7 @@ export default function WebsiteSettingsPage() {
     primaryColor: "#085041",
     logoUrl: "",
     heroImageUrl: "",
+    heroImageUrl2: "",
     templateCode: "modern",
     websiteStats: { studentsEnrolled: "", teachers: "", classes: "" },
     websiteValues: [],
@@ -86,12 +87,13 @@ export default function WebsiteSettingsPage() {
   const [activeTab, setActiveTab] = useState("identity");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState({ logo: false, hero: false, gallery: false });
+  const [uploading, setUploading] = useState({ logo: false, hero: false, hero2: false, gallery: false });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [newValue, setNewValue] = useState("");
   const logoInputRef = useRef(null);
   const heroInputRef = useRef(null);
+  const hero2InputRef = useRef(null);
 
   useEffect(() => {
     loadData();
@@ -106,6 +108,7 @@ export default function WebsiteSettingsPage() {
         primaryColor: result.primaryColor || "#085041",
         logoUrl: result.logoUrl || "",
         heroImageUrl: result.heroImageUrl || "",
+        heroImageUrl2: result.heroImageUrl2 || "",
         templateCode: result.templateCode || "modern",
         websiteStats: {
           studentsEnrolled: result.websiteStats?.studentsEnrolled?.toString() || "",
@@ -290,6 +293,22 @@ export default function WebsiteSettingsPage() {
     }
   };
 
+  const handleHero2Upload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setUploading((prev) => ({ ...prev, hero2: true }));
+      const response = await uploadMedia(file, 'hero');
+      setData((prev) => ({ ...prev, heroImageUrl2: response.url }));
+    } catch (err) {
+      console.error("Error uploading hero image 2:", err);
+      setError("Failed to upload hero image");
+    } finally {
+      setUploading((prev) => ({ ...prev, hero2: false }));
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setError("");
@@ -312,6 +331,7 @@ export default function WebsiteSettingsPage() {
         classes: parseInt(data.websiteStats.classes) || 0,
       },
       websiteValues: Array.isArray(data.websiteValues) ? data.websiteValues : [],
+      heroImageUrl2: data.heroImageUrl2,
       examType: data.examType,
       examPassRate: data.examPassRate,
       ranking: data.ranking,
@@ -643,54 +663,96 @@ export default function WebsiteSettingsPage() {
             />
           </div>
 
-          {/* Hero image */}
+          {/* Hero images */}
           <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
             <h2 className="text-sm font-semibold text-surface-800 dark:text-surface-100 mb-1">
-              {t("websiteSettings.hero.title", "Cover Image (Hero)")}
+              {t("websiteSettings.hero.title", "Cover Images (Hero)")}
             </h2>
             <p className="text-xs text-surface-400 mb-4">
-              {t("websiteSettings.hero.desc", "The main banner of your campus website. Recommended 1920×800px — max 5MB.")}
+              {t("websiteSettings.hero.desc", "Upload two images for the hero section. The first image will be in front, the second will be the background.")}
             </p>
-            <label
-              htmlFor="ws-hero-upload"
-              className="flex flex-col items-center justify-center gap-2.5 p-6 border-2 border-dashed border-surface-200 dark:border-surface-600 rounded-xl cursor-pointer hover:border-primary-400 transition-colors aspect-[21/9] max-h-48 overflow-hidden"
-            >
-              {data.heroImageUrl ? (
-                <img src={data.heroImageUrl} alt="Hero banner" className="w-full h-full object-cover rounded-lg" />
-              ) : (
-                <>
-                  <div className="w-10 h-10 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="w-5 h-5 text-surface-400">
-                      <rect x="3" y="3" width="18" height="18" rx="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <polyline points="21 15 16 10 5 21" />
-                    </svg>
-                  </div>
-                  <span className="text-sm font-medium text-surface-700 dark:text-surface-200">
-                    {uploading.hero ? t("actions.uploading", "Uploading...") : t("websiteSettings.hero.upload", "Click to upload cover image")}
-                  </span>
-                </>
-              )}
-              <input
-                ref={heroInputRef}
-                id="ws-hero-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleHeroUpload}
-                className="hidden"
-              />
-            </label>
-            {data.heroImageUrl && (
-              <div className="flex justify-end mt-3">
-                <button
-                  type="button"
-                  onClick={() => setData((prev) => ({ ...prev, heroImageUrl: "" }))}
-                  className="text-sm text-red-600 dark:text-red-400 font-medium hover:underline"
+            <div className="space-y-4">
+              {/* First hero image (foreground) */}
+              <div className="flex items-center gap-4">
+                <label
+                  htmlFor="ws-hero-upload"
+                  className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden flex items-center justify-center border-2 border-dashed border-surface-200 dark:border-surface-600 cursor-pointer hover:border-primary-400 transition-colors"
                 >
-                  {t("actions.remove", "Remove cover image")}
-                </button>
+                  {data.heroImageUrl ? (
+                    <img src={data.heroImageUrl} alt="Hero" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xs text-surface-400">Image 1</span>
+                  )}
+                  <input
+                    ref={heroInputRef}
+                    id="ws-hero-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleHeroUpload}
+                    className="hidden"
+                  />
+                </label>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => heroInputRef.current?.click()}
+                    disabled={uploading.hero}
+                    className="h-8 px-3 bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 text-surface-700 dark:text-surface-200 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {uploading.hero ? t("actions.uploading", "Uploading...") : t("websiteSettings.hero.upload", "Upload image 1")}
+                  </button>
+                  {data.heroImageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setData((prev) => ({ ...prev, heroImageUrl: "" }))}
+                      className="h-8 px-3 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    >
+                      {t("actions.remove", "Remove")}
+                    </button>
+                  )}
+                </div>
               </div>
-            )}
+              {/* Second hero image (background) */}
+              <div className="flex items-center gap-4">
+                <label
+                  htmlFor="ws-hero2-upload"
+                  className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden flex items-center justify-center border-2 border-dashed border-surface-200 dark:border-surface-600 cursor-pointer hover:border-primary-400 transition-colors"
+                >
+                  {data.heroImageUrl2 ? (
+                    <img src={data.heroImageUrl2} alt="Hero 2" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xs text-surface-400">Image 2</span>
+                  )}
+                  <input
+                    ref={hero2InputRef}
+                    id="ws-hero2-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleHero2Upload}
+                    className="hidden"
+                  />
+                </label>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => hero2InputRef.current?.click()}
+                    disabled={uploading.hero2}
+                    className="h-8 px-3 bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 text-surface-700 dark:text-surface-200 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {uploading.hero2 ? t("actions.uploading", "Uploading...") : t("websiteSettings.hero.upload2", "Upload image 2")}
+                  </button>
+                  {data.heroImageUrl2 && (
+                    <button
+                      type="button"
+                      onClick={() => setData((prev) => ({ ...prev, heroImageUrl2: "" }))}
+                      className="h-8 px-3 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    >
+                      {t("actions.remove", "Remove")}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

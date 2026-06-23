@@ -4,6 +4,7 @@ import { getPublicWebsite } from "../../../core/api/websiteService";
 import ModernTemplate from "../templates/ModernTemplate";
 import ClassicTemplate from "../templates/ClassicTemplate";
 import MinimalTemplate from "../templates/MinimalTemplate";
+import { getSubdomain } from "../../../core/utils/subdomainHelper";
 
 export default function PublicWebsitePage() {
   const [searchParams] = useSearchParams();
@@ -12,9 +13,7 @@ export default function PublicWebsitePage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const subdomain =
-      searchParams.get("subdomain") ||
-      getSubdomainFromHostname();
+    const subdomain = getSubdomain();
 
     if (!subdomain) {
       setError("No school subdomain found.");
@@ -68,13 +67,4 @@ export default function PublicWebsitePage() {
       {templateCode === "minimal" && <MinimalTemplate school={school} />}
     </>
   );
-}
-
-// Extrait le subdomain depuis l'hostname en prod
-// ex: grace-bilingual.akademee.cm → "grace-bilingual"
-function getSubdomainFromHostname() {
-  const hostname = window.location.hostname;
-  const parts = hostname.split(".");
-  if (parts.length >= 3) return parts[0];
-  return null;
 }

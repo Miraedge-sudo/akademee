@@ -16,7 +16,7 @@ function App() {
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
         {/* Vitrin website accessible without login */}
         <Route path="/site" element={<PublicWebsitePage />} />
 

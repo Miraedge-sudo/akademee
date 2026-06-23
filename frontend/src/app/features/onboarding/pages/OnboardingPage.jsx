@@ -1,15 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
-import api from "../../../core/api/axios";
-import { API_ENDPOINTS } from "../../../core/api/endpoints";
 import { useAuth } from "../../../core/hooks/useAuth";
+import { getOnboardingData, saveOnboardingData, uploadMedia } from "../../../core/api/websiteService";
+import { ThemeContext } from "../../../core/context/ThemeContext";
+import { buildSubdomainUrl } from "../../../core/utils/subdomainHelper";
 
 const STEPS = [
-  { num: 1, key: "logo" },
-  { num: 2, key: "hero" },
-  { num: 3, key: "content" },
+  { num: 1, key: "identity" },
+  { num: 2, key: "content" },
+  { num: 3, key: "template" },
   { num: 4, key: "review" },
 ];
 
@@ -18,127 +19,234 @@ const COLOR_PRESETS = [
   "#0F766E", "#1D4ED8", "#047857", "#9D174D", "#374151",
 ];
 
+const TEMPLATE_PREVIEWS = {
+  modern: {
+    name: "Modern",
+    desc: "Split hero, gradient accents, stats band, gallery grid — contemporary & engaging",
+    icon: (
+      <svg viewBox="0 0 48 36" fill="none" className="w-full h-full">
+        <rect x="2" y="2" width="44" height="32" rx="3" className="stroke-surface-300 dark:stroke-surface-500 fill-white dark:fill-surface-800" strokeWidth="1.5" />
+        <rect x="6" y="6" width="18" height="14" rx="1.5" className="fill-primary-100 dark:fill-primary-900/40" />
+        <rect x="27" y="6" width="15" height="6" rx="1.5" className="fill-surface-200 dark:fill-surface-700" />
+        <rect x="27" y="14" width="15" height="2" rx="1" className="fill-surface-200 dark:fill-surface-700" />
+        <rect x="27" y="17.5" width="10" height="2" rx="1" className="fill-surface-200 dark:fill-surface-700" />
+        <rect x="6" y="22.5" width="36" height="1.5" rx="0.75" className="fill-surface-200 dark:fill-surface-700" />
+        <rect x="6" y="26" width="8" height="3" rx="1" className="fill-surface-200 dark:fill-surface-700" />
+        <rect x="16" y="26" width="8" height="3" rx="1" className="fill-surface-200 dark:fill-surface-700" />
+        <rect x="26" y="26" width="8" height="3" rx="1" className="fill-surface-200 dark:fill-surface-700" />
+      </svg>
+    ),
+  },
+  classic: {
+    name: "Classic",
+    desc: "Gold/ink tones, framed hero, marquee, boxed stats — traditional & trustworthy",
+    icon: (
+      <svg viewBox="0 0 48 36" fill="none" className="w-full h-full">
+        <rect x="2" y="2" width="44" height="32" rx="3" className="stroke-surface-300 dark:stroke-surface-500 fill-amber-50 dark:fill-surface-800" strokeWidth="1.5" />
+        <rect x="6" y="6" width="36" height="14" rx="1.5" className="fill-amber-100 dark:fill-amber-900/20 stroke-amber-300 dark:stroke-amber-700" strokeWidth="0.75" />
+        <rect x="10" y="9" width="28" height="3" rx="1" className="fill-amber-800/30 dark:fill-amber-400/30" />
+        <rect x="14" y="14" width="20" height="1.5" rx="0.75" className="fill-surface-300 dark:fill-surface-600" />
+        <rect x="6" y="22.5" width="36" height="1.5" rx="0.75" className="fill-surface-200 dark:fill-surface-700" />
+        <rect x="6" y="26.5" width="10" height="4.5" rx="1" className="fill-amber-200/50 dark:fill-amber-800/30 stroke-amber-300/50 dark:stroke-amber-700/30" strokeWidth="0.5" />
+        <rect x="18.5" y="26.5" width="10" height="4.5" rx="1" className="fill-amber-200/50 dark:fill-amber-800/30 stroke-amber-300/50 dark:stroke-amber-700/30" strokeWidth="0.5" />
+        <rect x="31" y="26.5" width="10" height="4.5" rx="1" className="fill-amber-200/50 dark:fill-amber-800/30 stroke-amber-300/50 dark:stroke-amber-700/30" strokeWidth="0.5" />
+      </svg>
+    ),
+  },
+  minimal: {
+    name: "Minimal",
+    desc: "Clean whitespace, centered type, subtle borders, mono accents — sleek & fast",
+    icon: (
+      <svg viewBox="0 0 48 36" fill="none" className="w-full h-full">
+        <rect x="2" y="2" width="44" height="32" rx="3" className="stroke-surface-300 dark:stroke-surface-500 fill-white dark:fill-surface-800" strokeWidth="1.5" />
+        <rect x="14" y="7" width="20" height="3" rx="1.5" className="fill-surface-800/20 dark:fill-surface-100/20" />
+        <rect x="18" y="12" width="12" height="1.5" rx="0.75" className="fill-surface-300 dark:fill-surface-600" />
+        <rect x="8" y="17" width="32" height="0.75" rx="0.375" className="fill-surface-200 dark:fill-surface-700" />
+        <circle cx="24" cy="25" r="4" className="fill-surface-200 dark:fill-surface-700" />
+        <rect x="10" y="23" width="6" height="4" rx="1" className="fill-surface-200 dark:fill-surface-700" />
+        <rect x="32" y="23" width="6" height="4" rx="1" className="fill-surface-200 dark:fill-surface-700" />
+      </svg>
+    ),
+  },
+};
+
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const { user, login } = useAuth();
-  const { t, i18n } = useTranslation("onboarding");
+  const { t } = useTranslation("onboarding");
+  const { user } = useAuth();
+  const { updatePrimaryColor } = useContext(ThemeContext);
 
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [onboardingData, setOnboardingData] = useState({
+  const [uploading, setUploading] = useState({ logo: false, hero: false });
+  const logoInputRef = useRef(null);
+  const heroInputRef = useRef(null);
+
+  const [data, setData] = useState({
     tagline: "",
     description: "",
     primaryColor: "#085041",
     logoUrl: "",
     heroImageUrl: "",
+    templateCode: "modern",
+    websiteStats: {},
+    websiteValues: [],
   });
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [uploadingHero, setUploadingHero] = useState(false);
 
   useEffect(() => {
-    loadOnboardingData();
+    loadData();
   }, []);
 
-  const loadOnboardingData = async () => {
+  const loadData = async () => {
     try {
-      const response = await api.get(API_ENDPOINTS.SCHOOLS.ONBOARDING);
-      if (response.data.success) {
-        setOnboardingData((prev) => ({ ...prev, ...response.data.data }));
-      }
+      const result = await getOnboardingData();
+      setData({
+        tagline: result.tagline || "",
+        description: result.websiteDescription || "",
+        primaryColor: result.primaryColor || "#085041",
+        logoUrl: result.logoUrl || "",
+        heroImageUrl: result.heroImageUrl || "",
+        templateCode: result.templateCode || "modern",
+        websiteStats: result.websiteStats || {},
+        websiteValues: Array.isArray(result.websiteValues) ? result.websiteValues : [],
+      });
     } catch (err) {
       console.error("Error loading onboarding data:", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setData((prev) => ({ ...prev, [name]: value }));
+    setError("");
+  };
+
+  const handleColorChange = (hex) => {
+    setData((prev) => ({ ...prev, primaryColor: hex }));
   };
 
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setUploadingLogo(true);
+    setUploading((prev) => ({ ...prev, logo: true }));
     setError("");
-
-    const formData = new FormData();
-    formData.append("logo", file);
-
     try {
-      const response = await api.post(API_ENDPOINTS.SCHOOLS.ONBOARDING_MEDIA, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      if (response.data.success) {
-        setOnboardingData((prev) => ({ ...prev, logoUrl: response.data.data.logoUrl }));
+      const result = await uploadMedia(file, "logo");
+      if (result?.logoUrl || result?.url) {
+        setData((prev) => ({ ...prev, logoUrl: result.logoUrl || result.url }));
       }
     } catch (err) {
-      setError(t("errors.logoUpload", "Error uploading logo"));
+      console.error("Logo upload error:", err);
+      setError(err.response?.data?.message || err.message || "Error uploading logo");
     } finally {
-      setUploadingLogo(false);
+      setUploading((prev) => ({ ...prev, logo: false }));
     }
   };
 
   const handleHeroUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setUploadingHero(true);
+    setUploading((prev) => ({ ...prev, hero: true }));
     setError("");
-
-    const formData = new FormData();
-    formData.append("heroImage", file);
-
     try {
-      const response = await api.post(API_ENDPOINTS.SCHOOLS.ONBOARDING_MEDIA, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      if (response.data.success) {
-        setOnboardingData((prev) => ({ ...prev, heroImageUrl: response.data.data.heroImageUrl }));
+      const result = await uploadMedia(file, "hero");
+      if (result?.heroImageUrl || result?.url) {
+        setData((prev) => ({ ...prev, heroImageUrl: result.heroImageUrl || result.url }));
       }
     } catch (err) {
-      setError(t("errors.heroUpload", "Error uploading cover image"));
+      console.error("Hero upload error:", err);
+      setError(err.response?.data?.message || err.message || "Error uploading cover image");
     } finally {
-      setUploadingHero(false);
+      setUploading((prev) => ({ ...prev, hero: false }));
     }
   };
 
-  const handleChange = (e) => {
-    setOnboardingData({ ...onboardingData, [e.target.name]: e.target.value });
-  };
-
-  const handleColorChange = (hex) => {
-    setOnboardingData((prev) => ({ ...prev, primaryColor: hex }));
-  };
-
-  const handleSave = async () => {
-    setLoading(true);
+  const handleFinish = async () => {
+    setSaving(true);
     setError("");
+
+    let primaryColor = data.primaryColor;
+    if (!primaryColor.match(/^#[0-9A-Fa-f]{6}$/)) {
+      primaryColor = "#085041";
+    }
+
+    const payload = {
+      tagline: data.tagline,
+      websiteDescription: data.description,
+      primaryColor,
+      templateCode: data.templateCode,
+      websiteStats: data.websiteStats,
+      websiteValues: data.websiteValues,
+      onboardingCompleted: true,
+    };
+
     try {
-      const response = await api.put(API_ENDPOINTS.SCHOOLS.ONBOARDING, onboardingData);
-      if (response.data.success) {
-        const token = localStorage.getItem("token");
-        if (token) {
-          await login({ subdomain: "", email: user?.email || "", password: "" });
+      const response = await saveOnboardingData(payload);
+      if (response.success) {
+        // Save color synchronously before navigation (useEffect won't fire before reload)
+        localStorage.setItem('akademee-primary-color', primaryColor);
+        document.documentElement.style.setProperty('--primary-color', primaryColor);
+        updatePrimaryColor(primaryColor);
+
+        // Redirect to subdomain URL for multi-tenant routing
+        const token = localStorage.getItem('token');
+        const schoolSubdomain = user?.subdomain || localStorage.getItem('akademee-subdomain');
+        if (schoolSubdomain && token) {
+          const redirectUrl = buildSubdomainUrl(schoolSubdomain, `/dashboard?token=${encodeURIComponent(token)}`);
+          window.location.href = redirectUrl;
+        } else {
+          // Fallback: redirect to dashboard on same domain
+          window.location.href = "/dashboard";
         }
-        navigate("/dashboard");
+      } else {
+        setError(response.message || "Error saving configuration");
       }
     } catch (err) {
-      setError(err.response?.data?.message || t("errors.save", "Error saving"));
+      console.error("Save error:", err);
+      setError(err.response?.data?.message || err.message || "Error saving configuration");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   const nextStep = () => setStep((s) => Math.min(s + 1, 4));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
-  const skip = () => (step < 4 ? nextStep() : navigate("/dashboard"));
+  const skip = () => (step < 4 ? nextStep() : handleFinish());
 
-  const pc = onboardingData.primaryColor;
+  const pc = data.primaryColor;
+  const initials = (user?.schoolName || "SC")
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-50 dark:bg-surface-900">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-primary-600 border-t-transparent animate-spin" />
+          <p className="text-sm text-surface-400">{t("Loading...")}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-surface-50 dark:bg-surface-900">
 
-      {/* ══ LEFT PANEL ══ */}
+      {/* ══ LEFT PANEL — Progress sidebar ══ */}
       <aside
-        className="hidden lg:flex flex-col w-[300px] flex-shrink-0 sticky top-0 h-screen px-9 py-9 transition-colors duration-300"
+        className="hidden lg:flex flex-col w-[280px] flex-shrink-0 sticky top-0 h-screen px-8 py-9 transition-colors duration-300"
         style={{ backgroundColor: pc }}
       >
-        <div className="flex items-center gap-2.5 mb-11">
+        {/* Brand */}
+        <div className="flex items-center gap-2.5 mb-10">
           <div className="w-8 h-8 rounded-md bg-white/15 flex items-center justify-center">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" className="w-[18px] h-[18px]">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -148,50 +256,61 @@ export default function OnboardingPage() {
           <span className="font-display text-lg text-white/90">Akademee</span>
         </div>
 
-        <div className="mb-9">
+        {/* Welcome */}
+        <div className="mb-8">
           <p className="text-[11px] font-semibold tracking-wide uppercase text-white/45 mb-2">
             {t("firstTimeSetup", "First time setup")}
           </p>
-          <h2 className="font-display text-[24px] text-white leading-snug">
+          <h2 className="font-display text-[22px] text-white leading-snug">
             {t("welcomeTitle1", "Let's build your")}
             <br />
             <em className="italic text-white/55">{t("welcomeTitle2", "campus website.")}</em>
           </h2>
         </div>
 
-        <div className="flex flex-col gap-0.5 flex-1">
-          {STEPS.map((s) => (
-            <div key={s.num} className="flex items-center gap-3.5 py-2.5 px-3 relative">
-              <div
-                className={`w-[26px] h-[26px] rounded-full flex items-center justify-center text-[11px] font-semibold flex-shrink-0 border-2 transition-all ${
-                  step > s.num
-                    ? "bg-white/20 border-white/35 text-white"
-                    : step === s.num
-                    ? "bg-white border-white"
-                    : "bg-transparent border-white/20 text-white/35"
-                }`}
-                style={step === s.num ? { color: pc } : {}}
-              >
-                {step > s.num ? "✓" : s.num}
-              </div>
-              <div>
-                <div className={`text-[13px] font-medium ${step === s.num ? "text-white" : step > s.num ? "text-white/65" : "text-white/35"}`}>
-                  {t(`steps.${s.key}.title`, s.key)}
+        {/* Steps */}
+        <div className="flex flex-col gap-1 flex-1">
+          {STEPS.map((s) => {
+            const isActive = step === s.num;
+            const isDone = step > s.num;
+            return (
+              <div key={s.num} className="flex items-center gap-3 py-2.5 px-3 rounded-lg transition-colors" style={{ backgroundColor: isActive ? "rgba(255,255,255,0.1)" : "transparent" }}>
+                <div
+                  className={`w-[26px] h-[26px] rounded-full flex items-center justify-center text-[11px] font-semibold flex-shrink-0 border-2 transition-all ${
+                    isDone
+                      ? "bg-white/20 border-white/35 text-white"
+                      : isActive
+                      ? "bg-white border-white"
+                      : "bg-transparent border-white/20 text-white/35"
+                  }`}
+                  style={isActive ? { color: pc } : {}}
+                >
+                  {isDone ? "✓" : s.num}
                 </div>
-                <div className="text-[11px] text-white/25">
-                  {t(`steps.${s.key}.desc`, "")}
+                <div>
+                  <div className={`text-[13px] font-medium ${isActive ? "text-white" : isDone ? "text-white/65" : "text-white/35"}`}>
+                    {t(`steps.${s.key === "identity" ? "logo" : s.key === "content" ? "hero" : s.key}.title`, {
+                      identity: "School identity",
+                      content: "About & content",
+                      template: "Template",
+                      review: "Preview & publish"
+                    }[s.key] || s.key)}
+                  </div>
+                  <div className="text-[11px] text-white/25">
+                    {t(`steps.${s.key === "identity" ? "logo" : s.key === "content" ? "hero" : s.key}.desc`, "")}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <p className="text-[11.5px] text-white/22 leading-relaxed">
+        <p className="text-[11.5px] text-white/22 leading-relaxed mt-auto">
           {t("editLaterNote", "You can edit all of this later in Settings → Campus Website")}
         </p>
       </aside>
 
-      {/* ══ RIGHT PANEL ══ */}
+      {/* ══ RIGHT PANEL — Content ══ */}
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* Header */}
@@ -214,54 +333,130 @@ export default function OnboardingPage() {
               onClick={skip}
               className="text-[13px] text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-700 px-3 py-1.5 rounded-md transition-colors"
             >
-              {t("skipForNow", "Skip for now")} →
+              {step < 4 ? `${t("skipForNow", "Skip for now")} →` : t("skipForNow", "Skip for now")}
             </button>
           </div>
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 lg:px-10 py-9 max-w-[640px]">
+        <div className="flex-1 overflow-y-auto px-6 lg:px-10 py-9 max-w-[640px] mx-auto w-full">
 
           {error && (
-            <div className="mb-5 px-4 py-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm">
+            <div className="mb-5 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm flex items-center gap-2.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4 flex-shrink-0">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
               {error}
             </div>
           )}
 
-          {/* ── STEP 1 — Logo ── */}
+          {/* ── STEP 1 — Identity (Logo + Color) ── */}
           {step === 1 && (
-            <div>
-              <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
-                {t("steps.logo.title", "School identity")}
-              </p>
-              <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
-                {t("logo.heading", "Your school logo")}
-              </h1>
-              <p className="text-[13.5px] text-surface-400 leading-relaxed mb-7">
-                {t("logo.subtitle", "Upload your logo, or we'll generate one from your school's initials.")}
-              </p>
+            <div className="space-y-6">
+              {/* Logo */}
+              <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+                <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
+                  {t("steps.logo.title", "School identity")}
+                </p>
+                <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
+                  {t("logo.heading", "Your school logo")}
+                </h1>
+                <p className="text-[13.5px] text-surface-400 leading-relaxed mb-6">
+                  {t("logo.subtitle", "Upload your logo, or we'll generate one from your school's initials.")}
+                </p>
 
-              <label
-                htmlFor="logo-upload"
-                className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-surface-200 dark:border-surface-600 rounded-xl cursor-pointer hover:border-teal-400 transition-colors"
-              >
-                <div className="w-20 h-20 rounded-xl overflow-hidden flex items-center justify-center" style={{ backgroundColor: onboardingData.logoUrl ? "transparent" : pc }}>
-                  {onboardingData.logoUrl ? (
-                    <img src={onboardingData.logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="font-display text-2xl font-bold text-white">
-                      {(user?.schoolName || "SC").split(" ").filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
-                    </span>
-                  )}
+                <div className="flex items-center gap-5">
+                  <label
+                    htmlFor="onb-logo-upload"
+                    className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden flex items-center justify-center border-2 border-dashed border-surface-200 dark:border-surface-600 cursor-pointer hover:border-primary-400 transition-colors"
+                    style={{ backgroundColor: data.logoUrl ? "transparent" : pc + "15" }}
+                  >
+                    {data.logoUrl ? (
+                      <img src={data.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="font-display text-2xl font-bold" style={{ color: pc }}>
+                        {initials}
+                      </span>
+                    )}
+                    <input
+                      ref={logoInputRef}
+                      id="onb-logo-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={uploading.logo}
+                      className="h-9 px-4 bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 text-surface-700 dark:text-surface-200 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {uploading.logo ? t("logo.uploading", "Uploading...") : t("logo.cta", "Upload logo")}
+                    </button>
+                    {data.logoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setData((prev) => ({ ...prev, logoUrl: "" }))}
+                        className="h-9 px-4 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      >
+                        {t("Remove")}
+                      </button>
+                    )}
+                    <p className="text-[11px] text-surface-400">{t("logo.specs", "PNG, JPG or SVG · Max 2MB")}</p>
+                  </div>
                 </div>
-                <span className="text-sm font-medium text-surface-700 dark:text-surface-200">
-                  {uploadingLogo ? t("logo.uploading", "Uploading...") : t("logo.cta", "Click to upload your logo")}
-                </span>
-                <span className="text-xs text-surface-400">{t("logo.specs", "PNG, JPG or SVG · Max 2MB")}</span>
-                <input id="logo-upload" type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
-              </label>
+              </div>
 
-              <div className="flex items-start gap-2.5 mt-4 p-3 bg-surface-50 dark:bg-surface-800 rounded-md">
+              {/* Primary Color */}
+              <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+                <h2 className="text-sm font-semibold text-surface-800 dark:text-surface-100 mb-1">
+                  {t("content.colorLabel", "School primary colour")}
+                </h2>
+                <p className="text-xs text-surface-400 mb-4">
+                  This colour will be used for buttons, links, and accents across your website.
+                </p>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <div className="relative flex items-center gap-3 bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-600 rounded-lg px-3.5 py-2.5">
+                    <label
+                      htmlFor="onb-color-picker"
+                      className="w-8 h-8 rounded-lg cursor-pointer flex-shrink-0 border border-white/20"
+                      style={{ backgroundColor: pc }}
+                    />
+                    <input
+                      id="onb-color-picker"
+                      type="color"
+                      value={pc}
+                      onChange={(e) => handleColorChange(e.target.value)}
+                      className="absolute opacity-0 w-0 h-0"
+                    />
+                    <span className="text-sm font-medium text-surface-700 dark:text-surface-200 font-mono min-w-[4.5rem]">
+                      {pc}
+                    </span>
+                  </div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {COLOR_PRESETS.map((hex) => (
+                      <button
+                        key={hex}
+                        type="button"
+                        onClick={() => handleColorChange(hex)}
+                        className={`w-7 h-7 rounded-full flex-shrink-0 transition-all hover:scale-110 ${
+                          pc.toLowerCase() === hex.toLowerCase()
+                            ? "ring-2 ring-offset-2 ring-surface-800 dark:ring-surface-200 dark:ring-offset-surface-900 scale-110"
+                            : ""
+                        }`}
+                        style={{ backgroundColor: hex }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5 p-3 bg-surface-50 dark:bg-surface-800 rounded-lg">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4 text-surface-400 flex-shrink-0 mt-0.5">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="8" x2="12" y2="12" />
@@ -274,7 +469,7 @@ export default function OnboardingPage() {
 
               <button
                 onClick={nextStep}
-                className="w-full h-[46px] mt-7 text-white text-[15px] font-semibold rounded-md flex items-center justify-center gap-2 transition-colors active:scale-[0.99]"
+                className="w-full h-[46px] text-white text-[15px] font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors active:scale-[0.99]"
                 style={{ backgroundColor: pc }}
               >
                 {t("continue", "Continue")}
@@ -286,228 +481,97 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── STEP 2 — Hero image ── */}
+          {/* ── STEP 2 — Content (Tagline + Description + Hero) ── */}
           {step === 2 && (
-            <div>
-              <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
-                {t("steps.hero.title", "Photos")}
-              </p>
-              <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
-                {t("hero.heading", "Cover image")}
-              </h1>
-              <p className="text-[13.5px] text-surface-400 leading-relaxed mb-7">
-                {t("hero.subtitle", "This will be the main banner of your campus website.")}
-              </p>
+            <div className="space-y-6">
+              <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+                <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
+                  {t("steps.hero.title", "Content")}
+                </p>
+                <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
+                  {t("content.heading", "Present your school")}
+                </h1>
+                <p className="text-[13.5px] text-surface-400 leading-relaxed mb-7">
+                  {t("content.subtitle", "Choose your brand colour and tell visitors about your school.")}
+                </p>
 
-              <label
-                htmlFor="hero-upload"
-                className="flex flex-col items-center justify-center gap-3 p-6 border-2 border-dashed border-surface-200 dark:border-surface-600 rounded-xl cursor-pointer hover:border-teal-400 transition-colors aspect-[21/9] overflow-hidden"
-              >
-                {onboardingData.heroImageUrl ? (
-                  <img src={onboardingData.heroImageUrl} alt="Hero" className="w-full h-full object-cover rounded-lg" />
-                ) : (
-                  <>
-                    <div className="w-11 h-11 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="w-5 h-5 text-surface-400">
-                        <rect x="3" y="3" width="18" height="18" rx="2" />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <polyline points="21 15 16 10 5 21" />
-                      </svg>
-                    </div>
-                    <span className="text-sm font-medium text-surface-700 dark:text-surface-200">
-                      {uploadingHero ? t("hero.uploading", "Uploading...") : t("hero.cta", "Add hero photo")}
-                    </span>
-                    <span className="text-xs text-surface-400">{t("hero.specs", "Recommended 1920×800px · Max 5MB")}</span>
-                  </>
-                )}
-                <input id="hero-upload" type="file" accept="image/*" onChange={handleHeroUpload} className="hidden" />
-              </label>
+                {/* Tagline */}
+                <div className="mb-5">
+                  <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
+                    {t("content.taglineLabel", "Tagline / Slogan")}
+                  </label>
+                  <input
+                    name="tagline"
+                    type="text"
+                    value={data.tagline}
+                    onChange={handleChange}
+                    placeholder={t("content.taglinePlaceholder", "Shaping the leaders of tomorrow, today.")}
+                    maxLength={80}
+                    className="w-full h-11 px-3.5 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 placeholder:text-surface-400 text-sm outline-none focus:border-primary-600 focus:bg-white dark:focus:bg-surface-800 transition-colors"
+                  />
+                  <p className="text-[11px] text-surface-400 mt-1 text-right">{data.tagline.length}/80</p>
+                </div>
 
-              <div className="flex gap-2.5 mt-7">
-                <button
-                  onClick={prevStep}
-                  className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-md hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
-                    <line x1="19" y1="12" x2="5" y2="12" />
-                    <polyline points="12 19 5 12 12 5" />
-                  </svg>
-                  {t("back", "Back")}
-                </button>
-                <button
-                  onClick={nextStep}
-                  className="flex-1 h-11 text-white text-sm font-semibold rounded-md flex items-center justify-center gap-2 transition-colors"
-                  style={{ backgroundColor: pc }}
-                >
-                  {t("continue", "Continue")}
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
+                {/* Description */}
+                <div className="mb-5">
+                  <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
+                    {t("content.descLabel", "School description")}
+                  </label>
+                  <textarea
+                    name="description"
+                    rows={4}
+                    value={data.description}
+                    onChange={handleChange}
+                    placeholder={t("content.descPlaceholder", "Tell families what makes your school special...")}
+                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 placeholder:text-surface-400 text-sm outline-none focus:border-primary-600 focus:bg-white dark:focus:bg-surface-800 transition-colors resize-none"
+                  />
+                </div>
 
-          {/* ── STEP 3 — Content & Color ── */}
-          {step === 3 && (
-            <div>
-              <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
-                {t("steps.content.title", "About & content")}
-              </p>
-              <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
-                {t("content.heading", "Present your school")}
-              </h1>
-              <p className="text-[13.5px] text-surface-400 leading-relaxed mb-7">
-                {t("content.subtitle", "Choose your brand colour and tell visitors about your school.")}
-              </p>
-
-              {/* Color picker */}
-              <div className="mb-7">
-                <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-2.5">
-                  {t("content.colorLabel", "School primary colour")}
-                </label>
-                <div className="flex items-center gap-3.5 flex-wrap">
-                  <div className="relative flex items-center gap-2.5 bg-white dark:bg-surface-800 border-[1.5px] border-surface-200 dark:border-surface-600 rounded-md px-3.5 py-2">
+                {/* Hero image */}
+                <div>
+                  <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
+                    {t("hero.heading", "Cover image")}
+                  </label>
+                  <p className="text-[11px] text-surface-400 mb-3">
+                    {t("hero.specs", "Recommended 1920×800px · Max 5MB")}
+                  </p>
+                  <div className="flex items-center gap-4">
                     <label
-                      htmlFor="color-picker"
-                      className="w-7 h-7 rounded-md cursor-pointer flex-shrink-0"
-                      style={{ backgroundColor: pc }}
-                    />
-                    <input
-                      id="color-picker"
-                      type="color"
-                      value={pc}
-                      onChange={(e) => handleColorChange(e.target.value)}
-                      className="absolute opacity-0 w-0 h-0"
-                    />
-                    <span className="text-sm font-medium text-surface-700 dark:text-surface-200 font-mono w-20">
-                      {pc}
-                    </span>
-                  </div>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {COLOR_PRESETS.map((hex) => (
-                      <button
-                        key={hex}
-                        type="button"
-                        onClick={() => handleColorChange(hex)}
-                        className={`w-7 h-7 rounded-full flex-shrink-0 transition-transform hover:scale-110 ${
-                          pc.toLowerCase() === hex.toLowerCase() ? "ring-2 ring-offset-2 ring-surface-800 dark:ring-surface-200 dark:ring-offset-surface-900" : ""
-                        }`}
-                        style={{ backgroundColor: hex }}
+                      htmlFor="onb-hero-upload"
+                      className="flex-shrink-0 w-36 aspect-[21/9] rounded-lg overflow-hidden flex items-center justify-center border-2 border-dashed border-surface-200 dark:border-surface-600 cursor-pointer hover:border-primary-400 transition-colors"
+                    >
+                      {data.heroImageUrl ? (
+                        <img src={data.heroImageUrl} alt="Hero" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="flex flex-col items-center gap-1.5 p-2">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="w-5 h-5 text-surface-400">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                          </svg>
+                          <span className="text-[10px] text-surface-400 text-center">
+                            {uploading.hero ? t("hero.uploading", "Uploading...") : t("hero.cta", "Add hero photo")}
+                          </span>
+                        </div>
+                      )}
+                      <input
+                        ref={heroInputRef}
+                        id="onb-hero-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleHeroUpload}
+                        className="hidden"
                       />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-5">
-                <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
-                  {t("content.taglineLabel", "Tagline / Slogan")}
-                </label>
-                <input
-                  name="tagline"
-                  type="text"
-                  value={onboardingData.tagline}
-                  onChange={handleChange}
-                  placeholder={t("content.taglinePlaceholder", "Shaping the leaders of tomorrow, today.")}
-                  maxLength={80}
-                  className="w-full h-11 px-3.5 rounded-md border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 placeholder:text-surface-400 text-sm outline-none focus:border-teal-600 focus:bg-white dark:focus:bg-surface-800 transition-colors"
-                />
-              </div>
-
-              <div className="mb-5">
-                <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
-                  {t("content.descLabel", "School description")}
-                </label>
-                <textarea
-                  name="description"
-                  rows={5}
-                  value={onboardingData.description}
-                  onChange={handleChange}
-                  placeholder={t("content.descPlaceholder", "Tell families what makes your school special...")}
-                  className="w-full px-3.5 py-2.5 rounded-md border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 placeholder:text-surface-400 text-sm outline-none focus:border-teal-600 focus:bg-white dark:focus:bg-surface-800 transition-colors resize-none"
-                />
-              </div>
-
-              <div className="flex gap-2.5 mt-7">
-                <button
-                  onClick={prevStep}
-                  className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-md hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
-                    <line x1="19" y1="12" x2="5" y2="12" />
-                    <polyline points="12 19 5 12 12 5" />
-                  </svg>
-                  {t("back", "Back")}
-                </button>
-                <button
-                  onClick={nextStep}
-                  className="flex-1 h-11 text-white text-sm font-semibold rounded-md flex items-center justify-center gap-2 transition-colors"
-                  style={{ backgroundColor: pc }}
-                >
-                  {t("continue", "Continue")}
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ── STEP 4 — Review ── */}
-          {step === 4 && (
-            <div>
-              <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
-                {t("steps.review.title", "Preview & publish")}
-              </p>
-              <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
-                {t("review.heading", "Your site is ready 🎉")}
-              </h1>
-              <p className="text-[13.5px] text-surface-400 leading-relaxed mb-7">
-                {t("review.subtitle", "Review your details before going live. You can edit everything later.")}
-              </p>
-
-              <div className="space-y-3 mb-7">
-                <div className="flex items-center gap-4 p-4 bg-surface-50 dark:bg-surface-800 border border-surface-100 dark:border-surface-700 rounded-lg">
-                  <div className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0" style={{ backgroundColor: onboardingData.logoUrl ? "transparent" : pc }}>
-                    {onboardingData.logoUrl ? (
-                      <img src={onboardingData.logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-white text-sm font-bold font-display">
-                        {(user?.schoolName || "SC").split(" ").filter(Boolean).map((w) => w[0]).slice(0, 2).join("")}
-                      </span>
+                    </label>
+                    {data.heroImageUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setData((prev) => ({ ...prev, heroImageUrl: "" }))}
+                        className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                      >
+                        {t("Remove")}
+                      </button>
                     )}
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-surface-800 dark:text-surface-100">{t("review.logo", "Logo")}</h3>
-                    <p className="text-xs text-surface-400">{onboardingData.logoUrl ? t("review.uploaded", "Uploaded") : t("review.usingInitials", "Using initials placeholder")}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 p-4 bg-surface-50 dark:bg-surface-800 border border-surface-100 dark:border-surface-700 rounded-lg">
-                  {onboardingData.heroImageUrl ? (
-                    <img src={onboardingData.heroImageUrl} alt="Hero" className="w-20 h-12 rounded object-cover flex-shrink-0" />
-                  ) : (
-                    <div className="w-20 h-12 rounded bg-surface-200 dark:bg-surface-700 flex-shrink-0" />
-                  )}
-                  <div>
-                    <h3 className="text-sm font-medium text-surface-800 dark:text-surface-100">{t("review.coverImage", "Cover image")}</h3>
-                    <p className="text-xs text-surface-400">{onboardingData.heroImageUrl ? t("review.uploaded", "Uploaded") : t("review.notSet", "Not set")}</p>
-                  </div>
-                </div>
-
-                <div className="p-4 bg-surface-50 dark:bg-surface-800 border border-surface-100 dark:border-surface-700 rounded-lg">
-                  <h3 className="text-sm font-medium text-surface-800 dark:text-surface-100 mb-1">{t("review.tagline", "Tagline")}</h3>
-                  <p className="text-xs text-surface-400">{onboardingData.tagline || t("review.notSet", "Not set")}</p>
-                </div>
-
-                <div className="p-4 bg-surface-50 dark:bg-surface-800 border border-surface-100 dark:border-surface-700 rounded-lg">
-                  <h3 className="text-sm font-medium text-surface-800 dark:text-surface-100 mb-2">{t("review.primaryColor", "Primary colour")}</h3>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-md" style={{ backgroundColor: pc }} />
-                    <span className="text-xs text-surface-400 font-mono">{pc}</span>
                   </div>
                 </div>
               </div>
@@ -515,7 +579,7 @@ export default function OnboardingPage() {
               <div className="flex gap-2.5">
                 <button
                   onClick={prevStep}
-                  className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-md hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
+                  className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
                     <line x1="19" y1="12" x2="5" y2="12" />
@@ -524,13 +588,182 @@ export default function OnboardingPage() {
                   {t("back", "Back")}
                 </button>
                 <button
-                  onClick={handleSave}
-                  disabled={loading}
-                  className="flex-1 h-11 text-white text-sm font-semibold rounded-md flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={nextStep}
+                  className="flex-1 h-11 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors"
                   style={{ backgroundColor: pc }}
                 >
-                  {loading ? (
-                    t("review.saving", "Saving...")
+                  {t("continue", "Continue")}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── STEP 3 — Template ── */}
+          {step === 3 && (
+            <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+              <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
+                Template
+              </p>
+              <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
+                Choose your template
+              </h1>
+              <p className="text-[13.5px] text-surface-400 leading-relaxed mb-6">
+                Pick a design for your campus website. You can change this anytime in Settings.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                {Object.entries(TEMPLATE_PREVIEWS).map(([code, template]) => {
+                  const selected = data.templateCode === code;
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => setData((prev) => ({ ...prev, templateCode: code }))}
+                      className={`relative flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-all text-left ${
+                        selected
+                          ? "border-primary-600 bg-primary-50 dark:bg-primary-900/15 shadow-sm"
+                          : "border-surface-200 dark:border-surface-600 hover:border-primary-400 hover:bg-surface-50 dark:hover:bg-surface-750"
+                      }`}
+                    >
+                      {selected && (
+                        <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary-600 flex items-center justify-center">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        </div>
+                      )}
+                      <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-white dark:bg-surface-900 border border-surface-100 dark:border-surface-700">
+                        {template.icon}
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-surface-800 dark:text-surface-100">
+                          {template.name}
+                        </div>
+                        <div className="text-xs text-surface-400 mt-0.5 leading-relaxed">
+                          {template.desc}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-2.5">
+                <button
+                  onClick={prevStep}
+                  className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                  </svg>
+                  {t("back", "Back")}
+                </button>
+                <button
+                  onClick={nextStep}
+                  className="flex-1 h-11 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  style={{ backgroundColor: pc }}
+                >
+                  {t("continue", "Continue")}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── STEP 4 — Review & Finish ── */}
+          {step === 4 && (
+            <div className="space-y-6">
+              <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+                <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
+                  {t("steps.review.title", "Review")}
+                </p>
+                <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
+                  {t("review.heading", "Your site is ready 🎉")}
+                </h1>
+                <p className="text-[13.5px] text-surface-400 leading-relaxed mb-6">
+                  {t("review.subtitle", "Review your details before going live. You can edit everything later.")}
+                </p>
+
+                {/* Summary card */}
+                <div className="rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden" style={{ borderLeftWidth: "4px", borderLeftColor: pc }}>
+                  <div className="p-5 bg-white dark:bg-surface-800">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                      <div className="text-surface-500">{t("review.logo", "Logo")}</div>
+                      <div className="text-surface-800 dark:text-surface-100 font-medium">
+                        {data.logoUrl ? t("review.uploaded", "Uploaded") : t("review.usingInitials", "Using initials placeholder")}
+                      </div>
+
+                      <div className="text-surface-500">{t("review.coverImage", "Cover image")}</div>
+                      <div className="text-surface-800 dark:text-surface-100 font-medium">
+                        {data.heroImageUrl ? t("review.uploaded", "Uploaded") : t("review.notSet", "Not set")}
+                      </div>
+
+                      <div className="text-surface-500">{t("review.tagline", "Tagline")}</div>
+                      <div className="text-surface-800 dark:text-surface-100 font-medium truncate">
+                        {data.tagline || t("review.notSet", "—")}
+                      </div>
+
+                      <div className="text-surface-500">{t("review.primaryColor", "Primary colour")}</div>
+                      <div className="flex items-center gap-2 text-surface-800 dark:text-surface-100 font-medium">
+                        <span className="w-4 h-4 rounded" style={{ backgroundColor: pc }} />
+                        {pc}
+                      </div>
+
+                      <div className="text-surface-500">Template</div>
+                      <div className="text-surface-800 dark:text-surface-100 font-medium">
+                        {TEMPLATE_PREVIEWS[data.templateCode]?.name || data.templateCode}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-4 bg-surface-50 dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-surface-700 dark:text-surface-200 mb-0.5">
+                    You can edit everything later
+                  </p>
+                  <p className="text-sm text-surface-400">
+                    Go to Settings → Campus Website to add stats, values, gallery photos, and more.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2.5">
+                <button
+                  onClick={prevStep}
+                  className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                  </svg>
+                  {t("back", "Back")}
+                </button>
+                <button
+                  onClick={handleFinish}
+                  disabled={saving}
+                  className="flex-1 h-11 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: pc }}
+                >
+                  {saving ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                      {t("review.saving", "Saving...")}
+                    </span>
                   ) : (
                     <>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">

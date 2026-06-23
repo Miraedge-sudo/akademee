@@ -10,7 +10,6 @@ export default function LoginPage() {
   const { t } = useTranslation("auth");
 
   const [formData, setFormData] = useState({
-    subdomain: "",
     email: "",
     password: "",
   });
@@ -77,7 +76,7 @@ export default function LoginPage() {
               {t("login.title", "Welcome back")}
             </h1>
             <p className="text-[13.5px] text-surface-400 leading-relaxed mb-7">
-              {t("login.subtitle", "Enter your school details to access your campus.")}
+              {t("login.subtitle", "Enter your credentials to access your campus.")}
             </p>
 
             {error && (
@@ -87,33 +86,6 @@ export default function LoginPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-[18px]">
-
-              {/* Subdomain */}
-              <div>
-                <label htmlFor="subdomain" className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
-                  {t("login.subdomainLabel", "School subdomain")}
-                </label>
-                <div className="relative flex items-center">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 w-4 h-4 text-surface-400">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    <polyline points="9 22 9 12 15 12 15 22" />
-                  </svg>
-                  <input
-                    id="subdomain"
-                    name="subdomain"
-                    type="text"
-                    required
-                    value={formData.subdomain}
-                    onChange={handleChange}
-                    placeholder="grace-bilingual"
-                    autoComplete="off"
-                    className="w-full h-11 pl-10 pr-[120px] rounded-md border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 placeholder:text-surface-400 text-sm outline-none focus:border-teal-600 focus:bg-white dark:focus:bg-surface-800 focus:ring-[3.5px] focus:ring-teal-600/10 transition-colors"
-                  />
-                  <span className="absolute right-0 h-full flex items-center px-3 text-[12.5px] text-surface-500 bg-surface-100 dark:bg-surface-700 border-l-[1.5px] border-surface-200 dark:border-surface-600 rounded-r-md">
-                    .akademee.cm
-                  </span>
-                </div>
-              </div>
 
               {/* Email */}
               <div>

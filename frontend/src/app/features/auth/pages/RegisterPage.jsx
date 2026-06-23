@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
 import api from "../../../core/api/axios";
 import { API_ENDPOINTS } from "../../../core/api/endpoints";
 import { useAuth } from "../../../core/hooks/useAuth";
+import { getSubdomainFromHostname, saveSubdomain, clearSubdomain } from "../../../core/utils/subdomainHelper";
 
 const STEPS = [
   { num: 1, key: "school" },
@@ -44,6 +45,17 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
+  // If user arrived on a school subdomain (e.g. teste.lvh.me:3000/register),
+  // redirect to the main domain — registration must be domain-neutral.
+  useEffect(() => {
+    const subdomain = getSubdomainFromHostname();
+    if (subdomain) {
+      clearSubdomain();
+      const port = window.location.port ? `:${window.location.port}` : '';
+      window.location.href = `http://localhost${port}/register`;
+    }
+  }, []);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError("");
@@ -75,12 +87,21 @@ export default function RegisterPage() {
     try {
       const response = await api.post(API_ENDPOINTS.SCHOOLS.REGISTER, formData);
       if (response.data.success) {
+        const { data } = response.data;
+        
         // Store token
-        if (response.data.data?.token) {
-          localStorage.setItem("token", response.data.data.token);
+        if (data?.token) {
+          localStorage.setItem("token", data.token);
         }
-        // Reload page to let AuthContext detect the token and authenticate user
-        window.location.href = "/dashboard/website";
+
+        // Save subdomain for subdomain routing
+        const schoolSubdomain = data?.school?.subdomain || formData.subdomain;
+        if (schoolSubdomain) {
+          saveSubdomain(schoolSubdomain);
+        }
+
+        // Redirect to onboarding
+        window.location.href = "/onboarding";
       }
     } catch (err) {
       setError(
