@@ -7,37 +7,69 @@
 
   /* Primary color (dynamic - set via CSS variable) */
   --color-primary: var(--primary-color, #085041);
-  --color-primary-50: color-mix(in srgb, var(--primary-color, #085041) 5%, white);
-  --color-primary-100: color-mix(in srgb, var(--primary-color, #085041) 10%, white);
-  --color-primary-200: color-mix(in srgb, var(--primary-color, #085041) 20%, white);
-  --color-primary-400: color-mix(in srgb, var(--primary-color, #085041) 40%, white);
-  --color-primary-600: color-mix(in srgb, var(--primary-color, #085041) 60%, white);
-  --color-primary-700: color-mix(in srgb, var(--primary-color, #085041) 70%, white);
-  --color-primary-800: color-mix(in srgb, var(--primary-color, #085041) 80%, white);
-  --color-primary-900: color-mix(in srgb, var(--primary-color, #085041) 90%, white);
+  --color-primary-50: color-mix(
+    in srgb,
+    var(--primary-color, #085041) 5%,
+    white
+  );
+  --color-primary-100: color-mix(
+    in srgb,
+    var(--primary-color, #085041) 10%,
+    white
+  );
+  --color-primary-200: color-mix(
+    in srgb,
+    var(--primary-color, #085041) 20%,
+    white
+  );
+  --color-primary-400: color-mix(
+    in srgb,
+    var(--primary-color, #085041) 40%,
+    white
+  );
+  --color-primary-600: color-mix(
+    in srgb,
+    var(--primary-color, #085041) 60%,
+    white
+  );
+  --color-primary-700: color-mix(
+    in srgb,
+    var(--primary-color, #085041) 70%,
+    white
+  );
+  --color-primary-800: color-mix(
+    in srgb,
+    var(--primary-color, #085041) 80%,
+    white
+  );
+  --color-primary-900: color-mix(
+    in srgb,
+    var(--primary-color, #085041) 90%,
+    white
+  );
 
   /* Teal palette */
-  --color-teal-50: #E1F5EE;
-  --color-teal-100: #C8F0E4;
-  --color-teal-200: #9FE1CB;
-  --color-teal-400: #5DCAA5;
-  --color-teal-600: #1D9E75;
+  --color-teal-50: #e1f5ee;
+  --color-teal-100: #c8f0e4;
+  --color-teal-200: #9fe1cb;
+  --color-teal-400: #5dcaa5;
+  --color-teal-600: #1d9e75;
   --color-teal-700: #178060;
-  --color-teal-800: #0F6E56;
+  --color-teal-800: #0f6e56;
   --color-teal-900: #085041;
-  --color-teal-950: #04342C;
+  --color-teal-950: #04342c;
 
   /* Surface (neutral) palette */
-  --color-surface-50: #F7F8F6;
-  --color-surface-100: #EEF0EC;
-  --color-surface-200: #D8DBD5;
-  --color-surface-300: #BFC4BB;
-  --color-surface-400: #9BA59C;
-  --color-surface-500: #6E7A70;
-  --color-surface-600: #5C665E;
-  --color-surface-700: #434D45;
-  --color-surface-800: #2A3029;
-  --color-surface-900: #1A1F1B;
+  --color-surface-50: #f7f8f6;
+  --color-surface-100: #eef0ec;
+  --color-surface-200: #d8dbd5;
+  --color-surface-300: #bfc4bb;
+  --color-surface-400: #9ba59c;
+  --color-surface-500: #6e7a70;
+  --color-surface-600: #5c665e;
+  --color-surface-700: #434d45;
+  --color-surface-800: #2a3029;
+  --color-surface-900: #1a1f1b;
 
   /* Radius */
   --radius-sm: 6px;
@@ -63,7 +95,190 @@
     @apply bg-surface-900 text-surface-100;
   }
 
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
+  }
+}
+
+/* ── Animations ── */
+@layer utilities {
+  /* Fade In */
+  .animate-fadeIn {
+    animation: fadeIn 0.6s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Slide In Left */
+  .animate-slideInLeft {
+    animation: slideInLeft 0.8s ease-out forwards;
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Slide In Right */
+  .animate-slideInRight {
+    animation: slideInRight 0.8s ease-out forwards;
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Float */
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  /* Bounce on hover */
+  .animate-bounce-on-hover {
+    transition: transform 0.3s ease;
+  }
+
+  .animate-bounce-on-hover:hover {
+    animation: bounce 0.5s ease;
+  }
+
+  @keyframes bounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  /* Pulse on hover */
+  .animate-pulse-on-hover {
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+
+  .animate-pulse-on-hover:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px -5px rgba(13, 158, 136, 0.4);
+  }
+
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s ease;
+  }
+
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Gradient animation */
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 8s ease infinite;
+  }
+
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Shimmer effect */
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  /* Scale in */
+  .animate-scaleIn {
+    animation: scaleIn 0.5s ease-out forwards;
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Rotate in */
+  .animate-rotateIn {
+    animation: rotateIn 0.6s ease-out forwards;
+  }
+
+  @keyframes rotateIn {
+    from {
+      opacity: 0;
+      transform: rotate(-10deg);
+    }
+    to {
+      opacity: 1;
+      transform: rotate(0);
+    }
   }
 }

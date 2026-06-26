@@ -76,7 +76,12 @@ export function AuthProvider({ children }) {
         updatePrimaryColor(userData.school.primaryColor);
       }
 
-      return { success: true, onboardingCompleted: userData.onboardingCompleted };
+      return {
+        success: true,
+        onboardingCompleted: userData.onboardingCompleted,
+        subdomain: userData.subdomain,
+        token: token,
+      };
     } catch (error) {
       console.error("Login error:", error);
       return {
