@@ -4,6 +4,7 @@ import { useAuth } from '../core/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import ThemeLangToggles from './ThemeLangToggles';
 import { ROLES } from '../core/constants/roles';
+import { buildSubdomainUrl } from '../core/utils/subdomainHelper';
 
 export default function Navbar({ onToggleSidebar }) {
   const navigate = useNavigate();
@@ -43,8 +44,14 @@ export default function Navbar({ onToggleSidebar }) {
   const handleLogout = () => {
     setConfirmLogout(false);
     setDropdownOpen(false);
+    const schoolSubdomain = localStorage.getItem('akademee-subdomain');
     logout();
-    navigate('/login');
+    if (schoolSubdomain) {
+      // Redirect to the school's vitrine website
+      window.location.href = buildSubdomainUrl(schoolSubdomain, '/site');
+    } else {
+      navigate('/login');
+    }
   };
 
   const initials = user
