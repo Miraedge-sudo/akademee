@@ -442,20 +442,23 @@ export default function WebsiteSettingsPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          {/* Preview link */}
-          {data.websitePublished && user?.subdomain && (
+          {/* Preview link — always available, even before publishing */}
+          {user?.subdomain && (
             <a
-              href={`/site?subdomain=${user.subdomain}`}
+              href={`/site?subdomain=${user.subdomain}${data.websitePublished ? '' : '&preview=1'}`}
               target="_blank"
               rel="noopener noreferrer"
               className="h-10 px-3.5 border border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-2"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" y1="14" x2="21" y2="3" />
+                {data.websitePublished
+                  ? <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></>
+                  : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></>
+                }
               </svg>
-              {t("websiteSettings.preview", "Preview")}
+              {data.websitePublished
+                ? t("websiteSettings.preview", "Preview")
+                : t("websiteSettings.previewDraft", "Preview draft")}
             </a>
           )}
 

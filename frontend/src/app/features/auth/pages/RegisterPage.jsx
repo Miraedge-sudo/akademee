@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
@@ -44,6 +44,26 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const leftPanelRef = useRef(null);
+
+  // Scroll reveal for left panel
+  useEffect(() => {
+    const panel = leftPanelRef.current;
+    if (!panel) return;
+    const reveals = panel.querySelectorAll(".reveal");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("active");
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+    reveals.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
 
   // If user arrived on a school subdomain (e.g. teste.lvh.me:3000/register),
   // redirect to the main domain — registration must be domain-neutral.
@@ -113,11 +133,17 @@ export default function RegisterPage() {
     }
   };
 
-  const nextStep = () => setStep((s) => Math.min(s + 1, 3));
-  const prevStep = () => setStep((s) => Math.max(s - 1, 1));
+  const nextStep = () => {
+    setStep((s) => Math.min(s + 1, 3));
+  };
+  const prevStep = () => {
+    setStep((s) => Math.max(s - 1, 1));
+  };
 
   const inputClass =
-    "w-full h-11 pl-10 pr-3.5 rounded-md border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 placeholder:text-surface-400 text-sm outline-none focus:border-teal-600 focus:bg-white dark:focus:bg-surface-800 focus:ring-[3.5px] focus:ring-teal-600/10 transition-colors";
+    "w-full h-11 pl-10 pr-3.5 rounded-md border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 placeholder:text-surface-400 text-sm outline-none focus:border-teal-600 focus:bg-white dark:focus:bg-surface-800 focus:ring-[3.5px] focus:ring-teal-600/10 transition-all duration-200";
+
+  const staggerItem = (i) => ({ animationDelay: `${i * 0.07}s` });
 
   const Icon = ({ children, className = "" }) => (
     <svg
@@ -137,23 +163,30 @@ export default function RegisterPage() {
     <div className="flex min-h-screen bg-surface-50 dark:bg-surface-900">
 
       {/* ══ LEFT PANEL — Value story ══ */}
-      <div className="hidden lg:flex lg:w-[52%] flex-shrink-0 bg-teal-900 dark:bg-surface-950 relative overflow-hidden sticky top-0 h-screen">
-        {/* Grid texture */}
+      <div
+        ref={leftPanelRef}
+        className="hidden lg:flex lg:w-[52%] flex-shrink-0 bg-teal-900 dark:bg-surface-950 relative overflow-hidden sticky top-0 h-screen"
+      >
+        {/* Animated gradient mesh */}
         <div
-          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          className="absolute inset-0 opacity-[0.04] pointer-events-none animate-gradient"
           style={{
             backgroundImage:
               "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
             backgroundSize: "40px 40px",
           }}
         />
-        {/* Glow blob */}
-        <div className="absolute w-[500px] h-[500px] -bottom-36 -right-36 rounded-full bg-teal-600/25 blur-3xl pointer-events-none" />
+        {/* Glow blobs */}
+        <div className="absolute w-[500px] h-[500px] -bottom-36 -right-36 rounded-full bg-teal-600/25 blur-3xl pointer-events-none animate-float" />
+        <div
+          className="absolute w-[300px] h-[300px] -top-20 -left-20 rounded-full bg-teal-500/15 blur-3xl pointer-events-none animate-float"
+          style={{ animationDelay: "1.5s" }}
+        />
 
         <div className="relative z-10 flex flex-col h-full px-12 py-11 w-full">
 
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-12">
+          {/* Logo with fade-in */}
+          <div className="flex items-center gap-3 mb-12 animate-fadeIn">
             <div className="w-9 h-9 rounded-md bg-white/15 flex items-center justify-center">
               <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px]">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -163,8 +196,8 @@ export default function RegisterPage() {
             <span className="font-display text-xl text-teal-100">Akademee</span>
           </div>
 
-          {/* Problem statement */}
-          <div className="mb-9">
+          {/* Problem statement — staggered reveal */}
+          <div className="mb-9 reveal" style={{ transitionDelay: "0.1s" }}>
             <div className="inline-flex items-center gap-2 text-[10.5px] font-semibold tracking-wider uppercase text-teal-400 mb-4">
               <span className="w-5 h-px bg-teal-400" />
               {t("register.story.whyLabel", "Why we built this")}
@@ -187,7 +220,7 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          {/* Benefits */}
+          {/* Benefits — staggered */}
           <div className="flex flex-col gap-4 mb-9">
             {[
               {
@@ -214,24 +247,25 @@ export default function RegisterPage() {
             ].map((b, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3.5 p-4 bg-white/5 border border-white/[0.07] rounded-md hover:bg-white/[0.08] transition-colors"
+                className="flex items-start gap-3.5 p-4 bg-white/5 border border-white/[0.07] rounded-md hover:bg-white/[0.12] hover:border-white/20 transition-all duration-300 group reveal"
+                style={{ transitionDelay: `${0.2 + i * 0.12}s` }}
               >
-                <div className="w-9 h-9 rounded-sm bg-teal-600/20 flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-sm bg-teal-600/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:bg-teal-600/30 transition-all duration-300">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px] text-teal-400">
                     {b.icon}
                   </svg>
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-white mb-0.5">{b.title}</div>
+                  <div className="text-sm font-semibold text-white mb-0.5 group-hover:text-teal-200 transition-colors">{b.title}</div>
                   <div className="text-[12.5px] text-white/45 leading-snug">{b.desc}</div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Testimonial */}
-          <div className="mt-auto p-5 bg-white/[0.06] border border-white/[0.08] rounded-lg relative">
-            <span className="font-display text-6xl leading-[0.6] text-teal-600 italic absolute top-4 left-4">"</span>
+          {/* Testimonial — reveal */}
+          <div className="mt-auto p-5 bg-white/[0.06] border border-white/[0.08] rounded-lg relative reveal group hover:bg-white/[0.09] transition-all duration-300" style={{ transitionDelay: "0.5s" }}>
+            <span className="font-display text-6xl leading-[0.6] text-teal-600 italic absolute top-4 left-4 group-hover:text-teal-500 transition-colors">"</span>
             <p className="font-display text-[15.5px] italic text-white/85 leading-relaxed mb-4 pt-5">
               {t(
                 "register.story.testimonialQuote",
@@ -239,7 +273,7 @@ export default function RegisterPage() {
               )}
             </p>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-teal-700 border-2 border-white/10 flex items-center justify-center text-sm font-bold text-teal-200 flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-teal-700 border-2 border-white/10 flex items-center justify-center text-sm font-bold text-teal-200 flex-shrink-0 group-hover:border-teal-500/30 transition-colors">
                 EK
               </div>
               <div>
@@ -266,10 +300,16 @@ export default function RegisterPage() {
       </div>
 
       {/* ══ RIGHT PANEL — Form ══ */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        {/* Floating decorative blobs */}
+        <div className="absolute top-32 right-10 w-64 h-64 bg-teal-200/20 dark:bg-teal-800/10 rounded-full blur-3xl pointer-events-none animate-float" />
+        <div
+          className="absolute bottom-20 left-10 w-48 h-48 bg-teal-100/20 dark:bg-teal-900/10 rounded-full blur-3xl pointer-events-none animate-float"
+          style={{ animationDelay: "2s" }}
+        />
 
         {/* Top nav */}
-        <div className="flex items-center justify-between px-6 lg:px-11 py-5 bg-white dark:bg-surface-800 border-b border-surface-100 dark:border-surface-700">
+        <div className="relative z-10 flex items-center justify-between px-6 lg:px-11 py-5 bg-white/80 dark:bg-surface-800/80 backdrop-blur-md border-b border-surface-100 dark:border-surface-700">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-md bg-teal-900 flex items-center justify-center">
               <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
@@ -291,23 +331,29 @@ export default function RegisterPage() {
         </div>
 
         {/* Step indicator */}
-        <div className="flex items-center gap-1.5 px-6 lg:px-11 pt-6 max-w-[560px] w-full mx-auto">
+        <div className="relative z-10 flex items-center gap-1.5 px-6 lg:px-11 pt-6 max-w-[560px] w-full mx-auto">
         {STEPS.map((s, i) => (
           <div key={s.num} className="flex items-center flex-1 last:flex-none">
             <div className="flex flex-col items-center gap-1.5">
               <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-semibold border-2 transition-colors ${
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-semibold border-2 transition-all duration-500 ${
                   step > s.num
-                    ? "bg-teal-600 border-teal-600 text-white"
+                    ? "bg-teal-600 border-teal-600 text-white scale-100"
                     : step === s.num
-                    ? "bg-teal-900 border-teal-900 text-white"
-                    : "bg-white dark:bg-surface-800 border-surface-200 dark:border-surface-600 text-surface-400"
+                    ? "bg-teal-900 border-teal-900 text-white shadow-lg shadow-teal-900/30 scale-110"
+                    : "bg-white dark:bg-surface-800 border-surface-200 dark:border-surface-600 text-surface-400 scale-100"
                 }`}
               >
-                {step > s.num ? "✓" : s.num}
+                {step > s.num ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : (
+                  s.num
+                )}
               </div>
               <span
-                className={`text-[11px] font-medium whitespace-nowrap ${
+                className={`text-[11px] font-medium whitespace-nowrap transition-all duration-300 ${
                   step >= s.num ? "text-teal-700 dark:text-teal-400" : "text-surface-400"
                 }`}
               >
@@ -316,7 +362,7 @@ export default function RegisterPage() {
             </div>
             {i < STEPS.length - 1 && (
               <div
-                className={`flex-1 h-[1.5px] mx-1 -mt-4 ${
+                className={`flex-1 h-[1.5px] mx-1 -mt-4 transition-all duration-500 ${
                   step > s.num ? "bg-teal-400" : "bg-surface-200 dark:bg-surface-700"
                 }`}
               />
@@ -326,21 +372,23 @@ export default function RegisterPage() {
       </div>
 
       {/* Body */}
-      <div className="flex-1 flex justify-center px-6 py-8">
+      <div className="relative z-10 flex-1 flex justify-center px-6 py-8">
         <div className="w-full max-w-[480px]">
-          <div className="bg-white dark:bg-surface-800 border border-surface-100 dark:border-surface-700 rounded-xl shadow-sm p-7 lg:p-9">
+          <div className="bg-white dark:bg-surface-800 border border-surface-100 dark:border-surface-700 rounded-xl shadow-sm overflow-hidden">
+            <div
+              className="flex transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)]"
+              style={{ transform: `translateX(-${(step - 1) * 100}%)` }}
+            >
 
-            {error && (
-              <div className="mb-5 px-4 py-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm">
-                {error}
-              </div>
-            )}
+              {/* ══ SLIDE 1 — School ══ */}
+              <div className="w-full flex-shrink-0 p-7 lg:p-9">
+                {error && (
+                  <div className="mb-5 px-4 py-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm animate-fadeIn">
+                    {error}
+                  </div>
+                )}
 
-            <form onSubmit={handleSubmit}>
-
-              {/* ── STEP 1 — School ── */}
-              {step === 1 && (
-                <div>
+                <form onSubmit={handleSubmit}>
                   <p className="text-[11px] font-semibold tracking-wide uppercase text-teal-600 mb-1.5">
                     {t("register.stepLabel", "Step")} 1 {t("register.of", "of")} 3
                   </p>
@@ -352,7 +400,7 @@ export default function RegisterPage() {
                   </p>
 
                   <div className="space-y-[18px]">
-                    <div>
+                    <div className="animate-fadeIn" style={staggerItem(0)}>
                       <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
                         {t("register.school.name", "School name")} <span className="text-teal-600">*</span>
                       </label>
@@ -373,7 +421,7 @@ export default function RegisterPage() {
                       </div>
                     </div>
 
-                    <div>
+                    <div className="animate-fadeIn" style={staggerItem(1)}>
                       <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
                         {t("register.school.subdomain", "Campus subdomain")} <span className="text-teal-600">*</span>
                       </label>
@@ -404,7 +452,7 @@ export default function RegisterPage() {
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 animate-fadeIn" style={staggerItem(2)}>
                       <div>
                         <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
                           {t("register.school.city", "City")} <span className="text-teal-600">*</span>
@@ -446,7 +494,7 @@ export default function RegisterPage() {
                       </div>
                     </div>
 
-                    <div>
+                    <div className="animate-fadeIn" style={staggerItem(3)}>
                       <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
                         {t("register.school.email", "School email")} <span className="text-teal-600">*</span>
                       </label>
@@ -467,7 +515,7 @@ export default function RegisterPage() {
                       </div>
                     </div>
 
-                    <div>
+                    <div className="animate-fadeIn" style={staggerItem(4)}>
                       <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
                         {t("register.school.phone", "Phone number")} <span className="text-[11px] text-surface-400 font-normal">({t("register.optional", "optional")})</span>
                       </label>
@@ -490,20 +538,32 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="w-full h-[46px] mt-7 bg-teal-900 hover:bg-teal-800 text-teal-50 text-[15px] font-semibold rounded-md flex items-center justify-center gap-2 transition-colors active:scale-[0.99]"
+                    className="w-full h-[46px] mt-7 bg-teal-900 hover:bg-teal-800 text-teal-50 text-[15px] font-semibold rounded-md flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] hover:shadow-lg hover:shadow-teal-900/20 hover:scale-[1.01] group"
                   >
                     {t("register.continueAdmin", "Continue — Admin account")}
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-[17px] h-[17px]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-[17px] h-[17px] group-hover:translate-x-0.5 transition-transform">
                       <line x1="5" y1="12" x2="19" y2="12" />
                       <polyline points="12 5 19 12 12 19" />
                     </svg>
                   </button>
-                </div>
-              )}
+                </form>
+                <p className="text-center text-[13.5px] text-surface-400 mt-6 animate-fadeIn">
+                  {t("register.haveAccount", "Already registered?")}{" "}
+                  <Link to="/login" className="text-teal-600 font-medium hover:underline">
+                    {t("register.signInLink", "Sign in")}
+                  </Link>
+                </p>
+              </div>
 
-              {/* ── STEP 2 — Admin ── */}
-              {step === 2 && (
-                <div>
+              {/* ══ SLIDE 2 — Admin ══ */}
+              <div className="w-full flex-shrink-0 p-7 lg:p-9">
+                {error && (
+                  <div className="mb-5 px-4 py-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm animate-fadeIn">
+                    {error}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit}>
                   <p className="text-[11px] font-semibold tracking-wide uppercase text-teal-600 mb-1.5">
                     {t("register.stepLabel", "Step")} 2 {t("register.of", "of")} 3
                   </p>
@@ -515,7 +575,7 @@ export default function RegisterPage() {
                   </p>
 
                   <div className="space-y-[18px]">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 animate-fadeIn" style={staggerItem(0)}>
                       <div>
                         <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
                           {t("register.admin.firstName", "First name")} <span className="text-teal-600">*</span>
@@ -558,7 +618,7 @@ export default function RegisterPage() {
                       </div>
                     </div>
 
-                    <div>
+                    <div className="animate-fadeIn" style={staggerItem(1)}>
                       <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
                         {t("register.admin.email", "Email address")} <span className="text-teal-600">*</span>
                       </label>
@@ -579,7 +639,7 @@ export default function RegisterPage() {
                       </div>
                     </div>
 
-                    <div>
+                    <div className="animate-fadeIn" style={staggerItem(2)}>
                       <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
                         {t("register.admin.password", "Password")} <span className="text-teal-600">*</span>
                       </label>
@@ -601,7 +661,7 @@ export default function RegisterPage() {
                         <button
                           type="button"
                           onClick={() => setShowPwd((v) => !v)}
-                          className="absolute right-3 text-surface-400 hover:text-surface-600 dark:hover:text-surface-200"
+                          className="absolute right-3 text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 transition-colors"
                         >
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -611,7 +671,7 @@ export default function RegisterPage() {
                       </div>
                     </div>
 
-                    <div>
+                    <div className="animate-fadeIn" style={staggerItem(3)}>
                       <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
                         {t("register.admin.confirmPassword", "Confirm password")} <span className="text-teal-600">*</span>
                       </label>
@@ -633,7 +693,7 @@ export default function RegisterPage() {
                         <button
                           type="button"
                           onClick={() => setShowPwd2((v) => !v)}
-                          className="absolute right-3 text-surface-400 hover:text-surface-600 dark:hover:text-surface-200"
+                          className="absolute right-3 text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 transition-colors"
                         >
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -644,11 +704,11 @@ export default function RegisterPage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2.5 mt-7">
+                  <div className="flex gap-2.5 mt-7 animate-fadeIn" style={staggerItem(4)}>
                     <button
                       type="button"
                       onClick={prevStep}
-                      className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-md hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
+                      className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-md hover:bg-surface-50 dark:hover:bg-surface-700 transition-all duration-200 active:scale-[0.98] flex items-center gap-1.5"
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
                         <line x1="19" y1="12" x2="5" y2="12" />
@@ -659,7 +719,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={nextStep}
-                      className="flex-1 h-11 bg-teal-900 hover:bg-teal-800 text-teal-50 text-sm font-semibold rounded-md flex items-center justify-center gap-2 transition-colors"
+                      className="flex-1 h-11 bg-teal-900 hover:bg-teal-800 text-teal-50 text-sm font-semibold rounded-md flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg hover:shadow-teal-900/20 hover:scale-[1.01] active:scale-[0.98]"
                     >
                       {t("register.continuePlan", "Continue — Choose a plan")}
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
@@ -668,12 +728,18 @@ export default function RegisterPage() {
                       </svg>
                     </button>
                   </div>
-                </div>
-              )}
+                </form>
+              </div>
 
-              {/* ── STEP 3 — Plan ── */}
-              {step === 3 && (
-                <div>
+              {/* ══ SLIDE 3 — Plan ══ */}
+              <div className="w-full flex-shrink-0 p-7 lg:p-9">
+                {error && (
+                  <div className="mb-5 px-4 py-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm animate-fadeIn">
+                    {error}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit}>
                   <p className="text-[11px] font-semibold tracking-wide uppercase text-teal-600 mb-1.5">
                     {t("register.stepLabel", "Step")} 3 {t("register.of", "of")} 3
                   </p>
@@ -685,23 +751,24 @@ export default function RegisterPage() {
                   </p>
 
                   <div className="flex flex-col gap-2.5">
-                    {PLANS.map((plan) => {
+                    {PLANS.map((plan, pi) => {
                       const selected = formData.planId === plan.id;
                       return (
                         <label
                           key={plan.id}
-                          className={`flex items-center gap-3.5 p-4 rounded-lg border-[1.5px] cursor-pointer transition-colors ${
+                          className={`animate-fadeIn flex items-center gap-3.5 p-4 rounded-lg border-[1.5px] cursor-pointer transition-all duration-200 ${
                             selected
-                              ? "border-teal-600 bg-teal-50 dark:bg-teal-900/15"
-                              : "border-surface-200 dark:border-surface-600 hover:border-teal-400 hover:bg-teal-50/50 dark:hover:bg-teal-900/10"
+                              ? "border-teal-600 bg-teal-50 dark:bg-teal-900/15 shadow-md shadow-teal-500/10 scale-[1.02]"
+                              : "border-surface-200 dark:border-surface-600 hover:border-teal-400 hover:bg-teal-50/50 dark:hover:bg-teal-900/10 hover:scale-[1.01]"
                           }`}
+                          style={staggerItem(pi)}
                         >
                           <span
-                            className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                              selected ? "border-teal-600 bg-teal-600" : "border-surface-300 dark:border-surface-500"
+                            className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
+                              selected ? "border-teal-600 bg-teal-600 scale-110" : "border-surface-300 dark:border-surface-500"
                             }`}
                           >
-                            {selected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            {selected && <span className="w-1.5 h-1.5 rounded-full bg-white animate-scaleIn" />}
                           </span>
                           <span className="flex-1">
                             <span className="flex items-center gap-2">
@@ -745,11 +812,11 @@ export default function RegisterPage() {
                     })}
                   </div>
 
-                  <div className="flex gap-2.5 mt-7">
+                  <div className="flex gap-2.5 mt-7 animate-fadeIn" style={staggerItem(4)}>
                     <button
                       type="button"
                       onClick={prevStep}
-                      className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-md hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
+                      className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-md hover:bg-surface-50 dark:hover:bg-surface-700 transition-all duration-200 active:scale-[0.98] flex items-center gap-1.5"
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
                         <line x1="19" y1="12" x2="5" y2="12" />
@@ -760,10 +827,16 @@ export default function RegisterPage() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="flex-1 h-11 bg-teal-900 hover:bg-teal-800 disabled:opacity-60 disabled:cursor-not-allowed text-teal-50 text-sm font-semibold rounded-md flex items-center justify-center gap-2 transition-colors"
+                      className="flex-1 h-11 bg-teal-900 hover:bg-teal-800 disabled:opacity-60 disabled:cursor-not-allowed text-teal-50 text-sm font-semibold rounded-md flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg hover:shadow-teal-900/20 active:scale-[0.98] disabled:scale-100"
                     >
                       {loading ? (
-                        t("register.creating", "Creating your campus...")
+                        <span className="flex items-center gap-2">
+                          <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                            <path d="M4 12a8 8 0 0 1 8-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
+                          </svg>
+                          {t("register.creating", "Creating your campus...")}
+                        </span>
                       ) : (
                         <>
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
@@ -775,18 +848,10 @@ export default function RegisterPage() {
                       )}
                     </button>
                   </div>
-                </div>
-              )}
-            </form>
+                </form>
+              </div>
 
-            {step === 1 && (
-              <p className="text-center text-[13.5px] text-surface-400 mt-6">
-                {t("register.haveAccount", "Already registered?")}{" "}
-                <Link to="/login" className="text-teal-600 font-medium hover:underline">
-                  {t("register.signInLink", "Sign in")}
-                </Link>
-              </p>
-            )}
+            </div>
           </div>
         </div>
       </div>

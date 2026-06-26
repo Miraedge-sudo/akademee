@@ -12,6 +12,7 @@ const STEPS = [
   { num: 2, key: "content" },
   { num: 3, key: "template" },
   { num: 4, key: "review" },
+  { num: 5, key: "publish" },
 ];
 
 const COLOR_PRESETS = [
@@ -165,7 +166,8 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleFinish = async () => {
+  // Step 4: save and go to preview step
+  const handleSave = async () => {
     setSaving(true);
     setError("");
 
@@ -187,19 +189,59 @@ export default function OnboardingPage() {
     try {
       const response = await saveOnboardingData(payload);
       if (response.success) {
-        // Save color synchronously before navigation (useEffect won't fire before reload)
+        // Save color
+        localStorage.setItem('akademee-primary-color', primaryColor);
+        document.documentElement.style.setProperty('--primary-color', primaryColor);
+        updatePrimaryColor(primaryColor);
+        // Go to step 5 (preview)
+        nextStep();
+      } else {
+        setError(response.message || "Error saving configuration");
+      }
+    } catch (err) {
+      console.error("Save error:", err);
+      setError(err.response?.data?.message || err.message || "Error saving configuration");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Step 5: publish + redirect to live site
+  const handlePublishAndGoLive = async () => {
+    setSaving(true);
+    setError("");
+
+    let primaryColor = data.primaryColor;
+    if (!primaryColor.match(/^#[0-9A-Fa-f]{6}$/)) {
+      primaryColor = "#085041";
+    }
+
+    const payload = {
+      tagline: data.tagline,
+      websiteDescription: data.description,
+      primaryColor,
+      templateCode: data.templateCode,
+      websiteStats: data.websiteStats,
+      websiteValues: data.websiteValues,
+      onboardingCompleted: true,
+      websitePublished: true,
+    };
+
+    try {
+      const response = await saveOnboardingData(payload);
+      if (response.success) {
+        // Save color synchronously before navigation
         localStorage.setItem('akademee-primary-color', primaryColor);
         document.documentElement.style.setProperty('--primary-color', primaryColor);
         updatePrimaryColor(primaryColor);
 
-        // Redirect to subdomain URL for multi-tenant routing
-        const token = localStorage.getItem('token');
+        // Redirect to the live site on the school's subdomain
         const schoolSubdomain = user?.subdomain || localStorage.getItem('akademee-subdomain');
-        if (schoolSubdomain && token) {
-          const redirectUrl = buildSubdomainUrl(schoolSubdomain, `/dashboard?token=${encodeURIComponent(token)}`);
-          window.location.href = redirectUrl;
+        const token = localStorage.getItem('token');
+        if (schoolSubdomain) {
+          const liveUrl = buildSubdomainUrl(schoolSubdomain, `/site${token ? `?token=${encodeURIComponent(token)}` : ''}`);
+          window.location.href = liveUrl;
         } else {
-          // Fallback: redirect to dashboard on same domain
           window.location.href = "/dashboard";
         }
       } else {
@@ -213,9 +255,9 @@ export default function OnboardingPage() {
     }
   };
 
-  const nextStep = () => setStep((s) => Math.min(s + 1, 4));
+  const nextStep = () => setStep((s) => Math.min(s + 1, 5));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
-  const skip = () => (step < 4 ? nextStep() : handleFinish());
+  const skip = () => (step < 5 ? nextStep() : navigate('/dashboard'));
 
   const pc = data.primaryColor;
   const initials = (user?.schoolName || "SC")
@@ -289,15 +331,16 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <div className={`text-[13px] font-medium ${isActive ? "text-white" : isDone ? "text-white/65" : "text-white/35"}`}>
-                    {t(`steps.${s.key === "identity" ? "logo" : s.key === "content" ? "hero" : s.key}.title`, {
+                    {t(`steps.${s.key}.title`, {
                       identity: "School identity",
                       content: "About & content",
                       template: "Template",
-                      review: "Preview & publish"
+                      review: "Review",
+                      publish: "Preview & publish"
                     }[s.key] || s.key)}
                   </div>
                   <div className="text-[11px] text-white/25">
-                    {t(`steps.${s.key === "identity" ? "logo" : s.key === "content" ? "hero" : s.key}.desc`, "")}
+                    {t(`steps.${s.key}.desc`, "")}
                   </div>
                 </div>
               </div>
@@ -317,13 +360,13 @@ export default function OnboardingPage() {
         <div className="flex items-center justify-between px-6 lg:px-10 h-[58px] bg-white dark:bg-surface-800 border-b border-surface-100 dark:border-surface-700 flex-shrink-0">
           <div className="flex-1 max-w-[280px]">
             <div className="flex justify-between text-xs text-surface-400 mb-1.5">
-              <span>{t("stepLabel", "Step")} {step} {t("of", "of")} 4</span>
-              <span>{Math.round((step / 4) * 100)}%</span>
+              <span>{t("stepLabel", "Step")} {step} {t("of", "of")} 5</span>
+              <span>{Math.round((step / 5) * 100)}%</span>
             </div>
             <div className="h-1 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-300"
-                style={{ width: `${(step / 4) * 100}%`, backgroundColor: pc }}
+                style={{ width: `${(step / 5) * 100}%`, backgroundColor: pc }}
               />
             </div>
           </div>
@@ -754,7 +797,7 @@ export default function OnboardingPage() {
                   {t("back", "Back")}
                 </button>
                 <button
-                  onClick={handleFinish}
+                  onClick={handleSave}
                   disabled={saving}
                   className="flex-1 h-11 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   style={{ backgroundColor: pc }}
@@ -767,14 +810,116 @@ export default function OnboardingPage() {
                   ) : (
                     <>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                        <polyline points="22 4 12 14.01 9 11.01" />
+                        <polyline points="20 6 9 17 4 12" />
                       </svg>
-                      {t("review.submit", "Finish & go to dashboard")}
+                      {t("review.submit", "Continue to preview")}
                     </>
                   )}
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* ── STEP 5 — Preview & Publish ── */}
+          {step === 5 && (
+            <div className="space-y-6">
+
+              <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+                <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
+                  {t("steps.publish.title", "Preview & publish")}
+                </p>
+                <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
+                  Preview your campus website
+                </h1>
+                <p className="text-[13.5px] text-surface-400 leading-relaxed mb-5">
+                  Take a look at your site below. When you're happy, click "Publish" to make it live.
+                </p>
+
+                {/* Mini preview card */}
+                <div className="rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden" style={{ borderLeftWidth: "4px", borderLeftColor: pc }}>
+                  {/* Hero preview */}
+                  <div
+                    className="relative h-[200px] flex items-end overflow-hidden"
+                    style={{ background: data.heroImageUrl ? `url(${data.heroImageUrl}) center/cover` : `linear-gradient(135deg, ${pc}, ${pc}88)` }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                    <div className="relative z-10 p-6 flex items-center gap-4">
+                      {/* Logo / initials */}
+                      <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 border-white/30" style={{ background: data.logoUrl ? `url(${data.logoUrl}) center/cover` : pc }}>
+                        {!data.logoUrl && (
+                          <span className="w-full h-full flex items-center justify-center font-display font-bold text-lg text-white">{initials}</span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-display text-lg font-bold text-white drop-shadow-sm">{user?.schoolName || "Your School"}</div>
+                        {data.tagline && <div className="text-sm text-white/80 mt-0.5 drop-shadow-sm">{data.tagline}</div>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Content preview */}
+                  <div className="p-5 bg-white dark:bg-surface-800">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                      <div className="text-surface-500">Template</div>
+                      <div className="text-surface-800 dark:text-surface-100 font-medium">
+                        {TEMPLATE_PREVIEWS[data.templateCode]?.name || data.templateCode}
+                      </div>
+                      <div className="text-surface-500">Colour</div>
+                      <div className="flex items-center gap-2 text-surface-800 dark:text-surface-100 font-medium">
+                        <span className="w-4 h-4 rounded" style={{ backgroundColor: pc }} />
+                        {pc}
+                      </div>
+                      {data.description && (
+                        <>
+                          <div className="text-surface-500">Description</div>
+                          <div className="text-surface-800 dark:text-surface-100 text-surface-500 line-clamp-2">{data.description}</div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-surface-400 text-center mt-4 flex items-center justify-center gap-1.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
+                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+                  </svg>
+                  You can edit everything later in Settings → Campus Website
+                </p>
+              </div>
+
+              <div className="flex gap-2.5">
+                <button
+                  onClick={prevStep}
+                  className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                  </svg>
+                  {t("back", "Back")}
+                </button>
+                <button
+                  onClick={handlePublishAndGoLive}
+                  disabled={saving}
+                  className="flex-1 h-11 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: pc }}
+                >
+                  {saving ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                      Publishing...
+                    </span>
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className="w-4 h-4">
+                        <path d="M22 2 11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" />
+                      </svg>
+                      Publish my site
+                    </>
+                  )}
+                </button>
+              </div>
+
             </div>
           )}
 
