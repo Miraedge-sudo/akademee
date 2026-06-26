@@ -8,12 +8,14 @@ import ProtectedRoute from "./app/core/guards/ProtectedRoute";
 import DashboardPage from "./app/features/dashboard/pages/DashboardPage";
 import WebsiteSettingsPage from "./app/features/settings/pages/WebsiteSettingsPage";
 import PublicWebsitePage from "./app/features/website/pages/PublicWebsitePage";
+import LandingPage from "./app/features/landing/LandingPage";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
@@ -34,8 +36,7 @@ function App() {
         </Route>
 
         {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

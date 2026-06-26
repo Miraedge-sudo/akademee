@@ -1,0 +1,188 @@
+{
+  "nav": {
+    "logo": "Akademee",
+    "features": "Fonctionnalités",
+    "pricing": "Tarifs",
+    "testimonials": "Témoignages",
+    "faq": "FAQ",
+    "login": "Connexion",
+    "getStarted": "Commencer"
+  },
+  "hero": {
+    "badge": "Gestion scolaire multi-tenant • Cameroun",
+    "title": "Gérez toute votre école",
+    "titleHighlight": "sur une seule plateforme magnifique",
+    "subtitle": "Akademee offre à chaque école son propre campus personnalisé, un site web public et des tableaux de bord puissants pour les administrateurs, enseignants, comptables, élèves et parents.",
+    "ctaPrimary": "Créer votre campus",
+    "ctaSecondary": "Réserver une démo",
+    "trustCount": "320+ écoles",
+    "trustText": "au Cameroun font confiance à Akademee",
+    "stat1Label": "Taux de réussite",
+    "stat2Label": "Frais collectés"
+  },
+  "stats": {
+    "schools": "Écoles intégrées",
+    "students": "Élèves gérés",
+    "teachers": "Enseignants autonomisés",
+    "uptime": "Disponibilité de la plateforme"
+  },
+  "features": {
+    "title": "Une plateforme. Chaque département.",
+    "subtitle": "Tout ce dont une institution a besoin, magnifiquement unifié.",
+    "academics": {
+      "title": "Académique",
+      "description": "Classes, filières, matières, emplois du temps et notation pour les systèmes anglophones et francophones."
+    },
+    "attendance": {
+      "title": "Présence & Notes",
+      "description": "Trimestres, séquences et semestres avec génération automatique de bulletins et relevés de notes."
+    },
+    "finance": {
+      "title": "Finance",
+      "description": "Frais, factures, reçus, paie et suivi des dépenses avec analyses en temps réel."
+    },
+    "website": {
+      "title": "Site Web Public",
+      "description": "Chaque école obtient un site web avec sous-domaine personnalisé et 3 modèles premium."
+    },
+    "parent": {
+      "title": "Portail Parents",
+      "description": "Tenez les parents informés avec les notes, la présence et les frais en temps réel."
+    },
+    "staff": {
+      "title": "Personnel & Paie",
+      "description": "Gérez les contrats des enseignants, la présence et la paie depuis un seul tableau de bord."
+    },
+    "analytics": {
+      "title": "Analyses Avancées",
+      "description": "Tableaux de bord en temps réel pour les tendances d'inscription, la performance et les revenus."
+    },
+    "security": {
+      "title": "Sécurité",
+      "description": "Chaque école fonctionne dans un locataire entièrement isolé avec contrôle d'accès basé sur les rôles."
+    }
+  },
+  "why": {
+    "title": "Pourquoi les écoles choisissent Akademee",
+    "subtitle": "Akademee offre à chaque école son propre campus personnalisé, un site web public et des tableaux de bord puissants pour les administrateurs, enseignants, comptables, élèves et parents.",
+    "features": [
+      "Sous-domaine personnalisé & site web public",
+      "Notation anglophone & enseignement supérieur",
+      "Bilingue (Anglais / Français)",
+      "Import en masse depuis Excel & CSV",
+      "Mode sombre & clair pour chaque utilisateur"
+    ],
+    "satisfaction": "Taux de satisfaction"
+  },
+  "pricing": {
+    "title": "Tarification annuelle simple",
+    "subtitle": "Choisissez un plan, obtenez un campus personnalisé instantanément.",
+    "basic": {
+      "name": "Basic",
+      "price": "180 000",
+      "period": "FCFA / an",
+      "features": [
+        "Jusqu'à 300 élèves",
+        "Académique & notation de base",
+        "1 modèle de site web",
+        "Support par email",
+        "Site web public"
+      ]
+    },
+    "premium": {
+      "name": "Premium",
+      "price": "360 000",
+      "period": "FCFA / an",
+      "features": [
+        "Jusqu'à 1 500 élèves",
+        "Suite finance & paie",
+        "Les 3 modèles de site web",
+        "Support par chat en direct",
+        "Import en masse (Excel/CSV)",
+        "Marque personnalisée"
+      ],
+      "popular": "Le plus populaire"
+    },
+    "professional": {
+      "name": "Professionnel",
+      "price": "720 000",
+      "period": "FCFA / an",
+      "features": [
+        "Élèves illimités",
+        "Bibliothèque, transport & internat",
+        "Analyses avancées",
+        "Support prioritaire",
+        "Accès API",
+        "Multi-campus"
+      ]
+    },
+    "cta": "Commencer"
+  },
+  "testimonials": {
+    "title": "Ce que disent nos utilisateurs",
+    "grace": {
+      "quote": "Akademee a remplacé six outils. Nos bulletins se génèrent maintenant en quelques secondes et les parents adorent le portail.",
+      "name": "Grace Mbah",
+      "role": "Directrice, Grace Academy"
+    },
+    "nadia": {
+      "quote": "La collecte des frais et la paie prenaient des jours. C'est maintenant un seul tableau de bord propre avec des analyses en temps réel.",
+      "name": "Nadia Fomba",
+      "role": "Comptable, Collège Bilingue"
+    },
+    "aicha": {
+      "quote": "Je peux suivre les notes, la présence et les frais de ma fille depuis mon téléphone. C'est merveilleusement simple.",
+      "name": "Aïcha Njoya",
+      "role": "Parent"
+    }
+  },
+  "faq": {
+    "title": "Questions fréquentes",
+    "items": [
+      {
+        "q": "Comment fonctionne le sous-domaine ?",
+        "a": "Chaque école obtient son propre sous-domaine comme graceacademy.akademee.com hébergeant un site web public et des tableaux de bord dans un locataire entièrement isolé."
+      },
+      {
+        "q": "Puis-je importer mes données d'élèves existantes ?",
+        "a": "Oui, les plans Premium et Professionnel incluent l'import en masse depuis des fichiers Excel et CSV, rendant la migration transparente."
+      },
+      {
+        "q": "Akademee est-il bilingue ?",
+        "a": "Absolument. La plateforme prend en charge l'anglais et le français, avec des systèmes de notation pour les systèmes d'éducation anglophones et francophones."
+      },
+      {
+        "q": "Quels modes de paiement acceptez-vous ?",
+        "a": "Nous acceptons l'argent mobile (MTN, Orange), les virements bancaires et les cartes. Les plans annuels sont facturés en FCFA."
+      },
+      {
+        "q": "Les parents peuvent-ils accéder à la plateforme ?",
+        "a": "Oui, chaque plan inclut un portail parent où les parents peuvent consulter les notes, la présence, les frais et communiquer avec les enseignants."
+      }
+    ]
+  },
+  "cta": {
+    "title": "Prêt à moderniser votre école ?",
+    "subtitle": "Lancez votre campus personnalisé en quelques minutes.",
+    "button": "Créer votre campus"
+  },
+  "footer": {
+    "description": "Gestion scolaire multi-tenant moderne pour le Cameroun. Conçu pour les administrateurs, enseignants, comptables, élèves et parents.",
+    "product": "Produit",
+    "features": "Fonctionnalités",
+    "pricing": "Tarifs",
+    "templates": "Modèles",
+    "security": "Sécurité",
+    "company": "Entreprise",
+    "about": "À propos",
+    "blog": "Blog",
+    "careers": "Carrières",
+    "contact": "Contact",
+    "legal": "Légal",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions",
+    "support": "Support",
+    "status": "Statut",
+    "copyright": "© 2026 Akademee. akademee.com — Tous droits réservés."
+  }
+}

@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
+import { getSubdomain, buildSubdomainUrl } from "../../../core/utils/subdomainHelper";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const { t } = useTranslation("auth");
 
   const [formData, setFormData] = useState({
+    subdomain: getSubdomain() || "",
     email: "",
     password: "",
   });
@@ -29,7 +31,18 @@ export default function LoginPage() {
     try {
       const result = await login(formData);
       if (result.success) {
-        navigate("/dashboard");
+        // If on localhost (no subdomain in URL), redirect to school subdomain URL
+        // for proper tenant isolation. Token is passed via ?token= because
+        // localStorage is per-origin and won't persist across subdomains.
+        const isLocalhost =
+          window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1";
+        if (result.subdomain && isLocalhost) {
+          const dashboardUrl = buildSubdomainUrl(result.subdomain, `/dashboard?token=${result.token}`);
+          window.location.href = dashboardUrl;
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         setError(result.message);
       }
@@ -86,6 +99,33 @@ export default function LoginPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-[18px]">
+
+              {/* Subdomain / School Name */}
+              <div>
+                <label htmlFor="subdomain" className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
+                  {t("login.subdomainLabel", "School name or campus")}
+                </label>
+                <div className="relative flex items-center">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 w-4 h-4 text-surface-400">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                  </svg>
+                  <input
+                    id="subdomain"
+                    name="subdomain"
+                    type="text"
+                    required
+                    value={formData.subdomain}
+                    onChange={handleChange}
+                    placeholder={t("login.subdomainPlaceholder", "e.g. grace-academy")}
+                    autoComplete="off"
+                    className="w-full h-11 pl-10 pr-3.5 rounded-md border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 placeholder:text-surface-400 text-sm outline-none focus:border-teal-600 focus:bg-white dark:focus:bg-surface-800 focus:ring-[3.5px] focus:ring-teal-600/10 transition-colors"
+                  />
+                </div>
+                <p className="mt-1 text-[12px] text-surface-400 leading-relaxed">
+                  {t("login.subdomainHint", "Your school subdomain — find it in your welcome email or ask your admin.")}
+                </p>
+              </div>
 
               {/* Email */}
               <div>
