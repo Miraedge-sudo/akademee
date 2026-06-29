@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../layout/ThemeLangToggles";
+import akademeeLogo from "../../../assets/Logo.png";
 
 const faqs = [
   {
@@ -82,20 +83,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-md bg-teal-900 flex items-center justify-center">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-4 h-4"
-                >
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
-              </div>
+              <img
+                src={akademeeLogo}
+                alt="Akademee"
+                className="w-8 h-8 object-contain"
+              />
               <span className="font-display text-lg font-semibold text-surface-800 dark:text-surface-100">
                 Akademee
               </span>
@@ -443,7 +435,11 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="relative reveal">
               <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl animate-float">
-                <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&h=600&fit=crop&q=80" alt="Students collaborating in class" className="w-full h-full object-cover" />
+                <img
+                  src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&h=600&fit=crop&q=80"
+                  alt="Students collaborating in class"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div
                 className="absolute -bottom-6 -right-6 bg-white dark:bg-surface-800 rounded-2xl shadow-xl border border-surface-200 dark:border-surface-700 p-6 animate-float"
@@ -917,5 +913,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-

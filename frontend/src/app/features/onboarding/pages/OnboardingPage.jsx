@@ -3,7 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
 import { useAuth } from "../../../core/hooks/useAuth";
-import { getOnboardingData, saveOnboardingData, uploadMedia } from "../../../core/api/websiteService";
+import {
+  getOnboardingData,
+  saveOnboardingData,
+  uploadMedia,
+} from "../../../core/api/websiteService";
+import akademeeLogo from "../../../../assets/Logo.png";
 import { ThemeContext } from "../../../core/context/ThemeContext";
 import { buildSubdomainUrl } from "../../../core/utils/subdomainHelper";
 
@@ -16,8 +21,16 @@ const STEPS = [
 ];
 
 const COLOR_PRESETS = [
-  "#085041", "#1E40AF", "#7C3AED", "#B91C1C", "#B45309",
-  "#0F766E", "#1D4ED8", "#047857", "#9D174D", "#374151",
+  "#085041",
+  "#1E40AF",
+  "#7C3AED",
+  "#B91C1C",
+  "#B45309",
+  "#0F766E",
+  "#1D4ED8",
+  "#047857",
+  "#9D174D",
+  "#374151",
 ];
 
 const TEMPLATE_PREVIEWS = {
@@ -26,15 +39,79 @@ const TEMPLATE_PREVIEWS = {
     desc: "Split hero, gradient accents, stats band, gallery grid — contemporary & engaging",
     icon: (
       <svg viewBox="0 0 48 36" fill="none" className="w-full h-full">
-        <rect x="2" y="2" width="44" height="32" rx="3" className="stroke-surface-300 dark:stroke-surface-500 fill-white dark:fill-surface-800" strokeWidth="1.5" />
-        <rect x="6" y="6" width="18" height="14" rx="1.5" className="fill-primary-100 dark:fill-primary-900/40" />
-        <rect x="27" y="6" width="15" height="6" rx="1.5" className="fill-surface-200 dark:fill-surface-700" />
-        <rect x="27" y="14" width="15" height="2" rx="1" className="fill-surface-200 dark:fill-surface-700" />
-        <rect x="27" y="17.5" width="10" height="2" rx="1" className="fill-surface-200 dark:fill-surface-700" />
-        <rect x="6" y="22.5" width="36" height="1.5" rx="0.75" className="fill-surface-200 dark:fill-surface-700" />
-        <rect x="6" y="26" width="8" height="3" rx="1" className="fill-surface-200 dark:fill-surface-700" />
-        <rect x="16" y="26" width="8" height="3" rx="1" className="fill-surface-200 dark:fill-surface-700" />
-        <rect x="26" y="26" width="8" height="3" rx="1" className="fill-surface-200 dark:fill-surface-700" />
+        <rect
+          x="2"
+          y="2"
+          width="44"
+          height="32"
+          rx="3"
+          className="stroke-surface-300 dark:stroke-surface-500 fill-white dark:fill-surface-800"
+          strokeWidth="1.5"
+        />
+        <rect
+          x="6"
+          y="6"
+          width="18"
+          height="14"
+          rx="1.5"
+          className="fill-primary-100 dark:fill-primary-900/40"
+        />
+        <rect
+          x="27"
+          y="6"
+          width="15"
+          height="6"
+          rx="1.5"
+          className="fill-surface-200 dark:fill-surface-700"
+        />
+        <rect
+          x="27"
+          y="14"
+          width="15"
+          height="2"
+          rx="1"
+          className="fill-surface-200 dark:fill-surface-700"
+        />
+        <rect
+          x="27"
+          y="17.5"
+          width="10"
+          height="2"
+          rx="1"
+          className="fill-surface-200 dark:fill-surface-700"
+        />
+        <rect
+          x="6"
+          y="22.5"
+          width="36"
+          height="1.5"
+          rx="0.75"
+          className="fill-surface-200 dark:fill-surface-700"
+        />
+        <rect
+          x="6"
+          y="26"
+          width="8"
+          height="3"
+          rx="1"
+          className="fill-surface-200 dark:fill-surface-700"
+        />
+        <rect
+          x="16"
+          y="26"
+          width="8"
+          height="3"
+          rx="1"
+          className="fill-surface-200 dark:fill-surface-700"
+        />
+        <rect
+          x="26"
+          y="26"
+          width="8"
+          height="3"
+          rx="1"
+          className="fill-surface-200 dark:fill-surface-700"
+        />
       </svg>
     ),
   },
@@ -43,14 +120,75 @@ const TEMPLATE_PREVIEWS = {
     desc: "Gold/ink tones, framed hero, marquee, boxed stats — traditional & trustworthy",
     icon: (
       <svg viewBox="0 0 48 36" fill="none" className="w-full h-full">
-        <rect x="2" y="2" width="44" height="32" rx="3" className="stroke-surface-300 dark:stroke-surface-500 fill-amber-50 dark:fill-surface-800" strokeWidth="1.5" />
-        <rect x="6" y="6" width="36" height="14" rx="1.5" className="fill-amber-100 dark:fill-amber-900/20 stroke-amber-300 dark:stroke-amber-700" strokeWidth="0.75" />
-        <rect x="10" y="9" width="28" height="3" rx="1" className="fill-amber-800/30 dark:fill-amber-400/30" />
-        <rect x="14" y="14" width="20" height="1.5" rx="0.75" className="fill-surface-300 dark:fill-surface-600" />
-        <rect x="6" y="22.5" width="36" height="1.5" rx="0.75" className="fill-surface-200 dark:fill-surface-700" />
-        <rect x="6" y="26.5" width="10" height="4.5" rx="1" className="fill-amber-200/50 dark:fill-amber-800/30 stroke-amber-300/50 dark:stroke-amber-700/30" strokeWidth="0.5" />
-        <rect x="18.5" y="26.5" width="10" height="4.5" rx="1" className="fill-amber-200/50 dark:fill-amber-800/30 stroke-amber-300/50 dark:stroke-amber-700/30" strokeWidth="0.5" />
-        <rect x="31" y="26.5" width="10" height="4.5" rx="1" className="fill-amber-200/50 dark:fill-amber-800/30 stroke-amber-300/50 dark:stroke-amber-700/30" strokeWidth="0.5" />
+        <rect
+          x="2"
+          y="2"
+          width="44"
+          height="32"
+          rx="3"
+          className="stroke-surface-300 dark:stroke-surface-500 fill-amber-50 dark:fill-surface-800"
+          strokeWidth="1.5"
+        />
+        <rect
+          x="6"
+          y="6"
+          width="36"
+          height="14"
+          rx="1.5"
+          className="fill-amber-100 dark:fill-amber-900/20 stroke-amber-300 dark:stroke-amber-700"
+          strokeWidth="0.75"
+        />
+        <rect
+          x="10"
+          y="9"
+          width="28"
+          height="3"
+          rx="1"
+          className="fill-amber-800/30 dark:fill-amber-400/30"
+        />
+        <rect
+          x="14"
+          y="14"
+          width="20"
+          height="1.5"
+          rx="0.75"
+          className="fill-surface-300 dark:fill-surface-600"
+        />
+        <rect
+          x="6"
+          y="22.5"
+          width="36"
+          height="1.5"
+          rx="0.75"
+          className="fill-surface-200 dark:fill-surface-700"
+        />
+        <rect
+          x="6"
+          y="26.5"
+          width="10"
+          height="4.5"
+          rx="1"
+          className="fill-amber-200/50 dark:fill-amber-800/30 stroke-amber-300/50 dark:stroke-amber-700/30"
+          strokeWidth="0.5"
+        />
+        <rect
+          x="18.5"
+          y="26.5"
+          width="10"
+          height="4.5"
+          rx="1"
+          className="fill-amber-200/50 dark:fill-amber-800/30 stroke-amber-300/50 dark:stroke-amber-700/30"
+          strokeWidth="0.5"
+        />
+        <rect
+          x="31"
+          y="26.5"
+          width="10"
+          height="4.5"
+          rx="1"
+          className="fill-amber-200/50 dark:fill-amber-800/30 stroke-amber-300/50 dark:stroke-amber-700/30"
+          strokeWidth="0.5"
+        />
       </svg>
     ),
   },
@@ -59,13 +197,61 @@ const TEMPLATE_PREVIEWS = {
     desc: "Clean whitespace, centered type, subtle borders, mono accents — sleek & fast",
     icon: (
       <svg viewBox="0 0 48 36" fill="none" className="w-full h-full">
-        <rect x="2" y="2" width="44" height="32" rx="3" className="stroke-surface-300 dark:stroke-surface-500 fill-white dark:fill-surface-800" strokeWidth="1.5" />
-        <rect x="14" y="7" width="20" height="3" rx="1.5" className="fill-surface-800/20 dark:fill-surface-100/20" />
-        <rect x="18" y="12" width="12" height="1.5" rx="0.75" className="fill-surface-300 dark:fill-surface-600" />
-        <rect x="8" y="17" width="32" height="0.75" rx="0.375" className="fill-surface-200 dark:fill-surface-700" />
-        <circle cx="24" cy="25" r="4" className="fill-surface-200 dark:fill-surface-700" />
-        <rect x="10" y="23" width="6" height="4" rx="1" className="fill-surface-200 dark:fill-surface-700" />
-        <rect x="32" y="23" width="6" height="4" rx="1" className="fill-surface-200 dark:fill-surface-700" />
+        <rect
+          x="2"
+          y="2"
+          width="44"
+          height="32"
+          rx="3"
+          className="stroke-surface-300 dark:stroke-surface-500 fill-white dark:fill-surface-800"
+          strokeWidth="1.5"
+        />
+        <rect
+          x="14"
+          y="7"
+          width="20"
+          height="3"
+          rx="1.5"
+          className="fill-surface-800/20 dark:fill-surface-100/20"
+        />
+        <rect
+          x="18"
+          y="12"
+          width="12"
+          height="1.5"
+          rx="0.75"
+          className="fill-surface-300 dark:fill-surface-600"
+        />
+        <rect
+          x="8"
+          y="17"
+          width="32"
+          height="0.75"
+          rx="0.375"
+          className="fill-surface-200 dark:fill-surface-700"
+        />
+        <circle
+          cx="24"
+          cy="25"
+          r="4"
+          className="fill-surface-200 dark:fill-surface-700"
+        />
+        <rect
+          x="10"
+          y="23"
+          width="6"
+          height="4"
+          rx="1"
+          className="fill-surface-200 dark:fill-surface-700"
+        />
+        <rect
+          x="32"
+          y="23"
+          width="6"
+          height="4"
+          rx="1"
+          className="fill-surface-200 dark:fill-surface-700"
+        />
       </svg>
     ),
   },
@@ -111,7 +297,10 @@ export default function OnboardingPage() {
         heroImageUrl: result.heroImageUrl || "",
         templateCode: result.templateCode || "modern",
         websiteStats: result.websiteStats || {},
-        websiteValues: Array.isArray(result.websiteValues) ? result.websiteValues : [],
+        websiteValues: Array.isArray(result.websiteValues)
+          ? result.websiteValues
+          : [],
+
       });
     } catch (err) {
       console.error("Error loading onboarding data:", err);
@@ -142,7 +331,9 @@ export default function OnboardingPage() {
       }
     } catch (err) {
       console.error("Logo upload error:", err);
-      setError(err.response?.data?.message || err.message || "Error uploading logo");
+      setError(
+        err.response?.data?.message || err.message || "Error uploading logo",
+      );
     } finally {
       setUploading((prev) => ({ ...prev, logo: false }));
     }
@@ -156,11 +347,18 @@ export default function OnboardingPage() {
     try {
       const result = await uploadMedia(file, "hero");
       if (result?.heroImageUrl || result?.url) {
-        setData((prev) => ({ ...prev, heroImageUrl: result.heroImageUrl || result.url }));
+        setData((prev) => ({
+          ...prev,
+          heroImageUrl: result.heroImageUrl || result.url,
+        }));
       }
     } catch (err) {
       console.error("Hero upload error:", err);
-      setError(err.response?.data?.message || err.message || "Error uploading cover image");
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Error uploading cover image",
+      );
     } finally {
       setUploading((prev) => ({ ...prev, hero: false }));
     }
@@ -190,8 +388,11 @@ export default function OnboardingPage() {
       const response = await saveOnboardingData(payload);
       if (response.success) {
         // Save color
-        localStorage.setItem('akademee-primary-color', primaryColor);
-        document.documentElement.style.setProperty('--primary-color', primaryColor);
+        localStorage.setItem("akademee-primary-color", primaryColor);
+        document.documentElement.style.setProperty(
+          "--primary-color",
+          primaryColor,
+        );
         updatePrimaryColor(primaryColor);
         // Go to step 5 (preview)
         nextStep();
@@ -200,7 +401,11 @@ export default function OnboardingPage() {
       }
     } catch (err) {
       console.error("Save error:", err);
-      setError(err.response?.data?.message || err.message || "Error saving configuration");
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Error saving configuration",
+      );
     } finally {
       setSaving(false);
     }
@@ -231,15 +436,22 @@ export default function OnboardingPage() {
       const response = await saveOnboardingData(payload);
       if (response.success) {
         // Save color synchronously before navigation
-        localStorage.setItem('akademee-primary-color', primaryColor);
-        document.documentElement.style.setProperty('--primary-color', primaryColor);
+        localStorage.setItem("akademee-primary-color", primaryColor);
+        document.documentElement.style.setProperty(
+          "--primary-color",
+          primaryColor,
+        );
         updatePrimaryColor(primaryColor);
 
         // Redirect to the live site on the school's subdomain
-        const schoolSubdomain = user?.subdomain || localStorage.getItem('akademee-subdomain');
-        const token = localStorage.getItem('token');
+        const schoolSubdomain =
+          user?.subdomain || localStorage.getItem("akademee-subdomain");
+        const token = localStorage.getItem("token");
         if (schoolSubdomain) {
-          const liveUrl = buildSubdomainUrl(schoolSubdomain, `/site${token ? `?token=${encodeURIComponent(token)}` : ''}`);
+          const liveUrl = buildSubdomainUrl(
+            schoolSubdomain,
+            `/site${token ? `?token=${encodeURIComponent(token)}` : ""}`,
+          );
           window.location.href = liveUrl;
         } else {
           window.location.href = "/dashboard";
@@ -249,7 +461,11 @@ export default function OnboardingPage() {
       }
     } catch (err) {
       console.error("Save error:", err);
-      setError(err.response?.data?.message || err.message || "Error saving configuration");
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Error saving configuration",
+      );
     } finally {
       setSaving(false);
     }
@@ -257,7 +473,7 @@ export default function OnboardingPage() {
 
   const nextStep = () => setStep((s) => Math.min(s + 1, 5));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
-  const skip = () => (step < 5 ? nextStep() : navigate('/dashboard'));
+  const skip = () => (step < 5 ? nextStep() : navigate("/dashboard"));
 
   const pc = data.primaryColor;
   const initials = (user?.schoolName || "SC")
@@ -281,7 +497,6 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex min-h-screen bg-surface-50 dark:bg-surface-900">
-
       {/* ══ LEFT PANEL — Progress sidebar ══ */}
       <aside
         className="hidden lg:flex flex-col w-[280px] flex-shrink-0 sticky top-0 h-screen px-8 py-9 transition-colors duration-300"
@@ -289,12 +504,11 @@ export default function OnboardingPage() {
       >
         {/* Brand */}
         <div className="flex items-center gap-2.5 mb-10">
-          <div className="w-8 h-8 rounded-md bg-white/15 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" className="w-[18px] h-[18px]">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
-          </div>
+          <img
+            src={akademeeLogo}
+            alt="Akademee"
+            className="w-8 h-8 object-contain"
+          />
           <span className="font-display text-lg text-white/90">Akademee</span>
         </div>
 
@@ -306,7 +520,9 @@ export default function OnboardingPage() {
           <h2 className="font-display text-[22px] text-white leading-snug">
             {t("welcomeTitle1", "Let's build your")}
             <br />
-            <em className="italic text-white/55">{t("welcomeTitle2", "campus website.")}</em>
+            <em className="italic text-white/55">
+              {t("welcomeTitle2", "campus website.")}
+            </em>
           </h2>
         </div>
 
@@ -316,28 +532,41 @@ export default function OnboardingPage() {
             const isActive = step === s.num;
             const isDone = step > s.num;
             return (
-              <div key={s.num} className="flex items-center gap-3 py-2.5 px-3 rounded-lg transition-colors" style={{ backgroundColor: isActive ? "rgba(255,255,255,0.1)" : "transparent" }}>
+              <div
+                key={s.num}
+                className="flex items-center gap-3 py-2.5 px-3 rounded-lg transition-colors"
+                style={{
+                  backgroundColor: isActive
+                    ? "rgba(255,255,255,0.1)"
+                    : "transparent",
+                }}
+              >
                 <div
                   className={`w-[26px] h-[26px] rounded-full flex items-center justify-center text-[11px] font-semibold flex-shrink-0 border-2 transition-all ${
                     isDone
                       ? "bg-white/20 border-white/35 text-white"
                       : isActive
-                      ? "bg-white border-white"
-                      : "bg-transparent border-white/20 text-white/35"
+                        ? "bg-white border-white"
+                        : "bg-transparent border-white/20 text-white/35"
                   }`}
                   style={isActive ? { color: pc } : {}}
                 >
                   {isDone ? "✓" : s.num}
                 </div>
                 <div>
-                  <div className={`text-[13px] font-medium ${isActive ? "text-white" : isDone ? "text-white/65" : "text-white/35"}`}>
-                    {t(`steps.${s.key}.title`, {
-                      identity: "School identity",
-                      content: "About & content",
-                      template: "Template",
-                      review: "Review",
-                      publish: "Preview & publish"
-                    }[s.key] || s.key)}
+                  <div
+                    className={`text-[13px] font-medium ${isActive ? "text-white" : isDone ? "text-white/65" : "text-white/35"}`}
+                  >
+                    {t(
+                      `steps.${s.key}.title`,
+                      {
+                        identity: "School identity",
+                        content: "About & content",
+                        template: "Template",
+                        review: "Review",
+                        publish: "Preview & publish",
+                      }[s.key] || s.key,
+                    )}
                   </div>
                   <div className="text-[11px] text-white/25">
                     {t(`steps.${s.key}.desc`, "")}
@@ -349,18 +578,22 @@ export default function OnboardingPage() {
         </div>
 
         <p className="text-[11.5px] text-white/22 leading-relaxed mt-auto">
-          {t("editLaterNote", "You can edit all of this later in Settings → Campus Website")}
+          {t(
+            "editLaterNote",
+            "You can edit all of this later in Settings → Campus Website",
+          )}
         </p>
       </aside>
 
       {/* ══ RIGHT PANEL — Content ══ */}
       <div className="flex-1 flex flex-col min-w-0">
-
         {/* Header */}
         <div className="flex items-center justify-between px-6 lg:px-10 h-[58px] bg-white dark:bg-surface-800 border-b border-surface-100 dark:border-surface-700 flex-shrink-0">
           <div className="flex-1 max-w-[280px]">
             <div className="flex justify-between text-xs text-surface-400 mb-1.5">
-              <span>{t("stepLabel", "Step")} {step} {t("of", "of")} 5</span>
+              <span>
+                {t("stepLabel", "Step")} {step} {t("of", "of")} 5
+              </span>
               <span>{Math.round((step / 5) * 100)}%</span>
             </div>
             <div className="h-1 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
@@ -376,17 +609,25 @@ export default function OnboardingPage() {
               onClick={skip}
               className="text-[13px] text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-700 px-3 py-1.5 rounded-md transition-colors"
             >
-              {step < 4 ? `${t("skipForNow", "Skip for now")} →` : t("skipForNow", "Skip for now")}
+              {step < 4
+                ? `${t("skipForNow", "Skip for now")} →`
+                : t("skipForNow", "Skip for now")}
             </button>
           </div>
         </div>
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 lg:px-10 py-9 max-w-[640px] mx-auto w-full">
-
           {error && (
             <div className="mb-5 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm flex items-center gap-2.5">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4 flex-shrink-0">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                className="w-4 h-4 flex-shrink-0"
+              >
                 <circle cx="12" cy="12" r="10" />
                 <line x1="15" y1="9" x2="9" y2="15" />
                 <line x1="9" y1="9" x2="15" y2="15" />
@@ -400,26 +641,41 @@ export default function OnboardingPage() {
             <div className="space-y-6">
               {/* Logo */}
               <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
-                <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
+                <p
+                  className="text-[11px] font-semibold tracking-wide uppercase mb-1.5"
+                  style={{ color: pc }}
+                >
                   {t("steps.logo.title", "School identity")}
                 </p>
                 <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
                   {t("logo.heading", "Your school logo")}
                 </h1>
                 <p className="text-[13.5px] text-surface-400 leading-relaxed mb-6">
-                  {t("logo.subtitle", "Upload your logo, or we'll generate one from your school's initials.")}
+                  {t(
+                    "logo.subtitle",
+                    "Upload your logo, or we'll generate one from your school's initials.",
+                  )}
                 </p>
 
                 <div className="flex items-center gap-5">
                   <label
                     htmlFor="onb-logo-upload"
                     className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden flex items-center justify-center border-2 border-dashed border-surface-200 dark:border-surface-600 cursor-pointer hover:border-primary-400 transition-colors"
-                    style={{ backgroundColor: data.logoUrl ? "transparent" : pc + "15" }}
+                    style={{
+                      backgroundColor: data.logoUrl ? "transparent" : pc + "15",
+                    }}
                   >
                     {data.logoUrl ? (
-                      <img src={data.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                      <img
+                        src={data.logoUrl}
+                        alt="Logo"
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <span className="font-display text-2xl font-bold" style={{ color: pc }}>
+                      <span
+                        className="font-display text-2xl font-bold"
+                        style={{ color: pc }}
+                      >
                         {initials}
                       </span>
                     )}
@@ -439,18 +695,24 @@ export default function OnboardingPage() {
                       disabled={uploading.logo}
                       className="h-9 px-4 bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 text-surface-700 dark:text-surface-200 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
                     >
-                      {uploading.logo ? t("logo.uploading", "Uploading...") : t("logo.cta", "Upload logo")}
+                      {uploading.logo
+                        ? t("logo.uploading", "Uploading...")
+                        : t("logo.cta", "Upload logo")}
                     </button>
                     {data.logoUrl && (
                       <button
                         type="button"
-                        onClick={() => setData((prev) => ({ ...prev, logoUrl: "" }))}
+                        onClick={() =>
+                          setData((prev) => ({ ...prev, logoUrl: "" }))
+                        }
                         className="h-9 px-4 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
                         {t("Remove")}
                       </button>
                     )}
-                    <p className="text-[11px] text-surface-400">{t("logo.specs", "PNG, JPG or SVG · Max 2MB")}</p>
+                    <p className="text-[11px] text-surface-400">
+                      {t("logo.specs", "PNG, JPG or SVG · Max 2MB")}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -461,7 +723,8 @@ export default function OnboardingPage() {
                   {t("content.colorLabel", "School primary colour")}
                 </h2>
                 <p className="text-xs text-surface-400 mb-4">
-                  This colour will be used for buttons, links, and accents across your website.
+                  This colour will be used for buttons, links, and accents
+                  across your website.
                 </p>
                 <div className="flex items-center gap-4 flex-wrap">
                   <div className="relative flex items-center gap-3 bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-600 rounded-lg px-3.5 py-2.5">
@@ -500,13 +763,23 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex items-start gap-2.5 p-3 bg-surface-50 dark:bg-surface-800 rounded-lg">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4 text-surface-400 flex-shrink-0 mt-0.5">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  className="w-4 h-4 text-surface-400 flex-shrink-0 mt-0.5"
+                >
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="8" x2="12" y2="12" />
                   <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
                 <p className="text-xs text-surface-400 leading-relaxed">
-                  {t("logo.hint", "No logo yet? We'll use your school's initials and chosen colour as a placeholder.")}
+                  {t(
+                    "logo.hint",
+                    "No logo yet? We'll use your school's initials and chosen colour as a placeholder.",
+                  )}
                 </p>
               </div>
 
@@ -516,7 +789,15 @@ export default function OnboardingPage() {
                 style={{ backgroundColor: pc }}
               >
                 {t("continue", "Continue")}
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-[17px] h-[17px]">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-[17px] h-[17px]"
+                >
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
@@ -528,14 +809,20 @@ export default function OnboardingPage() {
           {step === 2 && (
             <div className="space-y-6">
               <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
-                <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
+                <p
+                  className="text-[11px] font-semibold tracking-wide uppercase mb-1.5"
+                  style={{ color: pc }}
+                >
                   {t("steps.hero.title", "Content")}
                 </p>
                 <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
                   {t("content.heading", "Present your school")}
                 </h1>
                 <p className="text-[13.5px] text-surface-400 leading-relaxed mb-7">
-                  {t("content.subtitle", "Choose your brand colour and tell visitors about your school.")}
+                  {t(
+                    "content.subtitle",
+                    "Choose your brand colour and tell visitors about your school.",
+                  )}
                 </p>
 
                 {/* Tagline */}
@@ -548,11 +835,16 @@ export default function OnboardingPage() {
                     type="text"
                     value={data.tagline}
                     onChange={handleChange}
-                    placeholder={t("content.taglinePlaceholder", "Shaping the leaders of tomorrow, today.")}
+                    placeholder={t(
+                      "content.taglinePlaceholder",
+                      "Shaping the leaders of tomorrow, today.",
+                    )}
                     maxLength={80}
                     className="w-full h-11 px-3.5 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 placeholder:text-surface-400 text-sm outline-none focus:border-primary-600 focus:bg-white dark:focus:bg-surface-800 transition-colors"
                   />
-                  <p className="text-[11px] text-surface-400 mt-1 text-right">{data.tagline.length}/80</p>
+                  <p className="text-[11px] text-surface-400 mt-1 text-right">
+                    {data.tagline.length}/80
+                  </p>
                 </div>
 
                 {/* Description */}
@@ -565,7 +857,10 @@ export default function OnboardingPage() {
                     rows={4}
                     value={data.description}
                     onChange={handleChange}
-                    placeholder={t("content.descPlaceholder", "Tell families what makes your school special...")}
+                    placeholder={t(
+                      "content.descPlaceholder",
+                      "Tell families what makes your school special...",
+                    )}
                     className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 placeholder:text-surface-400 text-sm outline-none focus:border-primary-600 focus:bg-white dark:focus:bg-surface-800 transition-colors resize-none"
                   />
                 </div>
@@ -584,16 +879,29 @@ export default function OnboardingPage() {
                       className="flex-shrink-0 w-36 aspect-[21/9] rounded-lg overflow-hidden flex items-center justify-center border-2 border-dashed border-surface-200 dark:border-surface-600 cursor-pointer hover:border-primary-400 transition-colors"
                     >
                       {data.heroImageUrl ? (
-                        <img src={data.heroImageUrl} alt="Hero" className="w-full h-full object-cover" />
+                        <img
+                          src={data.heroImageUrl}
+                          alt="Hero"
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <div className="flex flex-col items-center gap-1.5 p-2">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="w-5 h-5 text-surface-400">
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            className="w-5 h-5 text-surface-400"
+                          >
                             <rect x="3" y="3" width="18" height="18" rx="2" />
                             <circle cx="8.5" cy="8.5" r="1.5" />
                             <polyline points="21 15 16 10 5 21" />
                           </svg>
                           <span className="text-[10px] text-surface-400 text-center">
-                            {uploading.hero ? t("hero.uploading", "Uploading...") : t("hero.cta", "Add hero photo")}
+                            {uploading.hero
+                              ? t("hero.uploading", "Uploading...")
+                              : t("hero.cta", "Add hero photo")}
                           </span>
                         </div>
                       )}
@@ -609,7 +917,9 @@ export default function OnboardingPage() {
                     {data.heroImageUrl && (
                       <button
                         type="button"
-                        onClick={() => setData((prev) => ({ ...prev, heroImageUrl: "" }))}
+                        onClick={() =>
+                          setData((prev) => ({ ...prev, heroImageUrl: "" }))
+                        }
                         className="text-xs text-red-600 dark:text-red-400 hover:underline"
                       >
                         {t("Remove")}
@@ -624,7 +934,14 @@ export default function OnboardingPage() {
                   onClick={prevStep}
                   className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    className="w-3.5 h-3.5"
+                  >
                     <line x1="19" y1="12" x2="5" y2="12" />
                     <polyline points="12 19 5 12 12 5" />
                   </svg>
@@ -636,7 +953,15 @@ export default function OnboardingPage() {
                   style={{ backgroundColor: pc }}
                 >
                   {t("continue", "Continue")}
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-4 h-4"
+                  >
                     <line x1="5" y1="12" x2="19" y2="12" />
                     <polyline points="12 5 19 12 12 19" />
                   </svg>
@@ -648,14 +973,18 @@ export default function OnboardingPage() {
           {/* ── STEP 3 — Template ── */}
           {step === 3 && (
             <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
-              <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
+              <p
+                className="text-[11px] font-semibold tracking-wide uppercase mb-1.5"
+                style={{ color: pc }}
+              >
                 Template
               </p>
               <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
                 Choose your template
               </h1>
               <p className="text-[13.5px] text-surface-400 leading-relaxed mb-6">
-                Pick a design for your campus website. You can change this anytime in Settings.
+                Pick a design for your campus website. You can change this
+                anytime in Settings.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -665,7 +994,9 @@ export default function OnboardingPage() {
                     <button
                       key={code}
                       type="button"
-                      onClick={() => setData((prev) => ({ ...prev, templateCode: code }))}
+                      onClick={() =>
+                        setData((prev) => ({ ...prev, templateCode: code }))
+                      }
                       className={`relative flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                         selected
                           ? "border-primary-600 bg-primary-50 dark:bg-primary-900/15 shadow-sm"
@@ -674,7 +1005,15 @@ export default function OnboardingPage() {
                     >
                       {selected && (
                         <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary-600 flex items-center justify-center">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="white"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="w-3 h-3"
+                          >
                             <polyline points="20 6 9 17 4 12" />
                           </svg>
                         </div>
@@ -700,7 +1039,14 @@ export default function OnboardingPage() {
                   onClick={prevStep}
                   className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    className="w-3.5 h-3.5"
+                  >
                     <line x1="19" y1="12" x2="5" y2="12" />
                     <polyline points="12 19 5 12 12 5" />
                   </svg>
@@ -712,7 +1058,15 @@ export default function OnboardingPage() {
                   style={{ backgroundColor: pc }}
                 >
                   {t("continue", "Continue")}
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-4 h-4"
+                  >
                     <line x1="5" y1="12" x2="19" y2="12" />
                     <polyline points="12 5 19 12 12 19" />
                   </svg>
@@ -725,44 +1079,72 @@ export default function OnboardingPage() {
           {step === 4 && (
             <div className="space-y-6">
               <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
-                <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
+                <p
+                  className="text-[11px] font-semibold tracking-wide uppercase mb-1.5"
+                  style={{ color: pc }}
+                >
                   {t("steps.review.title", "Review")}
                 </p>
                 <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
                   {t("review.heading", "Your site is ready 🎉")}
                 </h1>
                 <p className="text-[13.5px] text-surface-400 leading-relaxed mb-6">
-                  {t("review.subtitle", "Review your details before going live. You can edit everything later.")}
+                  {t(
+                    "review.subtitle",
+                    "Review your details before going live. You can edit everything later.",
+                  )}
                 </p>
 
                 {/* Summary card */}
-                <div className="rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden" style={{ borderLeftWidth: "4px", borderLeftColor: pc }}>
+                <div
+                  className="rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden"
+                  style={{ borderLeftWidth: "4px", borderLeftColor: pc }}
+                >
                   <div className="p-5 bg-white dark:bg-surface-800">
                     <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                      <div className="text-surface-500">{t("review.logo", "Logo")}</div>
+                      <div className="text-surface-500">
+                        {t("review.logo", "Logo")}
+                      </div>
                       <div className="text-surface-800 dark:text-surface-100 font-medium">
-                        {data.logoUrl ? t("review.uploaded", "Uploaded") : t("review.usingInitials", "Using initials placeholder")}
+                        {data.logoUrl
+                          ? t("review.uploaded", "Uploaded")
+                          : t(
+                              "review.usingInitials",
+                              "Using initials placeholder",
+                            )}
                       </div>
 
-                      <div className="text-surface-500">{t("review.coverImage", "Cover image")}</div>
+                      <div className="text-surface-500">
+                        {t("review.coverImage", "Cover image")}
+                      </div>
                       <div className="text-surface-800 dark:text-surface-100 font-medium">
-                        {data.heroImageUrl ? t("review.uploaded", "Uploaded") : t("review.notSet", "Not set")}
+                        {data.heroImageUrl
+                          ? t("review.uploaded", "Uploaded")
+                          : t("review.notSet", "Not set")}
                       </div>
 
-                      <div className="text-surface-500">{t("review.tagline", "Tagline")}</div>
+                      <div className="text-surface-500">
+                        {t("review.tagline", "Tagline")}
+                      </div>
                       <div className="text-surface-800 dark:text-surface-100 font-medium truncate">
                         {data.tagline || t("review.notSet", "—")}
                       </div>
 
-                      <div className="text-surface-500">{t("review.primaryColor", "Primary colour")}</div>
+                      <div className="text-surface-500">
+                        {t("review.primaryColor", "Primary colour")}
+                      </div>
                       <div className="flex items-center gap-2 text-surface-800 dark:text-surface-100 font-medium">
-                        <span className="w-4 h-4 rounded" style={{ backgroundColor: pc }} />
+                        <span
+                          className="w-4 h-4 rounded"
+                          style={{ backgroundColor: pc }}
+                        />
                         {pc}
                       </div>
 
                       <div className="text-surface-500">Template</div>
                       <div className="text-surface-800 dark:text-surface-100 font-medium">
-                        {TEMPLATE_PREVIEWS[data.templateCode]?.name || data.templateCode}
+                        {TEMPLATE_PREVIEWS[data.templateCode]?.name ||
+                          data.templateCode}
                       </div>
                     </div>
                   </div>
@@ -770,7 +1152,14 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex items-start gap-3 p-4 bg-surface-50 dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5"
+                >
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="16" x2="12" y2="12" />
                   <line x1="12" y1="8" x2="12.01" y2="8" />
@@ -780,7 +1169,8 @@ export default function OnboardingPage() {
                     You can edit everything later
                   </p>
                   <p className="text-sm text-surface-400">
-                    Go to Settings → Campus Website to add stats, values, gallery photos, and more.
+                    Go to Settings → Campus Website to add stats, values,
+                    gallery photos, and more.
                   </p>
                 </div>
               </div>
@@ -790,7 +1180,14 @@ export default function OnboardingPage() {
                   onClick={prevStep}
                   className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    className="w-3.5 h-3.5"
+                  >
                     <line x1="19" y1="12" x2="5" y2="12" />
                     <polyline points="12 19 5 12 12 5" />
                   </svg>
@@ -809,7 +1206,15 @@ export default function OnboardingPage() {
                     </span>
                   ) : (
                     <>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-4 h-4"
+                      >
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                       {t("review.submit", "Continue to preview")}
@@ -823,36 +1228,61 @@ export default function OnboardingPage() {
           {/* ── STEP 5 — Preview & Publish ── */}
           {step === 5 && (
             <div className="space-y-6">
-
               <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
-                <p className="text-[11px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: pc }}>
+                <p
+                  className="text-[11px] font-semibold tracking-wide uppercase mb-1.5"
+                  style={{ color: pc }}
+                >
                   {t("steps.publish.title", "Preview & publish")}
                 </p>
                 <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
                   Preview your campus website
                 </h1>
                 <p className="text-[13.5px] text-surface-400 leading-relaxed mb-5">
-                  Take a look at your site below. When you're happy, click "Publish" to make it live.
+                  Take a look at your site below. When you're happy, click
+                  "Publish" to make it live.
                 </p>
 
                 {/* Mini preview card */}
-                <div className="rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden" style={{ borderLeftWidth: "4px", borderLeftColor: pc }}>
+                <div
+                  className="rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden"
+                  style={{ borderLeftWidth: "4px", borderLeftColor: pc }}
+                >
                   {/* Hero preview */}
                   <div
                     className="relative h-[200px] flex items-end overflow-hidden"
-                    style={{ background: data.heroImageUrl ? `url(${data.heroImageUrl}) center/cover` : `linear-gradient(135deg, ${pc}, ${pc}88)` }}
+                    style={{
+                      background: data.heroImageUrl
+                        ? `url(${data.heroImageUrl}) center/cover`
+                        : `linear-gradient(135deg, ${pc}, ${pc}88)`,
+                    }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                     <div className="relative z-10 p-6 flex items-center gap-4">
                       {/* Logo / initials */}
-                      <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 border-white/30" style={{ background: data.logoUrl ? `url(${data.logoUrl}) center/cover` : pc }}>
+                      <div
+                        className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 border-white/30"
+                        style={{
+                          background: data.logoUrl
+                            ? `url(${data.logoUrl}) center/cover`
+                            : pc,
+                        }}
+                      >
                         {!data.logoUrl && (
-                          <span className="w-full h-full flex items-center justify-center font-display font-bold text-lg text-white">{initials}</span>
+                          <span className="w-full h-full flex items-center justify-center font-display font-bold text-lg text-white">
+                            {initials}
+                          </span>
                         )}
                       </div>
                       <div>
-                        <div className="font-display text-lg font-bold text-white drop-shadow-sm">{user?.schoolName || "Your School"}</div>
-                        {data.tagline && <div className="text-sm text-white/80 mt-0.5 drop-shadow-sm">{data.tagline}</div>}
+                        <div className="font-display text-lg font-bold text-white drop-shadow-sm">
+                          {user?.schoolName || "Your School"}
+                        </div>
+                        {data.tagline && (
+                          <div className="text-sm text-white/80 mt-0.5 drop-shadow-sm">
+                            {data.tagline}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -862,17 +1292,23 @@ export default function OnboardingPage() {
                     <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
                       <div className="text-surface-500">Template</div>
                       <div className="text-surface-800 dark:text-surface-100 font-medium">
-                        {TEMPLATE_PREVIEWS[data.templateCode]?.name || data.templateCode}
+                        {TEMPLATE_PREVIEWS[data.templateCode]?.name ||
+                          data.templateCode}
                       </div>
                       <div className="text-surface-500">Colour</div>
                       <div className="flex items-center gap-2 text-surface-800 dark:text-surface-100 font-medium">
-                        <span className="w-4 h-4 rounded" style={{ backgroundColor: pc }} />
+                        <span
+                          className="w-4 h-4 rounded"
+                          style={{ backgroundColor: pc }}
+                        />
                         {pc}
                       </div>
                       {data.description && (
                         <>
                           <div className="text-surface-500">Description</div>
-                          <div className="text-surface-800 dark:text-surface-100 text-surface-500 line-clamp-2">{data.description}</div>
+                          <div className="text-surface-800 dark:text-surface-100 text-surface-500 line-clamp-2">
+                            {data.description}
+                          </div>
                         </>
                       )}
                     </div>
@@ -880,8 +1316,17 @@ export default function OnboardingPage() {
                 </div>
 
                 <p className="text-xs text-surface-400 text-center mt-4 flex items-center justify-center gap-1.5">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
-                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    className="w-4 h-4"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" />
                   </svg>
                   You can edit everything later in Settings → Campus Website
                 </p>
@@ -892,7 +1337,14 @@ export default function OnboardingPage() {
                   onClick={prevStep}
                   className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    className="w-3.5 h-3.5"
+                  >
                     <line x1="19" y1="12" x2="5" y2="12" />
                     <polyline points="12 19 5 12 12 5" />
                   </svg>
@@ -911,18 +1363,24 @@ export default function OnboardingPage() {
                     </span>
                   ) : (
                     <>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className="w-4 h-4">
-                        <path d="M22 2 11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" />
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        className="w-4 h-4"
+                      >
+                        <path d="M22 2 11 13" />
+                        <path d="M22 2l-7 20-4-9-9-4 20-7z" />
                       </svg>
                       Publish my site
                     </>
                   )}
                 </button>
               </div>
-
             </div>
           )}
-
         </div>
       </div>
     </div>
