@@ -29,7 +29,7 @@ export default function WebsiteNav({ school, variant = "light", scrolled, mobile
         </a>
         <div className="hidden md:flex items-center gap-2.5">
           <a href="#contact" className="h-9 px-[18px] border rounded-sm text-[11px] font-medium tracking-[1.5px] uppercase no-underline inline-flex items-center" style={{ borderColor: s.primaryColor+"80", color: s.primaryColor+"BF" }}>Contact</a>
-          <a href="/login" className="h-9 px-[18px] rounded-sm text-[11px] font-semibold tracking-[1.5px] uppercase no-underline inline-flex items-center gap-1.5" style={{ background: s.primaryColor, color: "#1A1710" }}>Portal</a>
+          <a href="/login" className="h-9 px-[18px] rounded-sm text-[11px] font-semibold tracking-[1.5px] uppercase no-underline inline-flex items-center gap-1.5" style={{ background: s.primaryColor, color: "#1A1710" }}>Login</a>
         </div>
         <button onClick={onToggleMobile} className="md:hidden w-10 h-10 border-none bg-transparent cursor-pointer flex flex-col items-end justify-center gap-[5px]">
           <span className="block h-[1.5px] bg-white rounded transition-all" style={{ width: mobileOpen?"24px":"24px", transform: mobileOpen?"rotate(45deg) translate(5px,5px)":"" }} />
@@ -63,8 +63,12 @@ export default function WebsiteNav({ school, variant = "light", scrolled, mobile
         ))}
       </ul>
       <div className="hidden md:flex items-center gap-2.5 flex-shrink-0">
-        <a href="/login" className="h-[38px] px-[18px] border-[1.5px] rounded-xl text-[13.5px] font-medium no-underline inline-flex items-center" style={{ borderColor: s.primaryColor||"#085041", color: s.primaryColor||"#085041" }}>Parent login</a>
-        <a href="/login" className="h-[38px] px-[18px] rounded-xl text-[13.5px] font-medium text-white no-underline inline-flex items-center gap-1.5" style={{ background: s.primaryColor||"#085041" }}>Student portal</a>
+        <a href="/login" className="h-[38px] px-[22px] rounded-xl text-[13.5px] font-medium text-white no-underline inline-flex items-center gap-1.5" style={{ background: s.primaryColor||"#085041" }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className="w-4 h-4">
+            <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          Login
+        </a>
       </div>
       <button onClick={onToggleMobile} className="md:hidden w-10 h-10 border-none bg-transparent cursor-pointer flex flex-col items-center justify-center gap-[5px] ml-auto">
         <span className="block w-[22px] h-[2px] bg-[#2A3029] rounded transition-all" style={{ transform: mobileOpen?"rotate(45deg) translate(5px,5px)":"" }} />

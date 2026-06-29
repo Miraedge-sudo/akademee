@@ -1,21 +1,18 @@
-import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-export default function StudentProfilePage() {
+export default function TeachersListPage() {
   const { t, i18n } = useTranslation("common");
-  const { id } = useParams();
   const lang = i18n.language === "fr" ? "fr" : "en";
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-14 h-14 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center text-2xl shadow-lg">👤</div>
+      <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-xl font-semibold text-surface-800 dark:text-surface-100">
-            {t("students.profile", "Student Profile")}
+            {t("teachers.title", "Teachers")}
           </h1>
           <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-            {lang === "fr" ? `Dossier de l'élève #${id}` : `Student record #${id}`}
+            {lang === "fr" ? "Gérer les enseignants" : "Manage your teaching staff"}
           </p>
         </div>
       </div>

@@ -29,7 +29,7 @@ export default function WebsiteFooter({ school, variant = "dark" }) {
           </div>
           {[
             {title:"Quick links",links:["About","Classes","Gallery","Contact"].map(l=>({label:l,href:`#${l.toLowerCase()}`}))},
-            {title:"Portals",links:["Student portal","Parent login","Teacher login","Admin dashboard"].map(l=>({label:l,href:"/login"}))},
+            {title:"Login",links:[{label:"Login",href:"/login"}]},
             {title:"Academic",links:["Timetable","Fees structure","GCE results","Admissions"].map(l=>({label:l,href:"#"}))},
           ].map((col,i) => (
             <div key={i}>
