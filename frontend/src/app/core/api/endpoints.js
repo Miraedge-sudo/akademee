@@ -90,6 +90,13 @@ export const API_ENDPOINTS = {
 
   // Config
   CONFIG: "/api/config",
+
+  // Dashboard
+  DASHBOARD: {
+    STATS: "/api/dashboard/stats",
+    RECENT_ACTIVITIES: "/api/dashboard/activities",
+    REVENUE: "/api/dashboard/revenue",
+  },
 };
 
 export default API_ENDPOINTS;
