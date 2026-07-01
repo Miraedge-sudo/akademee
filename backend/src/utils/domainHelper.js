@@ -5,11 +5,11 @@
 const domains = require('../config/domains');
 const SlugGenerator = require('./slugGenerator');
 
-/** Maps each school's chosen template to its public landing page file */
+/** Maps each school's chosen template to its public landing page path */
 const TEMPLATE_PAGES = {
-  modern: 'akademee_vitrine_modern.html',
-  classic: 'akademee_vitrine_classic.html',
-  minimal: 'akademee_vitrine_minimal.html',
+  modern: '/site',
+  classic: '/site',
+  minimal: '/site',
 };
 
 function stripPort(host = '') {
@@ -17,7 +17,7 @@ function stripPort(host = '') {
 }
 
 function escapeRegex(value) {
-  return value.replace(/\./g, '\\.');
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function parseSubdomainFromHost(host) {
@@ -49,14 +49,14 @@ function resolveSubdomain(req) {
     return SlugGenerator.sanitize(req.subdomain);
   }
 
-  const headerSubdomain = req.headers['x-school-subdomain'];
-  if (headerSubdomain) {
-    return SlugGenerator.sanitize(headerSubdomain);
-  }
-
   const hostSubdomain = parseSubdomainFromHost(req.get('host'));
   if (hostSubdomain) {
     return hostSubdomain;
+  }
+
+  const headerSubdomain = req.headers['x-school-subdomain'];
+  if (headerSubdomain) {
+    return SlugGenerator.sanitize(headerSubdomain);
   }
 
   if (req.query?.subdomain) {
@@ -67,7 +67,7 @@ function resolveSubdomain(req) {
     return SlugGenerator.sanitize(req.body.subdomain);
   }
 
-  return req.subdomain || null;
+  return null;
 }
 
 function buildSchoolUrls(subdomain, templateCode = 'modern') {
@@ -83,11 +83,11 @@ function buildSchoolUrls(subdomain, templateCode = 'modern') {
   return {
     subdomain: normalizedSubdomain,
     campusUrl: `${protocol}://${host}`,
-    dashboardUrl: `${protocol}://${host}/pages/akademee_layout.html`,
-    websiteUrl: `${protocol}://${host}/pages/${vitrinePage}`,
-    loginUrl: `${protocol}://${host}/pages/akademee_login.html`,
-    onboardingUrl: `${protocol}://${host}/pages/akademee_onboarding_v2.html`,
-    verifyEmailUrl: `${protocol}://${host}/pages/akademee_verify_email.html`,
+    dashboardUrl: `${protocol}://${host}/dashboard`,
+    websiteUrl: `${protocol}://${host}${vitrinePage}`,
+    loginUrl: `${protocol}://${host}/login`,
+    onboardingUrl: `${protocol}://${host}/onboarding`,
+    verifyEmailUrl: `${protocol}://${host}/verify-email`,
     apiUrl: domains.apiBaseUrl,
     domainSuffix: domains.getDomainSuffix(),
     templateCode,

@@ -1,0 +1,12 @@
+{
+  "title": "Tableau de bord",
+  "welcome": "Bon retour, {{name}}",
+  "quickStats": {
+    "students": "Élèves",
+    "teachers": "Enseignants",
+    "classes": "Classes",
+    "revenue": "Revenus"
+  },
+  "recentActivity": "Activité récente",
+  "viewAll": "Voir tout"
+}

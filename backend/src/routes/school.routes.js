@@ -3,6 +3,7 @@
  */
 
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const schoolController = require('../controllers/school.controller');
 const onboardingController = require('../controllers/onboarding.controller');
 const authMiddleware = require('../middleware/auth.middleware');
@@ -14,16 +15,26 @@ const {
   updateSchoolValidator,
   registerSchoolValidator,
   checkSubdomainValidator,
+  getSchoolValidator,
 } = require('../validators/school.validator');
 const { saveOnboardingValidator } = require('../validators/onboarding.validator');
 const validateMiddleware = require('../middleware/validate.middleware');
 
 const router = express.Router();
 
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, message: 'Too many registration attempts. Try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // ── Public routes ──
 
 router.post(
   '/register',
+  registerLimiter,
   registerSchoolValidator,
   validateMiddleware,
   schoolController.registerSchool
@@ -91,7 +102,7 @@ router.post(
 
 router.get('/', authMiddleware, schoolController.getAllSchools);
 
-router.get('/:id', authMiddleware, schoolController.getSchool);
+router.get('/:id', authMiddleware, getSchoolValidator, validateMiddleware, schoolController.getSchool);
 
 router.put(
   '/:id',

@@ -43,8 +43,9 @@ Content-Type: application/json
 | Field | Type | Required | Description | Example |
 |-------|------|----------|-------------|---------|
 | schoolName | string | ✅ | Name of the school | "Grace Bilingual Academy" |
+| subdomain | string | ✅ | School subdomain (auto-generated, can be customized) | "grace-bilingual" |
 | city | string | ✅ | City where school is located | "Douala" |
-| region | string | ✅ | Region/Province | "Littoral" |
+| region | string | ❌ | Region/Province | "Littoral" |
 | email | string | ✅ | School email address | "info@school.cm" |
 | firstName | string | ✅ | Admin first name | "John" |
 | lastName | string | ✅ | Admin last name | "Doe" |
@@ -53,6 +54,7 @@ Content-Type: application/json
 | password | string | ✅ | Admin password (min 8 chars) | "SecurePass@123" |
 | confirmPassword | string | ✅ | Confirm password (must match) | "SecurePass@123" |
 | planId | string | ✅ | Subscription plan: "free", "basic", or "premium" | "basic" |
+| templateCode | string | ❌ | Website template: "modern", "classic", or "minimal" | "modern" |
 
 #### Response - Success (201)
 ```json
@@ -60,13 +62,48 @@ Content-Type: application/json
   "success": true,
   "message": "School registered successfully",
   "data": {
+    "school": {
+      "schoolId": "550e8400-e29b-41d4-a716-446655440000",
+      "schoolName": "Grace Bilingual Academy",
+      "subdomain": "grace-bilingual-academy"
+    },
     "schoolId": "550e8400-e29b-41d4-a716-446655440000",
     "schoolName": "Grace Bilingual Academy",
     "subdomain": "grace-bilingual-academy",
-    "campusUrl": "grace-bilingual-academy.akademee.cm",
+    "templateCode": "modern",
+    "campusUrl": "http://grace-bilingual-academy.lvh.me:3000",
+    "dashboardUrl": "http://grace-bilingual-academy.lvh.me:3000/dashboard",
+    "websiteUrl": "http://grace-bilingual-academy.lvh.me:3000/site",
+    "onboardingUrl": "http://grace-bilingual-academy.lvh.me:3000/onboarding",
+    "loginUrl": "http://grace-bilingual-academy.lvh.me:3000/login",
+    "domainSuffix": ".lvh.me:3000",
     "adminEmail": "admin@grace-bilingual.cm",
     "adminName": "John Doe",
-    "planId": "basic"
+    "planId": "basic",
+    "emailVerified": true,
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "user": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "email": "admin@grace-bilingual.cm",
+      "firstName": "John",
+      "lastName": "Doe",
+      "schoolId": "550e8400-e29b-41d4-a716-446655440000",
+      "subdomain": "grace-bilingual-academy",
+      "schoolName": "Grace Bilingual Academy",
+      "roles": ["ADMIN"]
+    },
+    "urls": {
+      "subdomain": "grace-bilingual-academy",
+      "campusUrl": "http://grace-bilingual-academy.lvh.me:3000",
+      "dashboardUrl": "http://grace-bilingual-academy.lvh.me:3000/dashboard",
+      "websiteUrl": "http://grace-bilingual-academy.lvh.me:3000/site",
+      "loginUrl": "http://grace-bilingual-academy.lvh.me:3000/login",
+      "onboardingUrl": "http://grace-bilingual-academy.lvh.me:3000/onboarding",
+      "verifyEmailUrl": "http://grace-bilingual-academy.lvh.me:3000/verify-email",
+      "apiUrl": "http://localhost:5000",
+      "domainSuffix": ".lvh.me:3000",
+      "templateCode": "modern"
+    }
   },
   "timestamp": "2026-06-14T08:00:00.000Z"
 }
@@ -142,13 +179,28 @@ Content-Type: application/json
   "success": true,
   "message": "Login successful",
   "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJzY2hvb2xJZCI6IjU1MGU4NDAwLWUyOWItNDFkNC1hNzE2LTQ0NjY1NTQ0MDAwMCIsImVtYWlsIjoiYWRtaW5AZ3JhY2UtYmlsaW5ndWFsLmNtIiwiZmlyc3ROYW1lIjoiSm9obiIsImxhc3ROYW1lIjoiRG9lIiwicm9sZXMiOlsiU1VQRVJfQURNSU4iXSwiaWF0IjoxNjg3Nzc2Njc5LCJleHAiOjE2ODgzODEzNzl9.d3JhcHBlZF90b2tlbl9leGFtcGxl",
+    "token": "eyJhbGciOiJIUzI1NiIs...",
     "user": {
       "id": "550e8400-e29b-41d4-a716-446655440000",
       "email": "admin@grace-bilingual.cm",
       "firstName": "John",
       "lastName": "Doe",
-      "roles": ["SUPER_ADMIN"]
+      "schoolId": "550e8400-e29b-41d4-a716-446655440000",
+      "subdomain": "grace-bilingual-academy",
+      "schoolName": "Grace Bilingual Academy",
+      "roles": ["ADMIN"]
+    },
+    "urls": {
+      "subdomain": "grace-bilingual-academy",
+      "campusUrl": "http://grace-bilingual-academy.lvh.me:3000",
+      "dashboardUrl": "http://grace-bilingual-academy.lvh.me:3000/dashboard",
+      "websiteUrl": "http://grace-bilingual-academy.lvh.me:3000/site",
+      "loginUrl": "http://grace-bilingual-academy.lvh.me:3000/login",
+      "onboardingUrl": "http://grace-bilingual-academy.lvh.me:3000/onboarding",
+      "verifyEmailUrl": "http://grace-bilingual-academy.lvh.me:3000/verify-email",
+      "apiUrl": "http://localhost:5000",
+      "domainSuffix": ".lvh.me:3000",
+      "templateCode": "modern"
     }
   },
   "timestamp": "2026-06-14T08:00:00.000Z"
@@ -182,10 +234,12 @@ Content-Type: application/json
 {
   "userId": "550e8400-e29b-41d4-a716-446655440000",
   "schoolId": "550e8400-e29b-41d4-a716-446655440000",
+  "subdomain": "grace-bilingual-academy",
   "email": "admin@grace-bilingual.cm",
   "firstName": "John",
   "lastName": "Doe",
-  "roles": ["SUPER_ADMIN"],
+  "roles": ["ADMIN"],
+  "role": "ADMIN",
   "iat": 1687776679,
   "exp": 1688381379
 }
@@ -432,12 +486,18 @@ None
     "firstName": "John",
     "lastName": "Doe",
     "schoolId": "550e8400-e29b-41d4-a716-446655440000",
-    "roles": ["SUPER_ADMIN"],
+    "roles": ["ADMIN"],
     "school": {
       "school_id": "550e8400-e29b-41d4-a716-446655440000",
       "name": "Grace Bilingual Academy",
-      "subdomain": "grace-bilingual-academy"
-    }
+      "subdomain": "grace-bilingual-academy",
+      "email_verified": true,
+      "onboarding_completed": false
+    },
+    "schoolName": "Grace Bilingual Academy",
+    "subdomain": "grace-bilingual-academy",
+    "emailVerified": true,
+    "onboardingCompleted": false
   },
   "timestamp": "2026-06-14T08:00:00.000Z"
 }

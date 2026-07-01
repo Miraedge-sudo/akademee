@@ -3,6 +3,7 @@
  * School A can never read or mutate School B students.
  */
 
+const crypto = require('crypto');
 const sql = require('../config/database');
 
 class StudentService {
@@ -76,7 +77,7 @@ class StudentService {
     `;
 
     const user = users[0];
-    const number = studentNumber || `STU-${Date.now().toString().slice(-6)}`;
+    const number = studentNumber || `STU-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
     const students = await sql`
       INSERT INTO students (
@@ -121,6 +122,8 @@ class StudentService {
   }
 
   async listStudents(schoolId, { limit = 50, offset = 0, search, status, className } = {}) {
+    limit = Math.min(Math.max(1, limit), 500);
+    offset = Math.max(0, offset);
     const searchTerm = search ? `%${search.toLowerCase()}%` : null;
 
     const rows = await sql`
@@ -224,8 +227,8 @@ class StudentService {
       SELECT user_id FROM students WHERE student_id = ${studentId} AND school_id = ${schoolId}
     `;
 
-    await sql`DELETE FROM students WHERE student_id = ${studentId} AND school_id = ${schoolId}`;
-    await sql`DELETE FROM users WHERE user_id = ${rows[0].user_id} AND school_id = ${schoolId}`;
+    await sql`UPDATE students SET status = 'inactive', updated_at = NOW() WHERE student_id = ${studentId} AND school_id = ${schoolId}`;
+    await sql`UPDATE users SET is_active = false, updated_at = NOW() WHERE user_id = ${rows[0].user_id} AND school_id = ${schoolId}`;
 
     return { deleted: true, studentId };
   }

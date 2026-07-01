@@ -2,74 +2,127 @@
 
 This document lists available API endpoints and security requirements.
 
-## Public Endpoints
-- `GET /api/health` — health check and database connectivity
-- `POST /api/auth/register` — register a user
-- `POST /api/auth/login` — login and receive JWT
+## Public Endpoints (No Auth Required)
+
+### Health
+- `GET /api/health` — Health check
+
+### Auth
+- `POST /api/auth/login` — Login with subdomain + email + password (rate-limited: 20 req/15min)
+- `POST /api/auth/verify-school` — Check if a school exists by subdomain
+
+### School Registration
+- `POST /api/schools/register` — Register a new school + admin user (rate-limited: 10 req/15min)
+- `POST /api/schools/check-subdomain` — Check subdomain availability
+- `GET /api/schools/plans` — Get subscription plans
+- `GET /api/schools/templates` — Get website templates
+- `GET /api/schools/verify-email` — Verify school email via token
 
 ## Authenticated Endpoints
+
 All routes below require a valid `Authorization: Bearer <token>` header.
 
 ### Auth
-- `GET /api/auth/profile` — retrieve authenticated user profile
+- `GET /api/auth/me` — Get current user profile (with school details, onboarding status)
+- `POST /api/auth/logout` — Logout
 
 ### School Management
-- `GET /api/schools` — list active schools
-- `GET /api/schools/:id` — get school details
-- `POST /api/schools` — create a school (roles: `SUPER_ADMIN`, `ADMIN`)
+- `GET /api/schools` — List all schools
+- `GET /api/schools/:id` — Get school details
+- `POST /api/schools` — Create a school (ADMIN role)
+- `PUT /api/schools/:id` — Update school (ADMIN role)
+
+### Onboarding (ADMIN role)
+- `GET /api/schools/onboarding` — Get onboarding data (logo, colors, template, content)
+- `PUT /api/schools/onboarding` — Save onboarding data (partial update, all fields optional)
+- `POST /api/schools/onboarding/media` — Upload media (logo/hero/gallery)
+- `POST /api/schools/resend-verification` — Resend verification email
 
 ### Student Management
-- `GET /api/students` — list students
-- `GET /api/students/:id` — get a student
-- `POST /api/students` — create a student (roles: `SUPER_ADMIN`, `ADMIN`)
-- `PUT /api/students/:id` — update a student (roles: `SUPER_ADMIN`, `ADMIN`)
-- `DELETE /api/students/:id` — delete a student (role: `SUPER_ADMIN`)
+- `GET /api/students` — List students
+- `GET /api/students/:id` — Get a student
+- `POST /api/students` — Create a student (ADMIN role)
+- `PUT /api/students/:id` — Update a student (ADMIN role)
+- `DELETE /api/students/:id` — Delete a student (ADMIN role)
 
-### Class Management
-- `GET /api/classes` — list classes
-- `GET /api/classes/:id` — get class details
-- `POST /api/classes` — create a class (roles: `SUPER_ADMIN`, `ADMIN`)
+### Guardian Management
+- `GET /api/guardians` — List guardians
+- `GET /api/guardians/:id` — Get guardian details
+- `POST /api/guardians` — Create a guardian (ADMIN role)
+- `PUT /api/guardians/:id` — Update a guardian (ADMIN role)
 
-### Grade Management
-- `GET /api/grades` — list grades
-- `GET /api/grades/student/:studentId` — list grades for a student
-- `POST /api/grades` — create a grade entry (roles: `SUPER_ADMIN`, `ADMIN`, `TEACHER`)
+### Academic Structure
+- `GET /api/academics/years` — List academic years
+- `POST /api/academics/years` — Create academic year
+- `GET /api/classes` — List classes
+- `POST /api/classes` — Create a class
+- `GET /api/subjects` — List subjects
+- `POST /api/subjects` — Create a subject
 
-### Attendance Management
-- `GET /api/attendance` — list attendance records
-- `GET /api/attendance/student/:studentId` — get attendance for a student
-- `POST /api/attendance` — create an attendance record (roles: `SUPER_ADMIN`, `ADMIN`, `TEACHER`)
+### Grades
+- `GET /api/grades` — List grades
+- `GET /api/grades/student/:studentId` — Get grades for a student
+- `POST /api/grades` — Create a grade entry
+- `PUT /api/grades/:id` — Update a grade
 
-### Finance Management
-- `GET /api/finance` — list payments
-- `GET /api/finance/summary` — payment summary (roles: `SUPER_ADMIN`, `ADMIN`, `ACCOUNTANT`)
-- `GET /api/finance/student/:studentId` — get payments for a student
-- `POST /api/finance` — record a payment (roles: `SUPER_ADMIN`, `ADMIN`, `ACCOUNTANT`)
+### Attendance
+- `GET /api/attendance` — List attendance records
+- `GET /api/attendance/student/:studentId` — Get attendance for a student
+- `POST /api/attendance` — Create an attendance record
 
-### Report Generation
-- `GET /api/reports/pdf/:studentId` — download a PDF report card for a student
+### Finance
+- `GET /api/finance/fees` — List fees
+- `GET /api/payments` — List payments
+- `GET /api/payments/:id` — Get payment details
+- `POST /api/payments` — Record a payment
 
-### Enrollment Management
-- `GET /api/enrollments` — list enrollments
-- `GET /api/enrollments/:id` — get enrollment details
-- `POST /api/enrollments` — create an enrollment (roles: `SUPER_ADMIN`, `ADMIN`)
-- `PUT /api/enrollments/:id` — update enrollment (roles: `SUPER_ADMIN`, `ADMIN`)
-- `DELETE /api/enrollments/:id` — delete enrollment (role: `SUPER_ADMIN`)
+### Reports
+- `GET /api/reports/bulletin/:studentId` — Generate PDF report card
+- `GET /api/reports/class/:classId` — Class report
 
-### Fee Structure Management
-- `GET /api/fee-structures` — list fee structures
-- `GET /api/fee-structures/:id` — get fee structure details
-- `POST /api/fee-structures` — create a fee structure (roles: `SUPER_ADMIN`, `ADMIN`, `ACCOUNTANT`)
-- `PUT /api/fee-structures/:id` — update fee structure (roles: `SUPER_ADMIN`, `ADMIN`, `ACCOUNTANT`)
+### Notifications
+- `GET /api/notifications` — List notifications
+- `PUT /api/notifications/:id/read` — Mark notification as read
 
-### Offline Sync Queue
-- `GET /api/sync-queue` — list sync queue items
-- `GET /api/sync-queue/status/:status` — get items by sync status
-- `GET /api/sync-queue/failed-items` — get failed items eligible for retry
-- `POST /api/sync-queue/:id/synced` — mark item as synced
-- `POST /api/sync-queue/:id/failed` — mark item as failed
-- `POST /api/sync-queue/:id/retry` — retry failed sync (roles: `SUPER_ADMIN`, `ADMIN`)
+### Config
+- `GET /api/config` — System configuration
+
+## Response Format
+
+### Success
+```json
+{
+  "success": true,
+  "message": "Operation successful",
+  "data": { /* response data */ },
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### Error
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "error": null,
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### Validation Error
+```json
+{
+  "success": false,
+  "message": "Validation failed.",
+  "errors": [
+    { "field": "schoolName", "message": "School name is required" }
+  ],
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
 
 ## Notes
-- All `/api/*` resource routes except `/api/auth/*` and `/api/health` are protected by JWT authentication.
-- Role-based restrictions are enforced on creation, update, and delete operations per route.
+- All `/api/*` resource routes except public ones are protected by JWT authentication
+- Role-based restrictions are enforced on creation, update, and delete operations
+- Multi-tenant data isolation is enforced via `school_id` in every query
+- Rate limiting is applied to login (20/15min) and registration (10/15min) endpoints

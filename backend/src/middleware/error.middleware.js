@@ -2,10 +2,20 @@
  * Global Error Middleware
  */
 
-const errorMiddleware = (err, req, res, next) => {
-  console.error(err);
+const isDev = process.env.NODE_ENV === 'development';
 
-  // Multer errors
+const errorMiddleware = (err, req, res, next) => {
+  if (!err || typeof err !== 'object') {
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error.',
+    });
+  }
+
+  if (isDev) {
+    console.error(err);
+  }
+
   if (err.name === 'MulterError') {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
@@ -22,19 +32,22 @@ const errorMiddleware = (err, req, res, next) => {
     }
   }
 
-  // JWT errors
-  if (err.name === 'JsonWebTokenError') {
+  if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
     return res.status(401).json({
       success: false,
-      message: 'Invalid token.',
+      message: err.name === 'TokenExpiredError' ? 'Token expired.' : 'Invalid token.',
     });
   }
 
-  // Default error response
-  res.status(err.status || 500).json({
+  const statusCode = err.status || 500;
+  const message = statusCode === 500 && !isDev
+    ? 'Internal server error.'
+    : err.message || 'Internal server error.';
+
+  res.status(statusCode).json({
     success: false,
-    message: err.message || 'Internal server error.',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    message,
+    ...(isDev && { stack: err.stack }),
   });
 };
 

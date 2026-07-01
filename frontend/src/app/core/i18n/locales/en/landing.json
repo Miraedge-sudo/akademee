@@ -1,0 +1,188 @@
+{
+  "nav": {
+    "logo": "Akademee",
+    "features": "Features",
+    "pricing": "Pricing",
+    "testimonials": "Testimonials",
+    "faq": "FAQ",
+    "login": "Login",
+    "getStarted": "Get started"
+  },
+  "hero": {
+    "badge": "Multi-tenant School Management • Cameroon",
+    "title": "Run your entire school",
+    "titleHighlight": "on one beautiful platform",
+    "subtitle": "Akademee gives every school its own branded campus, public website and powerful dashboards for admins, teachers, accountants, students and parents.",
+    "ctaPrimary": "Create your campus",
+    "ctaSecondary": "Book a demo",
+    "trustCount": "320+ schools",
+    "trustText": "across Cameroon trust Akademee",
+    "stat1Label": "Pass rate",
+    "stat2Label": "Fees collected"
+  },
+  "stats": {
+    "schools": "Schools onboarded",
+    "students": "Students managed",
+    "teachers": "Teachers empowered",
+    "uptime": "Platform uptime"
+  },
+  "features": {
+    "title": "One platform. Every department.",
+    "subtitle": "Everything an institution needs, beautifully unified.",
+    "academics": {
+      "title": "Academics",
+      "description": "Classes, streams, subjects, timetables and grading for Anglophone & Francophone systems."
+    },
+    "attendance": {
+      "title": "Attendance & Grades",
+      "description": "Terms, sequences and semesters with auto-generated report cards and transcripts."
+    },
+    "finance": {
+      "title": "Finance",
+      "description": "Fees, invoices, receipts, payroll and expense tracking with real-time analytics."
+    },
+    "website": {
+      "title": "Public Website",
+      "description": "Every school gets a branded subdomain website with 3 premium templates."
+    },
+    "parent": {
+      "title": "Parent Portal",
+      "description": "Keep parents informed with real-time grades, attendance and fee notifications."
+    },
+    "staff": {
+      "title": "Staff & Payroll",
+      "description": "Manage teacher contracts, attendance and payroll from a single dashboard."
+    },
+    "analytics": {
+      "title": "Advanced Analytics",
+      "description": "Real-time dashboards for enrollment trends, performance and revenue."
+    },
+    "security": {
+      "title": "Security",
+      "description": "Each school runs in a fully isolated tenant with role-based access control."
+    }
+  },
+  "why": {
+    "title": "Why schools choose Akademee",
+    "subtitle": "Akademee gives every school its own branded campus, public website and powerful dashboards for admins, teachers, accountants, students and parents.",
+    "features": [
+      "Branded subdomain & public website",
+      "Anglophone & higher-education grading",
+      "Bilingual (English / French)",
+      "Bulk import from Excel & CSV",
+      "Dark & light mode for every user"
+    ],
+    "satisfaction": "Satisfaction rate"
+  },
+  "pricing": {
+    "title": "Simple, annual pricing",
+    "subtitle": "Pick a plan, get a branded campus instantly.",
+    "basic": {
+      "name": "Basic",
+      "price": "180,000",
+      "period": "FCFA / year",
+      "features": [
+        "Up to 300 students",
+        "Core academics & grading",
+        "1 website template",
+        "Email support",
+        "Public website"
+      ]
+    },
+    "premium": {
+      "name": "Premium",
+      "price": "360,000",
+      "period": "FCFA / year",
+      "features": [
+        "Up to 1,500 students",
+        "Finance & payroll suite",
+        "All 3 website templates",
+        "Live chat support",
+        "Bulk import (Excel/CSV)",
+        "Custom branding"
+      ],
+      "popular": "Most popular"
+    },
+    "professional": {
+      "name": "Professional",
+      "price": "720,000",
+      "period": "FCFA / year",
+      "features": [
+        "Unlimited students",
+        "Library, transport & hostel",
+        "Advanced analytics",
+        "Priority support",
+        "API access",
+        "Multi-campus"
+      ]
+    },
+    "cta": "Get started"
+  },
+  "testimonials": {
+    "title": "What our users say",
+    "grace": {
+      "quote": "Akademee replaced six tools. Our report cards now generate in seconds and parents love the portal.",
+      "name": "Grace Mbah",
+      "role": "Principal, Grace Academy"
+    },
+    "nadia": {
+      "quote": "Fee collection and payroll used to take days. Now it is one clean dashboard with real-time analytics.",
+      "name": "Nadia Fomba",
+      "role": "Bursar, Bilingual College"
+    },
+    "aicha": {
+      "quote": "I can follow my daughter's grades, attendance and fees from my phone. It is wonderfully simple.",
+      "name": "Aïcha Njoya",
+      "role": "Parent"
+    }
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "items": [
+      {
+        "q": "How does the subdomain work?",
+        "a": "Each school gets its own subdomain like graceacademy.akademee.com hosting a public website and dashboards in a fully isolated tenant."
+      },
+      {
+        "q": "Can I import my existing student data?",
+        "a": "Yes, Premium and Professional plans include bulk import from Excel and CSV files, making migration seamless."
+      },
+      {
+        "q": "Is Akademee bilingual?",
+        "a": "Absolutely. The platform supports English and French, with grading systems for both Anglophone and Francophone education systems."
+      },
+      {
+        "q": "What payment methods do you accept?",
+        "a": "We accept mobile money (MTN, Orange), bank transfers, and cards. Annual plans are billed in FCFA."
+      },
+      {
+        "q": "Can parents access the platform?",
+        "a": "Yes, every plan includes a parent portal where parents can view grades, attendance, fees, and communicate with teachers."
+      }
+    ]
+  },
+  "cta": {
+    "title": "Ready to modernise your school?",
+    "subtitle": "Launch your branded campus in minutes.",
+    "button": "Create your campus"
+  },
+  "footer": {
+    "description": "Modern multi-tenant school management for Cameroon. Built for admins, teachers, accountants, students & parents.",
+    "product": "Product",
+    "features": "Features",
+    "pricing": "Pricing",
+    "templates": "Templates",
+    "security": "Security",
+    "company": "Company",
+    "about": "About",
+    "blog": "Blog",
+    "careers": "Careers",
+    "contact": "Contact",
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "terms": "Terms",
+    "support": "Support",
+    "status": "Status",
+    "copyright": "© 2026 Akademee. akademee.com — All rights reserved."
+  }
+}

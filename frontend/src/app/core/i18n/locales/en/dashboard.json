@@ -1,0 +1,12 @@
+{
+  "title": "Dashboard",
+  "welcome": "Welcome back, {{name}}",
+  "quickStats": {
+    "students": "Students",
+    "teachers": "Teachers",
+    "classes": "Classes",
+    "revenue": "Revenue"
+  },
+  "recentActivity": "Recent Activity",
+  "viewAll": "View all"
+}

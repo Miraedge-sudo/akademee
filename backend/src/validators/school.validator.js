@@ -105,6 +105,17 @@ const updateSchoolValidator = [
   body('email').optional().isEmail(),
   body('phone').optional().trim(),
   body('location').optional().trim(),
+  body('city').optional().trim(),
+  body('region').optional().trim(),
+  body('tagline').optional().trim(),
+  body('address').optional().trim(),
+  body('primary_color').optional().matches(/^#[0-9A-Fa-f]{6}$/).withMessage('Primary color must be a valid hex color'),
+  body('website_description').optional().trim(),
+  body('year_founded').optional().matches(/^\d{4}$/).withMessage('Year founded must be a 4-digit year'),
+];
+
+const getSchoolValidator = [
+  param('id').isUUID().withMessage('School ID must be a valid UUID'),
 ];
 
 module.exports = {
@@ -112,4 +123,5 @@ module.exports = {
   checkSubdomainValidator,
   createSchoolValidator,
   updateSchoolValidator,
+  getSchoolValidator,
 };

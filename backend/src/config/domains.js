@@ -24,7 +24,12 @@ const domains = {
   apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:5000',
 
   /** Subdomains reserved for platform services (not schools) */
-  reservedSubdomains: ['www', 'api', 'app', 'admin', 'mail', 'static'],
+  reservedSubdomains: [
+    'www', 'api', 'app', 'admin', 'mail', 'static', 'auth', 'dev', 'stage',
+    'test', 'cdn', 'status', 'support', 'help', 'docs', 'blog', 'shop',
+    'store', 'web', 'beta', 'demo', 'secure', 'portal', 'console',
+    'dashboard', 'smtp', 'imap', 'pop3', 'webmail', 'ftp', 'git',
+  ],
 
   getActiveTenantDomain() {
     return isProduction ? this.prodTenantDomain : this.devTenantDomain;
