@@ -4,11 +4,9 @@
 
 const domains = require('./domains');
 
-function isAllowedOrigin(origin) {
-  if (!origin) {
-    return true;
-  }
+const isDev = process.env.NODE_ENV !== 'production';
 
+function isAllowedOrigin(origin) {
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
@@ -43,7 +41,14 @@ function isAllowedOrigin(origin) {
 
 const corsOptions = {
   origin(origin, callback) {
-    if (process.env.NODE_ENV === 'development' || isAllowedOrigin(origin)) {
+    if (!origin) {
+      if (isDev) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    }
+
+    if (isAllowedOrigin(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));

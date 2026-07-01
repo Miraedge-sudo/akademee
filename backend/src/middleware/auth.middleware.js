@@ -22,6 +22,8 @@ const authMiddleware = (req, res, next) => {
     if (decoded.schoolId) {
       req.schoolId = decoded.schoolId;
       req.tenantId = decoded.schoolId;
+      // JWT subdomain overrides any client-supplied subdomain (prevents tenant spoofing)
+      req.subdomain = decoded.subdomain;
     }
 
     if (req.school?.school_id && decoded.schoolId && req.school.school_id !== decoded.schoolId) {

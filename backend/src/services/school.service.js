@@ -47,7 +47,6 @@ class SchoolService {
       throw new Error('Subdomain already exists');
     }
 
-    // Enforce unique school email and admin email across the system
     const schoolEmailExists = await sql`
       SELECT school_id FROM schools WHERE LOWER(email) = LOWER(${email})
     `;
@@ -73,42 +72,48 @@ class SchoolService {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const schools = await sql`
-      INSERT INTO schools (
-        name, email, phone, city, region, subdomain, tagline,
-        website_template_id, subscription_plan, subscription_status, is_active,
-        email_verified, created_at
-      )
-      VALUES (
-        ${schoolName}, ${email}, ${phone || null}, ${city}, ${region || null}, ${normalizedSubdomain},
-        ${`Welcome to ${schoolName}`},
-        ${templateId}, ${planId}, 'trial', true,
-        true, NOW()
-      )
-      RETURNING school_id, name, email, subdomain
-    `;
-
-    const school = schools[0];
-
-    const users = await sql`
-      INSERT INTO users (school_id, first_name, last_name, email, password_hash, phone, is_active, created_at)
-      VALUES (${school.school_id}, ${firstName}, ${lastName}, ${adminEmail}, ${passwordHash}, ${phone || null}, true, NOW())
-      RETURNING user_id, first_name, last_name, email, school_id
-    `;
-
-    const user = users[0];
-
-    const roles = await sql`SELECT role_id, role_code FROM roles WHERE role_code = 'ADMIN'`;
-    const adminRole = roles[0];
-
-    if (adminRole) {
-      await sql`
-        INSERT INTO user_roles (user_id, role_id)
-        VALUES (${user.user_id}, ${adminRole.role_id})
+    const result = await sql.begin(async (tx) => {
+      const schools = await tx`
+        INSERT INTO schools (
+          name, email, phone, city, region, subdomain, tagline,
+          website_template_id, subscription_plan, subscription_status, is_active,
+          email_verified, created_at
+        )
+        VALUES (
+          ${schoolName}, ${email}, ${phone || null}, ${city}, ${region || null}, ${normalizedSubdomain},
+          ${`Welcome to ${schoolName}`},
+          ${templateId}, ${planId}, 'trial', true,
+          true, NOW()
+        )
+        RETURNING school_id, name, email, subdomain
       `;
-    }
 
-    const assignedRoles = adminRole ? [{ role_code: adminRole.role_code }] : [];
+      const school = schools[0];
+
+      const users = await tx`
+        INSERT INTO users (school_id, first_name, last_name, email, password_hash, phone, is_active, created_at)
+        VALUES (${school.school_id}, ${firstName}, ${lastName}, ${adminEmail}, ${passwordHash}, ${phone || null}, true, NOW())
+        RETURNING user_id, first_name, last_name, email, school_id
+      `;
+
+      const user = users[0];
+
+      const roles = await tx`SELECT role_id, role_code FROM roles WHERE role_code = 'ADMIN'`;
+      const adminRole = roles[0];
+
+      if (adminRole) {
+        await tx`
+          INSERT INTO user_roles (user_id, role_id)
+          VALUES (${user.user_id}, ${adminRole.role_id})
+        `;
+      }
+
+      const assignedRoles = adminRole ? [{ role_code: adminRole.role_code }] : [];
+
+      return { school, user, assignedRoles };
+    });
+
+    const { school, user, assignedRoles } = result;
     const schoolForSession = {
       ...school,
       template_code: resolvedTemplateCode,
@@ -117,9 +122,12 @@ class SchoolService {
     const session = await authService.createAuthSession(user, schoolForSession, assignedRoles);
     const urls = buildSchoolUrls(school.subdomain, resolvedTemplateCode);
 
-    urls.onboardingUrl = `${urls.campusUrl}/pages/akademee_onboarding_v2.html`;
-
     return {
+      school: {
+        schoolId: school.school_id,
+        schoolName: school.name,
+        subdomain: school.subdomain,
+      },
       schoolId: school.school_id,
       schoolName: school.name,
       subdomain: school.subdomain,
@@ -210,21 +218,18 @@ class SchoolService {
    * Get all website templates
    */
   async getTemplates() {
-    try {
-      const templates = await sql`SELECT * FROM website_templates ORDER BY created_at DESC`;
-      return templates;
-    } catch (error) {
-      throw error;
-    }
+    const templates = await sql`
+      SELECT template_id, template_code, name, description, preview_url, created_at
+      FROM website_templates ORDER BY created_at DESC
+    `;
+    return templates;
   }
 
   async createSchool(schoolData) {
     const { name } = schoolData;
 
-    // Generate slug
-    const slug = name.toLowerCase().replace(/\s+/g, '-');
+    const slug = SlugGenerator.sanitize(name);
 
-    // Create school
     const school = await sql`
       INSERT INTO schools (name, subdomain, is_active, created_at)
       VALUES (${name}, ${slug}, true, NOW())
@@ -235,7 +240,14 @@ class SchoolService {
   }
 
   async getSchool(id) {
-    const schools = await sql`SELECT * FROM schools WHERE school_id = ${id}`;
+    const schools = await sql`
+      SELECT school_id, name, email, phone, city, region, subdomain, tagline,
+        primary_color, logo_url, hero_image_url, website_description, year_founded,
+        website_template_id, subscription_plan, subscription_status, is_active,
+        email_verified, onboarding_completed, website_published, address,
+        website_stats, website_values, educational_systems, created_at, updated_at
+      FROM schools WHERE school_id = ${id}
+    `;
     if (schools.length === 0) {
       throw new Error('School not found');
     }
@@ -243,17 +255,36 @@ class SchoolService {
   }
 
   async updateSchool(id, updateData) {
-    const schools = await sql`SELECT * FROM schools WHERE school_id = ${id}`;
+    const schools = await sql`
+      SELECT school_id FROM schools WHERE school_id = ${id}
+    `;
     if (schools.length === 0) {
       throw new Error('School not found');
     }
 
-    // Update school
+    const ALLOWED_FIELDS = ['name', 'email', 'phone', 'city', 'region', 'address',
+      'tagline', 'primary_color', 'website_description', 'year_founded',
+      'website_stats', 'website_values', 'logo_url', 'hero_image_url',
+    ];
+
+    const safeData = {};
+    for (const key of ALLOWED_FIELDS) {
+      if (updateData[key] !== undefined) {
+        safeData[key] = updateData[key];
+      }
+    }
+
+    if (Object.keys(safeData).length === 0) {
+      return schools[0];
+    }
+
     const updated = await sql`
-      UPDATE schools
-      SET ${updateData}
+      UPDATE schools SET
+        ${sql(safeData, ...Object.keys(safeData))}
       WHERE school_id = ${id}
-      RETURNING *
+      RETURNING school_id, name, email, subdomain, city, region, phone, tagline,
+        primary_color, website_description, year_founded, logo_url, hero_image_url,
+        website_template_id, subscription_plan, is_active, created_at, updated_at
     `;
 
     return updated[0];
@@ -261,7 +292,10 @@ class SchoolService {
 
   async getAllSchools(limit = 10, offset = 0) {
     const schools = await sql`
-      SELECT * FROM schools
+      SELECT school_id, name, email, phone, city, region, subdomain,
+        is_active, subscription_plan, subscription_status,
+        created_at, updated_at
+      FROM schools
       ORDER BY created_at DESC
       LIMIT ${limit} OFFSET ${offset}
     `;

@@ -8,9 +8,12 @@ const authMiddleware = require('../middleware/auth.middleware');
 const tenantMiddleware = require('../middleware/tenant.middleware');
 const roleMiddleware = require('../middleware/role.middleware');
 const { createStudentValidator, updateStudentValidator } = require('../validators/student.validator');
+const { param } = require('express-validator');
 const validateMiddleware = require('../middleware/validate.middleware');
 
 const router = express.Router();
+
+const uuidParam = [param('id').isUUID().withMessage('Student ID must be a valid UUID')];
 
 router.use(authMiddleware, tenantMiddleware);
 
@@ -31,6 +34,8 @@ router.get(
 router.get(
   '/:id',
   roleMiddleware(['admin', 'teacher', 'accountant']),
+  uuidParam,
+  validateMiddleware,
   studentController.getStudent
 );
 
@@ -45,6 +50,8 @@ router.put(
 router.delete(
   '/:id',
   roleMiddleware(['admin']),
+  uuidParam,
+  validateMiddleware,
   studentController.deleteStudent
 );
 

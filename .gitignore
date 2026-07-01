@@ -5,7 +5,7 @@ node_modules/
 .env
 .env.local
 .env.*.local
-
+/akademee_design_frontend
 # IDE
 .vscode/
 .idea/

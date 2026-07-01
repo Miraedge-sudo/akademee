@@ -244,6 +244,10 @@ notification_type_enum: grade, attendance, payment, discipline, system, announce
 - `name`, `tagline`, `subdomain`
 - `email`, `phone`, `address`, `city`, `region`
 - `logo_url`, `hero_image_url`, `primary_color`
+- `website_description`, `year_founded`, `website_stats` (JSONB), `website_values` (JSONB)
+- `educational_systems` (JSONB) - systèmes éducatifs sélectionnés
+- `email_verified`, `verification_token`, `verification_token_expires_at`
+- `onboarding_completed`, `website_published`
 - `academic_system`, `subscription_plan`, `subscription_status`
 - `is_active`, `created_at`, `updated_at`
 
@@ -352,6 +356,7 @@ npm run migrate reset
 7. `007_create_attachments_attendance_notifications.js` - Attachements, présences, notifications
 8. `008_onboarding_verification_students.js` - Intégration et vérification
 9. `009_unique_emails.js` - Contraintes d'unicité
+10. `010_add_educational_systems.js` - Systèmes éducatifs
 
 ---
 
@@ -385,6 +390,11 @@ npm run migrate reset
 #### POST `/api/auth/login`
 Connexion utilisateur
 
+**Headers**
+```
+Content-Type: application/json
+```
+
 **Body**
 ```json
 {
@@ -394,14 +404,26 @@ Connexion utilisateur
 }
 ```
 
+**Rate Limiting**: 20 requêtes par fenêtre de 15 minutes
+
 **Response** `200`
 ```json
 {
   "success": true,
-  "message": "Connexion réussie",
+  "message": "Login successful",
   "data": {
     "token": "jwt_token_here",
-    "user": { "userId": "...", "email": "...", "role": "..." }
+    "user": {
+      "id": "...",
+      "email": "...",
+      "firstName": "...",
+      "lastName": "...",
+      "schoolId": "...",
+      "subdomain": "ecole-example",
+      "schoolName": "École Example",
+      "roles": ["ADMIN"]
+    },
+    "urls": { ... }
   }
 }
 ```
@@ -448,13 +470,25 @@ Authorization: Bearer <token>
 ```json
 {
   "success": true,
-  "message": "Utilisateur récupéré",
+  "message": "User retrieved successfully",
   "data": {
-    "userId": "...",
+    "id": "...",
     "email": "...",
     "firstName": "...",
     "lastName": "...",
-    "role": "..."
+    "schoolId": "...",
+    "roles": ["ADMIN"],
+    "school": {
+      "school_id": "...",
+      "name": "...",
+      "subdomain": "...",
+      "email_verified": true,
+      "onboarding_completed": false
+    },
+    "schoolName": "...",
+    "subdomain": "...",
+    "emailVerified": true,
+    "onboardingCompleted": false
   }
 }
 ```
@@ -504,10 +538,35 @@ Inscription complète d'une école (publique)
 ```json
 {
   "success": true,
-  "message": "École inscrite avec succès",
+  "message": "School registered successfully",
   "data": {
-    "school": { "schoolId": "...", "name": "...", "subdomain": "..." },
-    "user": { "userId": "...", "email": "..." }
+    "school": { "schoolId": "...", "schoolName": "...", "subdomain": "..." },
+    "schoolId": "...",
+    "schoolName": "...",
+    "subdomain": "...",
+    "templateCode": "modern",
+    "campusUrl": "http://example.lvh.me:3000",
+    "dashboardUrl": "http://example.lvh.me:3000/dashboard",
+    "websiteUrl": "http://example.lvh.me:3000/site",
+    "onboardingUrl": "http://example.lvh.me:3000/onboarding",
+    "loginUrl": "http://example.lvh.me:3000/login",
+    "domainSuffix": ".lvh.me:3000",
+    "adminEmail": "admin@example.com",
+    "adminName": "Jean Dupont",
+    "planId": "basic",
+    "emailVerified": true,
+    "token": "jwt_token_here",
+    "user": {
+      "id": "...",
+      "email": "admin@example.com",
+      "firstName": "Jean",
+      "lastName": "Dupont",
+      "schoolId": "...",
+      "subdomain": "example",
+      "schoolName": "École Example",
+      "roles": ["ADMIN"]
+    },
+    "urls": { ... }
   }
 }
 ```
@@ -578,7 +637,7 @@ Lister les templates de sites web (publique)
 Vérification email via token (publique)
 
 **Query Parameters**
-- `token`: token de vérification envoyé par email
+- `token` (requis): token de vérification envoyé par email
 
 #### GET `/api/schools/onboarding`
 Récupérer données onboarding (protégée, admin uniquement)
@@ -588,12 +647,58 @@ Récupérer données onboarding (protégée, admin uniquement)
 Authorization: Bearer <token>
 ```
 
+**Response** `200`
+```json
+{
+  "success": true,
+  "message": "Onboarding data retrieved",
+  "data": {
+    "schoolId": "...",
+    "schoolName": "...",
+    "tagline": "...",
+    "subdomain": "...",
+    "email": "...",
+    "phone": "...",
+    "address": "...",
+    "city": "...",
+    "region": "...",
+    "logoUrl": "...",
+    "heroImageUrl": "...",
+    "primaryColor": "#085041",
+    "websiteDescription": "...",
+    "yearFounded": "...",
+    "websiteStats": {},
+    "websiteValues": [],
+    "educationalSystems": ["anglophone_general"],
+    "templateCode": "modern",
+    "onboardingCompleted": false,
+    "websitePublished": false,
+    "emailVerified": true,
+    "gallery": [],
+    "urls": { ... }
+  }
+}
+```
+
 #### PUT `/api/schools/onboarding`
 Sauvegarder données onboarding (protégée, admin uniquement)
 
 **Headers**
 ```
 Authorization: Bearer <token>
+```
+
+**Body** (partial update — seuls les champs fournis sont mis à jour)
+```json
+{
+  "tagline": "Shaping the leaders of tomorrow",
+  "websiteDescription": "Description de l'école",
+  "primaryColor": "#085041",
+  "templateCode": "modern",
+  "educationalSystems": ["anglophone_general", "francophone_general"],
+  "onboardingCompleted": true,
+  "websitePublished": true
+}
 ```
 
 #### POST `/api/schools/onboarding/media`

@@ -32,8 +32,8 @@ class StudentController {
     try {
       const { limit = 50, offset = 0, search, status, className } = req.query;
       const result = await studentService.listStudents(req.schoolId, {
-        limit: parseInt(limit, 10),
-        offset: parseInt(offset, 10),
+        limit: parseInt(limit, 10) || 50,
+        offset: parseInt(offset, 10) || 0,
         search,
         status,
         className,

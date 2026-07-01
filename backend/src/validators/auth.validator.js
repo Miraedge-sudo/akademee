@@ -26,12 +26,38 @@ const loginValidator = [
   body('password').notEmpty().withMessage('Password is required'),
 ];
 
-const refreshTokenValidator = [
-  body('refreshToken').notEmpty(),
+const verifySchoolValidator = [
+  body('subdomain')
+    .trim()
+    .notEmpty()
+    .withMessage('Subdomain is required')
+    .customSanitizer((value) => value.toLowerCase())
+    .matches(SUBDOMAIN_PATTERN)
+    .withMessage('Subdomain may only contain lowercase letters, numbers, and hyphens'),
+];
+
+const forgotPasswordValidator = [
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('subdomain')
+    .trim()
+    .notEmpty()
+    .withMessage('Subdomain is required')
+    .customSanitizer((value) => value.toLowerCase())
+    .matches(SUBDOMAIN_PATTERN)
+    .withMessage('Invalid subdomain format'),
+];
+
+const resetPasswordValidator = [
+  body('token').trim().notEmpty().withMessage('Reset token is required'),
+  body('password')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters'),
 ];
 
 module.exports = {
   registerValidator,
   loginValidator,
-  refreshTokenValidator,
+  verifySchoolValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator,
 };

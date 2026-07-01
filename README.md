@@ -1,139 +1,105 @@
 # Akademee
 
-A comprehensive school management system built with modern web technologies. Akademee enables schools to manage students, grades, attendance, finances, and generate detailed academic reports—all through a multi-tenant platform with role-based access control.
+A comprehensive school management system built with modern web technologies. Akademee enables schools to manage students, grades, attendance, finances, and generate detailed academic reports — all through a multi-tenant platform with role-based access control.
 
 ## Features
 
 - **Multi-Tenant Architecture**: Support for multiple schools with subdomain-based routing
 - **Role-Based Access Control**: ADMIN, TEACHER, and STUDENT roles with fine-grained permissions
+- **School Registration & Onboarding**: 3-step registration wizard + 5-step onboarding for website setup
 - **Student Management**: Complete student profiles with class assignments and tracking
-- **Academic Grading**: Subject-based grading system with automatic average calculation (Anglophone system)
+- **Academic Grading**: Subject-based grading system with automatic average calculation
 - **Attendance Tracking**: Daily attendance recording with PRESENT, ABSENT, and LATE statuses
 - **Financial Management**: Student payment tracking, fee management, and finance reporting
 - **Report Generation**: Automated PDF report card generation for students
+- **Educational System Support**: Multiple Cameroonian systems (Anglophone General, Francophone General, Technical, University)
+- **School Website Builder**: Customizable public website with logo, colors, templates, and content
 - **Secure Authentication**: JWT-based authentication with bcrypt password hashing
 - **Responsive UI**: Modern React-based frontend with Vite for fast development
 
 ## Tech Stack
 
 ### Frontend
-- **React 18+** – UI framework
-- **Vite** – Fast bundler and dev server
-- **JavaScript/JSX** – Language
-- **CSS/Tailwind** (recommended) – Styling
+- **React 19+** — UI framework
+- **Vite 8+** — Fast bundler and dev server
+- **JavaScript/JSX** — Language
+- **Tailwind CSS 4** — Styling
+- **react-router-dom v7** — Client-side routing
+- **i18next** — Internationalization (EN/FR)
+- **Axios** — HTTP client
 
 ### Backend
-- **Node.js + Express** – REST API server
-- **MongoDB + Mongoose** – Database and ODM
-- **JWT** – Authentication tokens
-- **bcryptjs** – Password hashing
-- **PDFKit** – PDF report generation
-- **Morgan** – HTTP request logging
-- **Helmet** – Security headers
-- **CORS** – Cross-origin resource sharing
+- **Node.js + Express 4.18+** — REST API server
+- **PostgreSQL (Supabase)** — Database
+- **JWT** — Authentication tokens
+- **bcrypt** — Password hashing
+- **PDFKit** — PDF report generation
+- **Nodemailer** — Email sending (SMTP)
+- **Multer + Cloudinary** — File uploads
+- **express-validator** — Input validation
+- **express-rate-limit** — Rate limiting
 
 ## Project Structure
 
 ```
 akademee/
-├── backend/                           <- Node.js + Express + Mongoose server
+├── backend/
 │   ├── src/
-│   │   ├── config/
-│   │   │   ├── db.js                 <- MongoDB Atlas connection
-│   │   │   └── jwt.js                <- JWT configuration
+│   │   ├── app.js                  # Express app entry point
+│   │   ├── server.js               # Server start
+│   │   ├── config/                 # Configuration files
+│   │   │   ├── database.js         # PostgreSQL connection
+│   │   │   ├── jwt.js              # JWT configuration
+│   │   │   ├── email.js            # SMTP email config
+│   │   │   ├── cors.js             # CORS options
+│   │   │   ├── cloudinary.js       # Cloudinary config
+│   │   │   ├── multer.js           # File upload config
+│   │   │   └── domains.js          # Multi-tenant domain config
+│   │   │
+│   │   ├── database/
+│   │   │   └── migrations/         # SQL migration scripts (001-010)
 │   │   │
 │   │   ├── middleware/
-│   │   │   ├── auth.js               <- JWT verification
-│   │   │   ├── roleCheck.js          <- Role-based access control
-│   │   │   └── schoolResolver.js     <- School identification via subdomain
+│   │   │   ├── auth.middleware.js   # JWT verification
+│   │   │   ├── role.middleware.js   # RBAC enforcement
+│   │   │   ├── tenant.middleware.js # School tenant resolution
+│   │   │   ├── schoolResolver.middleware.js
+│   │   │   ├── upload.middleware.js # File upload handler
+│   │   │   ├── validate.middleware.js # Validation runner
+│   │   │   └── error.middleware.js  # Global error handler
 │   │   │
-│   │   ├── models/
-│   │   │   ├── School.model.js
-│   │   │   ├── User.model.js
-│   │   │   ├── Student.model.js
-│   │   │   ├── Class.model.js
-│   │   │   ├── Subject.model.js
-│   │   │   ├── AcademicYear.model.js
-│   │   │   ├── Grade.model.js
-│   │   │   ├── Attendance.model.js
-│   │   │   └── Payment.model.js
-│   │   │
-│   │   ├── routes/
-│   │   │   ├── auth.routes.js
-│   │   │   ├── school.routes.js
-│   │   │   ├── student.routes.js
-│   │   │   ├── class.routes.js
-│   │   │   ├── grade.routes.js
-│   │   │   ├── attendance.routes.js
-│   │   │   ├── finance.routes.js
-│   │   │   └── report.routes.js
-│   │   │
-│   │   ├── controllers/
-│   │   │   ├── auth.controller.js
-│   │   │   ├── student.controller.js
-│   │   │   ├── class.controller.js
-│   │   │   ├── grade.controller.js
-│   │   │   ├── attendance.controller.js
-│   │   │   ├── finance.controller.js
-│   │   │   └── report.controller.js
-│   │   │
-│   │   ├── services/
-│   │   │   ├── gradeCalculator.js    <- Anglophone average calculation
-│   │   │   └── pdfGenerator.js       <- Report card PDF generation
-│   │   │
-│   │   └── app.js                    <- Express app entry point
+│   │   ├── controllers/            # Route handlers
+│   │   ├── routes/                 # API route definitions
+│   │   ├── services/               # Business logic layer
+│   │   ├── validators/             # express-validator schemas
+│   │   └── utils/                  # Helpers (response, slug, domain)
 │   │
-│   ├── .env.example                  <- Environment template
-│   ├── package.json                  <- Node dependencies
-│   └── .gitignore
+│   ├── scripts/                    # Migration & seed scripts
+│   ├── .env.example
+│   └── package.json
 │
-├── frontend/                          <- React + Vite application
+├── frontend/
 │   ├── src/
-│   │   ├── api/
-│   │   │   ├── auth.api.js           <- Auth API calls
-│   │   │   ├── students.api.js       <- Student API calls
-│   │   │   ├── grades.api.js         <- Grade API calls
-│   │   │   └── finance.api.js        <- Finance API calls
-│   │   │
-│   │   ├── components/
-│   │   │   ├── common/               <- Reusable UI components
-│   │   │   ├── layout/               <- Sidebar, Navbar, PageWrapper
-│   │   │   └── forms/                <- Form components
-│   │   │
-│   │   ├── pages/
-│   │   │   ├── auth/                 <- Login, Register
-│   │   │   ├── admin/                <- Admin dashboard
-│   │   │   ├── teacher/              <- Teacher portal
-│   │   │   ├── student/              <- Student portal
-│   │   │   └── superadmin/           <- Super admin panel
-│   │   │
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx       <- Global auth state
-│   │   │
-│   │   ├── hooks/                    <- Custom React hooks
-│   │   ├── utils/                    <- Helper functions
-│   │   ├── App.jsx                   <- App routes
-│   │   └── main.jsx                  <- React entry point
-│   │
+│   │   ├── app/
+│   │   │   ├── core/               # API, context, hooks, utils, i18n
+│   │   │   ├── features/           # Feature modules (auth, onboarding, dashboard, etc.)
+│   │   │   └── layout/             # Layout components (Sidebar, Navbar, etc.)
+│   │   ├── App.jsx                 # Route definitions
+│   │   └── main.jsx                # React entry point
 │   ├── index.html
 │   ├── package.json
-│   ├── vite.config.js
-│   └── .gitignore
+│   └── vite.config.js
 │
-├── docs/
-│   ├── CHANGELOG.md                  <- Project history
-│   └── API.md                        <- API endpoint documentation
-│
-├── .gitignore
-└── README.md
+├── docs/                           # Documentation files
+└── akademee_design_frontend/       # Static HTML design prototypes
 ```
 
 ## Installation
 
 ### Prerequisites
-- **Node.js** (v16 or higher)
+- **Node.js** (v14 or higher)
 - **npm** or **yarn**
-- **MongoDB** (Atlas cloud or local instance)
+- **PostgreSQL** (Supabase recommended)
 
 ### Backend Setup
 
@@ -152,15 +118,14 @@ npm install
 cp .env.example .env
 ```
 
-4. Update `.env` with your configuration:
-```env
-MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<dbname>
-JWT_SECRET=your_secret_key_here
-JWT_EXPIRES_IN=7d
-PORT=5000
+4. Update `.env` with your configuration (see Environment Variables section)
+
+5. Run database migrations:
+```bash
+npm run migrate
 ```
 
-5. Start development server:
+6. Start development server:
 ```bash
 npm run dev
 ```
@@ -184,89 +149,75 @@ npm install
 npm run dev
 ```
 
-The frontend will typically run on `http://localhost:5173`.
+The frontend will run on `http://localhost:5173`.
 
 ## Running the Full Application
 
 In separate terminal windows:
 
-**Terminal 1 – Backend:**
+**Terminal 1 — Backend:**
 ```bash
 cd backend
 npm run dev
 ```
 
-**Terminal 2 – Frontend:**
+**Terminal 2 — Frontend:**
 ```bash
 cd frontend
 npm run dev
 ```
 
+Access the application at `http://localhost:5173`.
+
 ## API Endpoints
 
-See [docs/API.md](docs/API.md) for complete endpoint documentation.
+See [docs/API.md](docs/API.md) and [API_DOCUMENTATION.md](../API_DOCUMENTATION.md) for complete endpoint documentation.
 
 ### Core Endpoints:
-- **Auth**: `POST /api/auth/register`, `POST /api/auth/login`
-- **Students**: `GET/POST/PUT/DELETE /api/students`
-- **Grades**: `GET /api/grades`
-- **Attendance**: `GET /api/attendance`
-- **Finance**: `GET /api/finance`
-- **Reports**: `GET /api/reports/pdf/:studentId`
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| POST | `/api/schools/register` | Register a new school + admin user | Public |
+| POST | `/api/schools/check-subdomain` | Check subdomain availability | Public |
+| GET | `/api/schools/plans` | Get subscription plans | Public |
+| GET | `/api/schools/templates` | Get website templates | Public |
+| GET | `/api/schools/verify-email` | Verify school email | Public |
+| POST | `/api/auth/login` | Login | Public (rate-limited) |
+| POST | `/api/auth/verify-school` | Verify school exists | Public |
+| GET | `/api/auth/me` | Get current user | Protected |
+| POST | `/api/auth/logout` | Logout | Protected |
+| GET | `/api/schools/onboarding` | Get onboarding data | Admin |
+| PUT | `/api/schools/onboarding` | Save onboarding data | Admin |
+| POST | `/api/schools/onboarding/media` | Upload media (logo/hero) | Admin |
+| POST | `/api/schools/resend-verification` | Resend verification email | Admin |
+
+## Registration & Onboarding Flow
+
+1. **Register** (`POST /api/schools/register`) — Creates school, admin user, and returns JWT
+2. **Onboarding** (`GET/PUT /api/schools/onboarding`) — 5-step wizard: logo, color, tagline, description, hero image, template selection
+3. **Educational System Selection** (`PUT /api/schools/onboarding`) — Select one or more academic systems
+4. **Dashboard** — Redirect to `/dashboard` after setup
 
 ## Environment Variables
 
-### Backend (.env)
-```env
-MONGO_URI              # MongoDB connection string
-JWT_SECRET             # Secret key for JWT signing
-JWT_EXPIRES_IN         # Token expiration time (default: 7d)
-PORT                   # Server port (default: 5000)
-```
+See `.env.example` for all available variables. Key variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | Required |
+| `JWT_SECRET` | Secret key for JWT signing | Required |
+| `JWT_EXPIRES_IN` | Token expiration | `7d` |
+| `PORT` | Server port | `5000` |
+| `SMTP_HOST` | SMTP server for emails | Required for email |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary account | Required for uploads |
+| `TENANT_DEV_DOMAIN` | Development domain | `lvh.me` |
+| `TENANT_PROD_DOMAIN` | Production domain | `akademee.com` |
 
 ## User Roles
 
-- **ADMIN** – School administrator with full access to school data
-- **TEACHER** – Can manage classes, enter grades, mark attendance
-- **STUDENT** – Can view own grades, attendance, and fees
-
-## Key Features Implementation
-
-### Grade Calculation
-The backend includes an Anglophone average calculator in `services/gradeCalculator.js`. This calculates subject averages based on term scores.
-
-### PDF Report Generation
-Report cards are generated as PDFs using PDFKit. Endpoint: `GET /api/reports/pdf/:studentId`
-
-### Authentication Flow
-1. User registers/logs in
-2. Backend validates credentials and issues JWT
-3. Frontend stores token and includes in Authorization header
-4. Middleware verifies token on protected routes
-
-## Development Guidelines
-
-- **API Calls**: Centralize in `frontend/src/api/` directory
-- **State Management**: Use React Context for global state (auth, school info)
-- **Components**: Keep components in appropriate folders (common, layout, forms)
-- **Styles**: Use CSS modules or Tailwind CSS for styling
-- **Backend**: Follow MVC pattern (models → controllers → routes)
-
-## Contributing
-
-1. Create a feature branch: `git checkout -b feature/your-feature`
-2. Commit changes: `git commit -m 'Add your feature'`
-3. Push to branch: `git push origin feature/your-feature`
-4. Open a Pull Request
+- **ADMIN** — School administrator with full access to school data
+- **TEACHER** — Can manage classes, enter grades, mark attendance
+- **STUDENT** — Can view own grades, attendance, and fees
 
 ## License
 
 This project is proprietary. Unauthorized copying or distribution is prohibited.
-
-## Support
-
-For issues, questions, or contributions, please contact the development team.
-
----
-
-**Built with ❤️ for schools worldwide**
