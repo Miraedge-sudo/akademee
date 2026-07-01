@@ -4,6 +4,9 @@ import LandingPage from "./app/features/landing/LandingPage";
 import LoginPage from "./app/features/auth/pages/LoginPage";
 import RegisterPage from "./app/features/auth/pages/RegisterPage";
 import EducationalSystemSelectionPage from "./app/features/auth/pages/EducationalSystemSelectionPage";
+import ForgotPasswordPage from "./app/features/auth/pages/ForgotPasswordPage";
+import ResetPasswordPage from "./app/features/auth/pages/ResetPasswordPage";
+import VerifyEmailPage from "./app/features/auth/pages/VerifyEmailPage";
 import OnboardingPage from "./app/features/onboarding/pages/OnboardingPage";
 import AdminLayout from "./app/layout/AdminLayout";
 import ProtectedRoute from "./app/core/guards/ProtectedRoute";
@@ -39,6 +42,9 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
         {/* Educational system selection (first login after onboarding) */}
         <Route path="/educational-system-selection" element={<ProtectedRoute><EducationalSystemSelectionPage /></ProtectedRoute>} />
