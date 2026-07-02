@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getPublicWebsite } from "../../../core/api/websiteService";
-import ModernTemplate from "../templates/ModernTemplate";
-import ClassicTemplate from "../templates/ClassicTemplate";
-import MinimalTemplate from "../templates/MinimalTemplate";
+import BoldTemplate from "../templates/BoldTemplate";
+import PlayfulTemplate from "../templates/PlayfulTemplate";
+import PremiumTemplate from "../templates/PremiumTemplate";
 import { getSubdomain } from "../../../core/utils/subdomainHelper";
+
+const VALID_TEMPLATES = ["bold", "playful", "premium"];
 
 export default function PublicWebsitePage() {
   const [searchParams] = useSearchParams();
@@ -62,7 +64,10 @@ export default function PublicWebsitePage() {
   }
 
   // Choisir le bon template selon school.templateCode
-  const templateCode = school.templateCode || school.template?.code || "modern";
+  // Fallback: si le backend retourne 'modern'/'classic'/'minimal' (anciens codes),
+  // on les mappe vers les nouveaux templates
+  const rawCode = school.templateCode || school.template?.code || "bold";
+  const templateCode = VALID_TEMPLATES.includes(rawCode) ? rawCode : "bold";
 
   return (
     <>
@@ -76,9 +81,9 @@ export default function PublicWebsitePage() {
           <span>Preview mode — this site is not yet published.</span>
         </div>
       )}
-      {templateCode === "modern"  && <ModernTemplate  school={school} />}
-      {templateCode === "classic" && <ClassicTemplate school={school} />}
-      {templateCode === "minimal" && <MinimalTemplate school={school} />}
+      {templateCode === "bold"    && <BoldTemplate    school={school} />}
+      {templateCode === "playful" && <PlayfulTemplate school={school} />}
+      {templateCode === "premium" && <PremiumTemplate school={school} />}
     </>
   );
 }

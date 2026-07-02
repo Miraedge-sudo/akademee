@@ -37,7 +37,7 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     planId: "basic",
-    templateCode: "modern",
+    templateCode: "bold",
   });
   const [showPwd, setShowPwd] = useState(false);
   const [showPwd2, setShowPwd2] = useState(false);
