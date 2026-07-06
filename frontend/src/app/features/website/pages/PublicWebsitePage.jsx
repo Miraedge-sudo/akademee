@@ -1,3 +1,4 @@
+import { FiEye } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getPublicWebsite } from "../../../core/api/websiteService";
@@ -74,10 +75,7 @@ export default function PublicWebsitePage() {
       {/* Preview banner — shown when accessing via ?preview=1 before publishing */}
       {isPreviewMode && (
         <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-amber-950 px-4 py-2.5 flex items-center justify-center gap-3 text-sm font-medium shadow-lg">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4 flex-shrink-0">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
+          <FiEye className="w-4 h-4 flex-shrink-0" />
           <span>Preview mode — this site is not yet published.</span>
         </div>
       )}

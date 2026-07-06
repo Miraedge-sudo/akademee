@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
 import api from "../../../core/api/axios";
 import { API_ENDPOINTS } from "../../../core/api/endpoints";
+import { FiHome, FiCheckCircle, FiArrowLeft, FiLock, FiEye, FiEyeOff, FiXCircle, FiLoader } from "react-icons/fi";
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -74,10 +75,7 @@ export default function ResetPasswordPage() {
       <div className="flex items-center justify-between px-6 lg:px-11 py-5 bg-white dark:bg-surface-800 border-b border-surface-100 dark:border-surface-700">
         <div className="flex items-center gap-2.5 lg:hidden">
           <div className="w-7 h-7 rounded-md bg-teal-900 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
+            <FiHome className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="font-display text-base text-surface-800 dark:text-surface-100">Akademee</span>
         </div>
@@ -94,10 +92,7 @@ export default function ResetPasswordPage() {
             /* Success state */
             <div className="text-center animate-fadeIn">
               <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-teal-600">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
+                <FiCheckCircle className="w-7 h-7 text-teal-600" />
               </div>
               <h1 className="font-display text-xl font-medium text-surface-800 dark:text-surface-100 mb-2">
                 {t("resetPassword.successTitle", "Password reset successful")}
@@ -109,10 +104,7 @@ export default function ResetPasswordPage() {
                 to="/login"
                 className="inline-flex items-center gap-2 text-teal-600 font-medium hover:underline text-sm"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                  <line x1="19" y1="12" x2="5" y2="12" />
-                  <polyline points="12 19 5 12 12 5" />
-                </svg>
+                <FiArrowLeft className="w-4 h-4" />
                 {t("resetPassword.goToLogin", "Go to sign in")}
               </Link>
             </div>
@@ -120,11 +112,7 @@ export default function ResetPasswordPage() {
             /* Invalid/expired token state */
             <div className="text-center animate-fadeIn">
               <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-red-500">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="15" y1="9" x2="9" y2="15" />
-                  <line x1="9" y1="9" x2="15" y2="15" />
-                </svg>
+                <FiXCircle className="w-7 h-7 text-red-500" />
               </div>
               <h1 className="font-display text-xl font-medium text-surface-800 dark:text-surface-100 mb-2">
                 {t("resetPassword.invalidTitle", "Invalid or expired link")}
@@ -164,10 +152,7 @@ export default function ResetPasswordPage() {
                     {t("resetPassword.newPasswordLabel", "New password")}
                   </label>
                   <div className="relative flex items-center">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 w-4 h-4 text-surface-400">
-                      <rect x="3" y="11" width="18" height="11" rx="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
+                    <FiLock className="absolute left-3 w-4 h-4 text-surface-400" />
                     <input
                       id="password"
                       name="password"
@@ -187,15 +172,9 @@ export default function ResetPasswordPage() {
                       aria-label="Toggle password visibility"
                     >
                       {showPwd ? (
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                          <line x1="1" y1="1" x2="23" y2="23" />
-                        </svg>
+                        <FiEyeOff className="w-4 h-4" />
                       ) : (
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
+                        <FiEye className="w-4 h-4" />
                       )}
                     </button>
                   </div>
@@ -207,10 +186,7 @@ export default function ResetPasswordPage() {
                     {t("resetPassword.confirmLabel", "Confirm new password")}
                   </label>
                   <div className="relative flex items-center">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 w-4 h-4 text-surface-400">
-                      <rect x="3" y="11" width="18" height="11" rx="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
+                    <FiLock className="absolute left-3 w-4 h-4 text-surface-400" />
                     <input
                       id="confirmPassword"
                       name="confirmPassword"
@@ -259,10 +235,7 @@ export default function ResetPasswordPage() {
                     </span>
                   ) : (
                     <>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-[17px] h-[17px]">
-                        <rect x="3" y="11" width="18" height="11" rx="2" />
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                      </svg>
+                      <FiLock className="w-[17px] h-[17px]" />
                       {t("resetPassword.submit", "Reset password")}
                     </>
                   )}

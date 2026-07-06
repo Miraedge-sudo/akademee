@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { FiBook } from "react-icons/fi";
 
 const SERIES_META = {
   arts: {
@@ -83,10 +84,7 @@ export default function SeriesSection() {
       <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-8">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="w-16 h-16 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-surface-400">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-            </svg>
+            <FiBook className="w-8 h-8 text-surface-400" />
           </div>
           <h3 className="text-lg font-medium text-surface-700 dark:text-surface-200 mb-2">
             {t("series.comingSoon", "Module en cours de développement")}

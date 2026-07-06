@@ -96,25 +96,25 @@ export default function LandingPage() {
             <div className="hidden md:flex items-center gap-8">
               <a
                 href="#features"
-                className="text-sm font-medium text-surface-600 dark:text-surface-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                className="text-sm font-medium text-surface-600 dark:text-surface-300 hover:text-primary dark:hover:text-primary-400 transition-colors"
               >
                 {t("nav.features", "Features")}
               </a>
               <a
                 href="#pricing"
-                className="text-sm font-medium text-surface-600 dark:text-surface-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                className="text-sm font-medium text-surface-600 dark:text-surface-300 hover:text-primary dark:hover:text-primary-400 transition-colors"
               >
                 {t("nav.pricing", "Pricing")}
               </a>
               <a
                 href="#testimonials"
-                className="text-sm font-medium text-surface-600 dark:text-surface-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                className="text-sm font-medium text-surface-600 dark:text-surface-300 hover:text-primary dark:hover:text-primary-400 transition-colors"
               >
                 {t("nav.testimonials", "Testimonials")}
               </a>
               <a
                 href="#faq"
-                className="text-sm font-medium text-surface-600 dark:text-surface-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                className="text-sm font-medium text-surface-600 dark:text-surface-300 hover:text-primary dark:hover:text-primary-400 transition-colors"
               >
                 {t("nav.faq", "FAQ")}
               </a>
@@ -124,13 +124,13 @@ export default function LandingPage() {
               <ThemeLangToggles />
               <Link
                 to="/login"
-                className="text-sm font-medium text-surface-600 dark:text-surface-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                className="text-sm font-medium text-surface-600 dark:text-surface-300 hover:text-primary dark:hover:text-primary-400 transition-colors"
               >
                 {t("nav.signIn", "Sign in")}
               </Link>
               <Link
                 to="/register"
-                className="px-4 py-2 bg-teal-900 hover:bg-teal-800 text-white text-sm font-semibold rounded-md transition-colors animate-pulse-on-hover"
+                className="px-4 py-2 bg-primary hover:bg-primary-800 text-white text-sm font-semibold rounded-md transition-colors animate-pulse-on-hover"
               >
                 {t("nav.getStarted", "Get started")}
               </Link>
@@ -141,17 +141,17 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="py-20 lg:py-32 overflow-hidden relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-teal-50/50 to-surface-50 dark:from-teal-900/10 dark:to-surface-900" />
-        <div className="absolute top-20 right-20 w-72 h-72 bg-teal-200/30 dark:bg-teal-800/20 rounded-full blur-3xl animate-float" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-50/50 to-surface-50 dark:from-primary/10 dark:to-surface-900" />
+        <div className="absolute top-20 right-20 w-72 h-72 bg-primary-200/30 dark:bg-primary-800/20 rounded-full blur-3xl animate-float" />
         <div
-          className="absolute bottom-20 left-20 w-96 h-96 bg-teal-100/30 dark:bg-teal-900/20 rounded-full blur-3xl animate-float"
+          className="absolute bottom-20 left-20 w-96 h-96 bg-primary-100/30 dark:bg-primary/20 rounded-full blur-3xl animate-float"
           style={{ animationDelay: "1.5s" }}
         />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="animate-slideInLeft">
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 text-sm font-semibold rounded-full mb-8 animate-fadeIn border border-teal-200 dark:border-teal-800">
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 dark:bg-primary/40 text-primary dark:text-primary-200 text-sm font-semibold rounded-full mb-8 animate-fadeIn border border-primary-200 dark:border-primary-800">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -170,7 +170,7 @@ export default function LandingPage() {
 
               <h1 className="font-display text-5xl lg:text-6xl font-bold text-surface-900 dark:text-surface-100 leading-tight mb-6">
                 {t("hero.title", "Run your entire school")}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-teal-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-400">
                   {" "}
                   {t("hero.titleHighlight", "on one beautiful platform")}
                 </span>
@@ -186,7 +186,7 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row gap-4 mb-10">
                 <Link
                   to="/register"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white text-base font-semibold rounded-xl transition-all hover:scale-105 hover:shadow-lg hover:shadow-teal-500/30 animate-pulse-on-hover"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-primary-800 hover:from-primary-800 hover:to-primary-900 text-white text-base font-semibold rounded-xl transition-all hover:scale-105 hover:shadow-lg hover:shadow-primary/30 animate-pulse-on-hover"
                 >
                   {t("hero.ctaPrimary", "Create your campus")}
                   <svg
@@ -202,7 +202,7 @@ export default function LandingPage() {
                     <polyline points="12 5 19 12 12 19" />
                   </svg>
                 </Link>
-                <button className="px-8 py-4 border-2 border-surface-300 dark:border-surface-600 text-surface-700 dark:text-surface-300 text-base font-medium rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800 transition-all hover:scale-105 hover:border-teal-300 dark:hover:border-teal-600">
+                <button className="px-8 py-4 border-2 border-surface-300 dark:border-surface-600 text-surface-700 dark:text-surface-300 text-base font-medium rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800 transition-all hover:scale-105 hover:border-primary-400 dark:hover:border-primary">
                   {t("hero.ctaSecondary", "Book a demo")}
                 </button>
               </div>
@@ -214,12 +214,12 @@ export default function LandingPage() {
                       key={i}
                       className={`w-10 h-10 rounded-full border-2 border-white dark:border-surface-800 ${
                         i === 1
-                          ? "bg-teal-500"
-                          : i === 2
-                            ? "bg-teal-600"
-                            : i === 3
-                              ? "bg-teal-700"
-                              : "bg-teal-800"
+                          ? "bg-primary"
+                      : i === 2
+                        ? "bg-primary"
+                        : i === 3
+                          ? "bg-primary"
+                          : "bg-primary-800"
                       }`}
                     />
                   ))}
@@ -240,14 +240,14 @@ export default function LandingPage() {
                   alt="Dashboard Preview"
                   className="w-full h-auto rounded-2xl object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-teal-900/20 to-transparent rounded-3xl" />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent rounded-3xl" />
               </div>
 
               <div className="absolute -bottom-8 -left-8 bg-white dark:bg-surface-800 rounded-2xl shadow-xl border border-surface-200 dark:border-surface-700 px-6 py-4 animate-float z-10">
                 <p className="text-xs text-surface-500 dark:text-surface-400 mb-1 font-semibold uppercase tracking-wider">
                   {t("hero.stat1Label", "Pass rate")}
                 </p>
-                <p className="font-display text-3xl font-bold text-teal-600">
+                <p className="font-display text-3xl font-bold text-primary">
                   94.2%
                 </p>
               </div>
@@ -259,7 +259,7 @@ export default function LandingPage() {
                 <p className="text-xs text-surface-500 dark:text-surface-400 mb-1 font-semibold uppercase tracking-wider">
                   {t("hero.stat2Label", "Fees collected")}
                 </p>
-                <p className="font-display text-3xl font-bold text-teal-600">
+                <p className="font-display text-3xl font-bold text-primary">
                   81%
                 </p>
               </div>
@@ -269,7 +269,7 @@ export default function LandingPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-gradient-to-r from-teal-600 to-teal-700 text-white relative overflow-hidden">
+      <section className="py-16 bg-gradient-to-r from-primary to-primary-800 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0wIDQwaDQwVjBIMHY0MHptMjAgMjBoMjBWMjBIMjB2MjB6IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz48L2c+PC9zdmc+')] opacity-20" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
@@ -287,7 +287,7 @@ export default function LandingPage() {
                 <div className="font-display text-4xl lg:text-5xl font-bold mb-2 animate-scaleIn">
                   {stat.number}
                 </div>
-                <div className="text-teal-100 text-sm font-medium">
+                <div className="text-primary-100 text-sm font-medium">
                   {stat.label}
                 </div>
               </div>
@@ -399,10 +399,10 @@ export default function LandingPage() {
             ].map((feature, index) => (
               <div
                 key={index}
-                className="p-6 bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 hover:border-teal-300 dark:hover:border-teal-600 hover:shadow-xl hover:shadow-teal-500/10 transition-all duration-300 reveal group"
+                className="p-6 bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 hover:border-primary-400 dark:hover:border-primary hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 reveal group"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-800 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -429,8 +429,8 @@ export default function LandingPage() {
 
       {/* Why Akademee Section */}
       <section className="py-24 bg-white dark:bg-surface-800 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-teal-100/30 dark:bg-teal-900/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-50/30 dark:bg-teal-900/10 rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-100/30 dark:bg-primary/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary-50/30 dark:bg-primary/10 rounded-full blur-3xl" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="relative reveal">
@@ -446,7 +446,7 @@ export default function LandingPage() {
                 style={{ animationDelay: "0.5s" }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/40 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-primary-100 dark:bg-primary/40 rounded-xl flex items-center justify-center">
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -454,7 +454,7 @@ export default function LandingPage() {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="w-6 h-6 text-teal-600"
+                      className="w-6 h-6 text-primary"
                     >
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
@@ -491,7 +491,7 @@ export default function LandingPage() {
                     key={i}
                     className="flex items-center gap-4 text-surface-700 dark:text-surface-300 p-3 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-900/50 transition-colors"
                   >
-                    <span className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-100 to-teal-200 dark:from-teal-900/40 dark:to-teal-800/40 flex items-center justify-center flex-shrink-0">
+                    <span className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary/40 dark:to-primary-800/40 flex items-center justify-center flex-shrink-0">
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
@@ -499,7 +499,7 @@ export default function LandingPage() {
                         strokeWidth="2.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="w-4 h-4 text-teal-600"
+                        className="w-4 h-4 text-primary"
                       >
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
@@ -575,13 +575,13 @@ export default function LandingPage() {
                 key={index}
                 className={`relative p-8 bg-white dark:bg-surface-800 rounded-2xl border-2 flex flex-col transition-all duration-300 hover:shadow-xl hover:scale-105 reveal ${
                   plan.popular
-                    ? "border-teal-600 shadow-lg shadow-teal-500/20"
-                    : "border-surface-200 dark:border-surface-700 hover:border-teal-300 dark:hover:border-teal-600"
+                    ? "border-primary shadow-lg shadow-primary/20"
+                    : "border-surface-200 dark:border-surface-700 hover:border-primary-400 dark:hover:border-primary"
                 }`}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-teal-600 to-teal-700 text-white text-sm font-semibold rounded-full shadow-lg animate-pulse-on-hover">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-primary to-primary-800 text-white text-sm font-semibold rounded-full shadow-lg animate-pulse-on-hover">
                     Most popular
                   </div>
                 )}
@@ -602,7 +602,7 @@ export default function LandingPage() {
                       key={fIndex}
                       className="flex items-center gap-3 text-sm text-surface-600 dark:text-surface-400"
                     >
-                      <span className="w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center flex-shrink-0">
+                      <span className="w-6 h-6 rounded-full bg-primary-100 dark:bg-primary/40 flex items-center justify-center flex-shrink-0">
                         <svg
                           viewBox="0 0 24 24"
                           fill="none"
@@ -610,7 +610,7 @@ export default function LandingPage() {
                           strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          className="w-3.5 h-3.5 text-teal-600"
+                          className="w-3.5 h-3.5 text-primary"
                         >
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
@@ -623,7 +623,7 @@ export default function LandingPage() {
                   to="/register"
                   className={`block w-full py-4 text-center text-base font-semibold rounded-xl transition-all ${
                     plan.popular
-                      ? "bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white shadow-lg shadow-teal-500/30 animate-pulse-on-hover"
+                      ? "bg-gradient-to-r from-primary to-primary-800 hover:from-primary-800 hover:to-primary-900 text-white shadow-lg shadow-primary/30 animate-pulse-on-hover"
                       : "bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 text-surface-700 dark:text-surface-300 border border-surface-200 dark:border-surface-600"
                   }`}
                 >
@@ -640,7 +640,7 @@ export default function LandingPage() {
         id="testimonials"
         className="py-24 bg-white dark:bg-surface-800 relative overflow-hidden"
       >
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-teal-50/50 to-transparent dark:from-teal-900/10" />
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary-50/50 to-transparent dark:from-primary/10" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <h2 className="font-display text-4xl font-bold text-surface-900 dark:text-surface-100 text-center mb-16 reveal">
             What our users say
@@ -652,26 +652,26 @@ export default function LandingPage() {
                   "Akademee replaced six tools. Our report cards now generate in seconds and parents love the portal.",
                 name: "Grace Mbah",
                 role: "Principal, Grace Academy",
-                avatar: "teal-500",
+                avatar: "primary",
               },
               {
                 quote:
                   "Fee collection and payroll used to take days. Now it is one clean dashboard with real-time analytics.",
                 name: "Nadia Fomba",
                 role: "Bursar, Bilingual College",
-                avatar: "teal-600",
+                avatar: "primary",
               },
               {
                 quote:
                   "I can follow my daughter's grades, attendance and fees from my phone. It is wonderfully simple.",
                 name: "Aïcha Njoya",
                 role: "Parent",
-                avatar: "teal-700",
+                avatar: "primary",
               },
             ].map((t, index) => (
               <div
                 key={index}
-                className="p-8 bg-gradient-to-br from-white to-surface-50 dark:from-surface-800 dark:to-surface-900 rounded-2xl border border-surface-200 dark:border-surface-700 hover:shadow-xl hover:shadow-teal-500/10 transition-all duration-300 reveal group"
+                className="p-8 bg-gradient-to-br from-white to-surface-50 dark:from-surface-800 dark:to-surface-900 rounded-2xl border border-surface-200 dark:border-surface-700 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 reveal group"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="flex gap-1 mb-4">
@@ -735,20 +735,20 @@ export default function LandingPage() {
 
       {/* CTA Section */}
       <section className="py-24 bg-white dark:bg-surface-800 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-teal-50 to-surface-50 dark:from-teal-900/20 dark:to-surface-900" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-teal-200/30 dark:bg-teal-800/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-100/30 dark:bg-teal-900/10 rounded-full blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 to-surface-50 dark:from-primary/20 dark:to-surface-900" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-200/30 dark:bg-primary-800/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary-100/30 dark:bg-primary/10 rounded-full blur-3xl" />
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="bg-gradient-to-br from-teal-600 to-teal-800 rounded-3xl px-8 py-20 text-center shadow-2xl shadow-teal-500/30 reveal">
+          <div className="bg-gradient-to-br from-primary to-primary-800 rounded-3xl px-8 py-20 text-center shadow-2xl shadow-primary/30 reveal">
             <h2 className="font-display text-4xl lg:text-5xl font-bold text-white mb-6">
               Ready to modernise your school?
             </h2>
-            <p className="text-teal-100 text-xl mb-10 max-w-2xl mx-auto">
+            <p className="text-primary-100 text-xl mb-10 max-w-2xl mx-auto">
               Launch your branded campus in minutes.
             </p>
             <Link
               to="/register"
-              className="inline-block px-10 py-4 bg-white hover:bg-surface-100 text-teal-700 text-lg font-semibold rounded-xl transition-all hover:scale-105 hover:shadow-lg animate-pulse-on-hover"
+              className="inline-block px-10 py-4 bg-white hover:bg-surface-100 text-primary text-lg font-semibold rounded-xl transition-all hover:scale-105 hover:shadow-lg animate-pulse-on-hover"
             >
               Create your campus
             </Link>
@@ -762,7 +762,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-600 to-teal-700 flex items-center justify-center shadow-lg shadow-teal-500/30">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-800 flex items-center justify-center shadow-lg shadow-primary/30">
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -793,7 +793,7 @@ export default function LandingPage() {
                 <li>
                   <a
                     href="#features"
-                    className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                    className="hover:text-primary dark:hover:text-primary-400 transition-colors"
                   >
                     Features
                   </a>
@@ -801,7 +801,7 @@ export default function LandingPage() {
                 <li>
                   <a
                     href="#pricing"
-                    className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                    className="hover:text-primary dark:hover:text-primary-400 transition-colors"
                   >
                     Pricing
                   </a>
@@ -809,7 +809,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     to="#"
-                    className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                    className="hover:text-primary dark:hover:text-primary-400 transition-colors"
                   >
                     Templates
                   </Link>
@@ -817,7 +817,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     to="#"
-                    className="hover:text-teal-600 transition-colors"
+                    className="hover:text-primary transition-colors"
                   >
                     Security
                   </Link>
@@ -832,7 +832,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     to="#"
-                    className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                    className="hover:text-primary dark:hover:text-primary-400 transition-colors"
                   >
                     About
                   </Link>
@@ -840,7 +840,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     to="#"
-                    className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                    className="hover:text-primary dark:hover:text-primary-400 transition-colors"
                   >
                     Blog
                   </Link>
@@ -848,7 +848,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     to="#"
-                    className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                    className="hover:text-primary dark:hover:text-primary-400 transition-colors"
                   >
                     Careers
                   </Link>
@@ -856,7 +856,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     to="#"
-                    className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                    className="hover:text-primary dark:hover:text-primary-400 transition-colors"
                   >
                     Contact
                   </Link>
@@ -871,7 +871,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     to="#"
-                    className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                    className="hover:text-primary dark:hover:text-primary-400 transition-colors"
                   >
                     Privacy Policy
                   </Link>
@@ -879,7 +879,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     to="#"
-                    className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                    className="hover:text-primary dark:hover:text-primary-400 transition-colors"
                   >
                     Terms
                   </Link>
@@ -887,7 +887,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     to="#"
-                    className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                    className="hover:text-primary dark:hover:text-primary-400 transition-colors"
                   >
                     Support
                   </Link>
@@ -895,7 +895,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     to="#"
-                    className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                    className="hover:text-primary dark:hover:text-primary-400 transition-colors"
                   >
                     Status
                   </Link>

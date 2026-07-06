@@ -1,3 +1,4 @@
+import { FiArrowLeft, FiCheck, FiShield, FiXCircle, FiLoader, FiArrowRight, FiHome } from "react-icons/fi";
 import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -52,31 +53,19 @@ export default function VerifyEmailPage() {
     switch (status) {
       case "loading":
         return (
-          <svg className="animate-spin w-8 h-8 text-teal-600" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-            <path d="M4 12a8 8 0 0 1 8-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
-          </svg>
+          <FiLoader className="animate-spin w-8 h-8 text-teal-600" />
         );
       case "success":
         return (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-teal-600">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
+          <FiCheck className="w-8 h-8 text-teal-600" />
         );
       case "alreadyVerified":
         return (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-amber-500">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          </svg>
+          <FiShield className="w-8 h-8 text-amber-500" />
         );
       case "error":
         return (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-red-500">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="15" y1="9" x2="9" y2="15" />
-            <line x1="9" y1="9" x2="15" y2="15" />
-          </svg>
+          <FiXCircle className="w-8 h-8 text-red-500" />
         );
     }
   };
@@ -109,13 +98,8 @@ export default function VerifyEmailPage() {
             <Link
               to={onboardingUrl || "/login"}
               className="inline-flex items-center gap-2 bg-teal-900 hover:bg-teal-800 text-teal-50 text-sm font-semibold px-6 py-2.5 rounded-md transition-colors"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                <polyline points="10 17 15 12 10 7" />
-                <line x1="15" y1="12" x2="3" y2="12" />
-              </svg>
-              {t("verifyEmail.continueSetup", "Continue to setup")}
+            >                              <FiArrowRight className="w-4 h-4" />
+                              {t("verifyEmail.continueSetup", "Continue to setup")}
             </Link>
           </>
         );
@@ -134,13 +118,8 @@ export default function VerifyEmailPage() {
             <Link
               to={onboardingUrl || "/login"}
               className="inline-flex items-center gap-2 bg-teal-900 hover:bg-teal-800 text-teal-50 text-sm font-semibold px-6 py-2.5 rounded-md transition-colors"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                <polyline points="10 17 15 12 10 7" />
-                <line x1="15" y1="12" x2="3" y2="12" />
-              </svg>
-              {t("verifyEmail.goToLogin", "Go to sign in")}
+            >                              <FiArrowRight className="w-4 h-4" />
+                              {t("verifyEmail.goToLogin", "Go to sign in")}
             </Link>
           </>
         );
@@ -158,10 +137,7 @@ export default function VerifyEmailPage() {
               to="/login"
               className="inline-flex items-center gap-2 text-teal-600 font-medium hover:underline text-sm"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                <line x1="19" y1="12" x2="5" y2="12" />
-                <polyline points="12 19 5 12 12 5" />
-              </svg>
+              <FiArrowLeft className="w-4 h-4" />
               {t("verifyEmail.backToLogin", "Back to sign in")}
             </Link>
           </>
@@ -175,10 +151,7 @@ export default function VerifyEmailPage() {
       <div className="flex items-center justify-between px-6 lg:px-11 py-5 bg-white dark:bg-surface-800 border-b border-surface-100 dark:border-surface-700">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-md bg-teal-900 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
+            <FiHome className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="font-display text-base text-surface-800 dark:text-surface-100">Akademee</span>
         </div>

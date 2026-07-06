@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { saveOnboardingData } from "../../../core/api/websiteService";
 import akademeeLogo from "../../../../assets/Logo.png";
+import { FiBook, FiCheck, FiXCircle, FiSend, FiLayers, FiTool, FiCheckSquare } from "react-icons/fi";
 
 const SYSTEMS = [
   {
@@ -136,11 +137,7 @@ export default function EducationalSystemSelectionPage() {
           {/* Title */}
           <div className="text-center mb-10">
             <div className="w-14 h-14 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center mx-auto mb-4">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-7 h-7 text-primary-700 dark:text-primary-300">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                <path d="M2 17l10 5 10-5" />
-                <path d="M2 12l10 5 10-5" />
-              </svg>
+              <FiBook className="w-7 h-7 text-primary-700 dark:text-primary-300" />
             </div>
             <h1 className="font-display text-3xl font-bold text-surface-800 dark:text-surface-100 mb-2">
               {t("edsys.title", "Choose your educational systems")}
@@ -167,22 +164,18 @@ export default function EducationalSystemSelectionPage() {
                 >
                   {isSelected && (
                     <div className={`absolute top-3 right-3 w-5 h-5 rounded-full ${sys.color} flex items-center justify-center`}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" className="w-3 h-3">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
+                      <FiCheck className="w-3 h-3 text-white" strokeWidth={3} />
                     </div>
                   )}
                   <div className="flex items-start gap-3">
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                       isSelected ? `${sys.color} text-white` : "bg-surface-100 dark:bg-surface-700 text-surface-500"
                     }`}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-5 h-5">
-                        {sys.id === "anglophone_general" && <><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></>}
-                        {sys.id === "francophone_general" && <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /><path d="M8 12h8" /><path d="M8 8h5" /></>}
-                        {sys.id === "anglophone_technical" && <><rect x="4" y="4" width="16" height="16" rx="2" /><line x1="9" y1="1" x2="9" y2="4" /><line x1="15" y1="1" x2="15" y2="4" /><line x1="9" y1="20" x2="9" y2="23" /><line x1="15" y1="20" x2="15" y2="23" /></>}
-                        {sys.id === "francophone_technical" && <><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></>}
-                        {sys.id === "university" && <><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></>}
-                      </svg>
+                      {sys.id === "anglophone_general" && <FiBook className="w-5 h-5" />}
+                      {sys.id === "francophone_general" && <FiLayers className="w-5 h-5" />}
+                      {sys.id === "anglophone_technical" && <FiTool className="w-5 h-5" />}
+                      {sys.id === "francophone_technical" && <FiCheckSquare className="w-5 h-5" />}
+                      {sys.id === "university" && <FiSend className="w-5 h-5" />}
                     </div>
                     <div className="min-w-0 flex-1 pr-6">
                       <div className="text-sm font-semibold text-surface-800 dark:text-surface-100">
@@ -206,11 +199,7 @@ export default function EducationalSystemSelectionPage() {
           {/* Error */}
           {error && (
             <div className="mb-6 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm flex items-center gap-2.5">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 flex-shrink-0">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="15" y1="9" x2="9" y2="15" />
-                <line x1="9" y1="9" x2="15" y2="15" />
-              </svg>
+              <FiXCircle className="w-4 h-4 flex-shrink-0" />
               {error}
             </div>
           )}
@@ -229,9 +218,7 @@ export default function EducationalSystemSelectionPage() {
                 </>
               ) : (
                 <>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className="w-4 h-4">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <FiCheck className="w-4 h-4" strokeWidth={2.2} />
                   {selected.length > 0
                     ? t("edsys.continue", "Continue to dashboard")
                     : t("edsys.selectOne", "Select at least one system")}

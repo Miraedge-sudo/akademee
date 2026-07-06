@@ -1,3 +1,4 @@
+import { FiUsers, FiUser, FiBook, FiDollarSign, FiPlus, FiFileText, FiCreditCard, FiLoader } from "react-icons/fi";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -106,25 +107,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <svg
-          className="animate-spin h-8 w-8 text-primary-600"
-          viewBox="0 0 24 24"
-          fill="none"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          />
-        </svg>
+        <FiLoader className="animate-spin h-8 w-8 text-primary-600" />
       </div>
     );
   }
@@ -149,18 +132,7 @@ export default function DashboardPage() {
           title={lang === "fr" ? "Total Étudiants" : "Total Students"}
           value={stats.totalStudents.toLocaleString()}
           icon={
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="w-6 h-6 text-white"
-            >
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
+            <FiUsers className="w-6 h-6 text-white" />
           }
           color="bg-primary-600"
           trend={{ value: 12, positive: true }}
@@ -169,16 +141,7 @@ export default function DashboardPage() {
           title={lang === "fr" ? "Total Enseignants" : "Total Teachers"}
           value={stats.totalTeachers.toLocaleString()}
           icon={
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="w-6 h-6 text-white"
-            >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
+            <FiUser className="w-6 h-6 text-white" />
           }
           color="bg-green-600"
           trend={{ value: 5, positive: true }}
@@ -187,16 +150,7 @@ export default function DashboardPage() {
           title={lang === "fr" ? "Total Classes" : "Total Classes"}
           value={stats.totalClasses.toLocaleString()}
           icon={
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="w-6 h-6 text-white"
-            >
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-            </svg>
+            <FiBook className="w-6 h-6 text-white" />
           }
           color="bg-amber-600"
           trend={{ value: 8, positive: true }}
@@ -205,16 +159,7 @@ export default function DashboardPage() {
           title={lang === "fr" ? "Revenus Totaux" : "Total Revenue"}
           value={formatCurrency(stats.totalRevenue)}
           icon={
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="w-6 h-6 text-white"
-            >
-              <line x1="12" y1="1" x2="12" y2="23" />
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
+            <FiDollarSign className="w-6 h-6 text-white" />
           }
           color="bg-purple-600"
           trend={{ value: 23, positive: true }}
@@ -305,28 +250,10 @@ export default function DashboardPage() {
                     </svg>
                   )}
                   {activity.type === "payment" && (
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="w-4 h-4"
-                    >
-                      <rect x="2" y="5" width="20" height="14" rx="2" />
-                      <line x1="2" y1="10" x2="22" y2="10" />
-                    </svg>
+                    <FiCreditCard className="w-4 h-4" />
                   )}
                   {activity.type === "class" && (
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="w-4 h-4"
-                    >
-                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                    </svg>
+                    <FiBook className="w-4 h-4" />
                   )}
                   {activity.type === "teacher" && (
                     <svg
@@ -368,16 +295,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <button className="flex flex-col items-center gap-2 p-4 bg-surface-50 dark:bg-surface-900 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-xl transition-colors">
             <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="w-5 h-5 text-primary-600 dark:text-primary-400"
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
+              <FiPlus className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             </div>
             <span className="text-sm font-medium text-surface-700 dark:text-surface-200">
               {lang === "fr" ? "Ajouter Étudiant" : "Add Student"}
@@ -386,16 +304,7 @@ export default function DashboardPage() {
 
           <button className="flex flex-col items-center gap-2 p-4 bg-surface-50 dark:bg-surface-900 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-xl transition-colors">
             <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="w-5 h-5 text-green-600 dark:text-green-400"
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
+              <FiPlus className="w-5 h-5 text-green-600 dark:text-green-400" />
             </div>
             <span className="text-sm font-medium text-surface-700 dark:text-surface-200">
               {lang === "fr" ? "Ajouter Classe" : "Add Class"}
@@ -404,16 +313,7 @@ export default function DashboardPage() {
 
           <button className="flex flex-col items-center gap-2 p-4 bg-surface-50 dark:bg-surface-900 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-xl transition-colors">
             <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="w-5 h-5 text-amber-600 dark:text-amber-400"
-              >
-                <rect x="2" y="5" width="20" height="14" rx="2" />
-                <line x1="2" y1="10" x2="22" y2="10" />
-              </svg>
+              <FiCreditCard className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             </div>
             <span className="text-sm font-medium text-surface-700 dark:text-surface-200">
               {lang === "fr" ? "Enregistrer Paiement" : "Record Payment"}
@@ -422,19 +322,7 @@ export default function DashboardPage() {
 
           <button className="flex flex-col items-center gap-2 p-4 bg-surface-50 dark:bg-surface-900 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-xl transition-colors">
             <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="w-5 h-5 text-purple-600 dark:text-purple-400"
-              >
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-                <polyline points="10 9 9 9 8 9" />
-              </svg>
+              <FiFileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <span className="text-sm font-medium text-surface-700 dark:text-surface-200">
               {lang === "fr" ? "Générer Rapport" : "Generate Report"}

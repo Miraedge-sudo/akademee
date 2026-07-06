@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { FiBookOpen } from "react-icons/fi";
 
 const CLASS_META = {
   "lower-secondary": {
@@ -69,10 +70,7 @@ export default function ClassesChildrenSection() {
       <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-8">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="w-16 h-16 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-surface-400">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-            </svg>
+            <FiBookOpen className="w-8 h-8 text-surface-400" />
           </div>
           <h3 className="text-lg font-medium text-surface-700 dark:text-surface-200 mb-2">
             {t("classes.comingSoon", "Module en cours de développement")}

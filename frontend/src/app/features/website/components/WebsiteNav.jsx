@@ -1,3 +1,5 @@
+import { FiHome, FiLock } from "react-icons/fi";
+
 export default function WebsiteNav({ school, variant = "light", scrolled, mobileOpen, onToggleMobile }) {
   const s = school || {};
   const location = [s.city, s.region].filter(Boolean).join(", ");
@@ -18,9 +20,7 @@ export default function WebsiteNav({ school, variant = "light", scrolled, mobile
         </ul>
         <a href="#" className="flex flex-col items-center gap-1 no-underline">
           <div className="w-12 h-12 rounded-full flex items-center justify-center border-2 flex-shrink-0" style={{ background: s.primaryColor, borderColor: s.primaryColor+"BF" }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#1A1710" strokeWidth="1.8" strokeLinecap="round" className="w-6 h-6">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
+            <FiHome className="w-6 h-6" style={{ color: "#1A1710" }} />
           </div>
           <div className="text-center">
             <div className="text-[15px] font-semibold text-white leading-tight" style={{ fontFamily: "'Cormorant Garamond',Georgia,serif" }}>{s.schoolName||"School"}</div>
@@ -47,9 +47,7 @@ export default function WebsiteNav({ school, variant = "light", scrolled, mobile
         <div className="w-[38px] h-[38px] rounded-md flex items-center justify-center flex-shrink-0"
           style={{ background: s.logoUrl ? `url(${s.logoUrl}) center/cover no-repeat` : (s.primaryColor||"#085041") }}>
           {!s.logoUrl && (
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" className="w-5 h-5">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
+            <FiHome className="w-5 h-5 text-white" />
           )}
         </div>
         <div>
@@ -64,9 +62,7 @@ export default function WebsiteNav({ school, variant = "light", scrolled, mobile
       </ul>
       <div className="hidden md:flex items-center gap-2.5 flex-shrink-0">
         <a href="/login" className="h-[38px] px-[22px] rounded-xl text-[13.5px] font-medium text-white no-underline inline-flex items-center gap-1.5" style={{ background: s.primaryColor||"#085041" }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className="w-4 h-4">
-            <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
+          <FiLock className="w-4 h-4" />
           Login
         </a>
       </div>

@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { FiUsers } from "react-icons/fi";
 
 const ADMISSIONS_META = {
   applications: {
@@ -47,10 +48,7 @@ export default function AdmissionsSection() {
       <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-8">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="w-16 h-16 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-surface-400">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-            </svg>
+            <FiUsers className="w-8 h-8 text-surface-400" />
           </div>
           <h3 className="text-lg font-medium text-surface-700 dark:text-surface-200 mb-2">
             {t("admissions.comingSoon", "Module en cours de développement")}
