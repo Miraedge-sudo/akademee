@@ -14,7 +14,7 @@ const saveOnboardingValidator = [
   body('email').optional().isEmail().normalizeEmail(),
   body('yearFounded').optional().trim().isLength({ max: 4 }),
   body('primaryColor').optional().matches(/^#[0-9A-Fa-f]{6}$/),
-  body('templateCode').optional().isIn(['modern', 'classic', 'minimal']),
+  body('templateCode').optional().isIn(['bold', 'playful', 'premium']),
   body('websiteDescription').optional().trim().isLength({ max: 2000 }),
   body('websiteStats').optional().isObject(),
   body('websiteValues').optional().isArray({ max: 4 }),

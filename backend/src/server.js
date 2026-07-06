@@ -4,45 +4,40 @@
 
 require('dotenv').config();
 const app = require('./app');
+const logger = require('./utils/logger');
+const { validateEnv } = require('./config/env');
 
-const PORT = process.env.PORT || 5000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const { port } = validateEnv();
 
-const server = app.listen(PORT, () => {
-  console.log(`
-    ╔════════════════════════════════════════════════════════════╗
-    ║             AKADEMEE BACKEND SERVER STARTED                ║
-    ╠════════════════════════════════════════════════════════════╣
-    ║ Server:       http://localhost:${PORT}                        ║
-    ║ Environment:  ${NODE_ENV}                                    ║
-    ║ Timestamp:    ${new Date().toISOString()}           ║
-    ╚════════════════════════════════════════════════════════════╝
-  `);
+const server = app.listen(port, () => {
+  logger.info(`Server started on http://localhost:${port}`);
 });
 
-// Graceful Shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
+function shutdown(signal) {
+  logger.info(`${signal} received. Shutting down gracefully...`);
   server.close(() => {
-    console.log('Server closed');
+    logger.info('HTTP server closed');
+    const sql = require('./config/database');
+    sql.end({ timeout: 5 }).catch(() => {});
+    logger.info('Database pool closed');
     process.exit(0);
   });
-});
 
-process.on('SIGINT', () => {
-  console.log('SIGINT received. Shutting down gracefully...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
+  setTimeout(() => {
+    logger.error('Forced shutdown after timeout');
+    process.exit(1);
+  }, 30000).unref();
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
+  logger.error('Uncaught Exception', { stack: error.stack, message: error.message });
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled Rejection', { reason: reason?.stack || reason });
   process.exit(1);
 });

@@ -7,9 +7,9 @@ const SlugGenerator = require('./slugGenerator');
 
 /** Maps each school's chosen template to its public landing page path */
 const TEMPLATE_PAGES = {
-  modern: '/site',
-  classic: '/site',
-  minimal: '/site',
+  bold: '/site',
+  playful: '/site',
+  premium: '/site',
 };
 
 function stripPort(host = '') {
@@ -70,7 +70,7 @@ function resolveSubdomain(req) {
   return null;
 }
 
-function buildSchoolUrls(subdomain, templateCode = 'modern') {
+function buildSchoolUrls(subdomain, templateCode = 'bold') {
   const normalizedSubdomain = SlugGenerator.sanitize(subdomain);
   const protocol = domains.getProtocol();
   const activeDomain = domains.getActiveTenantDomain();
@@ -78,7 +78,7 @@ function buildSchoolUrls(subdomain, templateCode = 'modern') {
     ? `${normalizedSubdomain}.${activeDomain}`
     : `${normalizedSubdomain}.${activeDomain}:${domains.frontendPort}`;
 
-  const vitrinePage = TEMPLATE_PAGES[templateCode] || TEMPLATE_PAGES.modern;
+  const vitrinePage = TEMPLATE_PAGES[templateCode] || TEMPLATE_PAGES.bold;
 
   return {
     subdomain: normalizedSubdomain,

@@ -1,16 +1,13 @@
-/**
- * Payment Controller
- */
-
 const response = require('../utils/response');
+const paymentService = require('../services/payment.service');
 
 class PaymentController {
   async initiatePayment(req, res, next) {
     try {
-      const { studentId, amount, feeId, reference } = req.body;
+      const { studentId, amount, method, feeId, reference } = req.body;
       const { schoolId } = req;
-
-      response.success(res, 'Payment initiated', {}, 201);
+      const result = await paymentService.create(schoolId, { studentId, amount, method, feeId, reference });
+      response.success(res, 'Payment initiated', result, 201);
     } catch (error) {
       next(error);
     }
@@ -19,9 +16,13 @@ class PaymentController {
   async getPayment(req, res, next) {
     try {
       const { id } = req.params;
-
-      response.success(res, 'Payment retrieved', {});
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const result = await paymentService.getById(schoolId, id);
+      response.success(res, 'Payment retrieved', result);
     } catch (error) {
+      if (error.message === 'Payment not found') {
+        return response.error(res, error.message, null, 404);
+      }
       next(error);
     }
   }
@@ -29,9 +30,9 @@ class PaymentController {
   async getStudentPayments(req, res, next) {
     try {
       const { studentId } = req.params;
-      const { limit = 10, offset = 0 } = req.query;
-
-      response.success(res, 'Payments retrieved', []);
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const result = await paymentService.listByStudent(schoolId, studentId);
+      response.success(res, 'Payments retrieved', result);
     } catch (error) {
       next(error);
     }
@@ -39,10 +40,10 @@ class PaymentController {
 
   async getSchoolPayments(req, res, next) {
     try {
-      const { schoolId } = req;
-      const { limit = 10, offset = 0 } = req.query;
-
-      response.success(res, 'School payments retrieved', []);
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const { limit = 10, offset = 0, status, startDate, endDate } = req.query;
+      const result = await paymentService.listBySchool(schoolId, { limit, offset, status, startDate, endDate });
+      response.success(res, 'School payments retrieved', result);
     } catch (error) {
       next(error);
     }
@@ -51,9 +52,13 @@ class PaymentController {
   async confirmPayment(req, res, next) {
     try {
       const { reference } = req.body;
-
-      response.success(res, 'Payment confirmed', {});
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const result = await paymentService.confirm(schoolId, reference);
+      response.success(res, 'Payment confirmed', result);
     } catch (error) {
+      if (error.message === 'Payment not found') {
+        return response.error(res, error.message, null, 404);
+      }
       next(error);
     }
   }
@@ -61,9 +66,9 @@ class PaymentController {
   async generatePaymentReport(req, res, next) {
     try {
       const { startDate, endDate } = req.query;
-      const { schoolId } = req;
-
-      response.success(res, 'Payment report generated', {});
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const result = await paymentService.generateReport(schoolId, { startDate, endDate });
+      response.success(res, 'Payment report generated', result);
     } catch (error) {
       next(error);
     }

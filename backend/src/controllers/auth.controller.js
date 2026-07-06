@@ -6,24 +6,6 @@ const authService = require('../services/auth.service');
 const response = require('../utils/response');
 
 class AuthController {
-  async register(req, res, next) {
-    try {
-      const { email, password, firstName, lastName, schoolName } = req.body;
-
-      const user = await authService.register({
-        email,
-        password,
-        firstName,
-        lastName,
-        schoolName,
-      });
-
-      response.success(res, 'Registration successful', user, 201);
-    } catch (error) {
-      next(error);
-    }
-  }
-
   async login(req, res, next) {
     try {
       const { subdomain, email, password } = req.body;
@@ -44,19 +26,10 @@ class AuthController {
 
   async logout(req, res, next) {
     try {
+      if (req.token) {
+        await authService.blacklistToken(req.token);
+      }
       response.success(res, 'Logout successful');
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async verifyEmail(req, res, next) {
-    try {
-      const { token } = req.body;
-
-      await authService.verifyEmail(token);
-
-      response.success(res, 'Email verified successfully');
     } catch (error) {
       next(error);
     }

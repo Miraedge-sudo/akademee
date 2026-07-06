@@ -88,6 +88,20 @@ export const API_ENDPOINTS = {
   NOTIFICATIONS: {
     LIST: "/api/notifications",
     MARK_READ: (id) => `/api/notifications/${id}/read`,
+    DELETE: (id) => `/api/notifications/${id}`,
+    UNREAD_COUNT: "/api/notifications/unread/count",
+    SEND: "/api/notifications/send",
+  },
+
+  // Announcements
+  ANNOUNCEMENTS: {
+    LIST: "/api/announcements",
+    CREATE: "/api/announcements",
+    GET: (id) => `/api/announcements/${id}`,
+    UPDATE: (id) => `/api/announcements/${id}`,
+    DELETE: (id) => `/api/announcements/${id}`,
+    PUBLISH: (id) => `/api/announcements/${id}/publish`,
+    UNPUBLISH: (id) => `/api/announcements/${id}/unpublish`,
   },
 
   // Config

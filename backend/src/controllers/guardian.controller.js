@@ -54,6 +54,17 @@ class GuardianController {
     }
   }
 
+  async listAllGuardians(req, res, next) {
+    try {
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const { limit, offset } = req.query;
+      const guardians = await guardianService.listBySchool(schoolId, { limit, offset });
+      response.success(res, 'Guardians retrieved', guardians);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async deleteGuardian(req, res, next) {
     try {
       const result = await guardianService.deleteGuardian(req.schoolId, req.params.id);
