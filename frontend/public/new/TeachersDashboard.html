@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Teacher Dashboard — Akademee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<!-- Lucide Icons CDN -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal-900:#085041;--teal-700:#0F6E56;--teal-600:#1D9E75;
+  --teal-400:#5DCAA5;--teal-100:#C8F0E4;--teal-50:#E1F5EE;
+  --surface-900:#1A1F1B;--surface-800:#2A3029;--surface-700:#434D45;
+  --surface-600:#5C665E;--surface-500:#6E7A70;--surface-400:#9BA59C;
+  --surface-300:#BFC4BB;--surface-200:#D8DBD5;--surface-100:#EEF0EC;
+  --surface-50:#F7F8F6;--white:#fff;
+  --red:#EF4444;--amber:#F59E0B;--blue:#3B82F6;--purple:#8B5CF6;
+  --red-soft:rgba(239,68,68,.09);--amber-soft:rgba(245,158,11,.09);
+  --blue-soft:rgba(59,130,246,.09);--purple-soft:rgba(139,92,246,.09);
+  --teal-soft:rgba(8,80,65,.08);
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:20px;
+  --sh-sm:0 2px 8px rgba(0,0,0,.05);
+  --sh-md:0 4px 20px rgba(0,0,0,.08);
+  --sh-lg:0 12px 40px rgba(0,0,0,.12);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--surface-50);color:var(--surface-900);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ─── Keyframes ──────────────────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+@keyframes slideRight{from{width:0}to{width:var(--target-w)}}
+@keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes drawLine{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+@keyframes popIn{from{opacity:0;transform:scale(.7) translateY(8px)}60%{transform:scale(1.07)}to{opacity:1;transform:scale(1)}}
+@keyframes barGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes dotBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* ─── Layout ────────────────────────────────────────────── */
+.page{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+
+/* ─── Greeting ──────────────────────────────────────────── */
+.greeting{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px}
+.greeting-left{animation:fadeUp .55s cubic-bezier(.16,1,.3,1) both}
+.greeting-eyebrow{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal-600);margin-bottom:6px}
+.greeting-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,32px);font-weight:700;color:var(--surface-900);line-height:1.15}
+.greeting-title span{color:var(--teal-600)}
+.greeting-sub{font-size:13.5px;color:var(--surface-400);margin-top:4px}
+.greeting-date{animation:fadeUp .55s .08s cubic-bezier(.16,1,.3,1) both;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.date-badge{background:var(--white);border:1.5px solid var(--surface-100);border-radius:var(--r-lg);padding:12px 18px;text-align:right;box-shadow:var(--sh-sm)}
+.date-day{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--surface-900);line-height:1}
+.date-month{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--surface-400);margin-top:2px}
+
+/* ─── Stats grid ────────────────────────────────────────── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--surface-100);padding:20px;box-shadow:var(--sh-sm);position:relative;overflow:hidden;cursor:default;transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s}
+.stat-card:hover{transform:translateY(-5px);box-shadow:var(--sh-lg)}
+.stat-card::before{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:shimmer 2.5s 1s ease-in-out}
+.stat-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.stat-icon svg{width:18px;height:18px}
+.stat-trend{font-size:11px;font-weight:700;display:flex;align-items:center;gap:3px;padding:3px 8px;border-radius:50px}
+.trend-up{background:rgba(29,158,117,.1);color:var(--teal-600)}
+.trend-down{background:var(--red-soft);color:var(--red)}
+.trend-up svg,.trend-down svg{width:10px;height:10px}
+.stat-value{font-size:clamp(26px,3vw,34px);font-weight:800;color:var(--surface-900);line-height:1;margin-bottom:4px;font-family:'DM Sans',sans-serif}
+.stat-label{font-size:12px;color:var(--surface-400);font-weight:500}
+.stat-spark{height:36px;margin-top:12px}
+.stat-spark svg{width:100%;height:100%;overflow:visible}
+
+/* ─── Section title ─────────────────────────────────────── */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;color:var(--surface-900)}
+.section-title-bar{width:3px;height:18px;border-radius:2px;background:var(--teal-900)}
+.section-link{font-size:12.5px;font-weight:600;color:var(--teal-700);text-decoration:none;display:flex;align-items:center;gap:4px;transition:gap .2s}
+.section-link:hover{gap:8px}
+.section-link svg{width:13px;height:13px}
+
+/* ─── 2-col layout ──────────────────────────────────────── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px}
+.grid-3-2{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:24px}
+
+/* ─── Card base ─────────────────────────────────────────── */
+.card{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--surface-100);padding:22px;box-shadow:var(--sh-sm)}
+
+/* ─── Today's classes ───────────────────────────────────── */
+.schedule-list{display:flex;flex-direction:column;gap:10px}
+.schedule-item{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:var(--r-lg);border:1.5px solid var(--surface-100);background:var(--surface-50);transition:all .2s cubic-bezier(.34,1.56,.64,1);cursor:pointer;position:relative;overflow:hidden}
+.schedule-item:hover{border-color:var(--teal-400);background:var(--teal-50);transform:translateX(4px)}
+.schedule-item.active{border-color:var(--teal-600);background:var(--teal-50)}
+.schedule-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--teal-600);border-radius:0 2px 2px 0}
+.sched-time{text-align:center;min-width:52px}
+.sched-time-start{font-size:13px;font-weight:700;color:var(--surface-900)}
+.sched-time-end{font-size:11px;color:var(--surface-400)}
+.sched-divider{width:1px;height:32px;background:var(--surface-100)}
+.sched-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sched-info{flex:1;min-width:0}
+.sched-subject{font-size:13.5px;font-weight:700;color:var(--surface-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sched-class{font-size:12px;color:var(--surface-400)}
+.sched-badge{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:50px;flex-shrink:0}
+.sched-room{font-size:11px;color:var(--surface-400);display:flex;align-items:center;gap:4px;flex-shrink:0}
+.sched-room svg{width:11px;height:11px;stroke:var(--surface-400);stroke-width:1.8;fill:none}
+
+/* ─── Pending tasks ─────────────────────────────────────── */
+.task-list{display:flex;flex-direction:column;gap:8px}
+.task-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-md);border:1.5px solid transparent;background:var(--surface-50);transition:all .18s cubic-bezier(.34,1.56,.64,1);cursor:pointer}
+.task-item:hover{border-color:var(--surface-200);background:var(--white);transform:translateX(3px)}
+.task-check{width:20px;height:20px;border-radius:6px;border:2px solid var(--surface-200);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s cubic-bezier(.34,1.56,.64,1)}
+.task-check:hover{border-color:var(--teal-600);background:var(--teal-50)}
+.task-check.done{background:var(--teal-900);border-color:var(--teal-900);animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
+.task-check.done svg{stroke:white;width:11px;height:11px;stroke-width:2.5;fill:none;stroke-linecap:round}
+.task-text{flex:1;font-size:13px;font-weight:500;color:var(--surface-900)}
+.task-text.done{text-decoration:line-through;color:var(--surface-400)}
+.task-priority{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* ─── Performance chart ─────────────────────────────────── */
+.perf-chart-wrap{position:relative;height:160px;margin:16px 0}
+.perf-bars{display:flex;align-items:flex-end;gap:6px;height:140px}
+.perf-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+.perf-bar{width:100%;border-radius:6px 6px 0 0;transform-origin:bottom;animation:barGrow .7s cubic-bezier(.16,1,.3,1) both;position:relative;transition:filter .2s}
+.perf-bar:hover{filter:brightness(1.1)}
+.perf-bar-tooltip{position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:var(--surface-900);color:white;font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
+.perf-bar:hover .perf-bar-tooltip{opacity:1}
+.perf-bar-label{font-size:10.5px;color:var(--surface-400);font-weight:500;text-align:center}
+.perf-y-labels{position:absolute;left:0;top:0;bottom:16px;display:flex;flex-direction:column;justify-content:space-between}
+.perf-y-label{font-size:10px;color:var(--surface-300)}
+.perf-grid-line{position:absolute;left:32px;right:0;height:1px;background:var(--surface-100)}
+
+/* ─── Students performance list ─────────────────────────── */
+.student-perf-list{display:flex;flex-direction:column;gap:9px}
+.student-perf-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r-md);transition:background .15s;cursor:pointer}
+.student-perf-item:hover{background:var(--surface-50)}
+.student-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.student-name{flex:1;font-size:13px;font-weight:600;color:var(--surface-900)}
+.student-class{font-size:11.5px;color:var(--surface-400)}
+.student-avg{font-size:14px;font-weight:800;color:var(--surface-900)}
+.student-avg-bar{flex:1;max-width:80px;height:5px;background:var(--surface-100);border-radius:50px;overflow:hidden}
+.student-avg-fill{height:100%;border-radius:50px;transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+
+/* ─── Attendance mini ───────────────────────────────────── */
+.att-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--surface-50)}
+.att-row:last-child{border-bottom:none}
+.att-info{display:flex;align-items:center;gap:10px}
+.att-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.att-name{font-size:13px;font-weight:600;color:var(--surface-900)}
+.att-time{font-size:11.5px;color:var(--surface-400)}
+.att-status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px}
+
+/* ─── Upcoming assessments ──────────────────────────────── */
+.assess-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--surface-50)}
+.assess-item:last-child{border-bottom:none}
+.assess-date-box{width:44px;flex-shrink:0;text-align:center;background:var(--surface-50);border-radius:var(--r-md);padding:6px 4px;border:1.5px solid var(--surface-100)}
+.assess-date-d{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--surface-900);line-height:1}
+.assess-date-m{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--surface-400)}
+.assess-info{flex:1}
+.assess-name{font-size:13.5px;font-weight:700;color:var(--surface-900);margin-bottom:2px}
+.assess-meta{font-size:12px;color:var(--surface-400)}
+.assess-badge{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:50px;flex-shrink:0;align-self:center}
+
+/* ─── Announcement ──────────────────────────────────────── */
+.notif-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--surface-50)}
+.notif-item:last-child{border-bottom:none}
+.notif-icon-wrap{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.notif-icon-wrap svg{width:16px;height:16px}
+.notif-title{font-size:13px;font-weight:600;color:var(--surface-900);margin-bottom:2px}
+.notif-time{font-size:11.5px;color:var(--surface-400)}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(--teal-600);flex-shrink:0;margin-top:5px;animation:pulse 1.8s ease-in-out infinite}
+
+/* ─── Buttons ───────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:var(--r-md);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s;text-decoration:none}
+.btn-primary{background:var(--teal-900);color:var(--white);box-shadow:0 4px 14px rgba(8,80,65,.22)}
+.btn-primary:hover{background:var(--teal-700);transform:translateY(-2px);box-shadow:0 8px 20px rgba(8,80,65,.3)}
+.btn-ghost{background:var(--white);color:var(--surface-700);border:1.5px solid var(--surface-200)}
+.btn-ghost:hover{background:var(--surface-50)}
+.btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
+
+/* ─── Stagger animation helper ──────────────────────────── */
+.stagger>*{opacity:0;animation:fadeUp .5s cubic-bezier(.16,1,.3,1) both}
+.stagger>*:nth-child(1){animation-delay:.04s}
+.stagger>*:nth-child(2){animation-delay:.1s}
+.stagger>*:nth-child(3){animation-delay:.16s}
+.stagger>*:nth-child(4){animation-delay:.22s}
+.stagger>*:nth-child(5){animation-delay:.28s}
+.stagger>*:nth-child(6){animation-delay:.34s}
+
+/* ─── Responsive ────────────────────────────────────────── */
+@media(max-width:960px){.stats-row{grid-template-columns:1fr 1fr}.grid-3-2{grid-template-columns:1fr}}
+@media(max-width:640px){.stats-row{grid-template-columns:1fr 1fr}.grid-2{grid-template-columns:1fr}.page{padding:20px 16px 80px}}
+@media(max-width:420px){.stats-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Greeting ── -->
+  <div class="greeting">
+    <div class="greeting-left">
+      <div class="greeting-eyebrow">Teacher dashboard</div>
+      <h1 class="greeting-title">Good morning, <span id="teacherName">Mr. Tangue</span> 👋</h1>
+      <p class="greeting-sub">You have <strong id="classesToday">4 classes</strong> today and <strong id="pendingGrades">12 grades</strong> pending entry.</p>
+    </div>
+    <div class="greeting-date">
+      <div class="date-badge">
+        <div class="date-day" id="dateDay">—</div>
+        <div class="date-month" id="dateMonth">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Stat cards ── -->
+  <div class="stats-row stagger">
+    <!-- Classes -->
+    <div class="stat-card">
+      <div class="stat-card-header">
+        <div class="stat-icon" style="background:var(--teal-soft)">
+          <i data-lucide="book-open" style="width:18px;height:18px;stroke:var(--teal-900)"></i>
+        </div>
+        <div class="stat-trend trend-up">
+          <i data-lucide="trending-up" style="width:10px;height:10px"></i>
+          +2
+        </div>
+      </div>
+      <div class="stat-value" data-target="6">0</div>
+      <div class="stat-label">Classes assigned</div>
+      <div class="stat-spark">
+        <svg viewBox="0 0 100 36" preserveAspectRatio="none">
+          <polyline points="0,28 16,24 33,20 50,22 66,14 83,10 100,8"
+            fill="none" stroke="var(--teal-400)" stroke-width="2" stroke-linecap="round"
+            stroke-dasharray="200" stroke-dashoffset="200"
+            style="animation:drawLine 1.2s .5s cubic-bezier(.16,1,.3,1) forwards;--len:200"/>
+          <polyline points="0,28 16,24 33,20 50,22 66,14 83,10 100,8 100,36 0,36"
+            fill="rgba(8,80,65,.06)" stroke="none"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Students -->
+    <div class="stat-card">
+      <div class="stat-card-header">
+        <div class="stat-icon" style="background:var(--blue-soft)">
+          <i data-lucide="users" style="width:18px;height:18px;stroke:var(--blue)"></i>
+        </div>
+        <div class="stat-trend trend-up">
+          <i data-lucide="trending-up" style="width:10px;height:10px"></i>
+          +8
+        </div>
+      </div>
+      <div class="stat-value" data-target="187">0</div>
+      <div class="stat-label">Total students</div>
+      <div class="stat-spark">
+        <svg viewBox="0 0 100 36" preserveAspectRatio="none">
+          <polyline points="0,30 16,26 33,28 50,18 66,20 83,14 100,12"
+            fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" opacity=".6"
+            stroke-dasharray="200" stroke-dashoffset="200"
+            style="animation:drawLine 1.2s .6s cubic-bezier(.16,1,.3,1) forwards;--len:200"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Grades pending -->
+    <div class="stat-card">
+      <div class="stat-card-header">
+        <div class="stat-icon" style="background:var(--amber-soft)">
+          <i data-lucide="clipboard-list" style="width:18px;height:18px;stroke:var(--amber)"></i>
+        </div>
+        <div class="stat-trend trend-down">
+          <i data-lucide="alert-circle" style="width:10px;height:10px"></i>
+          Urgent
+        </div>
+      </div>
+      <div class="stat-value" data-target="12" style="color:var(--amber)">0</div>
+      <div class="stat-label">Grades to enter</div>
+      <div class="stat-spark">
+        <svg viewBox="0 0 100 36" preserveAspectRatio="none">
+          <polyline points="0,10 16,14 33,12 50,20 66,16 83,24 100,28"
+            fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" opacity=".6"
+            stroke-dasharray="200" stroke-dashoffset="200"
+            style="animation:drawLine 1.2s .7s cubic-bezier(.16,1,.3,1) forwards;--len:200"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Attendance rate -->
+    <div class="stat-card">
+      <div class="stat-card-header">
+        <div class="stat-icon" style="background:var(--purple-soft)">
+          <i data-lucide="check-circle-2" style="width:18px;height:18px;stroke:var(--purple)"></i>
+        </div>
+        <div class="stat-trend trend-up">
+          <i data-lucide="trending-up" style="width:10px;height:10px"></i>
+          +3%
+        </div>
+      </div>
+      <div class="stat-value" data-target="94" data-suffix="%">0</div>
+      <div class="stat-label">Avg. attendance rate</div>
+      <div class="stat-spark">
+        <svg viewBox="0 0 100 36" preserveAspectRatio="none">
+          <polyline points="0,24 16,20 33,22 50,14 66,12 83,8 100,6"
+            fill="none" stroke="var(--purple)" stroke-width="2" stroke-linecap="round" opacity=".6"
+            stroke-dasharray="200" stroke-dashoffset="200"
+            style="animation:drawLine 1.2s .8s cubic-bezier(.16,1,.3,1) forwards;--len:200"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Row 2 : Today's schedule + Pending tasks ── -->
+  <div class="grid-2 stagger">
+    <!-- Today's schedule -->
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-title-bar"></div>
+          Today's schedule
+        </div>
+        <a href="#" class="section-link">
+          Full timetable
+          <i data-lucide="arrow-right" style="width:13px;height:13px;stroke:currentColor"></i>
+        </a>
+      </div>
+      <div class="schedule-list" id="scheduleList"></div>
+    </div>
+
+    <!-- Pending tasks -->
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-title-bar"></div>
+          Pending tasks
+        </div>
+        <span id="taskCount" style="font-size:11.5px;font-weight:600;color:var(--surface-400)">0 remaining</span>
+      </div>
+      <div class="task-list" id="taskList"></div>
+    </div>
+  </div>
+
+  <!-- ── Row 3 : Class performance + Student list ── -->
+  <div class="grid-3-2 stagger">
+    <!-- Performance bar chart -->
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-title-bar"></div>
+          Class performance — Sequence 3
+        </div>
+        <select id="classFilter" style="font-size:12px;padding:5px 10px;border-radius:var(--r-sm);border:1.5px solid var(--surface-100);background:var(--white);color:var(--surface-700);cursor:pointer;font-family:'DM Sans',sans-serif">
+          <option>Form 4A</option>
+          <option>Form 3B</option>
+          <option>Form 5A</option>
+        </select>
+      </div>
+
+      <!-- Legend -->
+      <div style="display:flex;gap:16px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--surface-400)">
+          <div style="width:10px;height:10px;border-radius:3px;background:var(--teal-600)"></div>Pass
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--surface-400)">
+          <div style="width:10px;height:10px;border-radius:3px;background:var(--red)"></div>Fail
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--surface-400)">
+          <div style="width:10px;height:10px;border-radius:3px;background:var(--amber)"></div>At risk
+        </div>
+      </div>
+
+      <div id="perfChart" class="perf-bars"></div>
+      <div id="perfLabels" style="display:flex;gap:6px;margin-top:8px"></div>
+
+      <!-- Summary row -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--surface-100)">
+        <div style="text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--teal-600)" id="passCount">—</div>
+          <div style="font-size:11px;color:var(--surface-400)">Passed</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--red)" id="failCount">—</div>
+          <div style="font-size:11px;color:var(--surface-400)">Failed</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--amber)" id="riskCount">—</div>
+          <div style="font-size:11px;color:var(--surface-400)">At risk</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top students -->
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-title-bar"></div>
+          Top students
+        </div>
+        <a href="#" class="section-link">
+          View all
+          <i data-lucide="arrow-right" style="width:13px;height:13px;stroke:currentColor"></i>
+        </a>
+      </div>
+      <div class="student-perf-list" id="topStudents"></div>
+    </div>
+  </div>
+
+  <!-- ── Row 4 : Attendance summary + Assessments + Notifications ── -->
+  <div class="grid-3-2 stagger">
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-title-bar"></div>
+          Recent attendance issues
+        </div>
+        <a href="#" class="section-link">
+          Full report
+          <i data-lucide="arrow-right" style="width:13px;height:13px;stroke:currentColor"></i>
+        </a>
+      </div>
+      <div id="attList"></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <!-- Upcoming assessments -->
+      <div class="card" style="flex:1">
+        <div class="section-head">
+          <div class="section-title">
+            <div class="section-title-bar"></div>
+            Upcoming assessments
+          </div>
+        </div>
+        <div id="assessList"></div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="card" style="flex:1">
+        <div class="section-head">
+          <div class="section-title">
+            <div class="section-title-bar"></div>
+            Notifications
+          </div>
+          <div style="width:7px;height:7px;border-radius:50%;background:var(--red);animation:pulse 1.5s infinite"></div>
+        </div>
+        <div id="notifList"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Init Lucide icons ────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); });
+
+// ── Date ─────────────────────────────────────────────────
+const now = new Date();
+document.getElementById('dateDay').textContent = now.getDate();
+document.getElementById('dateMonth').textContent = now.toLocaleDateString('en', {month:'long', year:'numeric'});
+
+// ── Counter animation ────────────────────────────────────
+function animateCounter(el, target, suffix = '', duration = 1400) {
+  let start = null;
+  const tick = ts => {
+    if (!start) start = ts;
+    const p = Math.min((ts - start) / duration, 1);
+    const e = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.floor(e * target) + (p === 1 ? suffix : '');
+    if (p < 1) requestAnimationFrame(tick);
+    else el.textContent = target + suffix;
+  };
+  requestAnimationFrame(tick);
+}
+
+// Observe each stat value for counter animation
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const el = e.target;
+      animateCounter(el, +el.dataset.target, el.dataset.suffix || '', 1200);
+      observer.unobserve(el);
+    }
+  });
+}, { threshold: 0.4 });
+document.querySelectorAll('.stat-value[data-target]').forEach(el => observer.observe(el));
+
+// ── Schedule ─────────────────────────────────────────────
+const schedule = [
+  { time:'07:30', end:'08:30', subject:'Mathematics', cls:'Form 4A', room:'R.12', color:'#085041', status:'active' },
+  { time:'08:45', end:'09:45', subject:'Mathematics', cls:'Form 3B', room:'R.08', color:'#3B82F6', status:'upcoming' },
+  { time:'10:00', end:'11:00', subject:'Computer Sci.', cls:'Form 5A', room:'R.Lab', color:'#8B5CF6', status:'upcoming' },
+  { time:'11:15', end:'12:15', subject:'Mathematics', cls:'Lower 6th Sci.', room:'R.15', color:'#F59E0B', status:'upcoming' },
+];
+const schedList = document.getElementById('scheduleList');
+schedule.forEach((s, i) => {
+  const el = document.createElement('div');
+  el.className = 'schedule-item' + (s.status === 'active' ? ' active' : '');
+  el.style.animationDelay = (0.08 * i) + 's';
+  el.innerHTML = `
+    <div class="sched-time">
+      <div class="sched-time-start">${s.time}</div>
+      <div class="sched-time-end">${s.end}</div>
+    </div>
+    <div class="sched-divider"></div>
+    <div class="sched-dot" style="background:${s.color}"></div>
+    <div class="sched-info">
+      <div class="sched-subject">${s.subject}</div>
+      <div class="sched-class">${s.cls}</div>
+    </div>
+    <div class="sched-room">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="width:11px;height:11px">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      ${s.room}
+    </div>
+    ${s.status === 'active' ? '<span class="sched-badge" style="background:var(--teal-50);color:var(--teal-900);border:1px solid var(--teal-100)">Now</span>' : ''}`;
+  schedList.appendChild(el);
+});
+
+// ── Tasks ────────────────────────────────────────────────
+const tasks = [
+  { text: 'Enter Seq 3 grades — Form 4A Mathematics', priority: '#EF4444', done: false },
+  { text: 'Enter Seq 3 grades — Form 3B Mathematics', priority: '#EF4444', done: false },
+  { text: 'Attendance report — Form 5A (Friday)', priority: '#F59E0B', done: false },
+  { text: 'Prepare assessment — Lower 6th Sci.', priority: '#F59E0B', done: false },
+  { text: 'Submit term report — Form 4A', priority: '#3B82F6', done: false },
+  { text: 'Update lesson register — Form 3B', priority: '#9BA59C', done: true },
+];
+const taskList = document.getElementById('taskList');
+function renderTasks() {
+  taskList.innerHTML = '';
+  let remaining = tasks.filter(t => !t.done).length;
+  document.getElementById('taskCount').textContent = remaining + ' remaining';
+  tasks.forEach((t, i) => {
+    const el = document.createElement('div');
+    el.className = 'task-item';
+    el.style.animationDelay = (0.06 * i) + 's';
+    el.innerHTML = `
+      <div class="task-check ${t.done ? 'done' : ''}" onclick="toggleTask(${i})">
+        ${t.done ? '<svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg>' : ''}
+      </div>
+      <div class="task-text ${t.done ? 'done' : ''}">${t.text}</div>
+      <div class="task-priority" style="background:${t.done ? 'var(--surface-200)' : t.priority}"></div>`;
+    taskList.appendChild(el);
+  });
+}
+window.toggleTask = function(i) {
+  tasks[i].done = !tasks[i].done;
+  renderTasks();
+};
+renderTasks();
+
+// ── Performance chart ────────────────────────────────────
+const classData = {
+  subjects: ['Maths', 'English', 'Physics', 'Chem.', 'Bio.', 'French', 'Hist.', 'Geo.'],
+  averages: [13.2, 15.4, 11.8, 12.6, 14.1, 13.8, 15.0, 12.2],
+};
+const perfChart = document.getElementById('perfChart');
+const perfLabels = document.getElementById('perfLabels');
+let pass = 0, fail = 0, risk = 0;
+
+classData.averages.forEach((avg, i) => {
+  const pct = (avg / 20) * 100;
+  const color = avg >= 12 ? 'var(--teal-600)' : avg >= 10 ? 'var(--amber)' : 'var(--red)';
+  if (avg >= 12) pass++; else if (avg >= 10) risk++; else fail++;
+
+  const col = document.createElement('div');
+  col.className = 'perf-bar-col';
+  col.innerHTML = `
+    <div class="perf-bar" style="height:${pct}%;background:${color};animation-delay:${0.06 * i}s">
+      <div class="perf-bar-tooltip">${avg.toFixed(1)}/20</div>
+    </div>`;
+  perfChart.appendChild(col);
+
+  const lbl = document.createElement('div');
+  lbl.style.cssText = 'flex:1;text-align:center;font-size:10.5px;color:var(--surface-400);font-weight:500';
+  lbl.textContent = classData.subjects[i];
+  perfLabels.appendChild(lbl);
+});
+document.getElementById('passCount').textContent = pass;
+document.getElementById('failCount').textContent = fail;
+document.getElementById('riskCount').textContent = risk;
+
+// ── Top students ─────────────────────────────────────────
+const students = [
+  { name: 'Alice Mbarga', class: 'Form 4A', avg: 17.4, color: '#E1F5EE', text: '#085041' },
+  { name: 'Paul Effa',    class: 'Form 3B', avg: 16.8, color: '#EFF6FF', text: '#3B82F6' },
+  { name: 'Grace Nkolo',  class: 'Form 5A', avg: 15.9, color: '#F5F3FF', text: '#8B5CF6' },
+  { name: 'Marc Biya',    class: 'Form 4A', avg: 15.2, color: '#FFF7ED', text: '#F59E0B' },
+  { name: 'Sophie Talla', class: 'Form 3B', avg: 14.8, color: '#E1F5EE', text: '#085041' },
+];
+const topList = document.getElementById('topStudents');
+students.forEach((s, i) => {
+  const initials = s.name.split(' ').map(w => w[0]).join('');
+  const el = document.createElement('div');
+  el.className = 'student-perf-item';
+  el.style.animationDelay = (0.07 * i) + 's';
+  el.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:var(--surface-400);width:20px;text-align:center">${i + 1}</div>
+    <div class="student-avatar" style="background:${s.color}">
+      <span style="color:${s.text};font-size:12px;font-weight:800">${initials}</span>
+    </div>
+    <div style="flex:1">
+      <div class="student-name">${s.name}</div>
+      <div class="student-class">${s.class}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="student-avg-bar">
+        <div class="student-avg-fill" style="width:0%;background:${s.text}" data-target="${(s.avg/20)*100}"></div>
+      </div>
+      <div class="student-avg" style="color:${s.text}">${s.avg}</div>
+    </div>`;
+  topList.appendChild(el);
+});
+// Animate avg bars on scroll
+setTimeout(() => {
+  document.querySelectorAll('.student-avg-fill').forEach(bar => {
+    bar.style.width = bar.dataset.target + '%';
+  });
+}, 400);
+
+// ── Attendance ───────────────────────────────────────────
+const attData = [
+  { name: 'Jean-Paul Mbeki', cls: 'Form 4A', time: 'Today, 08:45', status: 'absent', color: '#EF4444', bg: 'var(--red-soft)', initials: 'JM', avatarBg: '#FEE2E2', avatarText: '#EF4444' },
+  { name: 'Claire Ateba',    cls: 'Form 3B', time: 'Today, 07:30', status: 'late',   color: '#F59E0B', bg: 'var(--amber-soft)', initials: 'CA', avatarBg: '#FEF3C7', avatarText: '#F59E0B' },
+  { name: 'Boris Nguema',    cls: 'Form 5A', time: 'Yesterday',    status: 'absent', color: '#EF4444', bg: 'var(--red-soft)', initials: 'BN', avatarBg: '#FEE2E2', avatarText: '#EF4444' },
+  { name: 'Sara Mekongo',    cls: 'Form 4A', time: 'Yesterday',    status: 'absent', color: '#EF4444', bg: 'var(--red-soft)', initials: 'SM', avatarBg: '#FEE2E2', avatarText: '#EF4444' },
+];
+const attList = document.getElementById('attList');
+attData.forEach(a => {
+  const el = document.createElement('div');
+  el.className = 'att-row';
+  el.innerHTML = `
+    <div class="att-info">
+      <div class="att-avatar" style="background:${a.avatarBg}">
+        <span style="color:${a.avatarText};font-size:11px;font-weight:800">${a.initials}</span>
+      </div>
+      <div>
+        <div class="att-name">${a.name}</div>
+        <div class="att-time">${a.cls} · ${a.time}</div>
+      </div>
+    </div>
+    <span class="att-status" style="background:${a.bg};color:${a.color}">${a.status.charAt(0).toUpperCase()+a.status.slice(1)}</span>`;
+  attList.appendChild(el);
+});
+
+// ── Assessments ──────────────────────────────────────────
+const assessments = [
+  { day: '18', month: 'Jan', name: 'Sequence 3 — Mathematics', meta: 'Form 4A · 2h', type: 'Exam', typeColor: '#085041', typeBg: 'var(--teal-50)' },
+  { day: '21', month: 'Jan', name: 'Sequence 3 — Mathematics', meta: 'Form 3B · 2h', type: 'Exam', typeColor: '#085041', typeBg: 'var(--teal-50)' },
+  { day: '24', month: 'Jan', name: 'Test — Computer Science', meta: 'Form 5A · 1h', type: 'Test', typeColor: '#8B5CF6', typeBg: 'var(--purple-soft)' },
+];
+const assessList = document.getElementById('assessList');
+assessments.forEach(a => {
+  const el = document.createElement('div');
+  el.className = 'assess-item';
+  el.innerHTML = `
+    <div class="assess-date-box">
+      <div class="assess-date-d">${a.day}</div>
+      <div class="assess-date-m">${a.month}</div>
+    </div>
+    <div class="assess-info">
+      <div class="assess-name">${a.name}</div>
+      <div class="assess-meta">${a.meta}</div>
+    </div>
+    <span class="assess-badge" style="background:${a.typeBg};color:${a.typeColor}">${a.type}</span>`;
+  assessList.appendChild(el);
+});
+
+// ── Notifications ────────────────────────────────────────
+const notifs = [
+  { icon: 'bell', title: 'Report cards due January 28', time: '2 hours ago', iconBg: 'var(--teal-soft)', iconColor: 'var(--teal-900)', unread: true },
+  { icon: 'user-check', title: 'New student added to Form 4A', time: 'Yesterday', iconBg: 'var(--blue-soft)', iconColor: 'var(--blue)', unread: false },
+  { icon: 'calendar', title: 'Academic calendar updated', time: '3 days ago', iconBg: 'var(--amber-soft)', iconColor: 'var(--amber)', unread: false },
+];
+const notifList = document.getElementById('notifList');
+notifs.forEach(n => {
+  const el = document.createElement('div');
+  el.className = 'notif-item';
+  el.innerHTML = `
+    <div class="notif-icon-wrap" style="background:${n.iconBg}">
+      <i data-lucide="${n.icon}" style="width:16px;height:16px;stroke:${n.iconColor}"></i>
+    </div>
+    <div style="flex:1">
+      <div class="notif-title">${n.title}</div>
+      <div class="notif-time">${n.time}</div>
+    </div>
+    ${n.unread ? '<div class="notif-dot"></div>' : ''}`;
+  notifList.appendChild(el);
+});
+
+// Re-init Lucide after dynamic DOM additions
+setTimeout(() => { lucide.createIcons(); }, 50);
+</script>
+</body>
+</html>

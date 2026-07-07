@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Student Dashboard — Akademee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal-900:#085041;--teal-700:#0F6E56;--teal-600:#1D9E75;
+  --teal-400:#5DCAA5;--teal-100:#C8F0E4;--teal-50:#E1F5EE;
+  --surface-900:#1A1F1B;--surface-800:#2A3029;--surface-700:#434D45;
+  --surface-600:#5C665E;--surface-500:#6E7A70;--surface-400:#9BA59C;
+  --surface-300:#BFC4BB;--surface-200:#D8DBD5;--surface-100:#EEF0EC;
+  --surface-50:#F7F8F6;--white:#fff;
+  --red:#EF4444;--amber:#F59E0B;--blue:#3B82F6;--purple:#8B5CF6;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:20px;
+  --sh-sm:0 2px 8px rgba(0,0,0,.05);--sh-md:0 4px 20px rgba(0,0,0,.08);--sh-lg:0 12px 40px rgba(0,0,0,.12);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--surface-50);color:var(--surface-900);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes drawLine{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+@keyframes barGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes popIn{from{opacity:0;transform:scale(.7)}60%{transform:scale(1.1)}to{opacity:1;transform:scale(1)}}
+@keyframes progressFill{from{stroke-dashoffset:var(--full)}to{stroke-dashoffset:var(--target)}}
+@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 80px}
+.stagger>*{opacity:0;animation:fadeUp .5s cubic-bezier(.16,1,.3,1) both}
+.stagger>*:nth-child(1){animation-delay:.04s}
+.stagger>*:nth-child(2){animation-delay:.1s}
+.stagger>*:nth-child(3){animation-delay:.16s}
+.stagger>*:nth-child(4){animation-delay:.22s}
+.stagger>*:nth-child(5){animation-delay:.28s}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px}
+.grid-3-2{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:24px}
+
+/* ── Hero banner ── */
+.hero-banner{border-radius:var(--r-xl);padding:28px 32px;margin-bottom:24px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--teal-900) 0%,#0F6E56 50%,#1D9E75 100%);
+  background-size:200% 200%;animation:gradientShift 8s ease infinite,fadeUp .6s cubic-bezier(.16,1,.3,1) both}
+.hero-banner::before{content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-content{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;position:relative;z-index:1}
+.hero-left{}
+.hero-eyebrow{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:6px}
+.hero-name{font-family:'Playfair Display',serif;font-size:clamp(22px,3.5vw,36px);font-weight:700;color:white;line-height:1.15;margin-bottom:4px}
+.hero-meta{font-size:13.5px;color:rgba(255,255,255,.65);display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.hero-meta-sep{width:1px;height:14px;background:rgba(255,255,255,.25)}
+.hero-right{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.hero-avg-ring{position:relative;width:110px;height:110px}
+.hero-avg-ring svg{width:110px;height:110px;transform:rotate(-90deg)}
+.hero-avg-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hero-avg-val{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:white;line-height:1}
+.hero-avg-lbl{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:2px}
+
+/* ── Stats strip ── */
+.stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.strip-card{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--surface-100);padding:18px;box-shadow:var(--sh-sm);position:relative;overflow:hidden;transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s;cursor:default}
+.strip-card:hover{transform:translateY(-4px);box-shadow:var(--sh-lg)}
+.strip-card::after{content:'';position:absolute;top:0;left:-100%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:shimmer 2.5s 1.5s ease-in-out}
+.strip-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.strip-val{font-size:clamp(22px,3vw,30px);font-weight:800;color:var(--surface-900);line-height:1;margin-bottom:3px}
+.strip-lbl{font-size:12px;color:var(--surface-400);font-weight:500}
+.strip-sub{font-size:11px;color:var(--surface-300);margin-top:5px}
+
+/* ── Card ── */
+.card{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--surface-100);padding:22px;box-shadow:var(--sh-sm)}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.section-title{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;color:var(--surface-900)}
+.section-title-bar{width:3px;height:18px;border-radius:2px;background:var(--teal-900)}
+.section-link{font-size:12.5px;font-weight:600;color:var(--teal-700);text-decoration:none;display:flex;align-items:center;gap:4px;transition:gap .2s}
+.section-link:hover{gap:8px}
+
+/* ── Grade bars ── */
+.grade-bar-wrap{display:grid;grid-template-columns:120px 1fr 40px;align-items:center;gap:12px;margin-bottom:12px}
+.grade-subj{font-size:13px;font-weight:600;color:var(--surface-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grade-track{height:8px;background:var(--surface-100);border-radius:50px;overflow:hidden}
+.grade-fill{height:100%;border-radius:50px;transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+.grade-val{font-size:13px;font-weight:800;text-align:right}
+
+/* ── Sequence chart ── */
+.seq-chart{display:flex;align-items:flex-end;gap:10px;height:130px;padding-bottom:4px}
+.seq-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+.seq-bar-wrap{flex:1;width:100%;display:flex;align-items:flex-end}
+.seq-bar{width:100%;border-radius:6px 6px 0 0;transform-origin:bottom;animation:barGrow .7s cubic-bezier(.16,1,.3,1) both;cursor:pointer;transition:filter .15s;position:relative}
+.seq-bar:hover{filter:brightness(1.1)}
+.seq-bar-tip{position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:var(--surface-900);color:white;font-size:10px;font-weight:700;padding:3px 6px;border-radius:4px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
+.seq-bar:hover .seq-bar-tip{opacity:1}
+.seq-lbl{font-size:10px;font-weight:600;color:var(--surface-400);text-align:center}
+.seq-val{font-size:10.5px;font-weight:700;color:var(--surface-700);text-align:center}
+
+/* ── Attendance calendar mini ── */
+.att-mini-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.att-mini-day{aspect-ratio:1;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:600;transition:transform .15s cubic-bezier(.34,1.56,.64,1)}
+.att-mini-day:hover{transform:scale(1.2)}
+
+/* ── Fee progress ── */
+.fee-ring-wrap{display:flex;align-items:center;gap:20px;padding:16px 0}
+.fee-ring{position:relative;width:90px;height:90px;flex-shrink:0}
+.fee-ring svg{width:90px;height:90px;transform:rotate(-90deg)}
+.fee-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.fee-ring-pct{font-size:18px;font-weight:800;color:var(--surface-900);line-height:1}
+.fee-ring-lbl{font-size:9px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--surface-400);margin-top:2px}
+.fee-breakdown{flex:1;display:flex;flex-direction:column;gap:8px}
+.fee-line{display:flex;align-items:center;justify-content:space-between;font-size:12.5px}
+.fee-line-dot{width:8px;height:8px;border-radius:3px;flex-shrink:0;margin-right:8px}
+
+/* ── Schedule ── */
+.sch-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-lg);background:var(--surface-50);border:1.5px solid var(--surface-100);margin-bottom:8px;transition:all .2s cubic-bezier(.34,1.56,.64,1)}
+.sch-item:hover{transform:translateX(5px);border-color:var(--teal-400);background:var(--teal-50)}
+.sch-time{font-size:12px;font-weight:700;color:var(--surface-900);min-width:44px;text-align:center}
+.sch-divider{width:1px;height:28px;background:var(--surface-200)}
+.sch-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sch-subj{font-size:13px;font-weight:700;color:var(--surface-900);flex:1}
+.sch-room{font-size:11.5px;color:var(--surface-400)}
+
+/* ── Notification ── */
+.notif-item{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--surface-50)}
+.notif-item:last-child{border-bottom:none}
+.notif-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.notif-title{font-size:13px;font-weight:600;color:var(--surface-900);margin-bottom:2px}
+.notif-time{font-size:11.5px;color:var(--surface-400)}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:4px;animation:pulse 1.8s ease-in-out infinite}
+
+/* ── Mention badge ── */
+.mention{display:inline-flex;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:50px}
+
+/* ── Responsive ── */
+@media(max-width:900px){.stats-strip{grid-template-columns:1fr 1fr}.grid-3-2{grid-template-columns:1fr}}
+@media(max-width:640px){.stats-strip{grid-template-columns:1fr 1fr}.grid-2{grid-template-columns:1fr}.hero-right{display:none}.page{padding:20px 16px 80px}}
+@media(max-width:420px){.stats-strip{grid-template-columns:1fr}.grade-bar-wrap{grid-template-columns:90px 1fr 36px}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Hero banner ── -->
+  <div class="hero-banner">
+    <div class="hero-content">
+      <div class="hero-left">
+        <div class="hero-eyebrow">Student portal · 2024 – 2025</div>
+        <h1 class="hero-name">Welcome back, Emma</h1>
+        <div class="hero-meta">
+          <span>Form 4A</span>
+          <span class="hero-meta-sep"></span>
+          <span>Matricule: STU-2024-0142</span>
+          <span class="hero-meta-sep"></span>
+          <span style="display:flex;align-items:center;gap:5px">
+            <span style="width:7px;height:7px;border-radius:50%;background:#5DCAA5;display:inline-block"></span>
+            Active
+          </span>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="hero-avg-ring">
+          <svg viewBox="0 0 110 110">
+            <circle cx="55" cy="55" r="45" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="10"/>
+            <circle cx="55" cy="55" r="45" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="10"
+              stroke-linecap="round"
+              stroke-dasharray="283"
+              stroke-dashoffset="283"
+              style="animation:drawLine 1.5s .5s cubic-bezier(.16,1,.3,1) forwards;--len:283"
+              id="avgArc"/>
+          </svg>
+          <div class="hero-avg-center">
+            <div class="hero-avg-val" id="heroAvg">—</div>
+            <div class="hero-avg-lbl">Annual avg</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:2px">Class rank</div>
+          <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:white">3rd <span style="font-size:14px;font-weight:400;opacity:.7">/ 45</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Stats strip ── -->
+  <div class="stats-strip stagger">
+    <div class="strip-card">
+      <div class="strip-icon" style="background:var(--teal-50)">
+        <i data-lucide="bar-chart-2" style="width:18px;height:18px;stroke:var(--teal-900)"></i>
+      </div>
+      <div class="strip-val" id="statAvg" data-target="14.2">—</div>
+      <div class="strip-lbl">Annual average</div>
+      <div class="strip-sub">/ 20 — Very Good</div>
+    </div>
+    <div class="strip-card">
+      <div class="strip-icon" style="background:rgba(59,130,246,.08)">
+        <i data-lucide="calendar-check" style="width:18px;height:18px;stroke:var(--blue)"></i>
+      </div>
+      <div class="strip-val" id="statAtt" data-target="94" data-suffix="%" style="color:var(--blue)">—</div>
+      <div class="strip-lbl">Attendance rate</div>
+      <div class="strip-sub">4 absences this year</div>
+    </div>
+    <div class="strip-card">
+      <div class="strip-icon" style="background:rgba(245,158,11,.08)">
+        <i data-lucide="credit-card" style="width:18px;height:18px;stroke:var(--amber)"></i>
+      </div>
+      <div class="strip-val" id="statFees" data-target="67" data-suffix="%" style="color:var(--amber)">—</div>
+      <div class="strip-lbl">Fees paid</div>
+      <div class="strip-sub">80 000 / 120 000 FCFA</div>
+    </div>
+    <div class="strip-card">
+      <div class="strip-icon" style="background:rgba(139,92,246,.08)">
+        <i data-lucide="award" style="width:18px;height:18px;stroke:var(--purple)"></i>
+      </div>
+      <div class="strip-val" style="color:var(--purple)">3rd</div>
+      <div class="strip-lbl">Class ranking</div>
+      <div class="strip-sub">Form 4A · 45 students</div>
+    </div>
+  </div>
+
+  <!-- ── Row 2: Grades + Sequence performance ── -->
+  <div class="grid-2 stagger">
+    <!-- Subject grades -->
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-title-bar"></div>
+          Subject averages — Term 1
+        </div>
+        <select style="font-size:12px;padding:5px 10px;border-radius:var(--r-sm);border:1.5px solid var(--surface-100);background:var(--white);color:var(--surface-700);cursor:pointer;font-family:'DM Sans',sans-serif">
+          <option>Term 1</option><option>Term 2</option><option>Annual</option>
+        </select>
+      </div>
+      <div id="gradeBars"></div>
+    </div>
+
+    <!-- Sequence performance chart -->
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-title-bar"></div>
+          Performance by sequence
+        </div>
+        <span style="font-size:12px;color:var(--surface-400)">2024/2025</span>
+      </div>
+      <div class="seq-chart" id="seqChart"></div>
+      <div id="seqLabels" style="display:flex;gap:10px;margin-top:8px"></div>
+
+      <!-- Trend summary -->
+      <div style="display:flex;align-items:center;gap:8px;margin-top:16px;padding:12px;background:var(--teal-50);border-radius:var(--r-md);border:1px solid var(--teal-100)">
+        <i data-lucide="trending-up" style="width:16px;height:16px;stroke:var(--teal-900)"></i>
+        <span style="font-size:13px;color:var(--teal-900);font-weight:600">Improving trend — +1.2 pts over last 3 sequences</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Row 3: Today's schedule + Attendance + Fees + Notifs ── -->
+  <div class="grid-3-2 stagger">
+    <!-- Left: schedule + notifs -->
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <!-- Today's schedule -->
+      <div class="card">
+        <div class="section-head">
+          <div class="section-title">
+            <div class="section-title-bar"></div>
+            Today's classes
+          </div>
+          <span style="font-size:12px;color:var(--surface-400)" id="todayDate">—</span>
+        </div>
+        <div id="studentSched"></div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="card">
+        <div class="section-head">
+          <div class="section-title">
+            <div class="section-title-bar"></div>
+            Notifications
+          </div>
+          <div style="width:7px;height:7px;border-radius:50%;background:var(--red);animation:pulse 1.5s infinite"></div>
+        </div>
+        <div id="studentNotifs"></div>
+      </div>
+    </div>
+
+    <!-- Right: attendance + fees -->
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <!-- Attendance mini calendar -->
+      <div class="card">
+        <div class="section-head">
+          <div class="section-title">
+            <div class="section-title-bar"></div>
+            Attendance — Jan 2025
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--surface-400)"><div style="width:9px;height:9px;border-radius:2px;background:var(--teal-50)"></div>Present</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--surface-400)"><div style="width:9px;height:9px;border-radius:2px;background:rgba(239,68,68,.12)"></div>Absent</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--surface-400)"><div style="width:9px;height:9px;border-radius:2px;background:rgba(245,158,11,.12)"></div>Late</div>
+        </div>
+        <div class="att-mini-grid" id="attMini"></div>
+      </div>
+
+      <!-- Fee status -->
+      <div class="card">
+        <div class="section-head">
+          <div class="section-title">
+            <div class="section-title-bar"></div>
+            Fee status
+          </div>
+          <span class="mention" style="background:rgba(245,158,11,.1);color:var(--amber)">Partial</span>
+        </div>
+
+        <div class="fee-ring-wrap">
+          <div class="fee-ring">
+            <svg viewBox="0 0 90 90">
+              <circle cx="45" cy="45" r="36" fill="none" stroke="var(--surface-100)" stroke-width="9"/>
+              <circle cx="45" cy="45" r="36" fill="none" stroke="var(--amber)" stroke-width="9"
+                stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="226"
+                style="animation:drawLine 1.4s .5s cubic-bezier(.16,1,.3,1) forwards;--len:151"/>
+            </svg>
+            <div class="fee-ring-center">
+              <div class="fee-ring-pct">67%</div>
+              <div class="fee-ring-lbl">Paid</div>
+            </div>
+          </div>
+          <div class="fee-breakdown">
+            <div class="fee-line">
+              <div style="display:flex;align-items:center">
+                <div class="fee-line-dot" style="background:var(--teal-600)"></div>
+                <span style="font-size:12px;color:var(--surface-500)">Paid</span>
+              </div>
+              <span style="font-size:13px;font-weight:700;color:var(--teal-700)">80 000 FCFA</span>
+            </div>
+            <div class="fee-line">
+              <div style="display:flex;align-items:center">
+                <div class="fee-line-dot" style="background:var(--amber)"></div>
+                <span style="font-size:12px;color:var(--surface-500)">Remaining</span>
+              </div>
+              <span style="font-size:13px;font-weight:700;color:var(--amber)">40 000 FCFA</span>
+            </div>
+            <div class="fee-line" style="padding-top:8px;border-top:1px solid var(--surface-100)">
+              <div style="display:flex;align-items:center">
+                <div class="fee-line-dot" style="background:var(--surface-300)"></div>
+                <span style="font-size:12px;color:var(--surface-500)">Total due</span>
+              </div>
+              <span style="font-size:13px;font-weight:700;color:var(--surface-900)">120 000 FCFA</span>
+            </div>
+            <div style="margin-top:10px;padding:10px;background:rgba(245,158,11,.06);border-radius:var(--r-sm);border:1px solid rgba(245,158,11,.15);font-size:11.5px;color:var(--amber);display:flex;align-items:center;gap:6px">
+              <i data-lucide="clock" style="width:13px;height:13px;stroke:currentColor;flex-shrink:0"></i>
+              Due by February 28, 2025
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); });
+
+const now = new Date();
+document.getElementById('todayDate').textContent = now.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' });
+
+// Counters
+function animateCounter(el, target, suffix = '', dec = 0, duration = 1300) {
+  let start = null;
+  const tick = ts => {
+    if (!start) start = ts;
+    const p = Math.min((ts - start) / duration, 1);
+    const e = 1 - Math.pow(1 - p, 3);
+    el.textContent = (e * target).toFixed(dec) + suffix;
+    if (p < 1) requestAnimationFrame(tick);
+    else el.textContent = target.toFixed(dec) + suffix;
+  };
+  requestAnimationFrame(tick);
+}
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      animateCounter(document.getElementById('statAvg'), 14.2, '/20', 1);
+      animateCounter(document.getElementById('statAtt'), 94, '%', 0);
+      animateCounter(document.getElementById('statFees'), 67, '%', 0);
+      // Hero avg arc
+      const arc = document.getElementById('avgArc');
+      const circumference = 283;
+      const pct = 14.2 / 20;
+      arc.style.setProperty('--len', circumference * (1 - pct));
+      document.getElementById('heroAvg').textContent = '14.2';
+      obs.disconnect();
+    }
+  });
+}, { threshold: 0.3 });
+obs.observe(document.getElementById('statAvg'));
+
+// Grade bars
+const grades = [
+  { subj: 'Mathematics', avg: 14, coeff: 4 },
+  { subj: 'English',     avg: 17, coeff: 3 },
+  { subj: 'Physics',     avg: 12, coeff: 3 },
+  { subj: 'Chemistry',   avg: 11, coeff: 3 },
+  { subj: 'Biology',     avg: 15, coeff: 2 },
+  { subj: 'French',      avg: 13, coeff: 2 },
+  { subj: 'History',     avg: 14, coeff: 2 },
+  { subj: 'Geography',   avg: 16, coeff: 2 },
+];
+const getMention = avg => {
+  if (avg >= 16) return { label: 'Excellent', color: 'var(--teal-600)', bg: 'var(--teal-50)' };
+  if (avg >= 14) return { label: 'Very Good', color: 'var(--blue)', bg: 'rgba(59,130,246,.08)' };
+  if (avg >= 12) return { label: 'Good', color: 'var(--purple)', bg: 'rgba(139,92,246,.08)' };
+  if (avg >= 10) return { label: 'Average', color: 'var(--amber)', bg: 'rgba(245,158,11,.08)' };
+  return { label: 'Fail', color: 'var(--red)', bg: 'rgba(239,68,68,.08)' };
+};
+const gradeBars = document.getElementById('gradeBars');
+grades.forEach((g, i) => {
+  const m = getMention(g.avg);
+  const pct = (g.avg / 20) * 100;
+  const fillColor = g.avg >= 14 ? 'var(--teal-600)' : g.avg >= 12 ? 'var(--blue)' : g.avg >= 10 ? 'var(--amber)' : 'var(--red)';
+  const el = document.createElement('div');
+  el.className = 'grade-bar-wrap';
+  el.style.animationDelay = (0.06 * i) + 's';
+  el.innerHTML = `
+    <div class="grade-subj" title="${g.subj}">${g.subj}</div>
+    <div class="grade-track">
+      <div class="grade-fill" style="width:0%;background:${fillColor}" data-target="${pct}"></div>
+    </div>
+    <div class="grade-val" style="color:${fillColor}">${g.avg}</div>`;
+  gradeBars.appendChild(el);
+});
+setTimeout(() => {
+  document.querySelectorAll('.grade-fill').forEach(f => { f.style.width = f.dataset.target + '%'; });
+}, 200);
+
+// Sequence chart
+const seqData = [
+  { seq: 'Seq 1', avg: 12.8, color: 'var(--blue)' },
+  { seq: 'Seq 2', avg: 13.5, color: 'var(--blue)' },
+  { seq: 'Seq 3', avg: 13.1, color: 'var(--blue)' },
+  { seq: 'Seq 4', avg: 14.2, color: 'var(--teal-600)' },
+  { seq: 'Seq 5', avg: 14.8, color: 'var(--teal-600)' },
+  { seq: 'Seq 6', avg: 15.2, color: 'var(--teal-600)' },
+];
+const maxSeq = Math.max(...seqData.map(s => s.avg));
+const seqChart = document.getElementById('seqChart');
+const seqLabels = document.getElementById('seqLabels');
+seqData.forEach((s, i) => {
+  const pct = (s.avg / 20) * 100;
+  const col = document.createElement('div');
+  col.className = 'seq-col';
+  col.innerHTML = `
+    <div class="seq-val">${s.avg}</div>
+    <div class="seq-bar-wrap">
+      <div class="seq-bar" style="height:${pct}%;background:${s.color};animation-delay:${0.07 * i}s">
+        <div class="seq-bar-tip">${s.avg}/20</div>
+      </div>
+    </div>`;
+  seqChart.appendChild(col);
+  const lbl = document.createElement('div');
+  lbl.style.cssText = 'flex:1;text-align:center;font-size:10.5px;color:var(--surface-400);font-weight:600';
+  lbl.textContent = s.seq;
+  seqLabels.appendChild(lbl);
+});
+
+// Today's schedule
+const todaySched = [
+  { time: '07:30', subj: 'Mathematics', room: 'Room 12', color: '#085041' },
+  { time: '08:45', subj: 'English Language', room: 'Room 08', color: '#3B82F6' },
+  { time: '10:00', subj: 'Physics', room: 'Lab 2', color: '#8B5CF6' },
+  { time: '11:15', subj: 'French', room: 'Room 05', color: '#F59E0B' },
+];
+const schedEl = document.getElementById('studentSched');
+todaySched.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'sch-item';
+  el.innerHTML = `
+    <div class="sch-time">${s.time}</div>
+    <div class="sch-divider"></div>
+    <div class="sch-dot" style="background:${s.color}"></div>
+    <div class="sch-subj">${s.subj}</div>
+    <div class="sch-room">${s.room}</div>`;
+  schedEl.appendChild(el);
+});
+
+// Attendance mini calendar
+const attMini = document.getElementById('attMini');
+['M','T','W','T','F','S','S'].forEach(d => {
+  const el = document.createElement('div');
+  el.style.cssText = 'font-size:9px;font-weight:700;color:var(--surface-400);text-align:center;padding:2px 0';
+  el.textContent = d;
+  attMini.appendChild(el);
+});
+const attStatuses = Array.from({ length: 31 }, (_, i) => {
+  if (i < 1 || i > 28) return 'empty';
+  const r = Math.random();
+  if (r < 0.8) return 'present';
+  if (r < 0.88) return 'absent';
+  if (r < 0.94) return 'late';
+  return 'empty';
+});
+const attColors = {
+  present: { bg: 'var(--teal-50)', text: 'var(--teal-900)' },
+  absent: { bg: 'rgba(239,68,68,.12)', text: 'var(--red)' },
+  late: { bg: 'rgba(245,158,11,.12)', text: 'var(--amber)' },
+  empty: { bg: 'var(--surface-50)', text: 'var(--surface-300)' },
+};
+attStatuses.forEach((s, i) => {
+  const c = attColors[s];
+  const el = document.createElement('div');
+  el.className = 'att-mini-day';
+  el.style.background = c.bg;
+  el.style.color = c.text;
+  el.style.animationDelay = (i * 0.012) + 's';
+  el.textContent = s !== 'empty' ? i + 1 : '';
+  el.title = s.charAt(0).toUpperCase() + s.slice(1);
+  attMini.appendChild(el);
+});
+
+// Notifications
+const notifs = [
+  { icon: 'bell', title: 'Sequence 3 results published', time: 'Today, 08:00', iconBg: 'var(--teal-50)', iconColor: 'var(--teal-900)', unread: true },
+  { icon: 'credit-card', title: 'Payment reminder — 40 000 FCFA due', time: 'Yesterday', iconBg: 'rgba(245,158,11,.08)', iconColor: 'var(--amber)', unread: true },
+  { icon: 'calendar', title: 'Academic calendar update — Term 2 dates', time: '3 days ago', iconBg: 'rgba(59,130,246,.08)', iconColor: 'var(--blue)', unread: false },
+];
+const notifEl = document.getElementById('studentNotifs');
+notifs.forEach(n => {
+  const el = document.createElement('div');
+  el.className = 'notif-item';
+  el.innerHTML = `
+    <div class="notif-icon" style="background:${n.iconBg}">
+      <i data-lucide="${n.icon}" style="width:15px;height:15px;stroke:${n.iconColor}"></i>
+    </div>
+    <div style="flex:1">
+      <div class="notif-title">${n.title}</div>
+      <div class="notif-time">${n.time}</div>
+    </div>
+    ${n.unread ? '<div class="notif-dot"></div>' : ''}`;
+  notifEl.appendChild(el);
+});
+
+setTimeout(() => { lucide.createIcons(); }, 100);
+</script>
+</body>
+</html>

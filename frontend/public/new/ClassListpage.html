@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classes List</title>
+  
+  <!-- Polices utilisées dans le design original -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── Configuration Générale ── */
+    body {
+      margin: 0;
+      font-family: 'DM Sans', sans-serif;
+      background-color: #FAFAFA;
+      color: #1A1F1B;
+    }
+
+    .classes-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px 120px;
+    }
+
+    /* ── Animations ── */
+    @keyframes skeleton-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 200%; }
+    }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    /* ── Icônes Utilitaires ── */
+    .icon-sm { width: 16px; height: 16px; }
+    .icon-xs { width: 13px; height: 13px; }
+    .icon-md { width: 22px; height: 22px; }
+
+    /* ── Page Header ── */
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 28px;
+      animation: fadeSlideUp 0.5s cubic-bezier(.16,1,.3,1) both;
+    }
+
+    .header-title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .title-indicator {
+      width: 4px;
+      height: 24px;
+      background: #085041;
+      border-radius: 2px;
+    }
+
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: #9BA59C;
+      margin: 0;
+      padding-left: 14px;
+    }
+
+    .btn-new-class {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 44px;
+      padding: 0 20px;
+      background: #085041;
+      color: white;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 4px 16px rgba(8,80,65,0.25);
+      transition: all 0.2s;
+    }
+
+    .btn-new-class:hover {
+      background: #063d32;
+      box-shadow: 0 6px 20px rgba(8,80,65,0.35);
+    }
+
+    /* ── Stats Strip ── */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+      animation: fadeSlideUp 0.5s 0.1s cubic-bezier(.16,1,.3,1) both;
+    }
+
+    .cls-stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px 18px;
+      border: 1.5px solid #F0F0F0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s;
+    }
+
+    .cls-stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+    }
+
+    .stat-icon { font-size: 22px; margin-bottom: 6px; }
+    .stat-value { font-size: 26px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+    .stat-label { font-size: 12px; color: #9BA59C; font-weight: 500; }
+
+    /* ── Search Bar ── */
+    .search-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      animation: fadeSlideUp 0.5s 0.15s cubic-bezier(.16,1,.3,1) both;
+    }
+
+    .search-bar {
+      flex: 1;
+      max-width: 380px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: white;
+      border: 1.5px solid #EEF0EC;
+      border-radius: 10px;
+      padding: 0 14px;
+      height: 44px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: border-color 0.2s;
+    }
+
+    .search-bar:focus-within { border-color: #085041; }
+    .search-input { flex: 1; border: none; outline: none; font-size: 14px; background: transparent; color: #1A1F1B; }
+    .search-results-count { font-size: 13px; color: #9BA59C; white-space: nowrap; }
+
+    /* ── Group & Header Accordion ── */
+    .level-group {
+      margin-bottom: 28px;
+      animation: fadeSlideUp 0.5s 0.2s cubic-bezier(.16,1,.3,1) both;
+    }
+
+    .cls-level-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 14px;
+      transition: background 0.2s;
+      user-select: none;
+    }
+
+    .cls-level-header:hover { background: rgba(8,80,65,0.04); }
+    .level-title { font-size: 13px; font-weight: 700; color: #1A1F1B; flex: 1; }
+    .level-badge { font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 50px; }
+    
+    .icon-arrow {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.25s ease;
+    }
+
+    /* Style quand un groupe est replié */
+    .level-group.collapsed .cards-grid { display: none; }
+    .level-group.collapsed .cls-level-header { margin-bottom: 0; }
+    .level-group.collapsed .icon-arrow { transform: rotate(-90deg); }
+
+    /* ── Cards Grid ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    /* ── Class Card Standard ── */
+    .class-card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      border: 1.5px solid #F0F0F0;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    /* Effet Shimmer au survol */
+    .card-shimmer {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      pointer-events: none;
+    }
+
+    .class-card:hover .card-shimmer { animation: shimmer 0.6s ease-in-out; }
+    .class-card:hover { transform: translateY(-4px); }
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+    .class-section-avatar { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; }
+    .status-badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 50px; }
+    .class-name { font-weight: 700; font-size: 16px; color: #1A1F1B; margin-bottom: 4px; }
+    .class-details { font-size: 12.5px; color: #9BA59C; margin-bottom: 16px; }
+
+    /* Capacity bar */
+    .capacity-section { margin-bottom: 14px; }
+    .capacity-text { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 11px; color: #9BA59C; }
+    .capacity-text .pct-text { font-weight: 600; }
+    .progress-bar-bg { height: 6px; border-radius: 50px; background: #F0F0F0; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 50px; transition: width 0.8s cubic-bezier(.16,1,.3,1); }
+
+    /* Card Footer */
+    .card-footer { display: flex; align-items: center; justify-content: space-between; }
+    .teacher-info { display: flex; align-items: center; gap: 8px; }
+    .teacher-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+    .teacher-name { font-size: 12px; color: #6E7A70; }
+    
+    .action-arrow {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #F7F8F6;
+      border: 1.5px solid #F0F0F0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .class-card:hover .action-arrow { transform: scale(1.1); }
+
+    /* ── Thématisation dynamique par niveau (Géré par CSS) ── */
+    
+    /* Form 1 Theme (Indigo) */
+    .lvl-form1 .level-dot { background: #6366F1; }
+    .lvl-form1 .level-badge { background: rgba(99,102,241,0.08); color: #6366F1; border: 1px solid rgba(99,102,241,0.2); }
+    .lvl-form1 .class-section-avatar, .lvl-form1 .teacher-avatar { background: rgba(99,102,241,0.08); border: 1.5px solid rgba(99,102,241,0.2); color: #6366F1; }
+    .lvl-form1 .class-card .pct-text { color: #6366F1; }
+    .lvl-form1 .class-card .progress-bar-fill { background: linear-gradient(90deg, #6366F1, rgba(99,102,241,0.6)); }
+    .lvl-form1 .class-card .status-badge { background: rgba(8,80,65,0.08); color: #085041; border: 1px solid rgba(8,80,65,0.2); }
+    .lvl-form1 .class-card:hover { border-color: #6366F1; box-shadow: 0 16px 40px rgba(0,0,0,0.08), 0 0 0 1px rgba(99,102,241,0.2); }
+
+    /* Form 2 Theme (Sky Blue) */
+    .lvl-form2 .level-dot { background: #0EA5E9; }
+    .lvl-form2 .level-badge { background: rgba(14,165,233,0.08); color: #0EA5E9; border: 1px solid rgba(14,165,233,0.2); }
+    .lvl-form2 .class-section-avatar, .lvl-form2 .teacher-avatar { background: rgba(14,165,233,0.08); border: 1.5px solid rgba(14,165,233,0.2); color: #0EA5E9; }
+    .lvl-form2 .class-card .pct-text { color: #0EA5E9; }
+    .lvl-form2 .class-card .progress-bar-fill { background: linear-gradient(90deg, #0EA5E9, rgba(14,165,233,0.6)); }
+    .lvl-form2 .class-card .status-badge { background: rgba(8,80,65,0.08); color: #085041; border: 1px solid rgba(8,80,65,0.2); }
+    .lvl-form2 .class-card:hover { border-color: #0EA5E9; box-shadow: 0 16px 40px rgba(0,0,0,0.08), 0 0 0 1px rgba(14,165,233,0.2); }
+
+    /* État "Almost Full" (Presque plein) */
+    .class-card.is-full .status-badge { background: rgba(239,68,68,0.08) !important; color: #EF4444 !important; border: 1px solid rgba(239,68,68,0.2) !important; }
+    .class-card.is-full .pct-text { color: #EF4444 !important; }
+    .class-card.is-full .progress-bar-fill { background: linear-gradient(90deg, #EF4444, #F87171) !important; }
+
+    /* ── Skeleton Loading Styles ── */
+    .skeleton-card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      border: 1.5px solid #F0F0F0;
+      animation: skeleton-pulse 1.5s ease-in-out infinite;
+    }
+
+    .skeleton-header { display: flex; justify-content: space-between; margin-bottom: 14px; }
+    .skeleton-avatar { width: 48px; height: 48px; border-radius: 12px; background: #F0F0F0; }
+    .skeleton-badge { width: 60px; height: 22px; border-radius: 50px; background: #F0F0F0; }
+    .skeleton-line { height: 16px; border-radius: 4px; background: #F0F0F0; margin-bottom: 8px; }
+    .skeleton-line.line-70 { width: 70%; }
+    .skeleton-line.line-45 { width: 45%; height: 12px; margin-bottom: 16px; }
+    .skeleton-bar { width: 100%; height: 6px; border-radius: 50px; background: #F0F0F0; margin-bottom: 12px; }
+    .skeleton-footer { display: flex; gap: 8px; }
+    .skeleton-circle { width: 28px; height: 28px; border-radius: 50%; background: #F0F0F0; }
+
+    /* ── Floating Action Button Mobile ── */
+    .fab-mobile {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #085041;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(8,80,65,0.35);
+      text-decoration: none;
+      z-index: 50;
+      transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s;
+    }
+
+    .fab-mobile:hover { transform: scale(1.1); }
+  </style>
+</head>
+<body>
+
+  <div class="classes-container">
+    
+    <!-- ── Page Header ── -->
+    <header class="page-header">
+      <div>
+        <div class="header-title-wrapper">
+          <div class="title-indicator"></div>
+          <h1 class="page-title">Classes</h1>
+        </div>
+        <p class="page-subtitle">3 classes · 78 students enrolled</p>
+      </div>
+
+      <a href="/dashboard/classes/new" class="btn-new-class">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="icon-sm">
+          <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        New class
+      </a>
+    </header>
+
+    <!-- ── Stats Strip ── -->
+    <section class="stats-strip">
+      <div class="cls-stat-card">
+        <div class="stat-icon">🏫</div>
+        <div class="stat-value" style="color: #085041;">3</div>
+        <div class="stat-label">Total classes</div>
+      </div>
+      <div class="cls-stat-card">
+        <div class="stat-icon">👩‍🎓</div>
+        <div class="stat-value" style="color: #1D9E75;">78</div>
+        <div class="stat-label">Total students</div>
+      </div>
+      <div class="cls-stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-value" style="color: #0EA5E9;">2</div>
+        <div class="stat-label">Levels active</div>
+      </div>
+      <div class="cls-stat-card">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-value" style="color: #EF4444;">1</div>
+        <div class="stat-label">Almost full</div>
+      </div>
+    </section>
+
+    <!-- ── Search Area ── -->
+    <section class="search-section">
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9BA59C" stroke-width="2" stroke-linecap="round" class="icon-sm">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search by class or level..." class="search-input">
+      </div>
+      <div class="search-results-count" id="resultsCount">3 results</div>
+    </section>
+
+    <!-- ── Group: Form 1 ── -->
+    <div class="level-group lvl-form1">
+      <div class="cls-level-header" onclick="toggleLevelGroup(this)">
+        <div class="level-dot"></div>
+        <span class="level-title">Form 1</span>
+        <span class="level-badge">2 classes</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9BA59C" stroke-width="2" stroke-linecap="round" class="icon-arrow">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </div>
+
+      <div class="cards-grid">
+        <div class="class-card" data-name="Form 1 Alpha" data-level="Form 1">
+          <div class="card-shimmer"></div>
+          <div class="card-header">
+            <div class="class-section-avatar">A</div>
+            <span class="status-badge">25 / 40</span>
+          </div>
+          <div class="class-name">Form 1 Alpha</div>
+          <div class="class-details">Science Stream · 12 subjects</div>
+          <div class="capacity-section">
+            <div class="capacity-text"><span>Capacity</span><span class="pct-text">63%</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 63%;"></div></div>
+          </div>
+          <div class="card-footer">
+            <div class="teacher-info"><div class="teacher-avatar">JD</div><span class="teacher-name">John Doe</span></div>
+            <div class="action-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#085041" stroke-width="2" class="icon-xs"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="class-card is-full" data-name="Form 1 Beta" data-level="Form 1">
+          <div class="card-shimmer"></div>
+          <div class="card-header">
+            <div class="class-section-avatar">B</div>
+            <span class="status-badge">39 / 40</span>
+          </div>
+          <div class="class-name">Form 1 Beta</div>
+          <div class="class-details">Arts Stream · 10 subjects</div>
+          <div class="capacity-section">
+            <div class="capacity-text"><span>Capacity</span><span class="pct-text">98%</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 98%;"></div></div>
+          </div>
+          <div class="card-footer">
+            <div class="teacher-info"><div class="teacher-avatar">MS</div><span class="teacher-name">Marie Smith</span></div>
+            <div class="action-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#085041" stroke-width="2" class="icon-xs"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Group: Form 2 ── -->
+    <div class="level-group lvl-form2">
+      <div class="cls-level-header" onclick="toggleLevelGroup(this)">
+        <div class="level-dot"></div>
+        <span class="level-title">Form 2</span>
+        <span class="level-badge">1 class</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9BA59C" stroke-width="2" stroke-linecap="round" class="icon-arrow">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </div>
+
+      <div class="cards-grid">
+        <div class="class-card" data-name="Form 2 Advanced" data-level="Form 2">
+          <div class="card-shimmer"></div>
+          <div class="card-header">
+            <div class="class-section-avatar">A</div>
+            <span class="status-badge">18 / 40</span>
+          </div>
+          <div class="class-name">Form 2 Advanced</div>
+          <div class="class-details">General Stream · 11 subjects</div>
+          <div class="capacity-section">
+            <div class="capacity-text"><span>Capacity</span><span class="pct-text">45%</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 45%;"></div></div>
+          </div>
+          <div class="card-footer">
+            <div class="teacher-info"><div class="teacher-avatar">TG</div><span class="teacher-name">Tom Green</span></div>
+            <div class="action-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#085041" stroke-width="2" class="icon-xs"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Skeleton Loading Section (Masqué par défaut) ── -->
+    <div class="skeleton-section" style="display: none; margin-top: 20px;">
+      <div class="cards-grid">
+        <div class="skeleton-card">
+          <div class="skeleton-header"><div class="skeleton-avatar"></div><div class="skeleton-badge"></div></div>
+          <div class="skeleton-line line-70"></div><div class="skeleton-line line-45"></div><div class="skeleton-bar"></div>
+          <div class="skeleton-footer"><div class="skeleton-circle"></div><div class="skeleton-circle"></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Floating Action Button Mobile ── -->
+  <a href="/dashboard/classes/new" class="fab-mobile">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" class="icon-md">
+      <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  </a>
+
+  <!-- ── JavaScript Intégré ── -->
+  <script>
+    // 1. Gérer l'ouverture/fermeture des blocs de niveaux (Collapse Accordion)
+    function toggleLevelGroup(headerElement) {
+      const groupElement = headerElement.parentElement;
+      groupElement.classList.toggle('collapsed');
+    }
+
+    // 2. Gestion dynamique de la recherche textuelle
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+      const query = e.target.value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.class-card');
+      const groups = document.querySelectorAll('.level-group');
+      let visibleCardsCount = 0;
+
+      groups.forEach(group => {
+        let groupHasVisibleCards = false;
+        const groupCards = group.querySelectorAll('.class-card');
+
+        groupCards.forEach(card => {
+          const name = card.getAttribute('data-name').toLowerCase();
+          const level = card.getAttribute('data-level').toLowerCase();
+
+          // Si la requête correspond au nom de la classe ou au niveau
+          if (name.includes(query) || level.includes(query)) {
+            card.style.display = 'block';
+            groupHasVisibleCards = true;
+            visibleCardsCount++;
+          } else {
+            card.style.display = 'none';
+          }
+        });
+
+        // Masquer ou afficher le groupe entier selon s'il contient des cartes valides
+        if (groupHasVisibleCards) {
+          group.style.display = 'block';
+        } else {
+          group.style.display = 'none';
+        }
+      });
+
+      // Mettre à jour le compteur de résultats en direct
+      document.getElementById('resultsCount').textContent = `${visibleCardsCount} result${visibleCardsCount !== 1 ? 's' : ''}`;
+    });
+  </script>
+</body>
+</html>

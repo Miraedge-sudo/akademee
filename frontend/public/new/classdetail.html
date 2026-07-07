@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class Detail Page</title>
+  <!-- Importation des polices identiques à votre projet -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Styles généraux de réinitialisation */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: #FAFAFA;
+      color: #1A1F1B;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Animations originales de votre composant */
+    @keyframes fadeSlideUp { 
+      from { opacity: 0; transform: translateY(12px); } 
+      to { opacity: 1; transform: none; } 
+    }
+    @keyframes spin { 
+      from { transform: rotate(0deg); } 
+      to { transform: rotate(360deg); } 
+    }
+
+    /* Classes d'interactivité issues de vos styles CSS injectés */
+    .cd-tab { 
+      transition: all 0.2s; 
+      cursor: pointer; 
+    }
+    .cd-row { 
+      transition: background 0.15s; 
+    }
+    .cd-row:hover { 
+      background: rgba(8, 80, 65, 0.03) !important; 
+    }
+    .cd-action-btn { 
+      transition: all 0.2s cubic-bezier(.34, 1.56, .64, 1); 
+    }
+    .cd-action-btn:hover { 
+      transform: scale(1.1); 
+    }
+
+    /* Utilitaires pour masquer les éléments dynamiques */
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Conteneur principal (maxWidth: 960) -->
+  <div style="width: 100%; max-width: 960px; padding: 0 0 80px;">
+
+    <!-- 1. Écran de chargement (Loading) -->
+    <div id="loading-screen" style="display: flex;智慧 align-items: center; justify-content: center; height: 300px;">
+      <div style="width: 36px; height: 36px; border: 3px solid #EEF0EC; border-top-color: #085041; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+    </div>
+
+    <!-- 2. Écran d'erreur (Class Not Found) -->
+    <div id="error-screen" class="hidden" style="text-align: center; padding: 80px 20px;">
+      <div style="font-size: 48px; margin-bottom: 12px;">😕</div>
+      <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #1A1F1B; margin-bottom: 8px;">Class not found</h3>
+      <a href="#" style="color: #085041; text-decoration: none; font-weight: 600;">← Back to classes</a>
+    </div>
+
+    <!-- 3. Contenu de la page (Une fois chargé avec succès) -->
+    <div id="page-content" class="hidden">
+      
+      <!-- Breadcrumb -->
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 13px; color: #9BA59C; animation: fadeSlideUp 0.4s cubic-bezier(.16,1,.3,1) both;">
+        <a href="#" style="color: #9BA59C; text-decoration: none;">Classes</a>
+        <span>/</span>
+        <span id="breadcrumb-current" style="color: #1A1F1B; font-weight: 500;">...</span>
+      </div>
+
+      <!-- ── Class hero card ── -->
+      <div style="background: white; border-radius: 16px; padding: 24px 28px; border: 1.5px solid #EEF0EC; box-shadow: 0 4px 24px rgba(0,0,0,0.05); margin-bottom: 24px; animation: fadeSlideUp 0.4s 0.05s cubic-bezier(.16,1,.3,1) both;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div id="hero-badge" style="width: 60px; height: 60px; border-radius: 16px; background: rgba(8,80,65,0.08); border: 1.5px solid rgba(8,80,65,0.2); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: #085041;">
+              -
+            </div>
+            <div>
+              <h1 id="hero-title" style="font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #1A1F1B; margin: 0 0 4px;">
+                ...
+              </h1>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span id="hero-level" style="font-size: 12.5px; color: #9BA59C;">...</span>
+                <span class="stream-separator" style="color: #D8DBD5;">·</span>
+                <span id="hero-stream" style="font-size: 12.5px; color: #9BA59C;">...</span>
+                <span class="year-separator" style="color: #D8DBD5;">·</span>
+                <span id="hero-year" style="font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 50px; background: rgba(8,80,65,0.06); color: #085041;">
+                  ...
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div style="display: flex; gap: 10px;">
+            <button class="cd-action-btn" style="height: 38px; padding: 0 16px; border: 1.5px solid #EEF0EC; border-radius: 9px; background: white; color: #434D45; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width: 13px; height: 13px;">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              Edit
+            </button>
+            <button class="cd-action-btn" style="height: 38px; padding: 0 16px; background: #085041; border: none; border-radius: 9px; color: white; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(8,80,65,0.2);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" style="width: 13px; height: 13px;">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add student
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats row -->
+        <div id="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+          <!-- Injecté dynamiquement par JS -->
+        </div>
+
+        <!-- Capacity bar -->
+        <div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="font-size: 12px; color: #9BA59C;">Enrollment progress</span>
+            <span id="pct-text" style="font-size: 12px; font-weight: 600;">...</span>
+          </div>
+          <div style="height: 8px; background: #F0F0F0; border-radius: 50px; overflow: hidden;">
+            <div id="pct-bar" style="height: 100%; border-radius: 50px; width: 0%; transition: width 1s cubic-bezier(.16,1,.3,1);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Tabs Container ── -->
+      <div style="background: white; border-radius: 16px; border: 1.5px solid #EEF0EC; box-shadow: 0 4px 24px rgba(0,0,0,0.05); overflow: hidden; animation: fadeSlideUp 0.4s 0.1s cubic-bezier(.16,1,.3,1) both;">
+        
+        <!-- Tab Navigation Bar -->
+        <div style="display: flex; border-bottom: 1.5px solid #EEF0EC; padding: 0 20px;">
+          <button onclick="switchTab('students')" id="tab-btn-students" class="cd-tab" style="padding: 16px 20px; border: none; background: transparent; font-size: 14px; display: flex; align-items: center; gap: 7px; margin-bottom: -1.5px;">
+            <span>👩‍🎓</span> Students
+            <span id="tab-student-count" style="font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 50px;">0</span>
+          </button>
+          <button onclick="switchTab('subjects')" id="tab-btn-subjects" class="cd-tab" style="padding: 16px 20px; border: none; background: transparent; font-size: 14px; display: flex; align-items: center; gap: 7px; margin-bottom: -1.5px;">
+            <span>📚</span> Subjects
+          </button>
+          <button onclick="switchTab('teachers')" id="tab-btn-teachers" class="cd-tab" style="padding: 16px 20px; border: none; background: transparent; font-size: 14px; display: flex; align-items: center; gap: 7px; margin-bottom: -1.5px;">
+            <span>👩‍🏫</span> Teachers
+          </button>
+        </div>
+
+        <!-- Tab contents views -->
+        <div style="padding: 20px;">
+          
+          <!-- View 1: Students -->
+          <div id="view-students" class="tab-view hidden">
+            <div id="students-content-wrapper">
+              <!-- Recherche -->
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                <div style="flex: 1; max-width: 300px; display: flex; align-items: center; gap: 9px; background: #F7F8F6; border: 1.5px solid #EEF0EC; border-radius: 9px; padding: 0 12px; height: 40px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#9BA59C" stroke-width="2" stroke-linecap="round" style="width: 14px; height: 14px;">
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input type="text" placeholder="Search student..." style="flex: 1; border: none; background: transparent; outline: none; font-size: 13px; color: #1A1F1B;">
+                </div>
+              </div>
+              <!-- Tableau Étudiants -->
+              <div style="border-radius: 12px; border: 1.5px solid #EEF0EC; overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background: #F7F8F6;">
+                      <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #9BA59C; border-bottom: 1.5px solid #EEF0EC;">Student</th>
+                      <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #9BA59C; border-bottom: 1.5px solid #EEF0EC;">Matricule</th>
+                      <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #9BA59C; border-bottom: 1.5px solid #EEF0EC;">Status</th>
+                      <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #9BA59C; border-bottom: 1.5px solid #EEF0EC;">Fees</th>
+                      <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #9BA59C; border-bottom: 1.5px solid #EEF0EC;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="students-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div id="students-empty-wrapper" class="hidden"></div>
+          </div>
+
+          <!-- View 2: Subjects -->
+          <div id="view-subjects" class="tab-view hidden">
+            <div id="subjects-content-wrapper" style="border-radius: 12px; border: 1.5px solid #EEF0EC; overflow: hidden;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #F7F8F6;">
+                    <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #9BA59C; border-bottom: 1.5px solid #EEF0EC;">Subject</th>
+                    <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #9BA59C; border-bottom: 1.5px solid #EEF0EC;">Code</th>
+                    <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #9BA59C; border-bottom: 1.5px solid #EEF0EC;">Coefficient</th>
+                    <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #9BA59C; border-bottom: 1.5px solid #EEF0EC;">Teacher</th>
+                    <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #9BA59C; border-bottom: 1.5px solid #EEF0EC;"></th>
+                  </tr>
+                </thead>
+                <tbody id="subjects-table-body"></tbody>
+              </table>
+            </div>
+            <div id="subjects-empty-wrapper" class="hidden"></div>
+          </div>
+
+          <!-- View 3: Teachers -->
+          <div id="view-teachers" class="tab-view hidden">
+            <div id="teachers-content-wrapper" style="display: flex; flex-direction: column; gap: 12px;"></div>
+            <div id="teachers-empty-wrapper" class="hidden"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── LOGIQUE JAVASCRIPT JUSQU'À LA FIN ── -->
+  <script>
+    // 1. Simulation des données API de l'objet "cls"
+    const mockClassData = {
+      id: "class-101",
+      name: "Terminal C",
+      section: "C",
+      level: "High School",
+      stream: "Science",
+      maxStudents: 35,
+      academicYear: { name: "2025/2026" },
+      mainTeacher: { id: "t1", firstName: "Jean", lastName: "Dupont", email: "j.dupont@school.com" },
+      teachers: [
+        { id: "t1", firstName: "Jean", lastName: "Dupont", email: "j.dupont@school.com" },
+        { id: "t2", firstName: "Marie", lastName: "Curie", email: "m.curie@school.com" }
+      ],
+      subjects: [
+        { id: "sub1", name: "Mathematics", code: "MATH-TC", coefficient: 5, teacher: { firstName: "Jean", lastName: "Dupont" } },
+        { id: "sub2", name: "Physics & Chemistry", code: "PHYS-TC", coefficient: 4, teacher: { firstName: "Marie", lastName: "Curie" } }
+      ],
+      students: [
+        { id: "s1", firstName: "Alain", lastName: "Prost", gender: "Male", studentNumber: "MAT-2026-001", status: "active", feeStatus: "paid" },
+        { id: "s2", firstName: "Sophie", lastName: "Marceau", gender: "Female", studentNumber: "MAT-2026-002", status: "active", feeStatus: "partial" },
+        { id: "s3", firstName: "Thomas", lastName: "Pesquet", gender: "Male", studentNumber: "MAT-2026-003", status: "inactive", feeStatus: "unpaid" }
+      ]
+    };
+
+    // État local réplicatif de l'état de React
+    let currentTab = "students";
+
+    // 2. Fonction de génération des composants Empty State
+    function buildEmptyTabHTML(icon, title, subtitle, actionHTML = '') {
+      return `
+        <div style="text-align: center; padding: 60px 20px;">
+          <div style="font-size: 48px; margin-bottom: 12px;">${icon}</div>
+          <h3 style="font-family: 'Playfair Display',serif; font-size: 18px; font-weight: 700; color: #1A1F1B; margin-bottom: 6px;">${title}</h3>
+          <p style="font-size: 13px; color: #9BA59C; margin-bottom: 20px;">${subtitle}</p>
+          ${actionHTML}
+        </div>
+      `;
+    }
+
+    // 3. Initialisation et rendu des données
+    function renderClassDetails(cls) {
+      if (!cls) {
+        document.getElementById("loading-screen").classList.add("hidden");
+        document.getElementById("error-screen").classList.remove("hidden");
+        return;
+      }
+
+      // Remplissage des textes simples
+      document.getElementById("breadcrumb-current").innerText = cls.name;
+      document.getElementById("hero-title").innerText = cls.name;
+      document.getElementById("hero-badge").innerText = cls.section || cls.name.slice(-1) || "A";
+      document.getElementById("hero-level").innerText = cls.level;
+
+      if(cls.stream) {
+        document.getElementById("hero-stream").innerText = cls.stream + " Stream";
+      } else {
+        document.querySelector('.stream-separator').classList.add('hidden');
+        document.getElementById("hero-stream").classList.add('hidden');
+      }
+
+      if(cls.academicYear && cls.academicYear.name) {
+        document.getElementById("hero-year").innerText = cls.academicYear.name;
+      } else {
+        document.querySelector('.year-separator').classList.add('hidden');
+        document.getElementById("hero-year").classList.add('hidden');
+      }
+
+      // Calculs de capacité
+      const capacity = cls.maxStudents || 40;
+      const enrolled = cls.students ? cls.students.length : 0;
+      const pct = Math.min(Math.round((enrolled / capacity) * 100), 100);
+
+      document.getElementById("pct-text").innerText = pct + "% full";
+      document.getElementById("pct-text").style.color = pct >= 90 ? "#EF4444" : "#085041";
+      document.getElementById("pct-bar").style.width = pct + "%";
+      document.getElementById("pct-bar").style.background = pct >= 90 ? "linear-gradient(90deg,#EF4444,#F87171)" : "linear-gradient(90deg,#085041,#1D9E75)";
+
+      // Rendu de la grille des Stats (4 blocs)
+      const subjectsCount = cls.subjects ? cls.subjects.length : 0;
+      const teachersCount = cls.teachers ? cls.teachers.length : (cls.mainTeacher ? 1 : 0);
+      
+      const stats = [
+        { label: "Students", value: enrolled, icon: "👩‍🎓" },
+        { label: "Capacity", value: capacity, icon: "🏫" },
+        { label: "Subjects", value: subjectsCount, icon: "📚" },
+        { label: "Teachers", value: teachersCount, icon: "👩‍🏫" },
+      ];
+
+      document.getElementById("stats-grid").innerHTML = stats.map(s => `
+        <div style="background: #F7F8F6; border-radius: 10px; padding: 12px 14px;">
+          <div style="font-size: 18px; margin-bottom: 4px;">${s.icon}</div>
+          <div style="font-family: 'DM Sans',sans-serif; font-size: 22px; font-weight: 800; color: #1A1F1B; line-height: 1; margin-bottom: 3px;">${s.value}</div>
+          <div style="font-size: 11px; color: #9BA59C; font-weight: 500;">${s.label}</div>
+        </div>
+      `).join('');
+
+      // Compteur dynamique sur l'onglet des étudiants
+      document.getElementById("tab-student-count").innerText = enrolled;
+
+      // ── CONSTRUIRE LE TABLEAU DES ÉTUDIANTS ──
+      if(enrolled > 0) {
+        document.getElementById("students-table-body").innerHTML = cls.students.map(s => {
+          const initials = ((s.firstName?.[0] || '') + (s.lastName?.[0] || '')).toUpperCase();
+          const statusBg = s.status === "active" ? "rgba(29,158,117,0.08)" : "rgba(239,68,68,0.08)";
+          const statusColor = s.status === "active" ? "#1D9E75" : "#EF4444";
+          const statusBorder = s.status === "active" ? "rgba(29,158,117,0.2)" : "rgba(239,68,68,0.2)";
+          
+          let feeBg = "rgba(239,68,68,0.08)", feeColor = "#EF4444";
+          if (s.feeStatus === "paid") { feeBg = "rgba(8,80,65,0.08)"; feeColor = "#085041"; }
+          else if (s.feeStatus === "partial") { feeBg = "rgba(245,158,11,0.08)"; feeColor = "#F59E0B"; }
+
+          return `
+            <tr class="cd-row" style="border-bottom: 1px solid #F7F8F6;">
+              <td style="padding: 12px 16px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(8,80,65,0.08); border: 1.5px solid rgba(8,80,65,0.15); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #085041; flex-shrink: 0;">
+                    ${initials}
+                  </div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 600; color: #1A1F1B;">${s.firstName} ${s.lastName}</div>
+                    <div style="font-size: 11px; color: #9BA59C;">${s.gender || ""}</div>
+                  </div>
+                </div>
+              </td>
+              <td style="padding: 12px 16px; font-size: 12.5px; color: #6E7A70; font-family: monospace;">${s.studentNumber || "—"}</td>
+              <td style="padding: 12px 16px;">
+                <span style="font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 50px; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBorder};">
+                  ${s.status || "active"}
+                </span>
+              </td>
+              <td style="padding: 12px 16px;">
+                <span style="font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 50px; background: ${feeBg}; color: ${feeColor};">
+                  ${s.feeStatus || "unpaid"}
+                </span>
+              </td>
+              <td style="padding: 12px 16px;">
+                <a href="#" style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #085041; text-decoration: none; font-weight: 600;">
+                  View
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width: 11px; height: 11px;">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </a>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        document.getElementById("students-content-wrapper").classList.add("hidden");
+        document.getElementById("students-empty-wrapper").classList.remove("hidden");
+        document.getElementById("students-empty-wrapper").innerHTML = buildEmptyTabHTML(
+          "👩‍🎓", "No students enrolled", "Add students to this class to get started.",
+          `<a href="#" style="display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 20px; background: #085041; color: white; border-radius: 9px; font-size: 13px; font-weight: 600; text-decoration: none;">Add student</a>`
+        );
+      }
+
+      // ── CONSTRUIRE LE TABLEAU DES MATIÈRES (SUBJECTS) ──
+      if(cls.subjects && cls.subjects.length > 0) {
+        document.getElementById("subjects-table-body").innerHTML = cls.subjects.map(s => `
+          <tr class="cd-row" style="border-bottom: 1px solid #F7F8F6;">
+            <td style="padding: 12px 16px; font-size: 13px; font-weight: 600; color: #1A1F1B;">${s.name}</td>
+            <td style="padding: 12px 16px; font-size: 12px; color: #9BA59C; font-family: monospace;">${s.code || "—"}</td>
+            <td style="padding: 12px 16px;">
+              <span style="font-size: 13px; font-weight: 700; color: #085041;">×${s.coefficient || 1}</span>
+            </td>
+            <td style="padding: 12px 16px; font-size: 12.5px; color: #6E7A70;">
+              ${s.teacher ? `${s.teacher.firstName} ${s.teacher.lastName}` : "—"}
+            </td>
+            <td style="padding: 12px 16px;">
+              <button style="font-size: 11px; color: #085041; background: none; border: none; cursor: pointer; font-weight: 600;">Edit</button>
+            </td>
+          </tr>
+        `).join('');
+      } else {
+        document.getElementById("subjects-content-wrapper").classList.add("hidden");
+        document.getElementById("subjects-empty-wrapper").classList.remove("hidden");
+        document.getElementById("subjects-empty-wrapper").innerHTML = buildEmptyTabHTML("📚", "No subjects yet", "Add subjects with coefficients to define the curriculum.");
+      }
+
+      // ── CONSTRUIRE LES PROFS (TEACHERS) ──
+      if(cls.mainTeacher) {
+        // Regrouper le prof principal d'abord, puis filtrer les autres profs uniques
+        const uniqueTeachers = [cls.mainTeacher, ...(cls.teachers || []).filter(t => t.id !== cls.mainTeacher.id)];
+        
+        document.getElementById("teachers-content-wrapper").innerHTML = uniqueTeachers.map((t, idx) => {
+          const initials = ((t.firstName?.[0] || '') + (t.lastName?.[0] || '')).toUpperCase();
+          const badgeHTML = idx === 0 ? `<span style="font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 50px; background: rgba(8,80,65,0.08); color: #085041; border: 1px solid rgba(8,80,65,0.2)">Class teacher</span>` : '';
+          
+          return `
+            <div class="cd-row" style="display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 10px; border: 1.5px solid #EEF0EC; background: white;">
+              <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(8,80,65,0.08); border: 1.5px solid rgba(8,80,65,0.2); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #085041; flex-shrink: 0;">
+                ${initials}
+              </div>
+              <div style="flex: 1;">
+                <div style="font-size: 14px; font-weight: 600; color: #1A1F1B; margin-bottom: 2px;">${t.firstName} ${t.lastName}</div>
+                <div style="font-size: 12px; color: #9BA59C;">${t.email}</div>
+              </div>
+              ${badgeHTML}
+            </div>
+          `;
+        }).join('');
+      } else {
+        document.getElementById("teachers-content-wrapper").classList.add("hidden");
+        document.getElementById("teachers-empty-wrapper").classList.remove("hidden");
+        document.getElementById("teachers-empty-wrapper").innerHTML = buildEmptyTabHTML("👩‍🏫", "No teacher assigned", "Assign a class teacher to manage this class.");
+      }
+
+      // Une fois injecté, masquer le loader et afficher la vue finale
+      document.getElementById("loading-screen").classList.add("hidden");
+      document.getElementById("page-content").classList.remove("hidden");
+      
+      // Init de la vue sur l'onglet actif initial (students)
+      switchTab(currentTab);
+    }
+
+    // 4. Logique de Switch d'onglets (Gestion active de styles et visibilité)
+    function switchTab(tabKey) {
+      currentTab = tabKey;
+      const tabs = ["students", "subjects", "teachers"];
+      
+      tabs.forEach(key => {
+        const btn = document.getElementById(`tab-btn-${key}`);
+        const view = document.getElementById(`view-${key}`);
+        
+        if(key === tabKey) {
+          // Onglet Sélectionné : Application des styles actifs natifs
+          btn.style.fontWeight = "700";
+          btn.style.color = "#085041";
+          btn.style.borderBottom = "2.5px solid #085041";
+          view.classList.remove("hidden");
+        } else {
+          // Onglet Désactivé : Restauration des styles par défaut
+          btn.style.fontWeight = "500";
+          btn.style.color = "#9BA59C";
+          btn.style.borderBottom = "2.5px solid transparent";
+          view.classList.add("hidden");
+        }
+      });
+    }
+
+    // 5. Exécution automatique après une petite latence simulée (effet useEffect)
+    setTimeout(() => {
+      renderClassDetails(mockClassData); // Passer `null` ici pour tester l'écran d'erreur.
+    }, 800);
+  </script>
+</body>
+</html>

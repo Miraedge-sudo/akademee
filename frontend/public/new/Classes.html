@@ -1,0 +1,1326 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create a new class</title>
+
+    <!-- Polices utilisées dans le design original -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700;800&family=Playfair+Display:wght@700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* ── Configuration Générale ── */
+      body {
+        margin: 0;
+        font-family: "DM Sans", sans-serif;
+        background-color: #fafafa;
+        color: #1a1f1b;
+        box-sizing: border-box;
+      }
+
+      *,
+      *:before,
+      *:after {
+        box-sizing: inherit;
+      }
+
+      .create-page-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 40px 20px 80px;
+      }
+
+      /* ── Animations ── */
+      @keyframes fadeSlideUp {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes successPop {
+        0% {
+          transform: scale(0.8);
+          opacity: 0;
+        }
+        60% {
+          transform: scale(1.1);
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ── Interactivité Focus ── */
+      input:focus,
+      select:focus {
+        border-color: #085041 !important;
+        box-shadow: 0 0 0 3.5px rgba(8, 80, 65, 0.1) !important;
+        background: white !important;
+      }
+
+      /* ── InputField Layout standard ── */
+      .input-field-group {
+        margin-bottom: 20px;
+      }
+
+      .field-label {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #434d45;
+        margin-bottom: 6px;
+        letter-spacing: 0.2px;
+      }
+
+      .field-required-star {
+        color: #085041;
+      }
+
+      .field-hint {
+        font-size: 11.5px;
+        color: #9ba59c;
+        margintop: 5px;
+      }
+
+      .field-error {
+        font-size: 11.5px;
+        color: #ef4444;
+        margin-top: 5px;
+        display: none; /* Affiché via JS */
+      }
+
+      /* Style de base des entrées de formulaire */
+      .base-input {
+        width: 100%;
+        height: 44px;
+        padding: 0 14px;
+        border: 1.5px solid #eef0ec;
+        border-radius: 10px;
+        font-size: 14px;
+        color: #1a1f1b;
+        background: #fafaf8;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .base-input.has-error {
+        border-color: #ef4444;
+      }
+
+      /* ── Success Overlay ── */
+      .success-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+        z-index: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+
+      .success-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .success-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px 48px;
+        text-align: center;
+      }
+      .success-overlay.active .success-card {
+        animation: successPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      }
+
+      /* ── Breadcrumb ── */
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 24px;
+        font-size: 13px;
+        color: #9ba59c;
+        animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      .breadcrumb a {
+        color: #9ba59c;
+        text-decoration: none;
+      }
+
+      /* ── Page Header ── */
+      .page-header {
+        margin-bottom: 32px;
+        animation: fadeSlideUp 0.4s 0.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      .header-title-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 4px;
+      }
+
+      .title-indicator {
+        width: 4px;
+        height: 24px;
+        background: #085041;
+        border-radius: 2px;
+      }
+
+      .page-title {
+        font-family: "Playfair Display", serif;
+        font-size: 26px;
+        font-weight: 700;
+        color: #1a1f1b;
+        margin: 0;
+      }
+
+      .page-subtitle {
+        font-size: 14px;
+        color: #9ba59c;
+        margin: 0;
+        padding-left: 14px;
+      }
+
+      /* ── Layout Principal (Deux colonnes) ── */
+      .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 24px;
+        align-items: flex-start;
+      }
+
+      @media (max-width: 850px) {
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+        .preview-sidebar {
+          position: static !important;
+        }
+      }
+
+      /* Form Card gauche */
+      .form-card {
+        background: white;
+        border-radius: 16px;
+        padding: 28px;
+        border: 1.5px solid #eef0ec;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+        animation: fadeSlideUp 0.4s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      .submit-error-banner {
+        padding: 12px 16px;
+        background: rgba(239, 68, 68, 0.06);
+        border: 1.5px solid rgba(239, 68, 68, 0.2);
+        border-radius: 10px;
+        color: #ef4444;
+        font-size: 14px;
+        margin-bottom: 24px;
+        display: none;
+      }
+
+      /* Grilles de boutons de sélection */
+      .level-buttons-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+
+      .stream-buttons-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .selector-btn {
+        padding: 9px 6px;
+        border-radius: 8px;
+        border: 1.5px solid #eef0ec;
+        background: white;
+        color: #6e7a70;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .selector-btn:hover {
+        background: #fafaf8;
+      }
+
+      /* Actions bouton fin de formulaire */
+      .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+      }
+
+      .btn-cancel {
+        height: 46px;
+        padding: 0 24px;
+        border: 1.5px solid #eef0ec;
+        border-radius: 10px;
+        color: #6e7a70;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        transition: all 0.2s;
+      }
+
+      .btn-cancel:hover {
+        background: #fafaf8;
+      }
+
+      .btn-submit {
+        flex: 1;
+        height: 46px;
+        background: #9ba59c; /* Devient #085041 quand débloqué */
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: not-allowed;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s;
+      }
+
+      .btn-submit.ready {
+        background: #085041;
+        cursor: pointer;
+        box-shadow: 0 4px 16px rgba(8, 80, 65, 0.25);
+      }
+
+      .btn-submit.ready:hover {
+        background: #063d32;
+      }
+
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        display: none;
+      }
+
+      /* ── Right Column — Live Preview ── */
+      .preview-sidebar {
+        position: sticky;
+        top: 88px;
+        animation: fadeSlideUp 0.4s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      .preview-title-meta {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: #9ba59c;
+        margin-bottom: 12px;
+      }
+
+      .preview-card {
+        background: white;
+        border-radius: 14px;
+        padding: 22px;
+        border: 1.5px solid #eef0ec;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .preview-card-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .preview-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 13px;
+        background: #f0f0f0;
+        border: 1.5px solid #e8e8e8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: 800;
+        color: #d0d0d0;
+        transition: all 0.3s;
+      }
+
+      .preview-badge {
+        height: 24px;
+        padding: 0 12px;
+        border-radius: 50px;
+        font-size: 11px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        background: rgba(8, 80, 65, 0.08);
+        color: #9ba59c;
+        border: 1px solid rgba(8, 80, 65, 0.1);
+        transition: all 0.3s;
+      }
+
+      .preview-class-name {
+        font-weight: 700;
+        font-size: 17px;
+        color: #d0d0d0;
+        margin-bottom: 5px;
+        min-height: 24px;
+        transition: color 0.2s;
+      }
+
+      .preview-class-details {
+        font-size: 13px;
+        color: #9ba59c;
+        margin-bottom: 18px;
+      }
+
+      /* Capacity bar preview */
+      .preview-capacity-bar-bg {
+        height: 6px;
+        background: #f0f0f0;
+        border-radius: 50px;
+        overflow: hidden;
+      }
+      .preview-capacity-bar-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 50px;
+      }
+
+      /* Teacher info preview */
+      .preview-teacher-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .preview-teacher-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #f0f0f0;
+        border: 1.5px solid #e8e8e8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        color: #085041;
+        transition: all 0.3s;
+      }
+
+      /* Checklist Box */
+      .checklist-box {
+        margin-top: 16px;
+        background: #f7f8f6;
+        border-radius: 12px;
+        padding: 16px;
+      }
+
+      .checklist-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .checklist-circle {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        background: #eef0ec;
+        border: 1.5px solid #d8dbd5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .checklist-circle.checked {
+        background: #085041;
+        border-color: #085041;
+        transform: scale(1.1);
+      }
+
+      .checklist-circle svg {
+        display: none;
+      }
+
+      .checklist-circle.checked svg {
+        display: block;
+      }
+
+      .checklist-text {
+        font-size: 12.5px;
+        color: #9ba59c;
+        transition: color 0.2s;
+      }
+
+      .checklist-text.checked {
+        color: #434d45;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="create-page-container">
+      <!-- ── Success overlay ── -->
+      <div class="success-overlay" id="successOverlay">
+        <div class="success-card">
+          <div style="font-size: 56px; margin-bottom: 12px">🎉</div>
+          <h3
+            style="
+              font-family: &quot;Playfair Display&quot;, serif;
+              font-size: 22px;
+              font-weight: 700;
+              color: #1a1f1b;
+              margin: 0 0 8px 0;
+            "
+          >
+            Class created!
+          </h3>
+          <p style="font-size: 14px; color: #9ba59c; margin: 0">
+            Redirecting to classes list...
+          </p>
+        </div>
+      </div>
+
+      <!-- ── Breadcrumb ── -->
+      <nav class="breadcrumb">
+        <a href="/dashboard/classes">Classes</a>
+        <span>/</span>
+        <span style="color: #1a1f1b; font-weight: 500">New class</span>
+      </nav>
+
+      <!-- ── Page header ── -->
+      <header class="page-header">
+        <div class="header-title-wrapper">
+          <div class="title-indicator"></div>
+          <h1 class="page-title">Create a new class</h1>
+        </div>
+        <p class="page-subtitle">
+          Define the class level, assign a teacher and set the capacity.
+        </p>
+      </header>
+
+      <!-- ── Layout Principal ── -->
+      <div class="main-grid">
+        <!-- ── Colonne Gauche : Formulaire ── -->
+        <main class="form-card">
+          <div class="submit-error-banner" id="submitErrorBanner"></div>
+
+          <form id="createClassForm" onsubmit="handleFormSubmit(event)">
+            <!-- Academic year -->
+            <div class="input-field-group">
+              <label class="field-label"
+                >Academic year <span class="field-required-star">*</span></label
+              >
+              <select
+                id="academicYearSelect"
+                class="base-input"
+                onchange="updateForm('academicYearId', this.value)"
+              >
+                <option value="">Select academic year</option>
+                <!-- Rempli dynamiquement par JS -->
+              </select>
+              <div class="field-error" id="error-academicYearId">
+                Please select an academic year
+              </div>
+            </div>
+
+            <!-- Level -->
+            <div class="input-field-group">
+              <label class="field-label"
+                >Class level <span class="field-required-star">*</span></label
+              >
+              <div class="level-buttons-grid" id="levelButtonsContainer">
+                <!-- Rempli dynamiquement par JS -->
+              </div>
+              <div class="field-error" id="error-level" style="margin-top: 8px">
+                Please select a level
+              </div>
+            </div>
+
+            <!-- Stream (Masqué par défaut, affiché uniquement pour 6th form) -->
+            <div
+              class="input-field-group"
+              id="streamFieldGroup"
+              style="display: none"
+            >
+              <label class="field-label"
+                >Stream <span class="field-required-star">*</span></label
+              >
+              <div class="stream-buttons-grid" id="streamButtonsContainer">
+                <!-- Rempli dynamiquement par JS -->
+              </div>
+              <div class="field-hint" id="streamHint">
+                Required for Lower 6th and Upper 6th
+              </div>
+              <div
+                class="field-error"
+                id="error-stream"
+                style="margin-top: 8px"
+              >
+                Stream is required for 6th form
+              </div>
+            </div>
+
+            <!-- Section -->
+            <div class="input-field-group">
+              <label class="field-label">Section</label>
+              <input
+                type="text"
+                id="sectionInput"
+                placeholder="A"
+                maxlength="3"
+                class="base-input"
+                oninput="
+                  this.value = this.value.toUpperCase();
+                  updateForm('section', this.value);
+                "
+              />
+              <div class="field-hint">
+                e.g. A, B, C — leave empty if only one section per level
+              </div>
+            </div>
+
+            <!-- Class name -->
+            <div class="input-field-group">
+              <label class="field-label"
+                >Class name <span class="field-required-star">*</span></label
+              >
+              <input
+                type="text"
+                id="classNameInput"
+                placeholder="e.g. Form 3A"
+                class="base-input"
+                oninput="updateForm('name', this.value)"
+              />
+              <div class="field-hint">
+                Auto-generated from level + stream + section. You can edit it.
+              </div>
+            </div>
+
+            <!-- Max students -->
+            <div class="input-field-group">
+              <label class="field-label"
+                >Maximum capacity
+                <span class="field-required-star">*</span></label
+              >
+              <div style="display: flex; align-items: center; gap: 12px">
+                <button
+                  type="button"
+                  onclick="adjustMaxStudents(-1)"
+                  style="
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 8px;
+                    border: 1.5px solid #eef0ec;
+                    background: white;
+                    cursor: pointer;
+                    font-size: 18px;
+                    color: #6e7a70;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.15s;
+                    flex-shrink: 0;
+                  "
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  id="maxStudentsInput"
+                  value="40"
+                  min="1"
+                  max="100"
+                  style="width: 90px; text-align: center; flex-shrink: 0"
+                  class="base-input"
+                  oninput="adjustMaxStudents(0)"
+                />
+                <button
+                  type="button"
+                  onclick="adjustMaxStudents(1)"
+                  style="
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 8px;
+                    border: 1.5px solid #eef0ec;
+                    background: white;
+                    cursor: pointer;
+                    font-size: 18px;
+                    color: #6e7a70;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.15s;
+                    flex-shrink: 0;
+                  "
+                >
+                  +
+                </button>
+
+                <div
+                  style="
+                    height: 8px;
+                    flex: 1;
+                    background: #f0f0f0;
+                    border-radius: 50px;
+                    overflow: hidden;
+                  "
+                >
+                  <div
+                    id="capacityRangeBar"
+                    style="
+                      height: 100%;
+                      width: 40%;
+                      background: #085041;
+                      border-radius: 50px;
+                      transition:
+                        width 0.3s,
+                        background-color 0.3s;
+                    "
+                  ></div>
+                </div>
+              </div>
+              <div class="field-hint" style="margin-top: 5px">
+                Number of student slots in this class
+              </div>
+              <div class="field-error" id="error-maxStudents">
+                Between 1 and 100 students
+              </div>
+            </div>
+
+            <!-- Main teacher -->
+            <div class="input-field-group">
+              <label class="field-label">Class teacher</label>
+              <select
+                id="teacherSelect"
+                class="base-input"
+                onchange="updateForm('mainTeacherId', this.value)"
+              >
+                <option value="">Assign later</option>
+                <!-- Rempli dynamiquement par JS -->
+              </select>
+              <div class="field-hint">
+                The principal teacher responsible for this class
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+              <a href="/dashboard/classes" class="btn-cancel">Cancel</a>
+              <button type="submit" id="submitBtn" class="btn-submit" disabled>
+                <div class="spinner" id="submitSpinner"></div>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  style="width: 15px; height: 15px"
+                  id="submitIcon"
+                >
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span id="submitText">Create class</span>
+              </button>
+            </div>
+          </form>
+        </main>
+
+        <!-- ── Colonne Droite : Aperçu en direct (Live Preview) ── -->
+        <aside class="preview-sidebar">
+          <div class="preview-title-meta">Live preview</div>
+
+          <!-- Preview Card -->
+          <div class="preview-card" id="previewCard">
+            <div class="preview-card-header">
+              <div class="preview-avatar" id="previewAvatar">A</div>
+              <div class="preview-badge" id="previewBadge">0 / 40</div>
+            </div>
+
+            <div class="preview-class-name" id="previewClassName">
+              Class name
+            </div>
+            <div class="preview-class-details" id="previewClassDetails">
+              No level selected
+            </div>
+
+            <!-- Progress Bar Capacity -->
+            <div style="margin-bottom: 16px">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  margin-bottom: 5px;
+                "
+              >
+                <span style="font-size: 11px; color: #9ba59c">Capacity</span>
+                <span
+                  style="font-size: 11px; font-weight: 600; color: #085041"
+                  id="previewCapacityPercent"
+                  >0%</span
+                >
+              </div>
+              <div class="preview-capacity-bar-bg">
+                <div
+                  class="preview-capacity-bar-fill"
+                  id="previewCapacityFill"
+                  style="width: 0%; background: #085041"
+                ></div>
+              </div>
+            </div>
+
+            <!-- Teacher View -->
+            <div class="preview-teacher-wrapper">
+              <div class="preview-teacher-avatar" id="previewTeacherAvatar">
+                —
+              </div>
+              <span
+                style="font-size: 12px; color: #9ba59c"
+                id="previewTeacherName"
+                >No teacher assigned</span
+              >
+            </div>
+          </div>
+
+          <!-- Checklist -->
+          <div class="checklist-box">
+            <div class="preview-title-meta" style="margin-bottom: 12px">
+              Checklist
+            </div>
+
+            <div class="checklist-item" id="chk-academic">
+              <div class="checklist-circle">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  style="width: 10px; height: 10px"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <span class="checklist-text">Academic year selected</span>
+            </div>
+
+            <div class="checklist-item" id="chk-level">
+              <div class="checklist-circle">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  style="width: 10px; height: 10px"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <span class="checklist-text">Level chosen</span>
+            </div>
+
+            <div class="checklist-item" id="chk-stream">
+              <div class="checklist-circle">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  style="width: 10px; height: 10px"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <span class="checklist-text">Stream selected (6th form)</span>
+            </div>
+
+            <div class="checklist-item" id="chk-name">
+              <div class="checklist-circle">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  style="width: 10px; height: 10px"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <span class="checklist-text">Class name set</span>
+            </div>
+
+            <div class="checklist-item" id="chk-teacher">
+              <div class="checklist-circle">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  style="width: 10px; height: 10px"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <span class="checklist-text"
+                >Class teacher assigned
+                <span style="font-size: 10px; color: #c0c0c0; margin-left: 5px"
+                  >(optional)</span
+                ></span
+              >
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ── Logique JavaScript native ── -->
+    <script>
+      // Configuration des constantes
+      const LEVELS = [
+        "Form 1",
+        "Form 2",
+        "Form 3",
+        "Form 4",
+        "Form 5",
+        "Lower 6th",
+        "Upper 6th",
+      ];
+      const STREAMS = ["Science", "Arts", "Commercial"];
+      const SIXTH_FORM_LEVELS = ["Lower 6th", "Upper 6th"];
+
+      const LEVEL_COLORS = {
+        "Form 1": "#6366F1",
+        "Form 2": "#0EA5E9",
+        "Form 3": "#14B8A6",
+        "Form 4": "#F59E0B",
+        "Form 5": "#EF4444",
+        "Lower 6th": "#A855F7",
+        "Upper 6th": "#085041",
+      };
+
+      // État local de l'application (Simule le useState de React)
+      let formData = {
+        name: "",
+        level: "",
+        stream: "",
+        section: "",
+        maxStudents: 40,
+        mainTeacherId: "",
+        academicYearId: "",
+      };
+
+      // Données fictives simulant les retours de tes endpoints API Axios
+      let mockTeachers = [
+        { id: "t1", firstName: "John", lastName: "Doe" },
+        { id: "t2", firstName: "Marie", lastName: "Smith" },
+        { id: "t3", firstName: "Tom", lastName: "Green" },
+      ];
+
+      let mockAcademicYears = [
+        { id: "y1", name: "2025/2026", isCurrent: true },
+        { id: "y2", name: "2026/2027", isCurrent: false },
+      ];
+
+      // Initialisation du DOM au chargement de la page (Simule useEffect)
+      window.addEventListener("DOMContentLoaded", () => {
+        populateAcademicYears(mockAcademicYears);
+        renderLevelButtons();
+        renderStreamButtons();
+        populateTeachers(mockTeachers);
+        syncLivePreview();
+      });
+
+      // ── Fonctions de rendu HTML dynamique ──
+      function populateAcademicYears(years) {
+        const select = document.getElementById("academicYearSelect");
+        years.forEach((y) => {
+          const option = document.createElement("option");
+          option.value = y.id;
+          option.textContent = `${y.name}${y.isCurrent ? " (Current)" : ""}`;
+          select.appendChild(option);
+        });
+      }
+
+      function renderLevelButtons() {
+        const container = document.getElementById("levelButtonsContainer");
+        LEVELS.forEach((lvl) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "selector-btn";
+          btn.id = `btn-lvl-${lvl.replace(" ", "-")}`;
+          btn.textContent = lvl;
+          btn.onclick = () => selectLevel(lvl);
+          container.appendChild(btn);
+        });
+      }
+
+      function renderStreamButtons() {
+        const container = document.getElementById("streamButtonsContainer");
+        STREAMS.forEach((strm) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "selector-btn";
+          btn.id = `btn-stream-${strm}`;
+          btn.textContent = strm;
+          btn.onclick = () => selectStream(strm);
+          container.appendChild(btn);
+        });
+      }
+
+      function populateTeachers(teachers) {
+        const select = document.getElementById("teacherSelect");
+        teachers.forEach((t) => {
+          const option = document.createElement("option");
+          option.value = t.id;
+          option.textContent = `${t.firstName} ${t.lastName}`;
+          select.appendChild(option);
+        });
+      }
+
+      // ── Gestionnaires d'événements et de mutations d'état ──
+      function updateForm(field, value) {
+        formData[field] = value;
+
+        // Masquer l'erreur du champ modifié si elle existe
+        const errDiv = document.getElementById(`error-${field}`);
+        if (errDiv) errDiv.style.display = "none";
+
+        // Effet automatique : Génération automatique du nom de la classe
+        if (field === "level" || field === "section" || field === "stream") {
+          autoGenerateClassName();
+        }
+
+        syncLivePreview();
+      }
+
+      function selectLevel(level) {
+        formData.level = level;
+
+        // Si le niveau n'est pas en 6th form, on supprime la branche (stream)
+        const needsStream = SIXTH_FORM_LEVELS.includes(level);
+        if (!needsStream) {
+          formData.stream = "";
+        }
+
+        // Afficher ou masquer le champ Stream en fonction du niveau choisi
+        document.getElementById("streamFieldGroup").style.display = needsStream
+          ? "block"
+          : "none";
+
+        // Mise à jour visuelle des boutons radio de niveau
+        LEVELS.forEach((lvl) => {
+          const btn = document.getElementById(
+            `btn-lvl-${lvl.replace(" ", "-")}`,
+          );
+          const color = LEVEL_COLORS[lvl];
+          if (lvl === level) {
+            btn.style.borderColor = color;
+            btn.style.backgroundColor = hexToRgba(color, 0.08);
+            btn.style.color = color;
+            btn.style.fontWeight = "700";
+            btn.style.transform = "scale(1.04)";
+          } else {
+            btn.style.borderColor = "#EEF0EC";
+            btn.style.backgroundColor = "white";
+            btn.style.color = "#6E7A70";
+            btn.style.fontWeight = "500";
+            btn.style.transform = "scale(1)";
+          }
+        });
+
+        document.getElementById(`error-level`).style.display = "none";
+        autoGenerateClassName();
+        syncLivePreview();
+      }
+
+      function selectStream(stream) {
+        formData.stream = stream;
+        const previewColor = LEVEL_COLORS[formData.level] || "#085041";
+
+        STREAMS.forEach((strm) => {
+          const btn = document.getElementById(`btn-stream-${strm}`);
+          if (strm === stream) {
+            btn.style.borderColor = previewColor;
+            btn.style.backgroundColor = hexToRgba(previewColor, 0.08);
+            btn.style.color = previewColor;
+            btn.style.fontWeight = "700";
+          } else {
+            btn.style.borderColor = "#EEF0EC";
+            btn.style.backgroundColor = "white";
+            btn.style.color = "#6E7A70";
+            btn.style.fontWeight = "500";
+          }
+        });
+
+        document.getElementById(`error-stream`).style.display = "none";
+        autoGenerateClassName();
+        syncLivePreview();
+      }
+
+      function autoGenerateClassName() {
+        if (formData.level) {
+          const base = formData.level;
+          const section = formData.section
+            ? formData.section.toUpperCase()
+            : "A";
+          const needsStream = SIXTH_FORM_LEVELS.includes(formData.level);
+          const stream =
+            needsStream && formData.stream ? ` ${formData.stream}` : "";
+
+          formData.name = `${base}${stream} ${section}`.trim();
+          document.getElementById("classNameInput").value = formData.name;
+        }
+      }
+
+      function adjustMaxStudents(amount) {
+        let input = document.getElementById("maxStudentsInput");
+        let currentVal = parseInt(input.value) || 0;
+
+        let newVal = currentVal + amount;
+        if (amount === 0) newVal = currentVal; // Appelé par l'événement d'input manuel
+
+        newVal = Math.max(1, Math.min(100, newVal));
+        input.value = newVal;
+        formData.maxStudents = newVal;
+
+        document.getElementById(`error-maxStudents`).style.display = "none";
+        syncLivePreview();
+      }
+
+      // ── Synchronisation visuelle de l'Aperçu en direct (Live Preview) et de la Checklist ──
+      function syncLivePreview() {
+        const pColor = LEVEL_COLORS[formData.level] || "#085041";
+        const needsStream = SIXTH_FORM_LEVELS.includes(formData.level);
+
+        // 1. Mise à jour de la carte de prévisualisation
+        const previewCard = document.getElementById("previewCard");
+        const previewAvatar = document.getElementById("previewAvatar");
+        const previewBadge = document.getElementById("previewBadge");
+
+        if (formData.level) {
+          previewCard.style.borderColor = `${pColor}55`;
+          previewCard.style.boxShadow = `0 8px 32px ${hexToRgba(pColor, 0.1)}`;
+
+          previewAvatar.style.background = hexToRgba(pColor, 0.1);
+          previewAvatar.style.borderColor = hexToRgba(pColor, 0.2);
+          previewAvatar.style.color = pColor;
+
+          previewBadge.style.background = hexToRgba(pColor, 0.08);
+          previewBadge.style.borderColor = hexToRgba(pColor, 0.2);
+          previewBadge.style.color = pColor;
+        } else {
+          previewCard.style.borderColor = "#EEF0EC";
+          previewCard.style.boxShadow = "0 4px 16px rgba(0,0,0,0.06)";
+
+          previewAvatar.style.background = "#F0F0F0";
+          previewAvatar.style.borderColor = "#E8E8E8";
+          previewAvatar.style.color = "#D0D0D0";
+
+          previewBadge.style.background = "rgba(8,80,65,0.08)";
+          previewBadge.style.borderColor = "rgba(8,80,65,0.1)";
+          previewBadge.style.color = "#9BA59C";
+        }
+
+        previewAvatar.textContent = formData.section || "A";
+        previewBadge.textContent = `0 / ${formData.maxStudents}`;
+
+        const nameEl = document.getElementById("previewClassName");
+        nameEl.textContent = formData.name || "Class name";
+        nameEl.style.color = formData.name ? "#1A1F1B" : "#D0D0D0";
+
+        document.getElementById("previewClassDetails").textContent =
+          `${formData.stream ? `${formData.stream} Stream · ` : ""}${formData.level || "No level selected"}`;
+
+        // Barre de progression
+        const rangeBar = document.getElementById("capacityRangeBar");
+        rangeBar.style.width = `${formData.maxStudents}%`;
+        rangeBar.style.backgroundColor = pColor;
+
+        const previewFill = document.getElementById("previewCapacityFill");
+        previewFill.style.background = `linear-gradient(90deg, ${pColor}, ${pColor}99)`;
+
+        // Enseignant
+        const tAvatar = document.getElementById("previewTeacherAvatar");
+        const tName = document.getElementById("previewTeacherName");
+
+        if (formData.mainTeacherId) {
+          const teacher = mockTeachers.find(
+            (t) => t.id === formData.mainTeacherId,
+          );
+          if (teacher) {
+            tAvatar.textContent =
+              (teacher.firstName?.[0] || "") + (teacher.lastName?.[0] || "");
+            tAvatar.style.background = hexToRgba(pColor, 0.1);
+            tAvatar.style.borderColor = hexToRgba(pColor, 0.2);
+            tAvatar.style.color = pColor;
+            tName.textContent = `${teacher.firstName} ${teacher.lastName}`;
+          }
+        } else {
+          tAvatar.textContent = "—";
+          tAvatar.style.background = "#F0F0F0";
+          tAvatar.style.borderColor = "#E8E8E8";
+          tAvatar.style.color = "#9BA59C";
+          tName.textContent = "No teacher assigned";
+        }
+
+        // 2. Traitement de la Checklist latérale
+        toggleChecklistItem("chk-academic", !!formData.academicYearId);
+        toggleChecklistItem("chk-level", !!formData.level);
+        toggleChecklistItem("chk-stream", !needsStream || !!formData.stream);
+        toggleChecklistItem("chk-name", !!formData.name);
+        toggleChecklistItem("chk-teacher", !!formData.mainTeacherId);
+
+        // 3. Activation ou désactivation du bouton de validation principal
+        const submitBtn = document.getElementById("submitBtn");
+        const formIsValid =
+          formData.level &&
+          formData.academicYearId &&
+          (!needsStream || formData.stream);
+
+        if (formIsValid) {
+          submitBtn.removeAttribute("disabled");
+          submitBtn.classList.add("ready");
+        } else {
+          submitBtn.setAttribute("disabled", "true");
+          submitBtn.classList.remove("ready");
+        }
+      }
+
+      function toggleChecklistItem(id, isDone) {
+        const container = document.getElementById(id);
+        const circle = container.querySelector(".checklist-circle");
+        const text = container.querySelector(".checklist-text");
+
+        if (isDone) {
+          circle.classList.add("checked");
+          text.classList.add("checked");
+        } else {
+          circle.classList.remove("checked");
+          text.classList.remove("checked");
+        }
+      }
+
+      // ── Soumission et Validation du Formulaire ──
+      function validateForm() {
+        let errs = {};
+        const needsStream = SIXTH_FORM_LEVELS.includes(formData.level);
+
+        if (!formData.level) errs.level = true;
+        if (needsStream && !formData.stream) errs.stream = true;
+        if (!formData.academicYearId) errs.academicYearId = true;
+        if (formData.maxStudents < 1 || formData.maxStudents > 100)
+          errs.maxStudents = true;
+
+        // Affichage dynamique des blocs d'erreurs
+        Object.keys(errs).forEach((field) => {
+          const errorDiv = document.getElementById(`error-${field}`);
+          if (errorDiv) errorDiv.style.display = "block";
+        });
+
+        return Object.keys(errs).length === 0;
+      }
+
+      function handleFormSubmit(event) {
+        event.preventDefault();
+
+        // Nettoyage des bannières d'erreurs globales
+        document.getElementById("submitErrorBanner").style.display = "none";
+
+        if (!validateForm()) return;
+
+        // Début de l'état "Submitting" (Simule l'envoi vers l'API Axios)
+        setSubmittingState(true);
+
+        // Simulation d'une latence réseau (ex: 1.2 secondes)
+        setTimeout(() => {
+          // Succès de la requête simulée
+          setSubmittingState(false);
+
+          // Affichage de la boîte de dialogue de succès animée
+          document.getElementById("successOverlay").classList.add("active");
+
+          // Redirection finale fictive vers la liste des classes après 1.2s
+          setTimeout(() => {
+            window.location.href = "/dashboard/classes";
+          }, 1200);
+        }, 1200);
+      }
+
+      function setSubmittingState(isSubmitting) {
+        const submitBtn = document.getElementById("submitBtn");
+        const spinner = document.getElementById("submitSpinner");
+        const icon = document.getElementById("submitIcon");
+        const text = document.getElementById("submitText");
+
+        if (isSubmitting) {
+          submitBtn.setAttribute("disabled", "true");
+          submitBtn.style.background = "#9BA59C";
+          submitBtn.style.boxShadow = "none";
+          submitBtn.style.cursor = "not-allowed";
+          spinner.style.display = "block";
+          icon.style.display = "none";
+          text.textContent = "Creating...";
+        } else {
+          submitBtn.removeAttribute("disabled");
+          submitBtn.style.background = "#085041";
+          spinner.style.display = "none";
+          icon.style.display = "block";
+          text.textContent = "Create class";
+        }
+      }
+
+      // Convertisseur Hex vers RGBA utilitaire
+      function hexToRgba(hex, alpha = 1) {
+        const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        if (r) {
+          return `rgba(${parseInt(r[1], 16)}, ${parseInt(r[2], 16)}, ${parseInt(r[3], 16)}, ${alpha})`;
+        }
+        return `rgba(8, 80, 65, ${alpha})`;
+      }
+    </script>
+  </body>
+</html>
