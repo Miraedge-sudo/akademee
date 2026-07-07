@@ -1,3 +1,4 @@
+import { FiChevronRight } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
@@ -74,9 +75,7 @@ export default function SettingsPage() {
                 {lang === "fr" ? item.descFr : item.desc}
               </div>
             </div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-surface-400 flex-shrink-0">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
+            <FiChevronRight className="w-5 h-5 text-surface-400 flex-shrink-0" />
           </button>
         ))}
       </div>

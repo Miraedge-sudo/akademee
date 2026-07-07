@@ -29,7 +29,10 @@ export async function getOnboardingData() {
  */
 export async function saveOnboardingData(payload) {
   const response = await api.put(API_ENDPOINTS.SCHOOLS.ONBOARDING, payload);
-  return response.data;
+  return {
+    success: response.data.success,
+    data: response.data.data,
+  };
 }
 
 /**

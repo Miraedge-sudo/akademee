@@ -33,9 +33,20 @@ import ResearchPage from "./app/features/research/pages/ResearchPage";
 import PublicationsPage from "./app/features/research/pages/PublicationsPage";
 
 import PublicWebsitePage from "./app/features/website/pages/PublicWebsitePage";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
+    <>
+    <Toaster
+      position="top-right"
+      toastOptions={{
+        duration: 4000,
+        style: { borderRadius: "10px", fontSize: "14px" },
+        success: { iconTheme: { primary: "#059669", secondary: "#fff" } },
+        error: { iconTheme: { primary: "#dc2626", secondary: "#fff" } },
+      }}
+    />
     <BrowserRouter>
       <Routes>
         {/* Public Routes */}
@@ -152,6 +163,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { FiAward } from "react-icons/fi";
 
 const PROGRAMS_META = {
   licence: {
@@ -53,10 +54,7 @@ export default function ProgramsSection() {
       <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-8">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="w-16 h-16 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-surface-400">
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-              <path d="M6 12v5c3 3 9 3 12 0v-5" />
-            </svg>
+            <FiAward className="w-8 h-8 text-surface-400" />
           </div>
           <h3 className="text-lg font-medium text-surface-700 dark:text-surface-200 mb-2">
             {t("programs.comingSoon", "Module en cours de développement")}

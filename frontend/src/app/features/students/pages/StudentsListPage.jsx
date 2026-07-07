@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getStudents } from "../../../core/api/studentService";
 import AddStudentDrawer from "../components/AddStudentDrawer";
+import { FiPlus, FiUsers, FiLoader } from "react-icons/fi";
 
 export default function StudentsListPage() {
   const { t, i18n } = useTranslation("common");
@@ -42,16 +43,7 @@ export default function StudentsListPage() {
           onClick={() => setIsDrawerOpen(true)}
           className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="w-4 h-4"
-          >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
+          <FiPlus className="w-4 h-4" />
           {lang === "fr" ? "Ajouter un étudiant" : "Add Student"}
         </button>
       </div>
@@ -59,41 +51,12 @@ export default function StudentsListPage() {
       <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-8">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <svg
-              className="animate-spin h-8 w-8 text-primary-600"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
+            <FiLoader className="animate-spin h-8 w-8 text-primary-600" />
           </div>
         ) : students.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="w-16 h-16 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-4">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                className="w-8 h-8 text-surface-400"
-              >
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
+              <FiUsers className="w-8 h-8 text-surface-400" />
             </div>
             <h3 className="text-lg font-medium text-surface-700 dark:text-surface-200 mb-2">
               {lang === "fr" ? "Aucun étudiant" : "No students yet"}

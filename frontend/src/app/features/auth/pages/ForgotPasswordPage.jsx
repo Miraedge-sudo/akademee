@@ -1,3 +1,4 @@
+import { FiArrowLeft, FiCheck, FiMail, FiGlobe, FiHome, FiSend, FiLoader } from "react-icons/fi";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -45,10 +46,7 @@ export default function ForgotPasswordPage() {
       <div className="flex items-center justify-between px-6 lg:px-11 py-5 bg-white dark:bg-surface-800 border-b border-surface-100 dark:border-surface-700">
         <div className="flex items-center gap-2.5 lg:hidden">
           <div className="w-7 h-7 rounded-md bg-teal-900 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
+            <FiHome className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="font-display text-base text-surface-800 dark:text-surface-100">Akademee</span>
         </div>
@@ -71,10 +69,7 @@ export default function ForgotPasswordPage() {
             /* Success state */
             <div className="text-center animate-fadeIn">
               <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-teal-600">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
+                <FiCheck className="w-7 h-7 text-teal-600" />
               </div>
               <h1 className="font-display text-xl font-medium text-surface-800 dark:text-surface-100 mb-2">
                 {t("forgotPassword.sentTitle", "Check your email")}
@@ -86,10 +81,7 @@ export default function ForgotPasswordPage() {
                 to="/login"
                 className="inline-flex items-center gap-2 text-teal-600 font-medium hover:underline text-sm"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                  <line x1="19" y1="12" x2="5" y2="12" />
-                  <polyline points="12 19 5 12 12 5" />
-                </svg>
+                <FiArrowLeft className="w-4 h-4" />
                 {t("forgotPassword.backToLogin", "Back to sign in")}
               </Link>
             </div>
@@ -118,11 +110,7 @@ export default function ForgotPasswordPage() {
                     {t("forgotPassword.subdomainLabel", "School subdomain")}
                   </label>
                   <div className="relative flex items-center">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 w-4 h-4 text-surface-400">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="2" y1="12" x2="22" y2="12" />
-                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                    </svg>
+                    <FiGlobe className="absolute left-3 w-4 h-4 text-surface-400" />
                     <input
                       id="subdomain"
                       name="subdomain"
@@ -143,10 +131,7 @@ export default function ForgotPasswordPage() {
                     {t("forgotPassword.emailLabel", "Email address")}
                   </label>
                   <div className="relative flex items-center">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 w-4 h-4 text-surface-400">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                      <polyline points="22,6 12,13 2,6" />
-                    </svg>
+                    <FiMail className="absolute left-3 w-4 h-4 text-surface-400" />
                     <input
                       id="email"
                       name="email"
@@ -168,18 +153,12 @@ export default function ForgotPasswordPage() {
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
-                      <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-                        <path d="M4 12a8 8 0 0 1 8-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
-                      </svg>
+                      <FiLoader className="animate-spin w-4 h-4" />
                       {t("forgotPassword.sending", "Sending...")}
                     </span>
                   ) : (
                     <>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-[17px] h-[17px]">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                        <polyline points="22,6 12,13 2,6" />
-                      </svg>
+                      <FiSend className="w-[17px] h-[17px]" />
                       {t("forgotPassword.submit", "Send reset link")}
                     </>
                   )}
@@ -188,10 +167,7 @@ export default function ForgotPasswordPage() {
 
               <div className="mt-6 text-center">
                 <Link to="/login" className="text-[13px] text-teal-600 hover:underline font-medium inline-flex items-center gap-1.5">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-                    <line x1="19" y1="12" x2="5" y2="12" />
-                    <polyline points="12 19 5 12 12 5" />
-                  </svg>
+                  <FiArrowLeft className="w-3.5 h-3.5" />
                   {t("forgotPassword.backToLogin", "Back to sign in")}
                 </Link>
               </div>

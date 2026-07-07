@@ -1,3 +1,4 @@
+import { FiMenu, FiGrid, FiUsers, FiBarChart2, FiDollarSign, FiBook, FiCalendar } from "react-icons/fi";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../core/hooks/useAuth";
@@ -25,41 +26,18 @@ const BOTTOM_CONFIG = {
 };
 
 // ── Tiny icons specifically for the bottom bar ──
-const ICONS = {
-  grid: (
-    <path d="M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z" />
-  ),
-  users: (
-    <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 10v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2" />
-  ),
-  barchart: (
-    <path d="M18 20V10M12 20V4M6 20v-6" />
-  ),
-  dollar: (
-    <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-  ),
-  classes: (
-    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2V3zm20 0h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7V3z" />
-  ),
-  calendar: (
-    <path d="M3 7h18v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7zm3-5v4m12-4v4M3 11h18" />
-  ),
+const ICON_MAP = {
+  grid: FiGrid,
+  users: FiUsers,
+  barchart: FiBarChart2,
+  dollar: FiDollarSign,
+  classes: FiBook,
+  calendar: FiCalendar,
 };
 
 function BottomIcon({ name, className }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      {ICONS[name]}
-    </svg>
-  );
+  const Icon = ICON_MAP[name];
+  return Icon ? <Icon className={className} /> : null;
 }
 
 export default function MobileBottomNav({ onOpenMenu }) {
@@ -114,18 +92,7 @@ export default function MobileBottomNav({ onOpenMenu }) {
         className="flex-1 flex flex-col items-center justify-center h-16 gap-0.5 text-surface-400 dark:text-surface-500 hover:text-surface-600 dark:hover:text-surface-300 transition-colors"
         aria-label={t("nav.menu", "Menu")}
       >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          className="w-5 h-5"
-        >
-          <line x1="4" y1="6" x2="20" y2="6" />
-          <line x1="4" y1="12" x2="20" y2="12" />
-          <line x1="4" y1="18" x2="20" y2="18" />
-        </svg>
+        <FiMenu className="w-5 h-5" />
         <span className="text-[10px] font-medium">
           {t("nav.menu", "Menu")}
         </span>

@@ -26,6 +26,7 @@
   "skipForNow": "Skip for now",
   "continue": "Continue",
   "back": "Back",
+  "backToDashboard": "Back to Dashboard",
   "logo": {
     "heading": "Your school logo",
     "subtitle": "Upload your logo, or we'll generate one from your school's initials.",
