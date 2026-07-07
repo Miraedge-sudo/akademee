@@ -1,11 +1,8 @@
-/**
- * Authentication Middleware - Verify JWT Token
- */
-
 const jwt = require('jsonwebtoken');
 const jwtConfig = require('../config/jwt');
+const authService = require('../services/auth.service');
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
 
@@ -18,13 +15,31 @@ const authMiddleware = (req, res, next) => {
 
     const decoded = jwt.verify(token, jwtConfig.secret);
     req.user = decoded;
+    req.token = token;
+
+    const blacklisted = await authService.isTokenBlacklisted(token);
+    if (blacklisted) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token has been invalidated. Please login again.',
+      });
+    }
 
     if (decoded.schoolId) {
       req.schoolId = decoded.schoolId;
       req.tenantId = decoded.schoolId;
-      // JWT subdomain overrides any client-supplied subdomain (prevents tenant spoofing)
       req.subdomain = decoded.subdomain;
     }
+
+    try {
+      const Sentry = require('@sentry/node');
+      Sentry.setUser({
+        id: decoded.userId,
+        email: decoded.email,
+        schoolId: decoded.schoolId,
+        role: Array.isArray(decoded.roles) ? decoded.roles.join(',') : decoded.role,
+      });
+    } catch (_e) { _e; }
 
     if (req.school?.school_id && decoded.schoolId && req.school.school_id !== decoded.schoolId) {
       return res.status(403).json({

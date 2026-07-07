@@ -74,8 +74,8 @@ const registerSchoolValidator = [
   body('templateCode')
     .optional({ values: 'falsy' })
     .trim()
-    .isIn(['modern', 'classic', 'minimal'])
-    .withMessage('Template must be modern, classic, or minimal'),
+    .isIn(['bold', 'playful', 'premium'])
+    .withMessage('Template must be bold, playful, or premium'),
 ];
 
 const checkSubdomainValidator = [

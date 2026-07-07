@@ -1,7 +1,3 @@
-/**
- * Website Controller — tenant-scoped public school pages
- */
-
 const response = require('../utils/response');
 const websiteService = require('../services/website.service');
 
@@ -38,7 +34,25 @@ class WebsiteController {
 
   async updateWebsiteTemplate(req, res, next) {
     try {
-      response.success(res, 'Template updated', {});
+      const { templateId } = req.body;
+      const schoolId = req.schoolId || req.user?.schoolId;
+
+      if (!templateId) {
+        return response.error(res, 'templateId is required', null, 400);
+      }
+
+      const sql = require('../config/database');
+      const rows = await sql`
+        UPDATE schools SET website_template_id = ${templateId}, updated_at = NOW()
+        WHERE school_id = ${schoolId}
+        RETURNING school_id, website_template_id
+      `;
+
+      if (rows.length === 0) {
+        return response.error(res, 'School not found', null, 404);
+      }
+
+      response.success(res, 'Template updated', { schoolId: rows[0].school_id, templateId: rows[0].website_template_id });
     } catch (error) {
       next(error);
     }

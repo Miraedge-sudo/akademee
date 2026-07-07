@@ -92,6 +92,35 @@ class GuardianService {
     return this.formatGuardian(rows[0]);
   }
 
+  async listBySchool(schoolId, { limit = 50, offset = 0 } = {}) {
+    limit = Math.min(Math.max(1, limit), 500);
+    offset = Math.max(0, offset);
+
+    const rows = await sql`
+      SELECT g.*, CONCAT(u.first_name, ' ', u.last_name) AS student_name
+      FROM guardians g
+      LEFT JOIN students st ON g.student_id = st.student_id
+      LEFT JOIN users u ON st.user_id = u.user_id
+      WHERE g.school_id = ${schoolId}
+      ORDER BY g.name ASC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+
+    const countRows = await sql`
+      SELECT COUNT(*)::int AS total FROM guardians WHERE school_id = ${schoolId}
+    `;
+
+    return {
+      guardians: rows.map(r => ({
+        ...this.formatGuardian(r),
+        studentName: r.student_name,
+      })),
+      total: countRows[0].total,
+      limit,
+      offset,
+    };
+  }
+
   async deleteGuardian(schoolId, guardianId) {
     await this.getGuardianById(schoolId, guardianId);
     await sql`DELETE FROM guardians WHERE guardian_id = ${guardianId} AND school_id = ${schoolId}`;

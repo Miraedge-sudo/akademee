@@ -89,33 +89,7 @@ class SchoolController {
 
   async getPlans(req, res, next) {
     try {
-      const plans = [
-        {
-          id: 'free',
-          name: 'Free',
-          description: 'Up to 50 students · Grades, attendance, basic reports',
-          price: 0,
-          currency: 'FCFA',
-          features: ['Up to 50 students', 'Grades & attendance', 'Basic reports'],
-        },
-        {
-          id: 'basic',
-          name: 'Basic',
-          description: 'Up to 300 students · Full grades, PDF bulletins, finance module',
-          price: 15000,
-          currency: 'FCFA',
-          features: ['Up to 300 students', 'Full grades', 'PDF bulletins', 'Finance module'],
-        },
-        {
-          id: 'premium',
-          name: 'Premium',
-          description: 'Unlimited students · All features + priority support + custom branding',
-          price: 35000,
-          currency: 'FCFA',
-          features: ['Unlimited students', 'All features', 'Priority support', 'Custom branding'],
-        },
-      ];
-
+      const plans = await schoolService.getPlans();
       response.success(res, 'Plans retrieved successfully', plans);
     } catch (error) {
       next(error);

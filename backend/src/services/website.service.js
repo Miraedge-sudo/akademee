@@ -43,7 +43,7 @@ class WebsiteService {
     }
 
     const school = schools[0];
-    const templateCode = school.template_code || 'modern';
+    const templateCode = school.template_code || 'bold';
     const urls = buildSchoolUrls(school.subdomain, templateCode);
     const gallery = await mediaService.listGallery(school.school_id);
 

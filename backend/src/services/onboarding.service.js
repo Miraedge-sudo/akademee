@@ -34,7 +34,7 @@ class OnboardingService {
 
     const school = schools[0];
     const gallery = await mediaService.listGallery(schoolId);
-    const templateCode = school.template_code || 'modern';
+    const templateCode = school.template_code || 'bold';
     const urls = buildSchoolUrls(school.subdomain, templateCode);
 
     return {
@@ -102,7 +102,7 @@ class OnboardingService {
     } = payload;
 
     let templateId = null;
-    let resolvedTemplateCode = templateCode || 'modern';
+    let resolvedTemplateCode = templateCode || 'bold';
 
     if (templateCode) {
       const templates = await sql`
@@ -157,7 +157,7 @@ class OnboardingService {
   }
 
   async uploadMedia(schoolId, file, mediaType, sortOrder = null) {
-    const allowed = ['logo', 'hero', 'gallery'];
+    const allowed = ['logo', 'hero', 'gallery', 'about'];
     if (!allowed.includes(mediaType)) {
       throw new Error('Invalid media type');
     }
