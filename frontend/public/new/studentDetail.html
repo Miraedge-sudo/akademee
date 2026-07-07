@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Student Profile — Akademee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── Reset & base ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal-900:#085041;--teal-700:#0F6E56;--teal-600:#1D9E75;
+  --teal-400:#5DCAA5;--teal-100:#C8F0E4;--teal-50:#E1F5EE;
+  --surface-900:#1A1F1B;--surface-800:#2A3029;--surface-700:#434D45;
+  --surface-600:#5C665E;--surface-500:#6E7A70;--surface-400:#9BA59C;
+  --surface-300:#BFC4BB;--surface-200:#D8DBD5;--surface-100:#EEF0EC;
+  --surface-50:#F7F8F6;--white:#FFFFFF;
+  --red:#EF4444;--amber:#F59E0B;--green:#1D9E75;--blue:#0EA5E9;
+  --radius-sm:6px;--radius-md:10px;--radius-lg:14px;--radius-xl:20px;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.06);
+  --shadow-md:0 4px 24px rgba(0,0,0,.08);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.12);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--surface-50);color:var(--surface-900);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.font-display{font-family:'Playfair Display',serif}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@keyframes slideRight{from{width:0}to{width:var(--w)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{left:-100%}100%{left:200%}}
+@keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.anim-fade-up{animation:fadeUp .5s cubic-bezier(.16,1,.3,1) both}
+.anim-fade-up-1{animation:fadeUp .5s .08s cubic-bezier(.16,1,.3,1) both}
+.anim-fade-up-2{animation:fadeUp .5s .16s cubic-bezier(.16,1,.3,1) both}
+.anim-fade-up-3{animation:fadeUp .5s .24s cubic-bezier(.16,1,.3,1) both}
+.anim-scale-in{animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1) both}
+
+/* ── Layout ── */
+.page{max-width:1060px;margin:0 auto;padding:28px 24px 100px}
+
+/* ── Breadcrumb ── */
+.breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--surface-400);margin-bottom:24px}
+.breadcrumb a{color:var(--surface-400);text-decoration:none;transition:color .2s}
+.breadcrumb a:hover{color:var(--teal-700)}
+.breadcrumb span{color:var(--surface-900);font-weight:500}
+
+/* ── Hero card ── */
+.hero-card{background:var(--white);border-radius:var(--radius-xl);border:1.5px solid var(--surface-100);box-shadow:var(--shadow-md);overflow:hidden;margin-bottom:20px}
+.hero-banner{height:120px;background:linear-gradient(135deg,var(--teal-900),var(--teal-600));position:relative;overflow:hidden}
+.hero-banner::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-body{padding:0 28px 24px;position:relative}
+.hero-avatar-wrap{position:relative;display:inline-block;margin-top:-44px;margin-bottom:12px}
+.hero-avatar{width:88px;height:88px;border-radius:50%;border:4px solid var(--white);background:var(--teal-50);object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--teal-900);box-shadow:var(--shadow-md);cursor:pointer;overflow:hidden;position:relative;transition:box-shadow .2s}
+.hero-avatar:hover{box-shadow:0 8px 24px rgba(8,80,65,.2)}
+.avatar-overlay{position:absolute;inset:0;background:rgba(8,80,65,.6);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;border-radius:50%}
+.hero-avatar:hover .avatar-overlay{opacity:1}
+.avatar-overlay svg{width:22px;height:22px;stroke:white;stroke-width:2;fill:none}
+.avatar-badge{position:absolute;bottom:4px;right:4px;width:20px;height:20px;border-radius:50%;background:var(--green);border:2.5px solid var(--white)}
+.hero-info-row{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.hero-name{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--surface-900);margin-bottom:4px}
+.hero-meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.hero-meta-item{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--surface-400)}
+.hero-meta-item svg{width:13px;height:13px;stroke:currentColor;stroke-width:1.8;fill:none}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:50px}
+.badge-green{background:rgba(29,158,117,.1);color:var(--green);border:1px solid rgba(29,158,117,.25)}
+.badge-amber{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.25)}
+.badge-red{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+.badge-blue{background:rgba(14,165,233,.1);color:var(--blue);border:1px solid rgba(14,165,233,.25)}
+.hero-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* ── Stat chips ── */
+.stat-chips{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:20px 28px;border-top:1.5px solid var(--surface-100)}
+.stat-chip{background:var(--surface-50);border-radius:var(--radius-md);padding:14px 16px;border:1.5px solid var(--surface-100);transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s}
+.stat-chip:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.stat-chip-icon{font-size:18px;margin-bottom:6px}
+.stat-chip-val{font-size:22px;font-weight:800;color:var(--surface-900);line-height:1;margin-bottom:3px;font-family:'DM Sans',sans-serif}
+.stat-chip-lbl{font-size:11px;color:var(--surface-400);font-weight:500}
+
+/* ── Tabs ── */
+.tabs-bar{display:flex;gap:2px;padding:0 28px;border-bottom:1.5px solid var(--surface-100);background:var(--white);border-radius:var(--radius-xl) var(--radius-xl) 0 0;overflow-x:auto;scrollbar-width:none}
+.tabs-bar::-webkit-scrollbar{display:none}
+.tab-btn{display:flex;align-items:center;gap:7px;padding:15px 18px;border:none;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:500;color:var(--surface-400);border-bottom:2.5px solid transparent;margin-bottom:-1.5px;white-space:nowrap;transition:color .2s,border-color .2s}
+.tab-btn:hover{color:var(--surface-700)}
+.tab-btn.active{color:var(--teal-900);font-weight:700;border-bottom-color:var(--teal-900)}
+.tab-badge{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:50px;background:var(--surface-100);color:var(--surface-500);transition:background .2s,color .2s}
+.tab-btn.active .tab-badge{background:var(--teal-50);color:var(--teal-900)}
+
+/* ── Tab content ── */
+.tab-content{background:var(--white);border-radius:0 0 var(--radius-xl) var(--radius-xl);border:1.5px solid var(--surface-100);border-top:none;padding:24px 28px;box-shadow:var(--shadow-md)}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeUp .35s cubic-bezier(.16,1,.3,1) both}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:var(--radius-md);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none;border:none}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--teal-900);color:var(--white);box-shadow:0 4px 12px rgba(8,80,65,.22)}
+.btn-primary:hover{background:var(--teal-700);box-shadow:0 8px 20px rgba(8,80,65,.28)}
+.btn-ghost{background:var(--white);color:var(--surface-700);border:1.5px solid var(--surface-200)}
+.btn-ghost:hover{background:var(--surface-50);border-color:var(--surface-300)}
+.btn-danger{background:rgba(239,68,68,.08);color:var(--red);border:1.5px solid rgba(239,68,68,.2)}
+.btn-danger:hover{background:rgba(239,68,68,.14)}
+.btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Info grid ── */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.info-section{margin-bottom:28px}
+.info-section-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--surface-400);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.info-section-title::after{content:'';flex:1;height:1px;background:var(--surface-100)}
+.info-row{display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--surface-50)}
+.info-row:last-child{border-bottom:none}
+.info-label{font-size:12.5px;color:var(--surface-400);font-weight:500}
+.info-value{font-size:13px;color:var(--surface-900);font-weight:600;text-align:right;max-width:60%}
+
+/* ── Grades chart ── */
+.chart-wrap{margin-bottom:24px}
+.chart-title{font-size:13px;font-weight:700;color:var(--surface-900);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.chart-subtitle{font-size:12px;color:var(--surface-400)}
+.seq-bars{display:flex;align-items:flex-end;gap:10px;height:120px;padding:0 4px}
+.seq-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1}
+.seq-bar-outer{width:100%;flex:1;background:var(--surface-100);border-radius:6px 6px 0 0;position:relative;overflow:hidden;display:flex;align-items:flex-end}
+.seq-bar-inner{width:100%;border-radius:6px 6px 0 0;transition:height 1s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden}
+.seq-bar-inner::after{content:'';position:absolute;top:0;left:-100%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);animation:shimmer 2s 1s ease-in-out}
+.seq-label{font-size:10px;font-weight:600;color:var(--surface-400);letter-spacing:.5px}
+.seq-val{font-size:11px;font-weight:700;color:var(--surface-700)}
+
+/* ── Grade table ── */
+.grade-table{width:100%;border-collapse:collapse;font-size:13px}
+.grade-table th{padding:10px 12px;text-align:left;font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--surface-400);background:var(--surface-50);border-bottom:1.5px solid var(--surface-100)}
+.grade-table td{padding:11px 12px;border-bottom:1px solid var(--surface-50);color:var(--surface-900);transition:background .15s}
+.grade-table tr:hover td{background:rgba(8,80,65,.025)}
+.grade-table tr:last-child td{border-bottom:none}
+.mention{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:50px}
+
+/* ── Attendance ── */
+.att-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:20px}
+.att-day{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;transition:transform .15s cubic-bezier(.34,1.56,.64,1)}
+.att-day:hover{transform:scale(1.15)}
+.att-present{background:var(--teal-50);color:var(--teal-900)}
+.att-absent{background:rgba(239,68,68,.1);color:var(--red)}
+.att-late{background:rgba(245,158,11,.1);color:var(--amber)}
+.att-excused{background:rgba(14,165,233,.1);color:var(--blue)}
+.att-empty{background:var(--surface-50);color:var(--surface-300)}
+.att-legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:20px}
+.att-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--surface-500)}
+.att-legend-dot{width:10px;height:10px;border-radius:3px}
+
+/* ── Fees ── */
+.fee-progress-wrap{background:var(--surface-50);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px;border:1.5px solid var(--surface-100)}
+.fee-progress-bar-track{height:12px;background:var(--surface-200);border-radius:50px;overflow:hidden;margin:14px 0 8px}
+.fee-progress-bar-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--teal-900),var(--teal-400));transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+.fee-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--surface-100)}
+.fee-row:last-child{border-bottom:none}
+
+/* ── Guardian card ── */
+.guardian-card{background:var(--surface-50);border-radius:var(--radius-lg);padding:18px;border:1.5px solid var(--surface-100);display:flex;align-items:flex-start;gap:14px;margin-bottom:12px;transition:box-shadow .2s,transform .2s cubic-bezier(.34,1.56,.64,1)}
+.guardian-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.guardian-avatar{width:44px;height:44px;border-radius:12px;background:var(--teal-50);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--teal-900);flex-shrink:0;border:1.5px solid var(--teal-100)}
+
+/* ── Empty state ── */
+.empty{text-align:center;padding:50px 20px}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--surface-800);margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--surface-400)}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .stat-chips{grid-template-columns:1fr 1fr}
+  .info-grid{grid-template-columns:1fr}
+  .hero-info-row{flex-direction:column}
+  .hero-actions{width:100%}
+  .page{padding:20px 16px 100px}
+}
+@media(max-width:480px){
+  .stat-chips{grid-template-columns:1fr 1fr}
+  .hero-body{padding:0 18px 20px}
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb anim-fade-up">
+    <a href="/dashboard">Dashboard</a>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    <a href="/dashboard/students">Students</a>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    <span>Emma Nkeng</span>
+  </div>
+
+  <!-- Hero card -->
+  <div class="hero-card anim-fade-up-1">
+    <div class="hero-banner"></div>
+    <div class="hero-body">
+      <div class="hero-info-row">
+        <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+          <div class="hero-avatar-wrap">
+            <div class="hero-avatar" id="avatarBtn" title="Change photo">
+              <span id="avatarInitials">EN</span>
+              <div class="avatar-overlay">
+                <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </div>
+              <div class="avatar-badge" id="statusBadge" title="Active"></div>
+            </div>
+            <input type="file" id="avatarInput" accept="image/*" style="display:none"/>
+          </div>
+          <div>
+            <div class="hero-name font-display">Emma Nkeng</div>
+            <div class="hero-meta">
+              <div class="hero-meta-item">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                STU-2024-0142
+              </div>
+              <div class="hero-meta-item">
+                <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                Form 4A
+              </div>
+              <div class="hero-meta-item">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                2024 – 2025
+              </div>
+              <span class="badge badge-green">
+                <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block"></span>
+                Active
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-actions">
+          <button class="btn btn-ghost" onclick="printBulletin()">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print report
+          </button>
+          <button class="btn btn-ghost" onclick="sendNotification()">
+            <svg viewBox="0 0 24 24"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3z"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Notify
+          </button>
+          <button class="btn btn-primary" onclick="openEditModal()">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit profile
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stat chips -->
+    <div class="stat-chips">
+      <div class="stat-chip anim-scale-in">
+        <div class="stat-chip-icon">📊</div>
+        <div class="stat-chip-val" id="statAvg">—</div>
+        <div class="stat-chip-lbl">Annual average</div>
+      </div>
+      <div class="stat-chip anim-scale-in" style="animation-delay:.06s">
+        <div class="stat-chip-icon">✅</div>
+        <div class="stat-chip-val" id="statAtt">—</div>
+        <div class="stat-chip-lbl">Attendance rate</div>
+      </div>
+      <div class="stat-chip anim-scale-in" style="animation-delay:.12s">
+        <div class="stat-chip-icon">💳</div>
+        <div class="stat-chip-val" id="statFees">—</div>
+        <div class="stat-chip-lbl">Fees paid</div>
+      </div>
+      <div class="stat-chip anim-scale-in" style="animation-delay:.18s">
+        <div class="stat-chip-icon">🏅</div>
+        <div class="stat-chip-val" id="statRank">—</div>
+        <div class="stat-chip-lbl">Class rank</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="anim-fade-up-2">
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchTab('info',this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Information
+      </button>
+      <button class="tab-btn" onclick="switchTab('grades',this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Grades
+        <span class="tab-badge">6</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('attendance',this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Attendance
+        <span class="tab-badge" id="attBadge">—</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('fees',this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Fees
+      </button>
+      <button class="tab-btn" onclick="switchTab('guardians',this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Guardians
+        <span class="tab-badge">2</span>
+      </button>
+    </div>
+
+    <div class="tab-content">
+
+      <!-- INFO TAB -->
+      <div class="tab-panel active" id="panel-info">
+        <div class="info-grid">
+          <div>
+            <div class="info-section-title">Personal information</div>
+            <div class="info-row"><span class="info-label">Full name</span><span class="info-value">Emma Marie Nkeng</span></div>
+            <div class="info-row"><span class="info-label">Date of birth</span><span class="info-value">March 14, 2009</span></div>
+            <div class="info-row"><span class="info-label">Gender</span><span class="info-value">Female</span></div>
+            <div class="info-row"><span class="info-label">Nationality</span><span class="info-value">Cameroonian</span></div>
+            <div class="info-row"><span class="info-label">Matricule</span><span class="info-value" style="font-family:monospace">STU-2024-0142</span></div>
+
+            <div class="info-section-title" style="margin-top:24px">Academic</div>
+            <div class="info-row"><span class="info-label">Current class</span><span class="info-value">Form 4A</span></div>
+            <div class="info-row"><span class="info-label">Academic year</span><span class="info-value">2024 – 2025</span></div>
+            <div class="info-row"><span class="info-label">Enrollment type</span><span class="info-value"><span class="badge badge-blue">Returning</span></span></div>
+            <div class="info-row"><span class="info-label">Enrolment date</span><span class="info-value">Sep 4, 2024</span></div>
+            <div class="info-row"><span class="info-label">Class teacher</span><span class="info-value">Mr. Tangue Pierre</span></div>
+          </div>
+          <div>
+            <div class="info-section-title">Contact & address</div>
+            <div class="info-row"><span class="info-label">Phone</span><span class="info-value">+237 677 123 456</span></div>
+            <div class="info-row"><span class="info-label">Email</span><span class="info-value">emma.nkeng@email.com</span></div>
+            <div class="info-row"><span class="info-label">Address</span><span class="info-value">12 Rue de la Paix, Bonanjo, Douala</span></div>
+
+            <div class="info-section-title" style="margin-top:24px">Administrative</div>
+            <div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="badge badge-green">Active</span></span></div>
+            <div class="info-row"><span class="info-label">Photo</span><span class="info-value"><span class="badge badge-green">Uploaded</span></span></div>
+            <div class="info-row"><span class="info-label">Created</span><span class="info-value">Sep 4, 2024</span></div>
+            <div class="info-row"><span class="info-label">Last updated</span><span class="info-value">Jan 12, 2025</span></div>
+
+            <div class="info-section-title" style="margin-top:24px">Danger zone</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;padding-top:8px">
+              <button class="btn btn-ghost" onclick="transferStudent()">
+                <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                Transfer
+              </button>
+              <button class="btn btn-danger" onclick="confirmDeactivate()">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                Deactivate
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRADES TAB -->
+      <div class="tab-panel" id="panel-grades">
+        <!-- Mini bar chart -->
+        <div class="chart-wrap">
+          <div class="chart-title">
+            Performance by sequence
+            <span class="chart-subtitle">Out of 20</span>
+          </div>
+          <div class="seq-bars" id="seqBars"></div>
+          <div style="display:flex;justify-content:space-around;margin-top:4px" id="seqLabels"></div>
+        </div>
+
+        <!-- Grade table -->
+        <table class="grade-table">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Coeff.</th>
+              <th>Seq 1</th>
+              <th>Seq 2</th>
+              <th>Term avg</th>
+              <th>Mention</th>
+            </tr>
+          </thead>
+          <tbody id="gradeTableBody"></tbody>
+          <tfoot>
+            <tr style="background:var(--teal-50)">
+              <td colspan="2" style="padding:11px 12px;font-weight:700;color:var(--teal-900);font-size:13px">Weighted average</td>
+              <td colspan="3" style="padding:11px 12px"></td>
+              <td style="padding:11px 12px;font-weight:800;color:var(--teal-900);font-size:16px" id="termAvgDisplay">—</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- ATTENDANCE TAB -->
+      <div class="tab-panel" id="panel-attendance">
+        <div class="att-legend">
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:var(--teal-50)"></div>Present</div>
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:rgba(239,68,68,.1)"></div>Absent</div>
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:rgba(245,158,11,.1)"></div>Late</div>
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:rgba(14,165,233,.1)"></div>Excused</div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+          <div class="stat-chip" style="flex:1;min-width:100px;padding:12px 14px">
+            <div class="stat-chip-icon">✅</div>
+            <div class="stat-chip-val" id="attPresent" style="font-size:18px">—</div>
+            <div class="stat-chip-lbl">Present days</div>
+          </div>
+          <div class="stat-chip" style="flex:1;min-width:100px;padding:12px 14px">
+            <div class="stat-chip-icon">❌</div>
+            <div class="stat-chip-val" id="attAbsent" style="font-size:18px;color:var(--red)">—</div>
+            <div class="stat-chip-lbl">Absent days</div>
+          </div>
+          <div class="stat-chip" style="flex:1;min-width:100px;padding:12px 14px">
+            <div class="stat-chip-icon">⏰</div>
+            <div class="stat-chip-val" id="attLate" style="font-size:18px;color:var(--amber)">—</div>
+            <div class="stat-chip-lbl">Late arrivals</div>
+          </div>
+          <div class="stat-chip" style="flex:1;min-width:100px;padding:12px 14px">
+            <div class="stat-chip-icon">📋</div>
+            <div class="stat-chip-val" id="attExcused" style="font-size:18px;color:var(--blue)">—</div>
+            <div class="stat-chip-lbl">Excused</div>
+          </div>
+        </div>
+
+        <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--surface-400);margin-bottom:12px">
+          January 2025
+        </div>
+        <div class="att-calendar" id="attCalendar"></div>
+      </div>
+
+      <!-- FEES TAB -->
+      <div class="tab-panel" id="panel-fees">
+        <div class="fee-progress-wrap">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--surface-900);margin-bottom:2px">Annual fees — 2024/2025</div>
+              <div style="font-size:12px;color:var(--surface-400)">Total due: <strong>120 000 FCFA</strong></div>
+            </div>
+            <span class="badge badge-amber">Partial payment</span>
+          </div>
+          <div class="fee-progress-bar-track">
+            <div class="fee-progress-bar-fill" id="feeBar" style="width:0%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--surface-400)">
+            <span id="feePaidLabel">0 FCFA paid</span>
+            <span id="feeRemainingLabel">120 000 FCFA remaining</span>
+          </div>
+        </div>
+
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--surface-400);margin-bottom:14px">
+          Payment history
+        </div>
+        <div id="paymentHistory"></div>
+
+        <button class="btn btn-primary" style="margin-top:16px" onclick="recordPayment()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Record payment
+        </button>
+      </div>
+
+      <!-- GUARDIANS TAB -->
+      <div class="tab-panel" id="panel-guardians">
+        <div id="guardiansList"></div>
+        <button class="btn btn-ghost" style="margin-top:8px" onclick="addGuardian()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add guardian
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast notification -->
+<div id="toast" style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface-900);color:white;padding:12px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;box-shadow:0 8px 28px rgba(0,0,0,.25)">
+  ✅ Action completed
+</div>
+
+<script>
+// ── Mock data ────────────────────────────────────────────────
+const student = {
+  firstName:"Emma", lastName:"Nkeng", matricule:"STU-2024-0142",
+  class:"Form 4A", year:"2024-2025", status:"active",
+  dob:"March 14, 2009", gender:"Female", nationality:"Cameroonian",
+  phone:"+237 677 123 456", email:"emma.nkeng@email.com",
+  address:"12 Rue de la Paix, Bonanjo, Douala",
+};
+
+const grades = [
+  {subject:"Mathematics",   coeff:4, seq1:14, seq2:16},
+  {subject:"English",       coeff:3, seq1:17, seq2:15},
+  {subject:"Physics",       coeff:3, seq1:12, seq2:13},
+  {subject:"Chemistry",     coeff:3, seq1:11, seq2:14},
+  {subject:"Biology",       coeff:2, seq1:15, seq2:16},
+  {subject:"French",        coeff:2, seq1:13, seq2:12},
+  {subject:"History",       coeff:2, seq1:14, seq2:15},
+  {subject:"Geography",     coeff:2, seq1:16, seq2:14},
+  {subject:"Computer Sci.", coeff:2, seq1:18, seq2:17},
+];
+
+const seqAverages = [13.2, 15.1, 12.8, 14.5, 13.9, 15.6];
+
+const attendance = {present:52, absent:4, late:3, excused:2, total:61,
+  days: Array.from({length:31}, (_,i) => {
+    if (i<2||i>28) return "empty";
+    const r=Math.random();
+    if(r<.78) return "present";
+    if(r<.86) return "absent";
+    if(r<.92) return "late";
+    if(r<.97) return "excused";
+    return "empty";
+  })
+};
+
+const fees = {
+  total:120000, paid:80000,
+  payments:[
+    {date:"Sep 10, 2024", amount:40000, method:"Mobile Money", receipt:"REC-001"},
+    {date:"Nov 22, 2024", amount:40000, method:"Cash",         receipt:"REC-002"},
+  ]
+};
+
+const guardians = [
+  {name:"Christine Nkeng", relation:"Mother", phone:"+237 699 234 567", email:"c.nkeng@email.com", primary:true},
+  {name:"Paul Nkeng",      relation:"Father",  phone:"+237 677 345 678", email:"p.nkeng@email.com", primary:false},
+];
+
+// ── Init stats ───────────────────────────────────────────────
+function animateNumber(el, target, suffix="", decimals=1) {
+  let start=null;
+  const duration=1200;
+  const tick = ts => {
+    if(!start) start=ts;
+    const p=Math.min((ts-start)/duration,1);
+    const e=1-Math.pow(1-p,3);
+    const val=e*target;
+    el.textContent = decimals>0 ? val.toFixed(decimals)+suffix : Math.floor(val)+suffix;
+    if(p<1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function initStats() {
+  // Annual average (simple mean of seq averages)
+  const annual = seqAverages.reduce((a,b)=>a+b,0)/seqAverages.length;
+  animateNumber(document.getElementById("statAvg"), annual, "/20");
+
+  const attRate = (attendance.present/attendance.total)*100;
+  animateNumber(document.getElementById("statAtt"), attRate, "%", 0);
+
+  const feesPct = (fees.paid/fees.total)*100;
+  animateNumber(document.getElementById("statFees"), feesPct, "%", 0);
+
+  document.getElementById("statRank").style.animation="countUp .6s .3s cubic-bezier(.16,1,.3,1) both";
+  document.getElementById("statRank").textContent="3rd";
+
+  document.getElementById("attBadge").textContent = attendance.absent+" abs.";
+}
+
+// ── Tabs ─────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+  btn.classList.add("active");
+  const panel=document.getElementById("panel-"+name);
+  panel.classList.add("active");
+
+  if(name==="grades") initGrades();
+  if(name==="attendance") initAttendance();
+  if(name==="fees") initFees();
+  if(name==="guardians") initGuardians();
+}
+
+// ── Grades ───────────────────────────────────────────────────
+function getMention(avg) {
+  if(avg>=16) return {label:"Excellent",cls:"badge-green"};
+  if(avg>=14) return {label:"Very Good",cls:"badge-green"};
+  if(avg>=12) return {label:"Good",     cls:"badge-blue"};
+  if(avg>=10) return {label:"Average",  cls:"badge-amber"};
+  return {label:"Fail",cls:"badge-red"};
+}
+
+function initGrades() {
+  // Bar chart
+  const barsEl=document.getElementById("seqBars");
+  const labelsEl=document.getElementById("seqLabels");
+  barsEl.innerHTML=""; labelsEl.innerHTML="";
+  const maxSeq=Math.max(...seqAverages);
+  const colors=["#6366F1","#0EA5E9","#14B8A6","#F59E0B","#EF4444","#A855F7"];
+  seqAverages.forEach((avg,i)=>{
+    const pct=(avg/20)*100;
+    const wrap=document.createElement("div");
+    wrap.className="seq-bar-wrap";
+    wrap.innerHTML=`
+      <div class="seq-val">${avg}</div>
+      <div class="seq-bar-outer">
+        <div class="seq-bar-inner" style="height:0%;background:${colors[i]}"></div>
+      </div>
+      <div class="seq-label">Seq ${i+1}</div>`;
+    barsEl.appendChild(wrap);
+    setTimeout(()=>{
+      wrap.querySelector(".seq-bar-inner").style.height=pct+"%";
+    }, 100+i*80);
+  });
+
+  // Grade table
+  const tbody=document.getElementById("gradeTableBody");
+  tbody.innerHTML="";
+  let sumWeighted=0, sumCoeff=0;
+  grades.forEach(g=>{
+    const termAvg=(g.seq1+g.seq2)/2;
+    sumWeighted+=termAvg*g.coeff; sumCoeff+=g.coeff;
+    const m=getMention(termAvg);
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td style="font-weight:600">${g.subject}</td>
+      <td style="color:var(--surface-400)">×${g.coeff}</td>
+      <td>${g.seq1}</td>
+      <td>${g.seq2}</td>
+      <td style="font-weight:700;color:${termAvg>=10?"var(--teal-900)":"var(--red)"}">${termAvg.toFixed(2)}</td>
+      <td><span class="mention badge ${m.cls}">${m.label}</span></td>`;
+    tbody.appendChild(tr);
+  });
+  const wAvg=sumWeighted/sumCoeff;
+  const m=getMention(wAvg);
+  document.getElementById("termAvgDisplay").innerHTML=`<span class="mention badge ${m.cls}">${wAvg.toFixed(2)} — ${m.label}</span>`;
+}
+
+// ── Attendance ───────────────────────────────────────────────
+function initAttendance() {
+  document.getElementById("attPresent").textContent=attendance.present;
+  document.getElementById("attAbsent").textContent=attendance.absent;
+  document.getElementById("attLate").textContent=attendance.late;
+  document.getElementById("attExcused").textContent=attendance.excused;
+
+  const cal=document.getElementById("attCalendar");
+  cal.innerHTML="";
+  // Day labels
+  ["M","T","W","T","F","S","S"].forEach(d=>{
+    const el=document.createElement("div");
+    el.style.cssText="font-size:10px;font-weight:700;color:var(--surface-400);text-align:center;padding:3px 0";
+    el.textContent=d; cal.appendChild(el);
+  });
+  attendance.days.forEach((status,i)=>{
+    const el=document.createElement("div");
+    el.className="att-day att-"+status;
+    el.textContent=status!=="empty"?i+1:"";
+    el.title=status.charAt(0).toUpperCase()+status.slice(1);
+    el.style.animationDelay=(i*.015)+"s";
+    el.style.animation="scaleIn .3s "+(i*.015)+"s cubic-bezier(.34,1.56,.64,1) both";
+    cal.appendChild(el);
+  });
+}
+
+// ── Fees ─────────────────────────────────────────────────────
+function initFees() {
+  const pct=(fees.paid/fees.total)*100;
+  setTimeout(()=>{
+    document.getElementById("feeBar").style.width=pct+"%";
+  },100);
+  document.getElementById("feePaidLabel").textContent=fees.paid.toLocaleString("fr")+" FCFA paid";
+  document.getElementById("feeRemainingLabel").textContent=(fees.total-fees.paid).toLocaleString("fr")+" FCFA remaining";
+
+  const hist=document.getElementById("paymentHistory");
+  hist.innerHTML="";
+  fees.payments.forEach(p=>{
+    const el=document.createElement("div");
+    el.className="fee-row";
+    el.innerHTML=`
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--surface-900)">${p.amount.toLocaleString("fr")} FCFA</div>
+        <div style="font-size:12px;color:var(--surface-400)">${p.date} · ${p.method}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="badge badge-green">Paid</span>
+        <span style="font-size:11px;font-family:monospace;color:var(--surface-400)">${p.receipt}</span>
+      </div>`;
+    hist.appendChild(el);
+  });
+}
+
+// ── Guardians ────────────────────────────────────────────────
+function initGuardians() {
+  const list=document.getElementById("guardiansList");
+  list.innerHTML="";
+  guardians.forEach(g=>{
+    const initials=g.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+    const el=document.createElement("div");
+    el.className="guardian-card";
+    el.innerHTML=`
+      <div class="guardian-avatar">${initials}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          <span style="font-size:14px;font-weight:700;color:var(--surface-900)">${g.name}</span>
+          ${g.primary?'<span class="badge badge-green">Primary</span>':''}
+        </div>
+        <div style="font-size:12px;color:var(--surface-400);margin-bottom:8px">${g.relation}</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <span style="font-size:12.5px;color:var(--surface-600)">📞 ${g.phone}</span>
+          <span style="font-size:12.5px;color:var(--surface-600)">✉️ ${g.email}</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost" onclick="callGuardian('${g.phone}')" style="height:34px;padding:0 12px">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.95a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Call
+      </button>`;
+    list.appendChild(el);
+  });
+}
+
+// ── Avatar upload ────────────────────────────────────────────
+document.getElementById("avatarBtn").addEventListener("click",()=>{
+  document.getElementById("avatarInput").click();
+});
+document.getElementById("avatarInput").addEventListener("change",function(){
+  const file=this.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const avatar=document.getElementById("avatarBtn");
+    avatar.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;inset:0"/><div class="avatar-overlay"><svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:white;stroke-width:2;fill:none"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div><div class="avatar-badge"></div>`;
+    showToast("📸 Photo updated");
+  };
+  reader.readAsDataURL(file);
+});
+
+// ── Toast ────────────────────────────────────────────────────
+function showToast(msg) {
+  const t=document.getElementById("toast");
+  t.textContent=msg;
+  t.style.transform="translateX(-50%) translateY(0)";
+  t.style.opacity="1";
+  setTimeout(()=>{
+    t.style.transform="translateX(-50%) translateY(80px)";
+    t.style.opacity="0";
+  },2600);
+}
+
+// ── Action stubs ─────────────────────────────────────────────
+function printBulletin(){ showToast("🖨️ Preparing report card PDF..."); }
+function sendNotification(){ showToast("🔔 Notification sent to guardian"); }
+function openEditModal(){ showToast("✏️ Edit mode — coming soon"); }
+function transferStudent(){ showToast("🔄 Transfer flow — coming soon"); }
+function confirmDeactivate(){ if(confirm("Deactivate Emma Nkeng?")) showToast("⚠️ Student deactivated"); }
+function recordPayment(){ showToast("💳 Payment form — coming soon"); }
+function addGuardian(){ showToast("➕ Add guardian form — coming soon"); }
+function callGuardian(phone){ showToast("📞 Calling "+phone); }
+
+// ── Boot ─────────────────────────────────────────────────────
+initStats();
+initGrades();
+</script>
+</body>
+</html>

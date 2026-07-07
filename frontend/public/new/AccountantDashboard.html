@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Accountant Dashboard — Akademee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal-900:#085041;--teal-700:#0F6E56;--teal-600:#1D9E75;
+  --teal-400:#5DCAA5;--teal-100:#C8F0E4;--teal-50:#E1F5EE;
+  --surface-900:#1A1F1B;--surface-800:#2A3029;--surface-700:#434D45;
+  --surface-600:#5C665E;--surface-500:#6E7A70;--surface-400:#9BA59C;
+  --surface-300:#BFC4BB;--surface-200:#D8DBD5;--surface-100:#EEF0EC;
+  --surface-50:#F7F8F6;--white:#fff;
+  --red:#EF4444;--amber:#F59E0B;--blue:#3B82F6;--green:#1D9E75;--purple:#8B5CF6;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:20px;
+  --sh-sm:0 2px 8px rgba(0,0,0,.05);--sh-md:0 4px 20px rgba(0,0,0,.08);--sh-lg:0 12px 40px rgba(0,0,0,.12);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--surface-50);color:var(--surface-900);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes drawLine{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+@keyframes barGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes progressFill{from{width:0}to{width:var(--target-w)}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+.page{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+.stagger>*{opacity:0;animation:fadeUp .5s cubic-bezier(.16,1,.3,1) both}
+.stagger>*:nth-child(1){animation-delay:.04s}
+.stagger>*:nth-child(2){animation-delay:.1s}
+.stagger>*:nth-child(3){animation-delay:.16s}
+.stagger>*:nth-child(4){animation-delay:.22s}
+.stagger>*:nth-child(5){animation-delay:.28s}
+
+/* ── Greeting ── */
+.greeting{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;animation:fadeUp .55s cubic-bezier(.16,1,.3,1) both}
+.greeting-eyebrow{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal-600);margin-bottom:6px}
+.greeting-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,30px);font-weight:700;color:var(--surface-900)}
+.greeting-title span{color:var(--teal-600)}
+.greeting-sub{font-size:13.5px;color:var(--surface-400);margin-top:4px}
+.date-badge{background:var(--white);border:1.5px solid var(--surface-100);border-radius:var(--r-lg);padding:12px 18px;text-align:right;box-shadow:var(--sh-sm)}
+.date-day{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--surface-900);line-height:1}
+.date-month{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--surface-400);margin-top:2px}
+
+/* ── KPI cards ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.kpi-card{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--surface-100);padding:22px;box-shadow:var(--sh-sm);overflow:hidden;position:relative;transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s}
+.kpi-card:hover{transform:translateY(-5px);box-shadow:var(--sh-lg)}
+.kpi-card::after{content:'';position:absolute;top:0;left:-100%;width:45%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:shimmer 2.5s 1.2s ease-in-out}
+.kpi-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.kpi-icon svg{width:19px;height:19px}
+.kpi-value{font-size:clamp(20px,2.5vw,28px);font-weight:800;color:var(--surface-900);line-height:1.1;margin-bottom:3px;font-family:'DM Sans',sans-serif}
+.kpi-label{font-size:12px;color:var(--surface-400);font-weight:500;margin-bottom:10px}
+.kpi-trend{font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:50px}
+.kpi-spark{height:32px;margin-top:10px}
+.kpi-spark svg{width:100%;height:100%;overflow:visible}
+
+/* ── Card ── */
+.card{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--surface-100);padding:22px;box-shadow:var(--sh-sm)}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.section-title{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;color:var(--surface-900)}
+.section-title-bar{width:3px;height:18px;border-radius:2px;background:var(--teal-900)}
+.section-link{font-size:12.5px;font-weight:600;color:var(--teal-700);text-decoration:none;display:flex;align-items:center;gap:4px;transition:gap .2s}
+.section-link:hover{gap:8px}
+
+/* ── Revenue chart ── */
+.rev-chart-wrap{position:relative}
+.rev-bars{display:flex;align-items:flex-end;gap:8px;height:140px}
+.rev-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+.rev-bar{width:100%;border-radius:6px 6px 0 0;transform-origin:bottom;animation:barGrow .8s cubic-bezier(.16,1,.3,1) both;position:relative;cursor:pointer;transition:filter .15s}
+.rev-bar:hover{filter:brightness(1.12)}
+.rev-bar-tooltip{position:absolute;top:-32px;left:50%;transform:translateX(-50%);background:var(--surface-900);color:white;font-size:10px;font-weight:700;padding:4px 8px;border-radius:5px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:10}
+.rev-bar:hover .rev-bar-tooltip{opacity:1}
+.rev-bar-label{font-size:10.5px;color:var(--surface-400);font-weight:500;text-align:center;white-space:nowrap}
+
+/* ── Progress fee bars ── */
+.fee-progress-item{margin-bottom:14px}
+.fee-progress-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.fee-progress-name{font-size:13px;font-weight:600;color:var(--surface-900)}
+.fee-progress-pct{font-size:12px;font-weight:700}
+.fee-progress-track{height:8px;background:var(--surface-100);border-radius:50px;overflow:hidden}
+.fee-progress-fill{height:100%;border-radius:50px;transition:width 1.3s cubic-bezier(.16,1,.3,1)}
+.fee-progress-sub{font-size:11.5px;color:var(--surface-400);margin-top:4px}
+
+/* ── Table ── */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{padding:10px 14px;text-align:left;font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--surface-400);background:var(--surface-50);border-bottom:1.5px solid var(--surface-100)}
+.data-table td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--surface-50);transition:background .12s}
+.data-table tr:hover td{background:rgba(8,80,65,.025)}
+.data-table tr:last-child td{border-bottom:none}
+.badge{display:inline-flex;align-items:center;font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:50px}
+
+/* ── Alert card ── */
+.alert-card{border-radius:var(--r-lg);padding:14px 16px;display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;cursor:pointer;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.alert-card:hover{transform:translateX(4px)}
+.alert-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.alert-icon svg{width:16px;height:16px}
+.alert-title{font-size:13px;font-weight:700;color:var(--surface-900);margin-bottom:2px}
+.alert-sub{font-size:11.5px;color:var(--surface-500)}
+.alert-amount{font-size:14px;font-weight:800;flex-shrink:0}
+
+/* ── Payment row ── */
+.pay-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--surface-50)}
+.pay-row:last-child{border-bottom:none}
+.pay-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.pay-name{font-size:13px;font-weight:600;color:var(--surface-900)}
+.pay-meta{font-size:11.5px;color:var(--surface-400)}
+.pay-amount{font-size:13.5px;font-weight:800}
+
+/* ── Donut chart ── */
+.donut-wrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.donut-legend{display:flex;flex-direction:column;gap:10px;flex:1}
+.legend-item{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--surface-700)}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.legend-val{font-weight:700;margin-left:auto;font-size:13px}
+
+/* ── Responsive ── */
+@media(max-width:960px){.stats-row{grid-template-columns:1fr 1fr}.grid-3-2{grid-template-columns:1fr}}
+@media(max-width:640px){.stats-row{grid-template-columns:1fr 1fr}.grid-2{grid-template-columns:1fr}.page{padding:20px 16px 80px}}
+@media(max-width:420px){.stats-row{grid-template-columns:1fr}}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px}
+.grid-3-2{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:24px}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Greeting -->
+  <div class="greeting">
+    <div>
+      <div class="greeting-eyebrow">Finance dashboard</div>
+      <h1 class="greeting-title">Finance overview, <span>2024 – 2025</span></h1>
+      <p class="greeting-sub">
+        <strong id="unpaidCount">47</strong> students with outstanding fees ·
+        <strong id="monthRevenue">1 240 000 FCFA</strong> collected this month
+      </p>
+    </div>
+    <div class="date-badge" style="animation:fadeUp .55s .08s cubic-bezier(.16,1,.3,1) both">
+      <div class="date-day" id="dateDay">—</div>
+      <div class="date-month" id="dateMonth">—</div>
+    </div>
+  </div>
+
+  <!-- KPI cards -->
+  <div class="stats-row stagger">
+    <!-- Total collected -->
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:var(--teal-50)">
+        <i data-lucide="banknote" style="width:19px;height:19px;stroke:var(--teal-900)"></i>
+      </div>
+      <div class="kpi-value" id="kpiCollected">0</div>
+      <div class="kpi-label">Total collected (FCFA)</div>
+      <div class="kpi-trend" style="background:rgba(29,158,117,.1);color:var(--teal-600)">
+        <i data-lucide="trending-up" style="width:10px;height:10px"></i>
+        +18% vs last year
+      </div>
+      <div class="kpi-spark">
+        <svg viewBox="0 0 100 32" preserveAspectRatio="none">
+          <polyline points="0,28 16,22 33,18 50,20 66,12 83,8 100,4"
+            fill="none" stroke="var(--teal-400)" stroke-width="2" stroke-linecap="round"
+            stroke-dasharray="220" stroke-dashoffset="220"
+            style="animation:drawLine 1.3s .6s cubic-bezier(.16,1,.3,1) forwards;--len:220"/>
+          <polyline points="0,28 16,22 33,18 50,20 66,12 83,8 100,4 100,32 0,32"
+            fill="rgba(8,80,65,.05)" stroke="none"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Outstanding -->
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(239,68,68,.08)">
+        <i data-lucide="alert-triangle" style="width:19px;height:19px;stroke:var(--red)"></i>
+      </div>
+      <div class="kpi-value" id="kpiOutstanding" style="color:var(--red)">0</div>
+      <div class="kpi-label">Outstanding fees (FCFA)</div>
+      <div class="kpi-trend" style="background:rgba(239,68,68,.08);color:var(--red)">
+        <i data-lucide="users" style="width:10px;height:10px"></i>
+        47 students
+      </div>
+      <div class="kpi-spark">
+        <svg viewBox="0 0 100 32" preserveAspectRatio="none">
+          <polyline points="0,8 16,12 33,10 50,16 66,14 83,20 100,24"
+            fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" opacity=".5"
+            stroke-dasharray="220" stroke-dashoffset="220"
+            style="animation:drawLine 1.3s .7s cubic-bezier(.16,1,.3,1) forwards;--len:220"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Collection rate -->
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(59,130,246,.08)">
+        <i data-lucide="percent" style="width:19px;height:19px;stroke:var(--blue)"></i>
+      </div>
+      <div class="kpi-value" id="kpiRate" style="color:var(--blue)">0</div>
+      <div class="kpi-label">Collection rate</div>
+      <div class="kpi-trend" style="background:rgba(59,130,246,.08);color:var(--blue)">
+        <i data-lucide="trending-up" style="width:10px;height:10px"></i>
+        +6% this term
+      </div>
+      <div class="kpi-spark">
+        <svg viewBox="0 0 100 32" preserveAspectRatio="none">
+          <polyline points="0,24 16,20 33,22 50,14 66,12 83,8 100,6"
+            fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" opacity=".5"
+            stroke-dasharray="220" stroke-dashoffset="220"
+            style="animation:drawLine 1.3s .8s cubic-bezier(.16,1,.3,1) forwards;--len:220"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Payments today -->
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(139,92,246,.08)">
+        <i data-lucide="receipt" style="width:19px;height:19px;stroke:var(--purple)"></i>
+      </div>
+      <div class="kpi-value" id="kpiToday">0</div>
+      <div class="kpi-label">Payments today</div>
+      <div class="kpi-trend" style="background:rgba(139,92,246,.08);color:var(--purple)">
+        <i data-lucide="clock" style="width:10px;height:10px"></i>
+        Last at 10:42
+      </div>
+      <div class="kpi-spark">
+        <svg viewBox="0 0 100 32" preserveAspectRatio="none">
+          <polyline points="0,26 16,20 33,24 50,16 66,18 83,10 100,8"
+            fill="none" stroke="var(--purple)" stroke-width="2" stroke-linecap="round" opacity=".5"
+            stroke-dasharray="220" stroke-dashoffset="220"
+            style="animation:drawLine 1.3s .9s cubic-bezier(.16,1,.3,1) forwards;--len:220"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Revenue chart + Fee collection by class -->
+  <div class="grid-3-2 stagger">
+    <!-- Monthly revenue chart -->
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-title-bar"></div>
+          Monthly collections — 2024/2025
+        </div>
+        <select style="font-size:12px;padding:5px 10px;border-radius:var(--r-sm);border:1.5px solid var(--surface-100);background:var(--white);color:var(--surface-700);cursor:pointer;font-family:'DM Sans',sans-serif">
+          <option>All classes</option>
+          <option>Form 4</option>
+          <option>Form 5</option>
+        </select>
+      </div>
+
+      <div class="rev-bars" id="revBars"></div>
+      <div id="revLabels" style="display:flex;gap:8px;margin-top:8px"></div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--surface-100)">
+        <div style="text-align:center">
+          <div style="font-size:14px;font-weight:800;color:var(--teal-600)">7 200 000</div>
+          <div style="font-size:11px;color:var(--surface-400)">Total collected</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:14px;font-weight:800;color:var(--red)">2 640 000</div>
+          <div style="font-size:11px;color:var(--surface-400)">Outstanding</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:14px;font-weight:800;color:var(--blue)">73%</div>
+          <div style="font-size:11px;color:var(--surface-400)">Collection rate</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fee collection by class -->
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-title-bar"></div>
+          Collection by class
+        </div>
+      </div>
+      <div id="feeByClass"></div>
+    </div>
+  </div>
+
+  <!-- Row 3: Defaulters + Recent payments + Donut -->
+  <div class="grid-3-2 stagger">
+    <!-- Top defaulters -->
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-title-bar"></div>
+          Outstanding fees — Priority alerts
+        </div>
+        <a href="#" class="section-link">
+          View all
+          <i data-lucide="arrow-right" style="width:13px;height:13px;stroke:currentColor"></i>
+        </a>
+      </div>
+
+      <div id="defaulterList"></div>
+    </div>
+
+    <!-- Right column -->
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <!-- Recent payments -->
+      <div class="card">
+        <div class="section-head">
+          <div class="section-title">
+            <div class="section-title-bar"></div>
+            Recent payments
+          </div>
+          <a href="#" class="section-link">
+            All
+            <i data-lucide="arrow-right" style="width:13px;height:13px;stroke:currentColor"></i>
+          </a>
+        </div>
+        <div id="recentPay"></div>
+      </div>
+
+      <!-- Fee status donut -->
+      <div class="card">
+        <div class="section-head">
+          <div class="section-title">
+            <div class="section-title-bar"></div>
+            Fee status overview
+          </div>
+        </div>
+        <div class="donut-wrap">
+          <svg width="100" height="100" viewBox="0 0 100 100" id="donutSvg"></svg>
+          <div class="donut-legend" id="donutLegend"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); });
+
+const now = new Date();
+document.getElementById('dateDay').textContent = now.getDate();
+document.getElementById('dateMonth').textContent = now.toLocaleDateString('en', { month: 'long', year: 'numeric' });
+
+// Counter
+function animateCounter(el, target, suffix = '', prefix = '', duration = 1400) {
+  let start = null;
+  const tick = ts => {
+    if (!start) start = ts;
+    const p = Math.min((ts - start) / duration, 1);
+    const e = 1 - Math.pow(1 - p, 3);
+    const val = Math.floor(e * target);
+    el.textContent = prefix + val.toLocaleString('fr') + suffix;
+    if (p < 1) requestAnimationFrame(tick);
+    else el.textContent = prefix + target.toLocaleString('fr') + suffix;
+  };
+  requestAnimationFrame(tick);
+}
+
+const kpiObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      animateCounter(document.getElementById('kpiCollected'), 7200000, ' FCFA', '', 1600);
+      animateCounter(document.getElementById('kpiOutstanding'), 2640000, ' FCFA', '', 1400);
+      animateCounter(document.getElementById('kpiRate'), 73, '%', '', 1200);
+      animateCounter(document.getElementById('kpiToday'), 8, '', '', 800);
+      kpiObs.disconnect();
+    }
+  });
+}, { threshold: 0.3 });
+kpiObs.observe(document.getElementById('kpiCollected'));
+
+// Revenue bars
+const months = ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+const amounts = [820000, 1100000, 960000, 1240000, 1320000, 980000, 780000];
+const maxAmt = Math.max(...amounts);
+const revBars = document.getElementById('revBars');
+const revLabels = document.getElementById('revLabels');
+months.forEach((m, i) => {
+  const pct = (amounts[i] / maxAmt) * 100;
+  const isLatest = i === 4;
+  const col = document.createElement('div');
+  col.className = 'rev-bar-col';
+  col.innerHTML = `
+    <div class="rev-bar" style="height:${pct}%;background:${isLatest ? 'var(--teal-600)' : 'var(--surface-100)'};animation-delay:${0.07 * i}s">
+      <div class="rev-bar-tooltip">${(amounts[i]/1000).toFixed(0)}K FCFA</div>
+    </div>`;
+  revBars.appendChild(col);
+  const lbl = document.createElement('div');
+  lbl.style.cssText = 'flex:1;text-align:center;font-size:10.5px;font-weight:' + (isLatest ? '700' : '500') + ';color:' + (isLatest ? 'var(--teal-900)' : 'var(--surface-400)');
+  lbl.textContent = m;
+  revLabels.appendChild(lbl);
+});
+
+// Fee by class
+const classFees = [
+  { name: 'Form 4A', paid: 980000, total: 1200000, color: 'var(--teal-600)' },
+  { name: 'Form 5A', paid: 760000, total: 1000000, color: 'var(--blue)' },
+  { name: 'Form 3B', paid: 840000, total: 960000, color: 'var(--purple)' },
+  { name: 'Lower 6th Sci.', paid: 620000, total: 900000, color: 'var(--amber)' },
+  { name: 'Form 1A', paid: 980000, total: 1000000, color: 'var(--green)' },
+];
+const feeByClass = document.getElementById('feeByClass');
+classFees.forEach(c => {
+  const pct = Math.round((c.paid / c.total) * 100);
+  const textColor = pct >= 90 ? 'var(--teal-600)' : pct >= 70 ? 'var(--blue)' : pct >= 50 ? 'var(--amber)' : 'var(--red)';
+  const el = document.createElement('div');
+  el.className = 'fee-progress-item';
+  el.innerHTML = `
+    <div class="fee-progress-header">
+      <span class="fee-progress-name">${c.name}</span>
+      <span class="fee-progress-pct" style="color:${textColor}">${pct}%</span>
+    </div>
+    <div class="fee-progress-track">
+      <div class="fee-progress-fill" style="width:0%;background:${c.color}" data-target="${pct}"></div>
+    </div>
+    <div class="fee-progress-sub">${(c.paid/1000).toFixed(0)}K / ${(c.total/1000).toFixed(0)}K FCFA</div>`;
+  feeByClass.appendChild(el);
+});
+setTimeout(() => {
+  document.querySelectorAll('.fee-progress-fill').forEach(f => {
+    f.style.width = f.dataset.target + '%';
+  });
+}, 300);
+
+// Defaulters
+const defaulters = [
+  { name: 'Jean-Marc Essomba', cls: 'Form 4A', amount: 80000, since: 'Oct 2024', level: 'critical', avatarBg: '#FEE2E2', avatarText: '#EF4444' },
+  { name: 'Alice Ndongo',      cls: 'Form 5A', amount: 60000, since: 'Nov 2024', level: 'high',     avatarBg: '#FEF3C7', avatarText: '#F59E0B' },
+  { name: 'Paul Eko',          cls: 'Form 3B', amount: 40000, since: 'Dec 2024', level: 'medium',   avatarBg: '#EFF6FF', avatarText: '#3B82F6' },
+  { name: 'Marie Abena',       cls: 'Lower 6th', amount: 40000, since: 'Dec 2024', level: 'medium', avatarBg: '#EFF6FF', avatarText: '#3B82F6' },
+  { name: 'Chris Bilong',      cls: 'Form 1A', amount: 20000, since: 'Jan 2025', level: 'low',      avatarBg: '#F5F3FF', avatarText: '#8B5CF6' },
+];
+const defColors = { critical: { bg: 'rgba(239,68,68,.08)', text: '#EF4444', label: 'Critical' }, high: { bg: 'rgba(245,158,11,.08)', text: '#F59E0B', label: 'High' }, medium: { bg: 'rgba(59,130,246,.08)', text: '#3B82F6', label: 'Medium' }, low: { bg: 'rgba(139,92,246,.08)', text: '#8B5CF6', label: 'Low' } };
+const defList = document.getElementById('defaulterList');
+defaulters.forEach(d => {
+  const lc = defColors[d.level];
+  const el = document.createElement('div');
+  el.className = 'alert-card';
+  el.style.background = lc.bg;
+  el.innerHTML = `
+    <div class="alert-icon" style="background:${d.avatarBg}">
+      <span style="font-size:12px;font-weight:800;color:${d.avatarText}">${d.name.split(' ').map(w=>w[0]).join('')}</span>
+    </div>
+    <div style="flex:1">
+      <div class="alert-title">${d.name}</div>
+      <div class="alert-sub">${d.cls} · Since ${d.since}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+      <div class="alert-amount" style="color:${lc.text}">${d.amount.toLocaleString('fr')} FCFA</div>
+      <span class="badge" style="background:${lc.bg};color:${lc.text}">${lc.label}</span>
+    </div>`;
+  defList.appendChild(el);
+});
+
+// Recent payments
+const payments = [
+  { name: 'Emma Nkeng',    cls: 'Form 4A', amount: 40000, method: 'Mobile Money', avatarBg: '#E1F5EE', avatarText: '#085041' },
+  { name: 'Boris Abega',   cls: 'Form 3B', amount: 20000, method: 'Cash',         avatarBg: '#EFF6FF', avatarText: '#3B82F6' },
+  { name: 'Sophie Mekam',  cls: 'Form 5A', amount: 60000, method: 'Bank transfer', avatarBg: '#F5F3FF', avatarText: '#8B5CF6' },
+];
+const payList = document.getElementById('recentPay');
+payments.forEach(p => {
+  const el = document.createElement('div');
+  el.className = 'pay-row';
+  el.innerHTML = `
+    <div class="pay-avatar" style="background:${p.avatarBg}">
+      <span style="color:${p.avatarText}">${p.name.split(' ').map(w=>w[0]).join('')}</span>
+    </div>
+    <div style="flex:1">
+      <div class="pay-name">${p.name}</div>
+      <div class="pay-meta">${p.cls} · ${p.method}</div>
+    </div>
+    <div class="pay-amount" style="color:var(--teal-700)">+${p.amount.toLocaleString('fr')} F</div>`;
+  payList.appendChild(el);
+});
+
+// Donut chart
+const donutData = [
+  { label: 'Fully paid', value: 148, color: '#1D9E75' },
+  { label: 'Partial',    value: 82,  color: '#F59E0B' },
+  { label: 'Unpaid',     value: 47,  color: '#EF4444' },
+];
+const total = donutData.reduce((s, d) => s + d.value, 0);
+const svg = document.getElementById('donutSvg');
+const cx = 50, cy = 50, r = 38, sw = 14;
+let angle = -90;
+donutData.forEach(d => {
+  const sweep = (d.value / total) * 360;
+  const a1 = (angle * Math.PI) / 180;
+  const a2 = ((angle + sweep) * Math.PI) / 180;
+  const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+  const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+  const large = sweep > 180 ? 1 : 0;
+  const circ = 2 * Math.PI * r;
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  const pct = (d.value / total) * circ;
+  path.setAttribute('d', `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', d.color);
+  path.setAttribute('stroke-width', sw);
+  path.setAttribute('stroke-linecap', 'butt');
+  path.style.strokeDasharray = circ;
+  path.style.strokeDashoffset = circ;
+  path.style.animation = `drawLine 1.2s ${0.3 + donutData.indexOf(d) * 0.15}s cubic-bezier(.16,1,.3,1) forwards`;
+  path.style.setProperty('--len', circ);
+  svg.appendChild(path);
+  angle += sweep;
+});
+// Center text
+const cText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+cText.setAttribute('x', '50'); cText.setAttribute('y', '47');
+cText.setAttribute('text-anchor', 'middle');
+cText.setAttribute('font-family', 'DM Sans,sans-serif');
+cText.setAttribute('font-size', '14'); cText.setAttribute('font-weight', '800');
+cText.setAttribute('fill', '#1A1F1B'); cText.textContent = total;
+svg.appendChild(cText);
+const cSub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+cSub.setAttribute('x', '50'); cSub.setAttribute('y', '58');
+cSub.setAttribute('text-anchor', 'middle');
+cSub.setAttribute('font-family', 'DM Sans,sans-serif');
+cSub.setAttribute('font-size', '8'); cSub.setAttribute('fill', '#9BA59C');
+cSub.textContent = 'students'; svg.appendChild(cSub);
+
+const legend = document.getElementById('donutLegend');
+donutData.forEach(d => {
+  const el = document.createElement('div');
+  el.className = 'legend-item';
+  el.innerHTML = `<div class="legend-dot" style="background:${d.color}"></div>${d.label}<span class="legend-val">${d.value}</span>`;
+  legend.appendChild(el);
+});
+
+setTimeout(() => { lucide.createIcons(); }, 50);
+</script>
+</body>
+</html>
