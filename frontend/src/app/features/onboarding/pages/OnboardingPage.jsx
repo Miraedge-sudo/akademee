@@ -34,40 +34,170 @@ const COLOR_PRESETS = [
 
 const CLASS_PRESETS = {
   anglophone: [
-    { level: "Junior", name: "Form 1 & 2", desc: "Middle school foundation", age: "Ages 12–14" },
-    { level: "Junior", name: "Form 3", desc: "Pre-GCE introduction", age: "Ages 14–15" },
-    { level: "Senior", name: "Form 4 & 5", desc: "GCE O-Level preparation", age: "Ages 15–17" },
-    { level: "Senior", name: "Lower Sixth", desc: "GCE A-Level year 1", age: "Ages 17–18" },
-    { level: "Senior", name: "Upper Sixth", desc: "GCE A-Level year 2", age: "Ages 18–19" },
+    {
+      level: "Junior",
+      name: "Form 1 & 2",
+      desc: "Middle school foundation",
+      age: "Ages 12–14",
+    },
+    {
+      level: "Junior",
+      name: "Form 3",
+      desc: "Pre-GCE introduction",
+      age: "Ages 14–15",
+    },
+    {
+      level: "Senior",
+      name: "Form 4 & 5",
+      desc: "GCE O-Level preparation",
+      age: "Ages 15–17",
+    },
+    {
+      level: "Senior",
+      name: "Lower Sixth",
+      desc: "GCE A-Level year 1",
+      age: "Ages 17–18",
+    },
+    {
+      level: "Senior",
+      name: "Upper Sixth",
+      desc: "GCE A-Level year 2",
+      age: "Ages 18–19",
+    },
   ],
-  "anglophone_technical": [
-    { level: "Technical", name: "Form 1 & 2", desc: "Foundation in technical & general subjects", age: "Ages 12–14" },
-    { level: "Technical", name: "Form 3", desc: "Introduction to technical streams", age: "Ages 14–15" },
-    { level: "Technical", name: "Form 4 & 5", desc: "Technical & vocational GCE O-Level", age: "Ages 15–17" },
-    { level: "Technical", name: "Lower Sixth Tech", desc: "Advanced technical A-Level entry", age: "Ages 17–18" },
-    { level: "Technical", name: "Upper Sixth Tech", desc: "Advanced technical A-Level exams", age: "Ages 18–19" },
+  anglophone_technical: [
+    {
+      level: "Technical",
+      name: "Form 1 & 2",
+      desc: "Foundation in technical & general subjects",
+      age: "Ages 12–14",
+    },
+    {
+      level: "Technical",
+      name: "Form 3",
+      desc: "Introduction to technical streams",
+      age: "Ages 14–15",
+    },
+    {
+      level: "Technical",
+      name: "Form 4 & 5",
+      desc: "Technical & vocational GCE O-Level",
+      age: "Ages 15–17",
+    },
+    {
+      level: "Technical",
+      name: "Lower Sixth Tech",
+      desc: "Advanced technical A-Level entry",
+      age: "Ages 17–18",
+    },
+    {
+      level: "Technical",
+      name: "Upper Sixth Tech",
+      desc: "Advanced technical A-Level exams",
+      age: "Ages 18–19",
+    },
   ],
   francophone: [
-    { level: "Primaire", name: "6e", desc: "Entrée au collège — programme général", age: "Âges 11–12" },
-    { level: "Collège", name: "5e & 4e", desc: "Cycle d'observation et approfondissement", age: "Âges 12–14" },
-    { level: "Collège", name: "3e", desc: "Préparation au BEPC", age: "Âges 14–15" },
-    { level: "Lycée", name: "Seconde", desc: "Entrée au lycée — tronc commun", age: "Âges 15–16" },
-    { level: "Lycée", name: "Première", desc: "Début du cycle Bac", age: "Âges 16–17" },
-    { level: "Lycée", name: "Terminale", desc: "Préparation au Baccalauréat", age: "Âges 17–18" },
+    {
+      level: "Primaire",
+      name: "6e",
+      desc: "Entrée au collège — programme général",
+      age: "Âges 11–12",
+    },
+    {
+      level: "Collège",
+      name: "5e & 4e",
+      desc: "Cycle d'observation et approfondissement",
+      age: "Âges 12–14",
+    },
+    {
+      level: "Collège",
+      name: "3e",
+      desc: "Préparation au BEPC",
+      age: "Âges 14–15",
+    },
+    {
+      level: "Lycée",
+      name: "Seconde",
+      desc: "Entrée au lycée — tronc commun",
+      age: "Âges 15–16",
+    },
+    {
+      level: "Lycée",
+      name: "Première",
+      desc: "Début du cycle Bac",
+      age: "Âges 16–17",
+    },
+    {
+      level: "Lycée",
+      name: "Terminale",
+      desc: "Préparation au Baccalauréat",
+      age: "Âges 17–18",
+    },
   ],
-  "francophone_technique": [
-    { level: "Collège Tech", name: "6e & 5e", desc: "Initiation aux matières techniques", age: "Âges 11–13" },
-    { level: "Collège Tech", name: "4e & 3e", desc: "Approfondissement technique & BEPC", age: "Âges 13–15" },
-    { level: "Lycée Tech", name: "Seconde STT/STI", desc: "Filière technologique", age: "Âges 15–16" },
-    { level: "Lycée Tech", name: "Première STT/STI", desc: "Spécialisation technique", age: "Âges 16–17" },
-    { level: "Lycée Tech", name: "Terminale STT/STI", desc: "Préparation au Bac Technique", age: "Âges 17–18" },
+  francophone_technique: [
+    {
+      level: "Collège Tech",
+      name: "6e & 5e",
+      desc: "Initiation aux matières techniques",
+      age: "Âges 11–13",
+    },
+    {
+      level: "Collège Tech",
+      name: "4e & 3e",
+      desc: "Approfondissement technique & BEPC",
+      age: "Âges 13–15",
+    },
+    {
+      level: "Lycée Tech",
+      name: "Seconde STT/STI",
+      desc: "Filière technologique",
+      age: "Âges 15–16",
+    },
+    {
+      level: "Lycée Tech",
+      name: "Première STT/STI",
+      desc: "Spécialisation technique",
+      age: "Âges 16–17",
+    },
+    {
+      level: "Lycée Tech",
+      name: "Terminale STT/STI",
+      desc: "Préparation au Bac Technique",
+      age: "Âges 17–18",
+    },
   ],
   international: [
-    { level: "Primary", name: "Year 1–3", desc: "Early years foundational learning", age: "Ages 5–8" },
-    { level: "Primary", name: "Year 4–6", desc: "Upper primary core subjects", age: "Ages 8–11" },
-    { level: "Secondary", name: "Year 7–9", desc: "Lower secondary exploration", age: "Ages 11–14" },
-    { level: "Secondary", name: "Year 10–11", desc: "IGCSE preparation & exams", age: "Ages 14–16" },
-    { level: "Sixth Form", name: "Year 12–13", desc: "A-Level / IB Diploma", age: "Ages 16–18" },
+    {
+      level: "Primary",
+      name: "Year 1–3",
+      desc: "Early years foundational learning",
+      age: "Ages 5–8",
+    },
+    {
+      level: "Primary",
+      name: "Year 4–6",
+      desc: "Upper primary core subjects",
+      age: "Ages 8–11",
+    },
+    {
+      level: "Secondary",
+      name: "Year 7–9",
+      desc: "Lower secondary exploration",
+      age: "Ages 11–14",
+    },
+    {
+      level: "Secondary",
+      name: "Year 10–11",
+      desc: "IGCSE preparation & exams",
+      age: "Ages 14–16",
+    },
+    {
+      level: "Sixth Form",
+      name: "Year 12–13",
+      desc: "A-Level / IB Diploma",
+      age: "Ages 16–18",
+    },
   ],
 };
 
@@ -337,24 +467,73 @@ const TEMPLATE_PREVIEWS = {
   },
 };
 
+const REQUIRED_PUBLISH_FIELDS = [
+  { key: "schoolName", label: "School name", step: 1 },
+  { key: "tagline", label: "Tagline", step: 4 },
+  { key: "description", label: "School description", step: 4 },
+  { key: "heroImageUrl", label: "Hero image", step: 4 },
+  { key: "email", label: "Email address", step: 3 },
+  { key: "phone", label: "Phone number", step: 3 },
+  { key: "address", label: "Street address", step: 3 },
+  { key: "city", label: "City", step: 3 },
+  { key: "region", label: "Region", step: 3 },
+  { key: "educationalSystems", label: "Educational systems", step: 5 },
+];
+
+const RequiredFieldLabel = ({ label }) => (
+  <div className="flex items-center gap-1.5">
+    <span className="block text-xs font-medium text-surface-600 dark:text-surface-300">
+      {label}
+    </span>
+    <span className="text-[11px] font-semibold text-red-500">*</span>
+  </div>
+);
+
 /** Sub-component rendering quick class preset buttons based on selected educational systems */
 const PresetButtons = ({ systems, onSelect }) => {
   const presets = [];
   if (systems.length === 0 || systems.includes("Anglophone")) {
-    presets.push({ key: "anglophone", label: "Anglophone General", subtitle: "GCE (Form 1–Upper Sixth)" });
-    presets.push({ key: "anglophone_technical", label: "Anglophone Technical", subtitle: "GCE Technical" });
+    presets.push({
+      key: "anglophone",
+      label: "Anglophone General",
+      subtitle: "GCE (Form 1–Upper Sixth)",
+    });
+    presets.push({
+      key: "anglophone_technical",
+      label: "Anglophone Technical",
+      subtitle: "GCE Technical",
+    });
   }
   if (systems.includes("Francophone")) {
-    presets.push({ key: "francophone", label: "Francophone G\u00e9n\u00e9ral", subtitle: "6e–Terminale" });
-    presets.push({ key: "francophone_technique", label: "Francophone Technique", subtitle: "6e–Terminale STT/STI" });
+    presets.push({
+      key: "francophone",
+      label: "Francophone G\u00e9n\u00e9ral",
+      subtitle: "6e–Terminale",
+    });
+    presets.push({
+      key: "francophone_technique",
+      label: "Francophone Technique",
+      subtitle: "6e–Terminale STT/STI",
+    });
   }
-  if (systems.includes("International") || (systems.length === 0 && !systems.includes("Francophone") && !systems.includes("Anglophone"))) {
-    presets.push({ key: "international", label: "International", subtitle: "IGCSE / A-Level / IB" });
+  if (
+    systems.includes("International") ||
+    (systems.length === 0 &&
+      !systems.includes("Francophone") &&
+      !systems.includes("Anglophone"))
+  ) {
+    presets.push({
+      key: "international",
+      label: "International",
+      subtitle: "IGCSE / A-Level / IB",
+    });
   }
   if (presets.length === 0) return null;
   return (
     <div className="mb-5 space-y-2">
-      <p className="text-xs text-surface-500 font-medium">Quick presets — pick one based on your system:</p>
+      <p className="text-xs text-surface-500 font-medium">
+        Quick presets — pick one based on your system:
+      </p>
       <div className="flex flex-wrap gap-2">
         {presets.map((p) => (
           <button
@@ -364,7 +543,9 @@ const PresetButtons = ({ systems, onSelect }) => {
             className="px-4 py-2.5 rounded-lg text-[12px] font-medium border border-dashed border-surface-300 dark:border-surface-600 text-surface-500 dark:text-surface-400 hover:border-primary-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all flex flex-col items-start"
           >
             <span>{p.label}</span>
-            <span className="text-[10px] text-surface-400 mt-0.5">{p.subtitle}</span>
+            <span className="text-[10px] text-surface-400 mt-0.5">
+              {p.subtitle}
+            </span>
           </button>
         ))}
       </div>
@@ -461,7 +642,9 @@ export default function OnboardingPage() {
         address: result.address || "",
         city: result.city || "",
         region: result.region || "",
-        educationalSystems: result.educationalSystems || [],
+        educationalSystems: normalizeEducationalSystemsForView(
+          result.educationalSystems || [],
+        ),
         examType: result.examType || "GCE",
         examPassRate: result.examPassRate || "",
         ranking: result.ranking || "",
@@ -513,7 +696,8 @@ export default function OnboardingPage() {
         toast.success("Logo uploaded successfully");
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Error uploading logo";
+      const msg =
+        err.response?.data?.message || err.message || "Error uploading logo";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -536,7 +720,10 @@ export default function OnboardingPage() {
         toast.success("Cover image uploaded");
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Error uploading cover image";
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Error uploading cover image";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -556,7 +743,10 @@ export default function OnboardingPage() {
         toast.success("Secondary image uploaded");
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Error uploading secondary hero image";
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Error uploading secondary hero image";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -586,7 +776,10 @@ export default function OnboardingPage() {
       setAboutCaptionInput("");
       toast.success(`${responses.length} photo(s) added to About section`);
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Error uploading about photo";
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Error uploading about photo";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -699,6 +892,49 @@ export default function OnboardingPage() {
     setData((prev) => ({ ...prev, classesConfig: presets }));
   };
 
+  const normalizeEducationalSystemsForPayload = (systems) => {
+    const codeMap = {
+      Anglophone: "anglophone_general",
+      Francophone: "francophone_general",
+      Bilingual: "university",
+      International: "university",
+      anglophone: "anglophone_general",
+      francophone: "francophone_general",
+      anglophone_general: "anglophone_general",
+      francophone_general: "francophone_general",
+      anglophone_technical: "anglophone_technical",
+      francophone_technical: "francophone_technical",
+      university: "university",
+    };
+
+    if (!Array.isArray(systems)) return [];
+    return Array.from(
+      new Set(
+        systems
+          .filter(Boolean)
+          .map((value) => String(value).trim())
+          .map((value) => codeMap[value] || value)
+          .filter(Boolean),
+      ),
+    );
+  };
+
+  const normalizeEducationalSystemsForView = (systems) => {
+    const labelMap = {
+      anglophone_general: "Anglophone",
+      francophone_general: "Francophone",
+      anglophone_technical: "Anglophone Technical",
+      francophone_technical: "Francophone Technical",
+      university: "International",
+    };
+
+    if (!Array.isArray(systems)) return [];
+    return systems
+      .filter(Boolean)
+      .map((value) => String(value).trim())
+      .map((value) => labelMap[value] || value);
+  };
+
   const buildPayload = (publish) => {
     let primaryColor = data.primaryColor;
     if (!primaryColor.match(/^#[0-9A-Fa-f]{6}$/)) {
@@ -723,7 +959,9 @@ export default function OnboardingPage() {
       address: data.address,
       city: data.city,
       region: data.region,
-      educationalSystems: data.educationalSystems,
+      educationalSystems: normalizeEducationalSystemsForPayload(
+        data.educationalSystems,
+      ),
       examType: data.examType,
       examPassRate: data.examPassRate,
       ranking: data.ranking,
@@ -770,7 +1008,10 @@ export default function OnboardingPage() {
         toast.error(msg);
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Error saving configuration";
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Error saving configuration";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -782,6 +1023,17 @@ export default function OnboardingPage() {
   const handlePublishAndGoLive = async () => {
     setSaving(true);
     setError("");
+
+    const missing = getMissingRequiredFields();
+    if (missing.length > 0) {
+      const firstMissingStep = missing[0]?.step || 1;
+      setStep(firstMissingStep);
+      const msg = `Please complete the required fields before publishing: ${missing.map((field) => field.label).join(", ")}.`;
+      setError(msg);
+      toast.error(msg);
+      setSaving(false);
+      return;
+    }
 
     const payload = buildPayload(true);
 
@@ -799,7 +1051,9 @@ export default function OnboardingPage() {
             `/site${token ? `?token=${encodeURIComponent(token)}` : ""}`,
           );
           // Small delay so the user can see the toast
-          setTimeout(() => { window.location.href = liveUrl; }, 800);
+          setTimeout(() => {
+            window.location.href = liveUrl;
+          }, 800);
         } else {
           window.location.href = "/dashboard";
         }
@@ -809,7 +1063,10 @@ export default function OnboardingPage() {
         toast.error(msg);
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Error saving configuration";
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Error saving configuration";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -901,6 +1158,19 @@ export default function OnboardingPage() {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+
+  const getMissingRequiredFields = () =>
+    REQUIRED_PUBLISH_FIELDS.filter(({ key }) => {
+      if (key === "educationalSystems") {
+        return (
+          !Array.isArray(data.educationalSystems) ||
+          data.educationalSystems.length === 0
+        );
+      }
+      return !String(data[key] || "").trim();
+    });
+
+  const missingRequiredFields = getMissingRequiredFields();
 
   const StepErr = () =>
     error ? (
@@ -997,6 +1267,15 @@ export default function OnboardingPage() {
     >
       <StepErr />
       <StepSuccess />
+      {missingRequiredFields.length > 0 && (
+        <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+          <div className="font-semibold">Required before publishing</div>
+          <div className="mt-1">
+            Please complete these fields to publish your website:{" "}
+            {missingRequiredFields.map((field) => field.label).join(", ")}.
+          </div>
+        </div>
+      )}
 
       {/* ── STEP 1 — Identity ── */}
       {step === 1 && (
@@ -1009,8 +1288,8 @@ export default function OnboardingPage() {
               {t("steps.logo.title", "School identity")}
             </p>
             <div className="mb-5">
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
-                School name
+              <label className="block mb-1.5">
+                <RequiredFieldLabel label="School name" />
               </label>
               <input
                 name="schoolName"
@@ -1158,7 +1437,7 @@ export default function OnboardingPage() {
           {isSettingsMode ? (
             <div className="flex gap-2.5">
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate("/dashboard")}
                 className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
               >
                 <svg
@@ -1300,8 +1579,8 @@ export default function OnboardingPage() {
               Your contact details will appear on your campus website.
             </p>
             <div className="mb-5">
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
-                Email address
+              <label className="block mb-1.5">
+                <RequiredFieldLabel label="Email address" />
               </label>
               <input
                 name="email"
@@ -1313,8 +1592,8 @@ export default function OnboardingPage() {
               />
             </div>
             <div className="mb-5">
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
-                Phone number
+              <label className="block mb-1.5">
+                <RequiredFieldLabel label="Phone number" />
               </label>
               <input
                 name="phone"
@@ -1326,8 +1605,8 @@ export default function OnboardingPage() {
               />
             </div>
             <div className="mb-5">
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
-                Street address
+              <label className="block mb-1.5">
+                <RequiredFieldLabel label="Street address" />
               </label>
               <textarea
                 name="address"
@@ -1353,8 +1632,8 @@ export default function OnboardingPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
-                  Region
+                <label className="block mb-1.5">
+                  <RequiredFieldLabel label="Region" />
                 </label>
                 <input
                   name="region"
@@ -1392,8 +1671,10 @@ export default function OnboardingPage() {
             </p>
 
             <div className="mb-5">
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
-                {t("content.taglineLabel", "Tagline / Slogan")}
+              <label className="block mb-1.5">
+                <RequiredFieldLabel
+                  label={t("content.taglineLabel", "Tagline / Slogan")}
+                />
               </label>
               <input
                 name="tagline"
@@ -1413,8 +1694,10 @@ export default function OnboardingPage() {
             </div>
 
             <div className="mb-5">
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
-                {t("content.descLabel", "School description")}
+              <label className="block mb-1.5">
+                <RequiredFieldLabel
+                  label={t("content.descLabel", "School description")}
+                />
               </label>
               <textarea
                 name="description"
@@ -1431,8 +1714,8 @@ export default function OnboardingPage() {
 
             {/* Hero image */}
             <div className="mb-5">
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-1.5">
-                {t("hero.heading", "Cover image")}
+              <label className="block mb-1.5">
+                <RequiredFieldLabel label={t("hero.heading", "Cover image")} />
               </label>
               <p className="text-[11px] text-surface-400 mb-3">
                 {t("hero.specs", "Recommended 1920×800px · Max 5MB")}
@@ -1776,8 +2059,8 @@ export default function OnboardingPage() {
             </p>
 
             <div className="mb-5">
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-300 mb-2">
-                Educational systems
+              <label className="block mb-2">
+                <RequiredFieldLabel label="Educational systems" />
               </label>
               <div className="flex flex-wrap gap-2">
                 {[
@@ -1906,7 +2189,10 @@ export default function OnboardingPage() {
               Define the levels, streams, and classes offered at your school.
             </p>
             {data.classesConfig.length === 0 && (
-              <PresetButtons systems={data.educationalSystems || []} onSelect={useClassPresets} />
+              <PresetButtons
+                systems={data.educationalSystems || []}
+                onSelect={useClassPresets}
+              />
             )}
             {data.classesConfig.length > 0 && (
               <div className="space-y-3 mb-5">
@@ -2142,52 +2428,52 @@ export default function OnboardingPage() {
           </div>
 
           <div className="flex gap-2.5">
-              <button
-                onClick={prevStep}
-                className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
+            <button
+              onClick={prevStep}
+              className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                className="w-3.5 h-3.5"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  className="w-3.5 h-3.5"
-                >
-                  <line x1="19" y1="12" x2="5" y2="12" />
-                  <polyline points="12 19 5 12 12 5" />
-                </svg>
-                {t("back", "Back")}
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex-1 h-11 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                style={{ backgroundColor: pc }}
-              >
-                {saving ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                    {t("review.saving", "Saving...")}
-                  </span>
-                ) : (
-                  <>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="w-4 h-4"
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    {t("review.submit", "Continue to preview")}
-                  </>
-                )}
-              </button>
-            </div>
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+              {t("back", "Back")}
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 h-11 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ backgroundColor: pc }}
+            >
+              {saving ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  {t("review.saving", "Saving...")}
+                </span>
+              ) : (
+                <>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-4 h-4"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {t("review.submit", "Continue to preview")}
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
 
@@ -2354,52 +2640,52 @@ export default function OnboardingPage() {
           </div>
 
           <div className="flex gap-2.5">
-              <button
-                onClick={prevStep}
-                className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
+            <button
+              onClick={prevStep}
+              className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                className="w-3.5 h-3.5"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  className="w-3.5 h-3.5"
-                >
-                  <line x1="19" y1="12" x2="5" y2="12" />
-                  <polyline points="12 19 5 12 12 5" />
-                </svg>
-                {t("back", "Back")}
-              </button>
-              <button
-                onClick={handlePublishAndGoLive}
-                disabled={saving}
-                className="flex-1 h-11 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                style={{ backgroundColor: pc }}
-              >
-                {saving ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                    Publishing...
-                  </span>
-                ) : (
-                  <>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      className="w-4 h-4"
-                    >
-                      <path d="M22 2 11 13" />
-                      <path d="M22 2l-7 20-4-9-9-4 20-7z" />
-                    </svg>
-                    Publish my site
-                  </>
-                )}
-              </button>
-            </div>
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+              {t("back", "Back")}
+            </button>
+            <button
+              onClick={handlePublishAndGoLive}
+              disabled={saving}
+              className="flex-1 h-11 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ backgroundColor: pc }}
+            >
+              {saving ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Publishing...
+                </span>
+              ) : (
+                <>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    className="w-4 h-4"
+                  >
+                    <path d="M22 2 11 13" />
+                    <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+                  </svg>
+                  Publish my site
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -2506,8 +2792,7 @@ export default function OnboardingPage() {
                 <span>
                   {totalVisibleSteps > 0
                     ? Math.round(
-                        ((visibleSteps.indexOf(step) + 1) /
-                          totalVisibleSteps) *
+                        ((visibleSteps.indexOf(step) + 1) / totalVisibleSteps) *
                           100,
                       )
                     : 0}
@@ -2543,10 +2828,7 @@ export default function OnboardingPage() {
               const isActive = step === s;
               const isDone = step > s;
               return (
-                <div
-                  key={s}
-                  className="flex items-center gap-1"
-                >
+                <div key={s} className="flex items-center gap-1">
                   <div
                     className={`w-2 h-2 rounded-full transition-all duration-300 ${
                       isDone
@@ -2559,7 +2841,9 @@ export default function OnboardingPage() {
                   {s < totalVisibleSteps && (
                     <div
                       className={`w-6 h-[2px] transition-colors duration-300 ${
-                        isDone ? "bg-primary-300" : "bg-surface-200 dark:bg-surface-700"
+                        isDone
+                          ? "bg-primary-300"
+                          : "bg-surface-200 dark:bg-surface-700"
                       }`}
                     />
                   )}
