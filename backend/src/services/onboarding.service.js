@@ -3,11 +3,52 @@
  * All onboarding fields power the public vitrine landing page for that school's subdomain.
  */
 
-const crypto = require('crypto');
-const sql = require('../config/database');
-const SlugGenerator = require('../utils/slugGenerator');
-const { buildSchoolUrls } = require('../utils/domainHelper');
-const mediaService = require('./media.service');
+const crypto = require("crypto");
+const sql = require("../config/database");
+const SlugGenerator = require("../utils/slugGenerator");
+const { buildSchoolUrls } = require("../utils/domainHelper");
+const mediaService = require("./media.service");
+
+const EDUCATIONAL_SYSTEM_MAP = {
+  Anglophone: "anglophone_general",
+  Francophone: "francophone_general",
+  Bilingual: "university",
+  International: "university",
+  anglophone: "anglophone_general",
+  francophone: "francophone_general",
+  anglo: "anglophone_general",
+  franco: "francophone_general",
+};
+
+const normalizeEducationalSystems = (value) => {
+  if (!Array.isArray(value)) return [];
+  const normalized = new Set();
+
+  value.forEach((item) => {
+    if (typeof item !== "string") return;
+    const trimmed = item.trim();
+    if (!trimmed) return;
+
+    const mapped = EDUCATIONAL_SYSTEM_MAP[trimmed] || trimmed;
+    if (mapped) normalized.add(mapped);
+  });
+
+  return Array.from(normalized).filter((item) =>
+    [
+      "anglophone_general",
+      "francophone_general",
+      "anglophone_technical",
+      "francophone_technical",
+      "university",
+    ].includes(item),
+  );
+};
+
+const normalizeClassesConfig = (value) => {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === "object") return value;
+  return [];
+};
 
 class OnboardingService {
   /**
@@ -29,12 +70,12 @@ class OnboardingService {
     `;
 
     if (schools.length === 0) {
-      throw new Error('School not found');
+      throw new Error("School not found");
     }
 
     const school = schools[0];
     const gallery = await mediaService.listGallery(schoolId);
-    const templateCode = school.template_code || 'bold';
+    const templateCode = school.template_code || "bold";
     const urls = buildSchoolUrls(school.subdomain, templateCode);
 
     return {
@@ -50,7 +91,7 @@ class OnboardingService {
       logoUrl: school.logo_url,
       heroImageUrl: school.hero_image_url,
       heroImageUrl2: school.hero_image_url_2,
-      primaryColor: school.primary_color || '#085041',
+      primaryColor: school.primary_color || "#085041",
       websiteDescription: school.website_description,
       yearFounded: school.year_founded,
       websiteStats: school.website_stats || {},
@@ -61,12 +102,16 @@ class OnboardingService {
       ranking: school.ranking,
       rankingCity: school.ranking_city,
       aboutPhotos: school.about_photos || [],
-      classesConfig: school.classes_config || {},
+      classesConfig: school.classes_config || [],
       templateCode,
       onboardingCompleted: school.onboarding_completed,
       websitePublished: school.website_published,
       emailVerified: school.email_verified,
-      gallery: gallery.map((g) => ({ id: g.media_id, url: g.url, caption: g.caption })),
+      gallery: gallery.map((g) => ({
+        id: g.media_id,
+        url: g.url,
+        caption: g.caption,
+      })),
       urls,
     };
   }
@@ -101,15 +146,20 @@ class OnboardingService {
       websitePublished,
     } = payload;
 
+    const normalizedEducationalSystems =
+      normalizeEducationalSystems(educationalSystems);
+    const normalizedClassesConfig = normalizeClassesConfig(classesConfig);
+
     let templateId = null;
-    let resolvedTemplateCode = templateCode || 'bold';
+    let resolvedTemplateCode = templateCode || "bold";
 
     if (templateCode) {
       const templates = await sql`
         SELECT template_id, template_code FROM website_templates WHERE template_code = ${templateCode}
       `;
       templateId = templates[0]?.template_id || null;
-      resolvedTemplateCode = templates[0]?.template_code || resolvedTemplateCode;
+      resolvedTemplateCode =
+        templates[0]?.template_code || resolvedTemplateCode;
     }
 
     const schools = await sql`
@@ -127,14 +177,14 @@ class OnboardingService {
         website_stats = COALESCE(${websiteStats ? sql.json(websiteStats) : null}, website_stats),
         website_values = COALESCE(${websiteValues ? sql.json(websiteValues) : null}, website_values),
         website_template_id = COALESCE(${templateId}, website_template_id),
-        educational_systems = COALESCE(${educationalSystems ? sql.json(educationalSystems) : null}, educational_systems),
+        educational_systems = COALESCE(${normalizedEducationalSystems.length > 0 ? sql.json(normalizedEducationalSystems) : null}, educational_systems),
         hero_image_url_2 = COALESCE(${heroImageUrl2 || null}, hero_image_url_2),
         exam_type = COALESCE(${examType || null}, exam_type),
         exam_pass_rate = COALESCE(${examPassRate || null}, exam_pass_rate),
         ranking = COALESCE(${ranking || null}, ranking),
         ranking_city = COALESCE(${rankingCity || null}, ranking_city),
         about_photos = COALESCE(${aboutPhotos ? sql.json(aboutPhotos) : null}, about_photos),
-        classes_config = COALESCE(${classesConfig ? sql.json(classesConfig) : null}, classes_config),
+        classes_config = COALESCE(${normalizedClassesConfig ? sql.json(normalizedClassesConfig) : null}, classes_config),
         onboarding_completed = COALESCE(${onboardingCompleted ?? null}, onboarding_completed),
         website_published = COALESCE(${websitePublished ?? null}, website_published),
         updated_at = NOW()
@@ -143,7 +193,7 @@ class OnboardingService {
     `;
 
     if (schools.length === 0) {
-      throw new Error('School not found');
+      throw new Error("School not found");
     }
 
     const school = schools[0];
@@ -157,11 +207,17 @@ class OnboardingService {
   }
 
   async uploadMedia(schoolId, file, mediaType, sortOrder = null) {
-    const allowed = ['logo', 'hero', 'gallery', 'about'];
+    const allowed = ["logo", "hero", "gallery", "about"];
     if (!allowed.includes(mediaType)) {
-      throw new Error('Invalid media type');
+      throw new Error("Invalid media type");
     }
-    return mediaService.saveSchoolMedia(schoolId, file, mediaType, null, sortOrder);
+    return mediaService.saveSchoolMedia(
+      schoolId,
+      file,
+      mediaType,
+      null,
+      sortOrder,
+    );
   }
 
   /**
@@ -175,7 +231,7 @@ class OnboardingService {
     `;
 
     if (schools.length === 0) {
-      throw new Error('Invalid or expired verification link');
+      throw new Error("Invalid or expired verification link");
     }
 
     const school = schools[0];
@@ -191,8 +247,13 @@ class OnboardingService {
       };
     }
 
-    if (school.verification_token_expires_at && new Date(school.verification_token_expires_at) < new Date()) {
-      throw new Error('Verification link has expired. Please request a new one.');
+    if (
+      school.verification_token_expires_at &&
+      new Date(school.verification_token_expires_at) < new Date()
+    ) {
+      throw new Error(
+        "Verification link has expired. Please request a new one.",
+      );
     }
 
     await sql`
@@ -213,7 +274,7 @@ class OnboardingService {
   }
 
   createVerificationToken() {
-    return crypto.randomBytes(32).toString('hex');
+    return crypto.randomBytes(32).toString("hex");
   }
 
   verificationExpiryDate(hours = 48) {
@@ -222,3 +283,5 @@ class OnboardingService {
 }
 
 module.exports = new OnboardingService();
+module.exports.normalizeEducationalSystems = normalizeEducationalSystems;
+module.exports.normalizeClassesConfig = normalizeClassesConfig;
