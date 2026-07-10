@@ -1,0 +1,11 @@
+FROM node:20-alpine
+WORKDIR /app
+
+RUN npm install -g nodemon
+
+COPY package*.json ./
+RUN npm install
+
+EXPOSE 5000
+
+CMD ["nodemon", "--legacy-watch", "src/server.js"]

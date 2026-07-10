@@ -33,7 +33,7 @@ class SchoolService {
       phone,
       password,
       planId,
-      templateCode = 'modern',
+      templateCode = 'bold',
     } = schoolData;
 
     const normalizedSubdomain = this.normalizeSubdomain(subdomain);
@@ -83,7 +83,7 @@ class SchoolService {
           ${schoolName}, ${email}, ${phone || null}, ${city}, ${region || null}, ${normalizedSubdomain},
           ${`Welcome to ${schoolName}`},
           ${templateId}, ${planId}, 'trial', true,
-          true, NOW()
+           false, NOW()
         )
         RETURNING school_id, name, email, subdomain
       `;
@@ -141,7 +141,7 @@ class SchoolService {
       adminEmail: user.email,
       adminName: `${user.first_name} ${user.last_name}`,
       planId,
-      emailVerified: true,
+      emailVerified: false,
       token: session.token,
       user: session.user,
       urls,
@@ -288,6 +288,24 @@ class SchoolService {
     `;
 
     return updated[0];
+  }
+
+  async getPlans() {
+    const plans = await sql`
+      SELECT plan_id, code, name, description, price, currency, max_students, features, sort_order
+      FROM subscription_plans
+      WHERE is_active = true
+      ORDER BY sort_order ASC
+    `;
+    return plans.map(p => ({
+      id: p.code,
+      name: p.name,
+      description: p.description,
+      price: Number(p.price),
+      currency: p.currency,
+      maxStudents: p.max_students,
+      features: p.features || [],
+    }));
   }
 
   async getAllSchools(limit = 10, offset = 0) {

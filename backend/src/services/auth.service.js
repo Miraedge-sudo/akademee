@@ -29,7 +29,7 @@ class AuthService {
       { expiresIn: jwtConfig.expiresIn }
     );
 
-    const templateCode = school.template_code || 'modern';
+    const templateCode = school.template_code || 'bold';
     const urls = buildSchoolUrls(school.subdomain, templateCode);
 
     return {
@@ -47,39 +47,6 @@ class AuthService {
       urls,
     };
   }
-  /**
-   * Register a new user with school
-   */
-  async register(userData) {
-    const { email, password, firstName, lastName, schoolName } = userData;
-
-    const existing = await sql`SELECT user_id FROM users WHERE email = ${email}`;
-    if (existing.length > 0) {
-      throw new Error('Email already exists');
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const subdomain = SlugGenerator.sanitize(schoolName);
-
-    const result = await sql.begin(async (tx) => {
-      const schools = await tx`
-        INSERT INTO schools (name, subdomain, is_active, created_at)
-        VALUES (${schoolName}, ${subdomain}, true, NOW())
-        RETURNING school_id, name, subdomain
-      `;
-
-      const users = await tx`
-        INSERT INTO users (school_id, first_name, last_name, email, password_hash, is_active, created_at)
-        VALUES (${schools[0].school_id}, ${firstName}, ${lastName}, ${email}, ${hashedPassword}, true, NOW())
-        RETURNING user_id, email, first_name
-      `;
-
-      return { school: schools[0], user: users[0] };
-    });
-
-    return { id: result.user.user_id, email: result.user.email, firstName: result.user.first_name };
-  }
-
   /**
    * Login user with subdomain, email and password
    */
@@ -311,12 +278,52 @@ class AuthService {
   }
 
   /**
-   * Verify email token — delegates to onboarding service
+   * Blacklist a JWT token so it can no longer be used.
+   * Stores a hash of the token with its expiry time for cleanup.
    */
-  async verifyEmail(token) {
-    const onboardingService = require('./onboarding.service');
-    return onboardingService.verifySchoolEmail(token);
+  async blacklistToken(token) {
+    try {
+      const decoded = jwt.decode(token);
+      if (!decoded || !decoded.exp) return { blacklisted: false };
+
+      const crypto = require('crypto');
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+      const expiresAt = new Date(decoded.exp * 1000);
+
+      await sql`
+        INSERT INTO token_blacklist (token_hash, expires_at)
+        VALUES (${tokenHash}, ${expiresAt})
+        ON CONFLICT DO NOTHING
+      `;
+
+      return { blacklisted: true };
+    } catch {
+      return { blacklisted: false };
+    }
   }
+
+  /**
+   * Check if a token has been blacklisted (logged out).
+   */
+  async isTokenBlacklisted(token) {
+    const crypto = require('crypto');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const rows = await sql`
+      SELECT id FROM token_blacklist
+      WHERE token_hash = ${tokenHash} AND expires_at > NOW()
+    `;
+
+    return rows.length > 0;
+  }
+
+  /**
+   * Clean up expired blacklist entries (run periodically).
+   */
+  async cleanExpiredBlacklist() {
+    await sql`DELETE FROM token_blacklist WHERE expires_at <= NOW()`;
+  }
+
 }
 
 module.exports = new AuthService();

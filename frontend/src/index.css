@@ -95,12 +95,11 @@
     @apply bg-surface-900 text-surface-100;
   }
 
-  h1,
-  h2,
-  h3,
-  h4 {
-    font-family: var(--font-display);
-  }
+  /* Removed — typography is managed per-page via font-display class where needed.
+     The global rule forced serif on ALL h1-h4, overriding templates like Bold/Playful
+     that expect sans-serif. Pages needing serif (LandingPage, admin) use font-display class. */
+  /* h1, h2, h3, h4 { font-family: var(--font-display); } */
+  
 }
 
 /* ── Animations ── */
@@ -196,7 +195,7 @@
 
   .animate-pulse-on-hover:hover {
     transform: scale(1.05);
-    box-shadow: 0 10px 25px -5px rgba(13, 158, 136, 0.4);
+    box-shadow: 0 10px 25px -5px color-mix(in srgb, var(--primary-color) 40%, transparent);
   }
 
   /* Scroll reveal */

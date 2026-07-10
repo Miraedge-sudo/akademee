@@ -1,53 +1,63 @@
-/**
- * Global Error Middleware
- */
+const AppError = require('../utils/AppError');
+const logger = require('../utils/logger');
 
-const isDev = process.env.NODE_ENV === 'development';
+const errorMiddleware = (err, req, res, _next) => {
+  const reqId = req.reqId || '-';
 
-const errorMiddleware = (err, req, res, next) => {
-  if (!err || typeof err !== 'object') {
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error.',
+  if (err instanceof AppError) {
+    logger.warn(`${err.statusCode} ${err.message}`, {
+      reqId,
+      path: req.originalUrl,
+      method: req.method,
+      details: err.details,
     });
-  }
-
-  if (isDev) {
-    console.error(err);
+    return res.status(err.statusCode).json({
+      success: false,
+      message: err.message,
+      details: err.details || undefined,
+      reqId,
+    });
   }
 
   if (err.name === 'MulterError') {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({
-        success: false,
-        message: 'File size exceeds 10MB limit.',
-      });
-    }
-
-    if (err.code === 'LIMIT_FILE_COUNT') {
-      return res.status(400).json({
-        success: false,
-        message: 'Too many files.',
-      });
-    }
-  }
-
-  if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-    return res.status(401).json({
+    const messages = {
+      LIMIT_FILE_SIZE: 'File too large',
+      LIMIT_FILE_COUNT: 'Too many files',
+      LIMIT_UNEXPECTED_FILE: `Unexpected file field: ${err.field}`,
+    };
+    logger.warn(`Multer error: ${err.code}`, { reqId, path: req.originalUrl });
+    return res.status(400).json({
       success: false,
-      message: err.name === 'TokenExpiredError' ? 'Token expired.' : 'Invalid token.',
+      message: messages[err.code] || err.message,
+      reqId,
     });
   }
 
-  const statusCode = err.status || 500;
-  const message = statusCode === 500 && !isDev
-    ? 'Internal server error.'
-    : err.message || 'Internal server error.';
+  if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+    logger.warn(`JWT error: ${err.name}`, { reqId });
+    return res.status(401).json({
+      success: false,
+      message: err.name === 'TokenExpiredError' ? 'Session expired' : 'Invalid token',
+      reqId,
+    });
+  }
+
+  const statusCode = err.status || err.statusCode || 500;
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  logger.error(`${statusCode} - ${err.message}`, {
+    reqId,
+    path: req.originalUrl,
+    method: req.method,
+    stack: isProduction ? undefined : err.stack,
+    ...(err.details || {}),
+  });
 
   res.status(statusCode).json({
     success: false,
-    message,
-    ...(isDev && { stack: err.stack }),
+    message: isProduction && statusCode >= 500 ? 'Internal server error' : err.message,
+    reqId,
+    ...(isProduction ? {} : { stack: err.stack }),
   });
 };
 

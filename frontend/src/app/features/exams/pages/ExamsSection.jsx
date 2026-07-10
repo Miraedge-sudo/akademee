@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { FiFileText } from "react-icons/fi";
 
 const EXAM_META = {
   "gce-o-level": {
@@ -123,12 +124,7 @@ export default function ExamsSection() {
       <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-8">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="w-16 h-16 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-surface-400">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
+            <FiFileText className="w-8 h-8 text-surface-400" />
           </div>
           <h3 className="text-lg font-medium text-surface-700 dark:text-surface-200 mb-2">
             {t("exams.comingSoon", "Module en cours de développement")}

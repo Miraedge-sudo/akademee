@@ -1,10 +1,13 @@
+import { FiEye } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getPublicWebsite } from "../../../core/api/websiteService";
-import ModernTemplate from "../templates/ModernTemplate";
-import ClassicTemplate from "../templates/ClassicTemplate";
-import MinimalTemplate from "../templates/MinimalTemplate";
+import BoldTemplate from "../templates/BoldTemplate";
+import PlayfulTemplate from "../templates/PlayfulTemplate";
+import PremiumTemplate from "../templates/PremiumTemplate";
 import { getSubdomain } from "../../../core/utils/subdomainHelper";
+
+const VALID_TEMPLATES = ["bold", "playful", "premium"];
 
 export default function PublicWebsitePage() {
   const [searchParams] = useSearchParams();
@@ -62,23 +65,23 @@ export default function PublicWebsitePage() {
   }
 
   // Choisir le bon template selon school.templateCode
-  const templateCode = school.templateCode || school.template?.code || "modern";
+  // Fallback: si le backend retourne 'modern'/'classic'/'minimal' (anciens codes),
+  // on les mappe vers les nouveaux templates
+  const rawCode = school.templateCode || school.template?.code || "bold";
+  const templateCode = VALID_TEMPLATES.includes(rawCode) ? rawCode : "bold";
 
   return (
     <>
       {/* Preview banner — shown when accessing via ?preview=1 before publishing */}
       {isPreviewMode && (
         <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-amber-950 px-4 py-2.5 flex items-center justify-center gap-3 text-sm font-medium shadow-lg">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4 flex-shrink-0">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
+          <FiEye className="w-4 h-4 flex-shrink-0" />
           <span>Preview mode — this site is not yet published.</span>
         </div>
       )}
-      {templateCode === "modern"  && <ModernTemplate  school={school} />}
-      {templateCode === "classic" && <ClassicTemplate school={school} />}
-      {templateCode === "minimal" && <MinimalTemplate school={school} />}
+      {templateCode === "bold"    && <BoldTemplate    school={school} />}
+      {templateCode === "playful" && <PlayfulTemplate school={school} />}
+      {templateCode === "premium" && <PremiumTemplate school={school} />}
     </>
   );
 }

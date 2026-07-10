@@ -1,438 +1,335 @@
-# Akademee Backend - API Server
+# Akademee Backend — API Server
 
-A comprehensive school management system backend built with **Express.js**, **PostgreSQL (Supabase)**, and **Node.js v22+**.
+School management system backend built with **Express.js**, **PostgreSQL**, and **Node.js 20+**.
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 backend/
 ├── src/
-│   ├── config/                          # Configuration files
-│   │   ├── database.js                  # PostgreSQL connection via postgres driver
-│   │   ├── cloudinary.js                # Cloudinary image storage config
-│   │   ├── multer.js                    # File upload configuration
-│   │   ├── jwt.js                       # JWT token settings
-│   │   ├── cors.js                      # CORS allowed domains
-│   │   └── domains.js                   # Tenant domain configuration
+│   ├── config/                    # Configuration
+│   │   ├── database.js            # PostgreSQL connection (postgres driver)
+│   │   ├── env.js                 # Environment variable validation
+│   │   ├── swagger.js             # OpenAPI 3.0 spec generator
+│   │   ├── sentry.js              # Sentry error monitoring init
+│   │   ├── cors.js                # CORS whitelist + tenant subdomain patterns
+│   │   ├── jwt.js                 # JWT secret & expiry
+│   │   ├── cloudinary.js          # Cloudinary image upload config
+│   │   ├── multer.js              # Multer file upload config
+│   │   └── domains.js             # Tenant domain configuration
 │   │
-│   ├── database/                        # Database related files
-│   │   ├── migrations/                  # SQL schema migration files
-│   │   ├── functions/                   # PostgreSQL stored procedures
-│   │   └── seeds/                       # Seed data for initial setup
+│   ├── database/
+│   │   └── migrations/            # 019 migrations (SQL schema)
 │   │
-│   ├── middleware/                      # Express middleware
-│   │   ├── auth.middleware.js           # JWT verification & authorization
-│   │   ├── role.middleware.js           # RBAC permission checking
-│   │   ├── schoolResolver.middleware.js # Extract school from subdomain
-│   │   ├── tenant.middleware.js         # Attach school_id to request
-│   │   ├── upload.middleware.js         # Multer upload handling
-│   │   ├── validate.middleware.js       # Request validation
-│   │   └── error.middleware.js          # Global error handler
+│   ├── middleware/
+│   │   ├── auth.middleware.js     # JWT verification + blacklist check
+│   │   ├── role.middleware.js     # RBAC role enforcement
+│   │   ├── schoolResolver.middleware.js  # Subdomain → school lookup
+│   │   ├── tenant.middleware.js   # Attach school_id to request
+│   │   ├── validate.middleware.js # express-validator runner
+│   │   ├── audit.middleware.js    # Action audit log writer
+│   │   ├── requestId.middleware.js # UUID per request
+│   │   ├── httpLogger.middleware.js # Morgan → Winston stream
+│   │   ├── cache.middleware.js    # Response caching + invalidation
+│   │   ├── rateLimiter.middleware.js # Standard / strict rate limiters
+│   │   ├── error.middleware.js    # Typed error handler (AppError, Multer, JWT)
+│   │   └── upload.middleware.js   # Multer upload handler
 │   │
-│   ├── controllers/                     # Request handlers (API endpoint logic)
-│   │   ├── auth.controller.js           # Authentication endpoints
-│   │   ├── school.controller.js         # School management
-│   │   ├── student.controller.js        # Student CRUD operations
-│   │   ├── user.controller.js           # User management
-│   │   ├── grade.controller.js          # Grading system
-│   │   ├── class.controller.js          # Class management
-│   │   ├── subject.controller.js        # Subject management
-│   │   ├── academicYear.controller.js   # Academic year setup
-│   │   ├── attendance.controller.js     # Attendance tracking
-│   │   ├── guardian.controller.js       # Guardian management
-│   │   ├── payment.controller.js        # Payment processing
-│   │   ├── fee.controller.js            # Fee management
-│   │   ├── notification.controller.js   # Notifications
-│   │   ├── report.controller.js         # Report generation
-│   │   └── website.controller.js        # Website/portal management
+│   ├── controllers/               # 25 controllers (HTTP handlers)
+│   ├── routes/                    # 30 route files (all endpoints)
+│   ├── services/                  # 30 services (business logic)
+│   ├── validators/                # 15 validator files (express-validator chains)
+│   ├── utils/
+│   │   ├── logger.js              # Winston logger (console + file transports)
+│   │   ├── cache.js               # node-cache wrapper (TTL, prefix invalidation)
+│   │   ├── AppError.js            # Typed error class with static factories
+│   │   ├── response.js            # Standardized success/error/paginated responses
+│   │   ├── constants.js           # Application constants
+│   │   ├── domainHelper.js        # School URL builder
+│   │   └── slugGenerator.js       # Subdomain slug generator
 │   │
-│   ├── routes/                          # API endpoint definitions
-│   │   ├── auth.routes.js
-│   │   ├── school.routes.js
-│   │   ├── student.routes.js
-│   │   ├── user.routes.js
-│   │   ├── grade.routes.js
-│   │   ├── class.routes.js
-│   │   ├── subject.routes.js
-│   │   ├── academic.routes.js
-│   │   ├── attendance.routes.js
-│   │   ├── guardian.routes.js
-│   │   ├── payment.routes.js
-│   │   ├── finance.routes.js
-│   │   ├── notification.routes.js
-│   │   ├── report.routes.js
-│   │   ├── website.routes.js
-│   │   └── config.routes.js
-│   │
-│   ├── validators/                      # Request validation schemas
-│   │   ├── auth.validator.js
-│   │   ├── school.validator.js
-│   │   ├── student.validator.js
-│   │   ├── grade.validator.js
-│   │   └── payment.validator.js
-│   │
-│   ├── services/                        # Business logic layer
-│   │   ├── auth.service.js              # Login/register logic
-│   │   ├── school.service.js            # School onboarding & management
-│   │   └── website.service.js           # Website/portal services
-│   │
-│   ├── uploads/                         # Temporary file storage
-│   │
-│   ├── utils/                           # Utility functions
-│   │   ├── response.js                  # Standardized API responses
-│   │   ├── constants.js                 # Application constants
-│   │   ├── domainHelper.js              # Domain/tenant utilities
-│   │   └── slugGenerator.js             # URL slug generation
-│   │
-│   ├── app.js                           # Express app setup & middleware
-│   └── server.js                        # Server entry point
+│   ├── app.js                     # Express app setup
+│   └── server.js                  # Entry point with graceful shutdown
 │
 ├── scripts/
-│   ├── migrate.js                       # Database migration runner
-│   ├── seed.js                          # Database seeding script
-│   └── testConnection.js                # Database connection test
+│   ├── migrate.js                 # Migration runner
+│   ├── seed.js                    # Database seeder
+│   └── testConnection.js          # Connectivity test
 │
-├── package.json                         # Node.js dependencies
-├── .env                                 # Environment variables (DO NOT COMMIT)
-├── .env.example                         # Environment template
-├── .gitignore
-└── README.md                            # This file
+├── Dockerfile                     # Production container
+├── Dockerfile.dev                 # Dev container (nodemon)
+├── .dockerignore
+├── .eslintrc.json                 # ESLint config
+├── package.json
+└── README.md
 ```
-## 🚀 Quick Start
 
-### Prerequisites
-- **Node.js** ≥ 14.0.0 (tested with v22.14.0)
-- **npm** or **yarn**
-- **Supabase** account (PostgreSQL database)
-- **Cloudinary** account (optional, for image uploads)
+## Quick Start
 
-### Installation & Setup
+```bash
+# Install dependencies
+npm install
 
-1. **Clone and navigate to backend:**
-   ```bash
-   git clone https://github.com/Miraedge-sudo/akademee.git
-   cd akademee/backend
-   ```
+# Configure environment
+cp .env.example .env
+# Edit .env with your DATABASE_URL, JWT_SECRET, etc.
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+# Run migrations (all 019)
+npm run migrate
 
-3. **Create environment file:**
-   ```bash
-   cp .env.example .env
-   ```
+# Seed initial data (roles, templates, plans)
+npm run seed
 
-4. **Configure environment variables** in `.env`:
-   ```env
-   # Database
-   DATABASE_URL=postgresql://user:password@host:5432/dbname
-   
-   # Server
-   PORT=5000
-   NODE_ENV=development
-   
-   # JWT
-   JWT_SECRET=your_strong_secret_key
-   JWT_EXPIRES_IN=7d
-   
-   # Frontend URLs
-   FRONTEND_URL=http://localhost:3000
-   FRONTEND_URL_PRODUCTION=https://akademee.cm
-   FRONTEND_PORT=3000
-   API_BASE_URL=http://localhost:5000
-   
-   # Cloudinary (for image uploads)
-   CLOUDINARY_NAME=your_cloud_name
-   CLOUDINARY_API_KEY=your_api_key
-   CLOUDINARY_API_SECRET=your_api_secret
-   
-   # Multi-tenant domains
-   TENANT_DEV_DOMAIN=lvh.me
-   TENANT_PROD_DOMAIN=akademee.cm
-   ```
+# Start dev server
+npm run dev
+```
 
-5. **Run database migrations:**
-   ```bash
-   npm run migrate
-   ```
+Server runs at `http://localhost:5000` — API docs at `http://localhost:5000/api-docs`.
 
-6. **Seed database with initial data:**
-   ```bash
-   npm run seed
-   ```
-
-7. **Test database connection:**
-   ```bash
-   npm run testConnection
-   ```
-
-8. **Start development server:**
-   ```bash
-   npm run dev
-   ```
-   
-   Server runs on: `http://localhost:5000`
-
-## 📋 Available Scripts
+## Available Scripts
 
 | Command | Description |
-|---------|------------|
-| `npm start` | Run production server |
-| `npm run dev` | Run development server (with nodemon) |
-| `npm run migrate` | Run database migrations |
-| `npm run seed` | Seed database with initial data |
-| `npm test` | Run test suite |
-| `npm run lint` | Check code style with ESLint |
-| `npm run lint:fix` | Fix code style issues |
+|---------|-------------|
+| `npm start` | Production server |
+| `npm run dev` | Dev server with nodemon |
+| `npm run migrate [num]` | Run migrations (all or specific) |
+| `npm run seed` | Seed database |
+| `npm test` | Run Jest tests |
+| `npm run lint` | ESLint check |
+| `npm run lint:fix` | ESLint auto-fix |
 
-## 🔌 API Endpoints Overview
+## API Endpoints
 
-### Authentication
-- `POST /api/auth/register` – Register new user account
-- `POST /api/auth/login` – Login with credentials
-- `GET /api/auth/logout` – Logout user
-- `POST /api/auth/refresh-token` – Get new JWT token
+Full interactive documentation at `/api-docs` when the server is running.
 
-### Schools
-- `POST /api/schools` – Create new school
-- `GET /api/schools` – List schools
-- `GET /api/schools/:id` – Get school details
-- `PUT /api/schools/:id` – Update school
+| Area | Base Path | Key Endpoints |
+|------|-----------|---------------|
+| Auth | `/api/auth` | `POST /login`, `POST /logout`, `GET /me`, `POST /forgot-password`, `POST /reset-password`, `POST /verify-school` |
+| Schools | `/api/schools` | `POST /register`, `GET /onboarding`, `PUT /onboarding`, `POST /onboarding/media`, `GET /plans`, `GET /templates` |
+| Website | `/api/website` | `GET /public/:subdomain`, `GET /data/:schoolId`, `POST /template/update` |
+| Users | `/api/users` | `GET /profile`, `PUT /profile`, `PUT /change-password` |
+| User Mgmt | `/api/users/manage` | Full CRUD for admin users |
+| Students | `/api/students` | Full CRUD + list |
+| Guardians | `/api/guardians` | CRUD + list by student |
+| Academics | `/api/academics` | `GET/POST /years`, `PUT/DELETE /years/:id`, `POST /years/:id/activate`, `GET/POST /terms`, `PUT/DELETE /terms/:id`, `POST /terms/:id/set-active` |
+| Classes | `/api/classes` | Full CRUD, `POST /:id/students`, `DELETE /:id/students/:studentId` |
+| Subjects | `/api/subjects` | Full CRUD, `POST /:id/classes`, `POST /:id/teachers` |
+| Grades | `/api/grades` | CRUD, `GET /student/:studentId`, `GET /class/:classId`, `GET /period/:periodId`, `POST /calculate`, `GET /report-card/:studentId`, `POST /bulk-upload` |
+| Attendance | `/api/attendance` | `POST /record`, `GET /student/:studentId`, `GET /class/:classId`, `GET /statistics`, `POST /bulk` |
+| Finance | `/api/finance` | `GET/POST /fees`, `PUT/DELETE /fees/:id`, `POST /fees/assign`, `GET /student/:studentId`, `GET /reports` |
+| Payments | `/api/payments` | `POST /initiate`, `POST /confirm`, `GET /:id`, `GET /student/:studentId`, `GET /report` |
+| Exams | `/api/exams` | CRUD, `POST /:id/register`, `GET /:id/registrations`, `PUT /:id/result` |
+| Reports | `/api/reports` | `GET /bulletin/:studentId`, `GET /bulletin/:studentId/pdf`, `GET /class/:classId`, `GET /class/:classId/pdf`, `GET /performance`, `GET /export` |
+| Notifications | `/api/notifications` | `GET /`, `GET /unread/count`, `POST /send`, `PUT /:id/read`, `DELETE /:id` |
+| Announcements | `/api/announcements` | CRUD, `POST /:id/publish`, `POST /:id/unpublish` |
+| Periods | `/api/periods` | CRUD (terms/semesters) |
+| Enrollments | `/api/enrollments` | CRUD, `PUT /:id/transfer`, `GET /student/:studentId` |
+| Dashboard | `/api/dashboard` | `GET /stats`, `GET /activities`, `GET /revenue` |
+| Roles | `/api/roles` | List roles/permissions, assign/remove user roles |
+| Audit | `/api/audit-logs` | `GET /` (paginated log viewer) |
+| Config | `/api/config` | App configuration |
+| API Docs | `/api-docs` | Swagger UI + `GET /spec.json` |
 
-### Students
-- `POST /api/students` – Create student
-- `GET /api/students` – List students
-- `GET /api/students/:id` – Get student details
-- `PUT /api/students/:id` – Update student
-- `DELETE /api/students/:id` – Delete student
+## Authentication & Authorization
 
-### Grades & Academic
-- `POST /api/grades` – Record grade
-- `GET /api/grades` – List grades
-- `GET /api/grades/student/:studentId` – Get student's grades
-- `PUT /api/grades/:id` – Update grade
-- `POST /api/academic/years` – Manage academic years
-- `POST /api/classes` – Manage classes
-- `POST /api/subjects` – Manage subjects
+### JWT Flow
+1. `POST /api/auth/login` with `{ subdomain, email, password }`
+2. Returns JWT token (configurable expiry, default 7d)
+3. Client sends `Authorization: Bearer <token>` on all subsequent requests
+4. Token blacklisted on logout — checked on every request via `token_blacklist` table
 
-### Attendance
-- `POST /api/attendance` – Record attendance
-- `GET /api/attendance` – List attendance records
-- `GET /api/attendance/student/:studentId` – Get student attendance
+### Roles
 
-### Finance
-- `POST /api/payments` – Create payment record
-- `GET /api/payments` – List payments
-- `GET /api/finance/fees` – Manage fees
-
-### Reports & Notifications
-- `GET /api/reports/bulletin/:studentId` – Generate report card
-- `GET /api/reports/class/:classId` – Class report
-- `GET /api/notifications` – Get notifications
-
-See [API_DOCUMENTATION.md](../API_DOCUMENTATION.md) for complete endpoint documentation.
-
-## 🔐 Authentication & Authorization
-
-### JWT Token Flow
-1. User calls `POST /api/auth/login` with credentials
-2. Server validates and returns JWT token
-3. Client includes token in Authorization header: `Bearer <token>`
-4. Middleware verifies token before processing request
-5. Token expires after `JWT_EXPIRES_IN` period
-
-### Role-Based Access Control (RBAC)
-
-| Role | Permissions |
-|------|------------|
+| Role | Access |
+|------|--------|
 | SUPER_ADMIN | Full system access |
 | ADMIN | School administration |
 | TEACHER | Class & grade management |
 | ACCOUNTANT | Financial operations |
 | STUDENT | View own data |
-| GUARDIAN | View child data |
+| GUARDIAN | View child's data |
 | STAFF | General functions |
 
-Roles enforced via `role.middleware.js`
+Permissions enforced via `role.middleware.js` against the `role_permissions` / `permissions` tables (36 granular permission codes).
 
-## 📊 Response Format
+## Response Format
 
-### Success Response
 ```json
 {
   "success": true,
-  "message": "Operation completed successfully",
-  "data": { /* actual response data */ },
-  "timestamp": "2024-01-15T10:30:00.000Z"
+  "message": "...",
+  "data": { ... },
+  "reqId": "uuid"
 }
 ```
 
-### Error Response
-```json
-{
-  "success": false,
-  "message": "Error description",
-  "error": "Detailed error message",
-  "statusCode": 400,
-  "timestamp": "2024-01-15T10:30:00.000Z"
-}
-```
+Paginated responses include `total`, `limit`, `offset` alongside the data array.
 
-## 🏗️ Architecture & Design Patterns
+Error responses include `reqId` for request tracing.
 
-### MVC-style Organization
-- **Routes** → Define endpoints
-- **Controllers** → Handle HTTP requests
-- **Services** → Implement business logic
-- **Middleware** → Process requests (auth, validation, etc.)
-- **Utils** → Helper functions
-- **Validators** → Request validation rules
+## Architecture
 
-### Key Middleware
-- `auth.middleware.js` – JWT verification
-- `role.middleware.js` – RBAC permission checking
-- `schoolResolver.middleware.js` – Extract school from subdomain
-- `tenant.middleware.js` – Tenant isolation
-- `error.middleware.js` – Global error handling
-- `validate.middleware.js` – Request validation
+### Layered Pattern
+- **Routes** — Define HTTP method + path, wire middleware chain
+- **Validators** — express-validator chains for input validation
+- **Controllers** — Extract params from request, delegate to service, format response
+- **Services** — Business logic with tenant-scoped SQL queries
+- **Middleware** — Cross-cutting concerns (auth, audit, cache, rate limit, error handling)
 
-## 🛡️ Security Features
+### Key Middleware (in order)
+1. `helmet` — Security headers
+2. `compression` — Gzip response compression
+3. `cors` — Origin whitelist
+4. `requestId` — UUID per request (`X-Request-Id`)
+5. `httpLogger` — Morgan → Winston structured logging
+6. `schoolResolver` — Subdomain → school lookup
+7. `tenant` — Attach `school_id` / `req.tenantId`
+8. Route-level: auth → role → validator → rate limiter → audit → controller
 
-✅ **JWT-based authentication** – Stateless, secure tokens  
-✅ **Role-Based Access Control** – Fine-grained permissions  
-✅ **Password hashing** – bcrypt with salt rounds  
-✅ **Input validation** – express-validator for all requests  
-✅ **SQL Injection Prevention** – Parameterized queries via postgres driver  
-✅ **CORS Configuration** – Whitelist specific domains  
-✅ **Error Handling** – No sensitive data in error messages  
-✅ **Environment separation** – Dev/prod configs via `.env`  
+## Security
 
-## 🗄️ Database
+- **JWT authentication** — Stateless tokens with blacklist support
+- **RBAC** — Role-based access with granular permission checks
+- **Password hashing** — bcrypt (10 salt rounds)
+- **Input validation** — All mutation endpoints validated via express-validator
+- **SQL injection prevention** — Parameterized queries via `postgres` tagged template literals
+- **CORS** — Strict origin whitelist with tenant subdomain patterns
+- **Rate limiting** — Standard (30/15min) and strict (10/15min) limiters on all mutation routes
+- **Audit logging** — Every POST/PUT/DELETE logged to `audit_logs` table
+- **Error handling** — No stack traces in production; typed errors via `AppError` class
+- **Helmet** — Secure HTTP headers
 
-### PostgreSQL via Supabase
-- Managed PostgreSQL database
-- SSL/TLS encrypted connections
-- Automatic backups
-- Real-time capabilities
+## Monitoring & Observability
 
-### Key Tables
-- `schools` – School organizations
-- `users` – User accounts & authentication
-- `students` – Student records
-- `academic_years` – School years
-- `classes` – Class sections
-- `subjects` – Subjects offered
-- `grades` – Student grades
-- `attendance` – Attendance records
-- `payments` – Payment transactions
-- `notifications` – System notifications
+| Tool | Purpose |
+|------|---------|
+| **Winston** | Structured logging (console in dev, JSON files in prod). Transports: `error.log`, `combined.log` with 5MB rotation |
+| **Morgan** | HTTP request logging piped into Winston's `http` level |
+| **Sentry** | Error tracking (enable by setting `SENTRY_DSN` in `.env`). Captures stack traces, user context, request breadcrumbs |
+| **Request ID** | Every request gets a UUID — logged by Winston and Sentry, returned in all error responses |
+| **Health check** | `GET /health` returns `{ status: "OK", timestamp }` — used by Docker HEALTHCHECK |
+
+## Caching
+
+In-memory cache via `node-cache` (max 5000 keys, default 5min TTL):
+
+| Route Group | TTL |
+|-------------|-----|
+| `/api/config` | 10 min |
+| `/api/website` | 5 min |
+| `/api/reports`, `/api/audit-logs` | 5 min |
+| `/api/dashboard` | 2 min |
+| `/api/grades`, `/api/grade-calculations` | 2 min |
+| `/api/attendance-stats`, `/api/fee-calculations` | 2 min |
+
+Responses include `X-Cache: HIT|MISS` header. Cache invalidated automatically on mutation via `invalidateCache` middleware.
+
+## Database
+
+### PostgreSQL
+
+Connection via the `postgres` driver (tagged template literals). SSL enabled in production via `DATABASE_SSL=true`.
+
+### Key Tables (31 total)
+
+| Table | Purpose |
+|-------|---------|
+| `schools` | Tenant organizations |
+| `users` | User accounts (staff, teachers, students, guardians) |
+| `students` | Student records (linked to users) |
+| `guardians` | Parent/guardian relationships |
+| `classes` | Class sections with capacity |
+| `subjects` | Subjects with coefficient |
+| `class_subjects` | Many-to-many class↔subject (compulsory flag, coefficient) |
+| `subject_teachers` | Teacher assignments to subject+class |
+| `periods` | Academic terms/semesters |
+| `academic_years` | School years |
+| `enrollments` | Student enrollment (supports transfers) |
+| `grades` | Student scores per subject per period |
+| `grade_scales` | Letter grade boundaries (francophone/anglophone systems) |
+| `attendance` | Daily attendance records |
+| `exams` | External exam definitions |
+| `exam_registrations` | Student exam registration + results |
+| `fees` | Fee structures |
+| `student_fees` | Per-student fee assignments |
+| `payments` | Payment transactions |
+| `notifications` | In-app notifications |
+| `announcements` | School-wide announcements |
+| `audit_logs` | Action audit trail |
+| `roles` / `permissions` / `role_permissions` | RBAC system |
+| `website_templates` | Public website theme presets |
 
 ### Running Migrations
+
 ```bash
-# Run all migrations
+# Run all pending migrations
 npm run migrate
 
-# Reset database (careful!)
+# Run a specific migration
+npm run migrate 019
+
+# Reset database (drops all tables)
 npm run migrate reset
 ```
 
-### Seeding Database
-```bash
-# Populate initial data (roles, templates)
-npm run seed
-```
+## Docker
 
-## 🧪 Testing
+### Production
 
 ```bash
-npm test                    # Run jest tests
-npm test -- --coverage      # With coverage report
+# Set required env vars
+echo "JWT_SECRET=$(openssl rand -base64 32)" >> .env
+echo "DB_PASSWORD=$(openssl rand -base64 16)" >> .env
+
+# Start stack
+docker compose up -d
+
+# Run migrations
+docker compose exec backend node scripts/migrate.js
+
+# Seed data
+docker compose exec backend node scripts/seed.js
 ```
 
-## 📁 File Uploads
+Stack: `db` (postgres:16), `backend` (port 5000), `frontend` (port 80). Frontend nginx reverse-proxies `/api/` and `/api-docs` to backend.
 
-Images and documents uploaded via **Cloudinary**:
-- Max file size: 10MB
-- Supported formats: JPG, PNG, GIF, WebP, PDF, DOC, DOCX
+### Development
 
-Configure Cloudinary credentials in `.env`
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
 
-## 🐛 Troubleshooting
+Hot-reload enabled via volume mounts + nodemon (backend) / vite dev server (frontend).
 
-### "Missing DATABASE_URL" Error
-**Solution:** Ensure `.env` is in project root and `require('dotenv').config()` is called before importing database config.
+## CI/CD
 
-### CORS Errors
-**Solution:** Update `src/config/cors.js` with your frontend domain
+GitHub Actions workflow (`.github/workflows/ci.yml`):
 
-### JWT Token Validation Fails
-**Solution:** Check token hasn't expired or been modified. Request new token via refresh endpoint.
+1. **Backend** — `npm ci` → `eslint` → `jest` (skips if no tests)
+2. **Frontend** — `npm ci` → `eslint` → `vite build`
+3. **Deploy** — On push to `main`, after lint+build pass (add your deploy logic)
 
-### Database Connection Timeout
-**Solution:** Verify DATABASE_URL is correct and Supabase instance is running
+## Troubleshooting
 
-### File Upload Fails
-**Solution:** Check Cloudinary credentials in `.env` and file size < 10MB
+| Problem | Check |
+|---------|-------|
+| `Missing DATABASE_URL` | Ensure `.env` exists with valid Supabase/PostgreSQL connection string |
+| CORS errors | Verify origin is in `cors.js` whitelist or is a valid tenant subdomain |
+| `School not found` on login | Confirm subdomain exists in `schools` table and `is_active = true` |
+| JWT expired | Token TTL is 7d by default — login again |
+| `relation does not exist` | Run `npm run migrate` to apply all migrations |
+| File upload fails | Check Cloudinary credentials and file size < 10MB |
+| Sentry not reporting | `SENTRY_DSN` must be set in `.env` — empty DSN disables Sentry silently |
+| Cache serving stale data | Cache TTL varies by route (2-10 min). Mutation handlers auto-invalidate |
+| 429 Too Many Requests | Rate limited — standard 30 req/15min, strict 10 req/15min for mutations |
+| Slow queries | Run migration 019 to add missing indexes. Check query plans via `EXPLAIN ANALYZE` |
 
-## 📚 Documentation
+## Docs
 
-- [Main README](../README.md) – Project overview
-- [API_DOCUMENTATION.md](../API_DOCUMENTATION.md) – Complete API reference
-- [POSTMAN_QUICK_GUIDE.md](../POSTMAN_QUICK_GUIDE.md) – Postman setup
-- [SCHEMA_COMPARISON.md](../SCHEMA_COMPARISON.md) – Database schema notes
-
-## 🤝 Contributing
-
-1. Create feature branch: `git checkout -b feature/your-feature`
-2. Make changes and test
-3. Commit: `git commit -m 'Add feature description'`
-4. Push: `git push origin feature/your-feature`
-5. Open Pull Request
-
-## 📄 License
-
-Proprietary – All rights reserved
-
-## 💬 Support
-
-For questions or issues:
-1. Check existing GitHub issues
-2. Review API documentation
-3. Contact development team
+- **Swagger UI**: `GET /api-docs` (when server is running)
+- **Raw spec**: `GET /api-docs/spec.json`
+- `backend/src/config/swagger.js` — OpenAPI 3.0 definition with all schemas and path annotations
 
 ---
 
-**Akademee Backend v1.0.0** | **Node.js v22+** | **Express.js** | **PostgreSQL/Supabase**
-
-## 🌐 Multi-Tenant Support
-
-The system supports multiple schools (multi-tenant):
-- Schools are resolved via subdomain (e.g., school-name.akademee.app)
-- Tenant middleware automatically attaches `school_id` to requests
-- All data is scoped to the school
-
-## 📖 API Documentation
-
-For detailed API documentation, see [API.md](../../docs/API.md)
-
-## 🤝 Contributing
-
-1. Create a feature branch (`git checkout -b feature/amazing-feature`)
-2. Commit changes (`git commit -m 'Add amazing feature'`)
-3. Push to branch (`git push origin feature/amazing-feature`)
-4. Open a Pull Request
-
-## 📄 License
-
-MIT License - see LICENSE file for details
-
-## 📞 Support
-
-For issues and questions, please create an issue in the repository.
-
----
-
-**Last Updated**: January 2024
-**Version**: 1.0.0
+**Akademee Backend v1.0.0** | Node.js 20+ | Express.js | PostgreSQL

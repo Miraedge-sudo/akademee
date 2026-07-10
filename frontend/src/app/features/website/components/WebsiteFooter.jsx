@@ -1,3 +1,5 @@
+import { FiHome } from "react-icons/fi";
+
 export default function WebsiteFooter({ school, variant = "dark" }) {
   const s = school || {};
   const year = new Date().getFullYear();
@@ -19,9 +21,7 @@ export default function WebsiteFooter({ school, variant = "dark" }) {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-3.5">
               <div className="w-[34px] h-[34px] rounded-md flex items-center justify-center flex-shrink-0" style={{ background: s.primaryColor+"99" }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" className="w-[17px] h-[17px]">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
+                <FiHome className="w-[17px] h-[17px] text-white" />
               </div>
               <span className="font-display text-[17px] text-white">{s.schoolName || "School"}</span>
             </div>

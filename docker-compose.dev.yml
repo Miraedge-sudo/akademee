@@ -1,0 +1,65 @@
+x-common: &common
+  networks: [akademee]
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:16-alpine
+    <<: *common
+    environment:
+      POSTGRES_DB: akademee
+      POSTGRES_USER: akademee
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-akademee_dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U akademee"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    <<: *common
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      DATABASE_URL: postgresql://akademee:${DB_PASSWORD:-akademee_dev}@db:5432/akademee
+      DATABASE_SSL: "false"
+      JWT_SECRET: dev-secret-change-in-production
+      JWT_EXPIRES_IN: 7d
+      FRONTEND_URL: http://localhost:3000
+      TENANT_DEV_DOMAIN: lvh.me
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/scripts:/app/scripts
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    <<: *common
+    environment:
+      VITE_API_URL: http://localhost:5000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+
+volumes:
+  pgdata_dev:
+
+networks:
+  akademee:

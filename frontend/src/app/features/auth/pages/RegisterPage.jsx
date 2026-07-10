@@ -1,3 +1,4 @@
+import { FiCheck, FiArrowLeft, FiArrowRight, FiHome, FiGlobe, FiMapPin, FiMail, FiPhone, FiUser, FiLock, FiEye, FiLoader } from "react-icons/fi";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -37,7 +38,7 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     planId: "basic",
-    templateCode: "modern",
+    templateCode: "bold",
   });
   const [showPwd, setShowPwd] = useState(false);
   const [showPwd2, setShowPwd2] = useState(false);
@@ -145,19 +146,16 @@ export default function RegisterPage() {
 
   const staggerItem = (i) => ({ animationDelay: `${i * 0.07}s` });
 
-  const Icon = ({ children, className = "" }) => (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={`absolute left-3 w-4 h-4 text-surface-400 pointer-events-none ${className}`}
-    >
-      {children}
-    </svg>
-  );
+  const iconMap = {
+    home: <FiHome className="absolute left-3 w-4 h-4 text-surface-400 pointer-events-none" />,
+    globe: <FiGlobe className="absolute left-3 w-4 h-4 text-surface-400 pointer-events-none" />,
+    mapPin: <FiMapPin className="absolute left-3 w-4 h-4 text-surface-400 pointer-events-none" />,
+    mail: <FiMail className="absolute left-3 w-4 h-4 text-surface-400 pointer-events-none" />,
+    phone: <FiPhone className="absolute left-3 w-4 h-4 text-surface-400 pointer-events-none" />,
+    user: <FiUser className="absolute left-3 w-4 h-4 text-surface-400 pointer-events-none" />,
+    lock: <FiLock className="absolute left-3 w-4 h-4 text-surface-400 pointer-events-none" />,
+  };
+  const Icon = ({ name }) => iconMap[name] || null;
 
   return (
     <div className="flex min-h-screen bg-surface-50 dark:bg-surface-900">
@@ -188,10 +186,7 @@ export default function RegisterPage() {
           {/* Logo with fade-in */}
           <div className="flex items-center gap-3 mb-12 animate-fadeIn">
             <div className="w-9 h-9 rounded-md bg-white/15 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px]">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
+              <FiHome className="w-[18px] h-[18px] text-white" />
             </div>
             <span className="font-display text-xl text-teal-100">Akademee</span>
           </div>
@@ -311,11 +306,7 @@ export default function RegisterPage() {
         {/* Top nav */}
         <div className="relative z-10 flex items-center justify-between px-6 lg:px-11 py-5 bg-white/80 dark:bg-surface-800/80 backdrop-blur-md border-b border-surface-100 dark:border-surface-700">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-md bg-teal-900 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
+            <div className="w-7 h-7 rounded-md bg-teal-900 flex items-center justify-center">            <FiHome className="w-3.5 h-3.5 text-white" />
             </div>
             <span className="font-display text-base text-surface-800 dark:text-surface-100">Akademee</span>
           </div>
@@ -345,9 +336,7 @@ export default function RegisterPage() {
                 }`}
               >
                 {step > s.num ? (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <FiCheck className="w-3.5 h-3.5" />
                 ) : (
                   s.num
                 )}
@@ -405,10 +394,7 @@ export default function RegisterPage() {
                         {t("register.school.name", "School name")} <span className="text-teal-600">*</span>
                       </label>
                       <div className="relative flex items-center">
-                        <Icon>
-                          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                          <polyline points="9 22 9 12 15 12 15 22" />
-                        </Icon>
+                        <Icon name="home" />
                         <input
                           name="schoolName"
                           type="text"
@@ -426,11 +412,7 @@ export default function RegisterPage() {
                         {t("register.school.subdomain", "Campus subdomain")} <span className="text-teal-600">*</span>
                       </label>
                       <div className="relative flex items-center">
-                        <Icon>
-                          <circle cx="12" cy="12" r="10" />
-                          <line x1="2" y1="12" x2="22" y2="12" />
-                          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                        </Icon>
+                        <Icon name="globe" />
                         <input
                           name="subdomain"
                           type="text"
@@ -458,10 +440,7 @@ export default function RegisterPage() {
                           {t("register.school.city", "City")} <span className="text-teal-600">*</span>
                         </label>
                         <div className="relative flex items-center">
-                          <Icon>
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                            <circle cx="12" cy="10" r="3" />
-                          </Icon>
+                        <Icon name="mapPin" />
                           <input
                             name="city"
                             type="text"
@@ -478,10 +457,7 @@ export default function RegisterPage() {
                           {t("register.school.region", "Region")}
                         </label>
                         <div className="relative flex items-center">
-                          <Icon>
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                            <circle cx="12" cy="10" r="3" />
-                          </Icon>
+                        <Icon name="mapPin" />
                           <input
                             name="region"
                             type="text"
@@ -520,9 +496,7 @@ export default function RegisterPage() {
                         {t("register.school.phone", "Phone number")} <span className="text-[11px] text-surface-400 font-normal">({t("register.optional", "optional")})</span>
                       </label>
                       <div className="relative flex items-center">
-                        <Icon>
-                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.95a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-                        </Icon>
+                        <Icon name="phone" />
                         <input
                           name="phone"
                           type="tel"
@@ -581,10 +555,7 @@ export default function RegisterPage() {
                           {t("register.admin.firstName", "First name")} <span className="text-teal-600">*</span>
                         </label>
                         <div className="relative flex items-center">
-                          <Icon>
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                          </Icon>
+                        <Icon name="user" />
                           <input
                             name="firstName"
                             type="text"
@@ -601,10 +572,7 @@ export default function RegisterPage() {
                           {t("register.admin.lastName", "Last name")} <span className="text-teal-600">*</span>
                         </label>
                         <div className="relative flex items-center">
-                          <Icon>
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                          </Icon>
+                        <Icon name="user" />
                           <input
                             name="lastName"
                             type="text"
@@ -623,10 +591,7 @@ export default function RegisterPage() {
                         {t("register.admin.email", "Email address")} <span className="text-teal-600">*</span>
                       </label>
                       <div className="relative flex items-center">
-                        <Icon>
-                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                          <polyline points="22,6 12,13 2,6" />
-                        </Icon>
+                        <Icon name="mail" />
                         <input
                           name="adminEmail"
                           type="email"
@@ -644,10 +609,7 @@ export default function RegisterPage() {
                         {t("register.admin.password", "Password")} <span className="text-teal-600">*</span>
                       </label>
                       <div className="relative flex items-center">
-                        <Icon>
-                          <rect x="3" y="11" width="18" height="11" rx="2" />
-                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        </Icon>
+                        <Icon name="lock" />
                         <input
                           name="password"
                           type={showPwd ? "text" : "password"}
@@ -663,10 +625,7 @@ export default function RegisterPage() {
                           onClick={() => setShowPwd((v) => !v)}
                           className="absolute right-3 text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 transition-colors"
                         >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </svg>
+                          <FiEye className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -676,10 +635,7 @@ export default function RegisterPage() {
                         {t("register.admin.confirmPassword", "Confirm password")} <span className="text-teal-600">*</span>
                       </label>
                       <div className="relative flex items-center">
-                        <Icon>
-                          <rect x="3" y="11" width="18" height="11" rx="2" />
-                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        </Icon>
+                        <Icon name="lock" />
                         <input
                           name="confirmPassword"
                           type={showPwd2 ? "text" : "password"}
@@ -695,10 +651,7 @@ export default function RegisterPage() {
                           onClick={() => setShowPwd2((v) => !v)}
                           className="absolute right-3 text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 transition-colors"
                         >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </svg>
+                          <FiEye className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -710,10 +663,7 @@ export default function RegisterPage() {
                       onClick={prevStep}
                       className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-md hover:bg-surface-50 dark:hover:bg-surface-700 transition-all duration-200 active:scale-[0.98] flex items-center gap-1.5"
                     >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
-                        <line x1="19" y1="12" x2="5" y2="12" />
-                        <polyline points="12 19 5 12 12 5" />
-                      </svg>
+                      <FiArrowLeft className="w-3.5 h-3.5" />
                       {t("register.back", "Back")}
                     </button>
                     <button
@@ -818,10 +768,7 @@ export default function RegisterPage() {
                       onClick={prevStep}
                       className="h-11 px-5 border-[1.5px] border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium rounded-md hover:bg-surface-50 dark:hover:bg-surface-700 transition-all duration-200 active:scale-[0.98] flex items-center gap-1.5"
                     >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
-                        <line x1="19" y1="12" x2="5" y2="12" />
-                        <polyline points="12 19 5 12 12 5" />
-                      </svg>
+                      <FiArrowLeft className="w-3.5 h-3.5" />
                       {t("register.back", "Back")}
                     </button>
                     <button
@@ -831,18 +778,12 @@ export default function RegisterPage() {
                     >
                       {loading ? (
                         <span className="flex items-center gap-2">
-                          <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-                            <path d="M4 12a8 8 0 0 1 8-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
-                          </svg>
+                          <FiLoader className="animate-spin w-4 h-4" />
                           {t("register.creating", "Creating your campus...")}
                         </span>
                       ) : (
                         <>
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                            <polyline points="22 4 12 14.01 9 11.01" />
-                          </svg>
+                          <FiCheck className="w-4 h-4" />
                           {t("register.submit", "Create my campus")}
                         </>
                       )}

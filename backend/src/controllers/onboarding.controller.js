@@ -62,15 +62,6 @@ class OnboardingController {
     }
   }
 
-  async resendVerification(req, res, next) {
-    try {
-      const schoolService = require('../services/school.service');
-      const result = await schoolService.resendVerificationEmail(req.schoolId);
-      response.success(res, 'Verification email sent', result);
-    } catch (error) {
-      next(error);
-    }
-  }
 }
 
 module.exports = new OnboardingController();
