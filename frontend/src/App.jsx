@@ -25,6 +25,8 @@ import WebsiteSettingsPage from "./app/features/settings/pages/WebsiteSettingsPa
 import ExamsSection from "./app/features/exams/pages/ExamsSection";
 import SeriesSection from "./app/features/series/pages/SeriesSection";
 import ClassesChildrenSection from "./app/features/classes/pages/ClassesChildrenSection";
+import CreateClassPage from "./app/features/classes/pages/CreateClassPage";
+import ClassDetailPage from "./app/features/classes/pages/ClassDetailPage";
 import ProgramsSection from "./app/features/programs/pages/ProgramsSection";
 import AdmissionsSection from "./app/features/admissions/pages/AdmissionsSection";
 import FacultiesPage from "./app/features/faculties/pages/FacultiesPage";
@@ -112,7 +114,7 @@ function App() {
           <Route path="series/industriel" element={<SeriesSection />} />
           <Route path="series/tertiaire" element={<SeriesSection />} />
 
-          {/* Class level routes (system-specific) */}
+          {/* Class level routes (system-specific) — MUST be before :id to avoid conflicts */}
           <Route path="classes/lower-secondary" element={<ClassesChildrenSection />} />
           <Route path="classes/upper-secondary" element={<ClassesChildrenSection />} />
           <Route path="classes/college" element={<ClassesChildrenSection />} />
@@ -121,6 +123,10 @@ function App() {
           <Route path="classes/tech-upper" element={<ClassesChildrenSection />} />
           <Route path="classes/tech-college" element={<ClassesChildrenSection />} />
           <Route path="classes/tech-lycee" element={<ClassesChildrenSection />} />
+          {/* Class CRUD routes */}
+          <Route path="classes/new" element={<CreateClassPage />} />
+          <Route path="classes/:id/edit" element={<CreateClassPage />} />
+          <Route path="classes/:id" element={<ClassDetailPage />} />
 
           {/* Grade routes */}
           <Route path="grades" element={<GradesPage />} />

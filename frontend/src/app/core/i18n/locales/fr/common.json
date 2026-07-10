@@ -54,81 +54,76 @@
     "loading": "Chargement...",
     "saving": "Enregistrement..."
   },
-  "websiteSettings": {
-    "title": "Site Vitrine — Configuration",
-    "subtitle": "Configurez le site public de votre école — logo, couleurs, contenu et plus",
-    "tabs": {
-      "identity": "Identité",
-      "content": "Contenu",
-      "template": "Template",
-      "stats": "Stats & Valeurs",
-      "publish": "Publication"
+  "classes": {
+    "title": "Classes",
+    "subtitle": "Gérer les niveaux et les classes",
+    "subtitleWithCount": "{count} classe(s) · {students} élève(s)",
+    "newClass": "Nouvelle classe",
+    "editClass": "Modifier la classe",
+    "deleteClass": "Supprimer la classe",
+    "createClass": "Créer une nouvelle classe",
+    "createSubtitle": "Définissez le niveau, assignez un professeur et la capacité.",
+    "classCreated": "Classe créée avec succès !",
+    "classDeleted": "Classe supprimée avec succès !",
+    "classUpdated": "Classe mise à jour avec succès !",
+    "totalClasses": "Total classes",
+    "totalStudents": "Total élèves",
+    "activeLevels": "Niveaux actifs",
+    "almostFull": "Presque pleines",
+    "searchPlaceholder": "Rechercher par classe ou niveau...",
+    "noClasses": "Aucune classe",
+    "noClassesDesc": "Créez votre première classe pour commencer à organiser vos élèves.",
+    "createFirst": "Créer une classe",
+    "academicYear": "Année académique",
+    "classLevel": "Niveau",
+    "stream": "Filière",
+    "section": "Section",
+    "className": "Nom de la classe",
+    "maxCapacity": "Capacité maximale",
+    "classTeacher": "Professeur principal",
+    "assignLater": "Assigner plus tard",
+    "noTeacher": "Aucun professeur assigné",
+    "capacity": "Capacité",
+    "students": "Élèves",
+    "subjects": "Matières",
+    "teachers": "Enseignants",
+    "enrollmentProgress": "Progression des inscriptions",
+    "student": "Élève",
+    "matricule": "Matricule",
+    "status": "Statut",
+    "fees": "Frais",
+    "subject": "Matière",
+    "code": "Code",
+    "coefficient": "Coefficient",
+    "noStudents": "Aucun élève inscrit",
+    "noStudentsDesc": "Ajoutez des élèves à cette classe pour commencer.",
+    "noSubjects": "Aucune matière",
+    "noSubjectsDesc": "Ajoutez des matières avec coefficients pour définir le programme.",
+    "noTeachers": "Aucun enseignant assigné",
+    "noTeachersDesc": "Assignez un professeur principal pour gérer cette classe.",
+    "addStudent": "Ajouter un élève",
+    "edit": "Modifier",
+    "view": "Voir",
+    "backToClasses": "Retour aux classes",
+    "classNotFound": "Classe introuvable",
+    "redirecting": "Redirection vers la liste des classes...",
+    "checklist": {
+      "yearSelected": "Année académique sélectionnée",
+      "levelChosen": "Niveau choisi",
+      "streamSelected": "Filière sélectionnée (6e)",
+      "nameSet": "Nom de la classe défini",
+      "teacherAssigned": "Professeur assigné"
     },
-    "logo": {
-      "title": "Logo de l'école",
-      "desc": "Téléchargez le logo de votre école. PNG, JPG ou SVG — max 2Mo.",
-      "upload": "Télécharger le logo"
-    },
-    "color": {
-      "title": "Couleur principale",
-      "desc": "Cette couleur sera utilisée pour les boutons, liens et accents sur votre site."
-    },
-    "tagline": {
-      "title": "Slogan",
-      "desc": "Une courte phrase qui capture l'esprit de votre école.",
-      "placeholder": "Former les leaders de demain, aujourd'hui."
-    },
-    "description": {
-      "title": "Description de l'école",
-      "desc": "Dites aux familles ce qui rend votre école spéciale.",
-      "placeholder": "Bienvenue dans notre école — un endroit où chaque enfant s'épanouit..."
-    },
-    "hero": {
-      "title": "Image de couverture (Hero)",
-      "desc": "La bannière principale de votre site. Recommandé 1920×800px — max 5Mo.",
-      "upload": "Cliquez pour télécharger l'image de couverture"
-    },
-    "template": {
-      "title": "Template du site",
-      "desc": "Choisissez l'apparence de votre site. Vous pouvez changer cela à tout moment."
-    },
-    "stats": {
-      "title": "Statistiques de l'école",
-      "desc": "Affichez des chiffres clés sur votre site pour impressionner les visiteurs.",
-      "students": "Élèves inscrits",
-      "teachers": "Enseignants",
-      "classes": "Classes"
-    },
-    "values": {
-      "title": "Valeurs de l'école",
-      "desc": "Ajoutez les valeurs fondamentales qui définissent la mission de votre école.",
-      "placeholder": "ex: Excellence, Intégrité, Communauté...",
-      "empty": "Aucune valeur ajoutée. Tapez-en une ci-dessus et cliquez sur Ajouter."
-    },
-    "publish": {
-      "title": "Publier le site",
-      "desc": "Rendez votre site visible au public."
-    },
-    "summary": {
-      "title": "Résumé",
-      "logo": "Logo",
-      "uploaded": "Téléchargé",
-      "notSet": "—",
-      "tagline": "Slogan",
-      "template": "Template",
-      "stats": "Stats",
-      "values": "Valeurs",
-      "status": "Statut",
-      "published": "Publié",
-      "draft": "Brouillon"
-    },
-    "info": {
-      "title": "URL de votre site",
-      "notAvailable": "Pas encore disponible"
-    },
-    "saved": "Configuration enregistrée avec succès",
-    "preview": "Aperçu",
-    "unsaved": "Vous avez des modifications non enregistrées",
-    "allSaved": "Toutes les modifications sont enregistrées"
+    "livePreview": "Aperçu en direct",
+    "lowerSecondary": "Premier cycle",
+    "upperSecondary": "Second cycle",
+    "college": "Collège",
+    "lycee": "Lycée",
+    "techLower": "Technique premier cycle",
+    "techUpper": "Technique second cycle",
+    "techCollege": "Collège Technique",
+    "techLycee": "Lycée Technique",
+    "comingSoon": "Module en cours de développement",
+    "comingSoonDesc": "Cette section vous permettra de gérer les niveaux et les classes."
   }
 }

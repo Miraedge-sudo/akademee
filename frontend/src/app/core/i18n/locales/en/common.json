@@ -54,81 +54,76 @@
     "loading": "Loading...",
     "saving": "Saving..."
   },
-  "websiteSettings": {
-    "title": "Site Vitrine — Configuration",
-    "subtitle": "Configure your school's public website — logo, colours, content & more",
-    "tabs": {
-      "identity": "Identity",
-      "content": "Content",
-      "template": "Template",
-      "stats": "Stats & Values",
-      "publish": "Publish"
+  "classes": {
+    "title": "Classes",
+    "subtitle": "Manage class levels and sections",
+    "subtitleWithCount": "{count} classes · {students} students",
+    "newClass": "New class",
+    "editClass": "Edit class",
+    "deleteClass": "Delete class",
+    "createClass": "Create a new class",
+    "createSubtitle": "Define the class level, assign a teacher and set the capacity.",
+    "classCreated": "Class created successfully!",
+    "classDeleted": "Class deleted successfully!",
+    "classUpdated": "Class updated successfully!",
+    "totalClasses": "Total classes",
+    "totalStudents": "Total students",
+    "activeLevels": "Levels active",
+    "almostFull": "Almost full",
+    "searchPlaceholder": "Search by class or level...",
+    "noClasses": "No classes yet",
+    "noClassesDesc": "Create your first class to start organising students.",
+    "createFirst": "Create class",
+    "academicYear": "Academic year",
+    "classLevel": "Class level",
+    "stream": "Stream",
+    "section": "Section",
+    "className": "Class name",
+    "maxCapacity": "Maximum capacity",
+    "classTeacher": "Class teacher",
+    "assignLater": "Assign later",
+    "noTeacher": "No teacher assigned",
+    "capacity": "Capacity",
+    "students": "Students",
+    "subjects": "Subjects",
+    "teachers": "Teachers",
+    "enrollmentProgress": "Enrollment progress",
+    "student": "Student",
+    "matricule": "Matricule",
+    "status": "Status",
+    "fees": "Fees",
+    "subject": "Subject",
+    "code": "Code",
+    "coefficient": "Coefficient",
+    "noStudents": "No students enrolled",
+    "noStudentsDesc": "Add students to this class to get started.",
+    "noSubjects": "No subjects yet",
+    "noSubjectsDesc": "Add subjects with coefficients to define the curriculum.",
+    "noTeachers": "No teacher assigned",
+    "noTeachersDesc": "Assign a class teacher to manage this class.",
+    "addStudent": "Add student",
+    "edit": "Edit",
+    "view": "View",
+    "backToClasses": "Back to classes",
+    "classNotFound": "Class not found",
+    "redirecting": "Redirecting to classes list...",
+    "checklist": {
+      "yearSelected": "Academic year selected",
+      "levelChosen": "Level chosen",
+      "streamSelected": "Stream selected (6th form)",
+      "nameSet": "Class name set",
+      "teacherAssigned": "Teacher assigned"
     },
-    "logo": {
-      "title": "School Logo",
-      "desc": "Upload your school logo. PNG, JPG or SVG — max 2MB.",
-      "upload": "Upload logo"
-    },
-    "color": {
-      "title": "Primary Colour",
-      "desc": "This colour will be used for buttons, links, and accents across your website."
-    },
-    "tagline": {
-      "title": "Tagline / Slogan",
-      "desc": "A short phrase that captures your school's spirit.",
-      "placeholder": "Shaping the leaders of tomorrow, today."
-    },
-    "description": {
-      "title": "School Description",
-      "desc": "Tell families what makes your school special.",
-      "placeholder": "Welcome to our school — a place where every child thrives..."
-    },
-    "hero": {
-      "title": "Cover Image (Hero)",
-      "desc": "The main banner of your campus website. Recommended 1920×800px — max 5MB.",
-      "upload": "Click to upload cover image"
-    },
-    "template": {
-      "title": "Website Template",
-      "desc": "Choose how your campus website looks. You can change this anytime."
-    },
-    "stats": {
-      "title": "School Statistics",
-      "desc": "Display key numbers on your website to impress visitors.",
-      "students": "Students enrolled",
-      "teachers": "Teachers",
-      "classes": "Classes"
-    },
-    "values": {
-      "title": "School Values",
-      "desc": "Add the core values that define your school's mission.",
-      "placeholder": "e.g. Excellence, Integrity, Community...",
-      "empty": "No values added yet. Type one above and click Add."
-    },
-    "publish": {
-      "title": "Publish Website",
-      "desc": "Make your campus website visible to the public."
-    },
-    "summary": {
-      "title": "Summary",
-      "logo": "Logo",
-      "uploaded": "Uploaded",
-      "notSet": "—",
-      "tagline": "Tagline",
-      "template": "Template",
-      "stats": "Stats",
-      "values": "Values",
-      "status": "Status",
-      "published": "Published",
-      "draft": "Draft"
-    },
-    "info": {
-      "title": "Your website URL",
-      "notAvailable": "Not available yet"
-    },
-    "saved": "Configuration saved successfully",
-    "preview": "Preview",
-    "unsaved": "You have unsaved changes",
-    "allSaved": "All changes saved"
+    "livePreview": "Live preview",
+    "lowerSecondary": "Lower Secondary",
+    "upperSecondary": "Upper Secondary",
+    "college": "Collège",
+    "lycee": "Lycée",
+    "techLower": "Technical Lower",
+    "techUpper": "Technical Upper",
+    "techCollege": "Collège Technique",
+    "techLycee": "Lycée Technique",
+    "comingSoon": "Module under development",
+    "comingSoonDesc": "This section will let you manage class levels and sections."
   }
 }

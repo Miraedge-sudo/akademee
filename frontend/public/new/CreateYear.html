@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Academic Year Setup — Akademee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal-900:#085041;--teal-700:#0F6E56;--teal-600:#1D9E75;
+  --teal-400:#5DCAA5;--teal-100:#C8F0E4;--teal-50:#E1F5EE;
+  --surface-900:#1A1F1B;--surface-800:#2A3029;--surface-700:#434D45;
+  --surface-600:#5C665E;--surface-500:#6E7A70;--surface-400:#9BA59C;
+  --surface-300:#BFC4BB;--surface-200:#D8DBD5;--surface-100:#EEF0EC;
+  --surface-50:#F7F8F6;--white:#fff;
+  --red:#EF4444;--amber:#F59E0B;--blue:#3B82F6;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:20px;--r-2xl:28px;
+  --sh-sm:0 2px 8px rgba(0,0,0,.05);--sh-md:0 4px 24px rgba(0,0,0,.08);--sh-lg:0 16px 48px rgba(0,0,0,.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--surface-50);color:var(--surface-900);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes slideRight{from{width:0}to{width:var(--w)}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes popIn{0%{opacity:0;transform:scale(.6)}60%{transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes gradPan{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+/* ── Layout ── */
+.shell{display:flex;min-height:100vh}
+
+/* ── Left panel ── */
+.left-panel{width:320px;flex-shrink:0;background:linear-gradient(160deg,var(--teal-900) 0%,#0a6650 60%,var(--teal-600) 100%);background-size:200% 200%;animation:gradPan 10s ease infinite;display:flex;flex-direction:column;padding:36px 32px;position:sticky;top:0;height:100vh}
+.left-logo{display:flex;align-items:center;gap:10px;margin-bottom:48px;animation:fadeIn .6s cubic-bezier(.16,1,.3,1) both}
+.left-logo-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center}
+.left-logo-name{font-family:'Playfair Display',serif;font-size:20px;color:white;font-weight:600}
+.left-steps{flex:1;display:flex;flex-direction:column;gap:0}
+.step-item{display:flex;align-items:flex-start;gap:14px;position:relative}
+.step-item:not(:last-child)::after{content:'';position:absolute;left:17px;top:36px;width:2px;height:calc(100% - 12px);background:rgba(255,255,255,.12)}
+.step-connector-done{background:rgba(255,255,255,.35) !important}
+.step-num{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);position:relative;z-index:1}
+.step-num-done{background:rgba(255,255,255,.9);color:var(--teal-900)}
+.step-num-active{background:white;color:var(--teal-900);box-shadow:0 0 0 4px rgba(255,255,255,.2)}
+.step-num-pending{background:rgba(255,255,255,.1);color:rgba(255,255,255,.4);border:2px solid rgba(255,255,255,.15)}
+.step-body{padding:6px 0 28px}
+.step-label{font-size:13px;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:2px;transition:color .2s}
+.step-label-pending{color:rgba(255,255,255,.35) !important}
+.step-sub{font-size:11.5px;color:rgba(255,255,255,.45);line-height:1.5}
+.left-note{font-size:12px;color:rgba(255,255,255,.3);line-height:1.6;padding-top:20px;border-top:1px solid rgba(255,255,255,.08)}
+
+/* ── Right panel ── */
+.right-panel{flex:1;display:flex;flex-direction:column;overflow-y:auto}
+.right-topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1.5px solid var(--surface-100);background:var(--white);flex-shrink:0}
+.progress-bar-wrap{flex:1;max-width:280px;margin:0 24px}
+.progress-bar-track{height:4px;background:var(--surface-100);border-radius:50px;overflow:hidden}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--teal-900),var(--teal-600));border-radius:50px;transition:width .6s cubic-bezier(.16,1,.3,1)}
+.progress-label{font-size:11.5px;color:var(--surface-400);margin-bottom:6px;font-weight:500}
+.right-content{flex:1;padding:48px 40px;max-width:680px;width:100%}
+.right-content-inner{animation:fadeUp .5s cubic-bezier(.16,1,.3,1) both}
+
+/* ── Section eyebrow ── */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--teal-600);margin-bottom:8px}
+.page-title{font-family:'Playfair Display',serif;font-size:clamp(24px,3.5vw,34px);font-weight:700;color:var(--surface-900);line-height:1.2;margin-bottom:8px}
+.page-sub{font-size:14px;color:var(--surface-400);line-height:1.7;margin-bottom:36px;max-width:520px}
+
+/* ── Form fields ── */
+.field-group{margin-bottom:22px}
+.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--surface-700);margin-bottom:7px;letter-spacing:.2px}
+.field-label .req{color:var(--teal-600);margin-left:2px}
+.field-input{width:100%;height:48px;padding:0 16px;border:1.5px solid var(--surface-100);border-radius:var(--r-lg);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--surface-900);background:white;outline:none;transition:all .2s;appearance:none}
+.field-input:focus{border-color:var(--teal-600);box-shadow:0 0 0 4px rgba(8,80,65,.09);background:white}
+.field-input.error{border-color:var(--red);box-shadow:0 0 0 4px rgba(239,68,68,.08)}
+.field-hint{font-size:12px;color:var(--surface-400);margin-top:6px;line-height:1.5}
+.field-error{font-size:12px;color:var(--red);margin-top:5px;display:none}
+.has-error .field-error{display:block}
+.has-error .field-hint{display:none}
+select.field-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239BA59C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;cursor:pointer;padding-right:40px}
+
+/* ── Date row ── */
+.date-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* ── Term cards ── */
+.terms-section{margin-top:32px;margin-bottom:28px}
+.terms-title{font-size:13px;font-weight:700;color:var(--surface-700);margin-bottom:4px}
+.terms-sub{font-size:12px;color:var(--surface-400);margin-bottom:18px}
+.term-card{border:1.5px solid var(--surface-100);border-radius:var(--r-xl);overflow:hidden;margin-bottom:12px;transition:border-color .2s,box-shadow .2s}
+.term-card:hover{border-color:var(--surface-200);box-shadow:var(--sh-sm)}
+.term-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;cursor:pointer;background:var(--surface-50);transition:background .15s}
+.term-header:hover{background:var(--surface-100)}
+.term-header-left{display:flex;align-items:center;gap:12px}
+.term-number{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.term-name{font-size:14px;font-weight:700;color:var(--surface-900)}
+.term-dates-preview{font-size:12px;color:var(--surface-400)}
+.term-toggle{width:28px;height:28px;border-radius:50%;background:var(--white);border:1.5px solid var(--surface-200);display:flex;align-items:center;justify-content:center;transition:all .25s cubic-bezier(.34,1.56,.64,1)}
+.term-toggle svg{width:13px;height:13px;stroke:var(--surface-400);stroke-width:2;transition:transform .25s}
+.term-card.open .term-toggle svg{transform:rotate(180deg)}
+.term-card.open .term-toggle{background:var(--teal-50);border-color:var(--teal-200)}
+.term-body{display:none;padding:18px;border-top:1.5px solid var(--surface-100)}
+.term-card.open .term-body{display:block;animation:fadeUp .3s cubic-bezier(.16,1,.3,1)}
+.seq-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.seq-row:last-child{margin-bottom:0}
+.seq-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--surface-400);margin-bottom:10px;grid-column:1/-1}
+
+/* ── System selector ── */
+.system-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+.system-card{border:2px solid var(--surface-100);border-radius:var(--r-xl);padding:18px;cursor:pointer;transition:all .2s cubic-bezier(.34,1.56,.64,1);background:white;text-align:left}
+.system-card:hover{border-color:var(--surface-200);transform:translateY(-2px);box-shadow:var(--sh-md)}
+.system-card.selected{border-color:var(--teal-600);background:var(--teal-50);transform:translateY(-2px);box-shadow:0 8px 24px rgba(8,80,65,.12)}
+.system-card-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--surface-200);display:flex;align-items:center;justify-content:center;margin-bottom:12px;transition:all .25s cubic-bezier(.34,1.56,.64,1)}
+.system-card.selected .system-card-check{background:var(--teal-900);border-color:var(--teal-900);animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
+.system-card.selected .system-card-check svg{stroke:white;width:11px;height:11px;stroke-width:2.5;fill:none;stroke-linecap:round}
+.system-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.system-card-name{font-size:14px;font-weight:700;color:var(--surface-900);margin-bottom:4px}
+.system-card-desc{font-size:12px;color:var(--surface-400);line-height:1.5}
+.system-tag{display:inline-flex;font-size:10px;font-weight:700;padding:2px 8px;border-radius:50px;margin-top:8px}
+
+/* ── Preview card ── */
+.preview-card{background:var(--surface-900);border-radius:var(--r-xl);padding:24px;margin-bottom:28px;position:relative;overflow:hidden}
+.preview-card::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
+.preview-year{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:white;margin-bottom:6px}
+.preview-system{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:20px}
+.preview-terms{display:flex;gap:3px;margin-bottom:4px}
+.preview-term-bar{flex:1;height:6px;border-radius:50px;background:rgba(255,255,255,.15);position:relative;overflow:hidden}
+.preview-term-fill{height:100%;border-radius:50px;background:var(--teal-400)}
+.preview-term-labels{display:flex;gap:3px;margin-top:4px}
+.preview-term-label{flex:1;font-size:9.5px;font-weight:600;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px}
+
+/* ── Divider ── */
+.divider{height:1px;background:var(--surface-100);margin:28px 0}
+
+/* ── Actions ── */
+.form-actions{display:flex;align-items:center;justify-content:space-between;padding-top:8px}
+.btn{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 24px;border-radius:var(--r-lg);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:all .2s;text-decoration:none}
+.btn-primary{background:var(--teal-900);color:white;box-shadow:0 4px 16px rgba(8,80,65,.22)}
+.btn-primary:hover{background:var(--teal-700);transform:translateY(-2px);box-shadow:0 10px 28px rgba(8,80,65,.3)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{background:white;color:var(--surface-700);border:1.5px solid var(--surface-200)}
+.btn-ghost:hover{background:var(--surface-50)}
+.btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
+.btn .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.btn.loading .spinner{display:block}
+.btn.loading .btn-label{display:none}
+
+/* ── Success overlay ── */
+.success-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);z-index:999;display:none;align-items:center;justify-content:center}
+.success-overlay.show{display:flex;animation:fadeIn .3s}
+.success-box{background:white;border-radius:var(--r-2xl);padding:48px 56px;text-align:center;max-width:480px;width:90%;animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1)}
+.success-icon{width:80px;height:80px;border-radius:50%;background:var(--teal-50);border:3px solid var(--teal-100);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.success-year-badge{display:inline-flex;align-items:center;gap:8px;background:var(--teal-50);border:1.5px solid var(--teal-100);border-radius:50px;padding:8px 18px;margin:16px 0 24px;font-size:14px;font-weight:700;color:var(--teal-900)}
+
+/* ── Warning banner ── */
+.warn-banner{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:rgba(245,158,11,.07);border:1.5px solid rgba(245,158,11,.2);border-radius:var(--r-lg);margin-bottom:24px}
+.warn-banner svg{width:18px;height:18px;stroke:var(--amber);stroke-width:2;fill:none;stroke-linecap:round;flex-shrink:0;margin-top:1px}
+.warn-text{font-size:13px;color:var(--surface-700);line-height:1.6}
+.warn-text strong{color:var(--amber);font-weight:700}
+
+/* ── Responsive ── */
+@media(max-width:900px){.left-panel{display:none}.right-content{padding:32px 24px}}
+@media(max-width:520px){.system-cards{grid-template-columns:1fr}.date-row{grid-template-columns:1fr}.seq-row{grid-template-columns:1fr}.right-topbar{padding:16px 20px}.right-content{padding:24px 20px}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── Left panel ── -->
+  <aside class="left-panel">
+    <div class="left-logo">
+      <div class="left-logo-icon">
+        <i data-lucide="home" style="width:18px;height:18px;stroke:white;stroke-width:2;fill:none"></i>
+      </div>
+      <span class="left-logo-name">Akademee</span>
+    </div>
+
+    <div class="left-steps">
+      <!-- Done steps -->
+      <div class="step-item">
+        <div class="step-num step-num-done">
+          <i data-lucide="check" style="width:14px;height:14px;stroke:var(--teal-900);stroke-width:3;fill:none;stroke-linecap:round"></i>
+        </div>
+        <div class="step-body">
+          <div class="step-label">School identity</div>
+          <div class="step-sub">Name, subdomain, city</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num step-num-done">
+          <i data-lucide="check" style="width:14px;height:14px;stroke:var(--teal-900);stroke-width:3;fill:none;stroke-linecap:round"></i>
+        </div>
+        <div class="step-body">
+          <div class="step-label">Branding & website</div>
+          <div class="step-sub">Logo, colors, template</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num step-num-done">
+          <i data-lucide="check" style="width:14px;height:14px;stroke:var(--teal-900);stroke-width:3;fill:none;stroke-linecap:round"></i>
+        </div>
+        <div class="step-body">
+          <div class="step-label">Admin account</div>
+          <div class="step-sub">Login credentials set</div>
+        </div>
+      </div>
+      <!-- Active step -->
+      <div class="step-item">
+        <div class="step-num step-num-active">4</div>
+        <div class="step-body">
+          <div class="step-label">Academic year</div>
+          <div class="step-sub" style="color:rgba(255,255,255,.6)">Configure your first school year</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="left-note">
+      Without an academic year, your team won't be able to enroll students, enter grades or generate reports. This takes less than 2 minutes.
+    </div>
+  </aside>
+
+  <!-- ── Right panel ── -->
+  <main class="right-panel">
+    <div class="right-topbar">
+      <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--surface-400)">
+        <span style="font-weight:700;color:var(--surface-900)">Grace Bilingual Academy</span>
+        <span>·</span>
+        <span>Setup step 4 of 4</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-label">Almost there — final step</div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" style="width:85%"></div>
+        </div>
+      </div>
+      <button style="display:flex;align-items:center;gap:6px;background:none;border:none;font-size:13px;color:var(--surface-400);cursor:pointer;font-family:'DM Sans',sans-serif;padding:8px 12px;border-radius:var(--r-md);transition:background .15s" onmouseenter="this.style.background='var(--surface-100)'" onmouseleave="this.style.background='none'" onclick="showToast('Setup saved — you can continue later from Settings')">
+        <i data-lucide="save" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none"></i>
+        Save & continue later
+      </button>
+    </div>
+
+    <div style="flex:1;display:flex;justify-content:center;padding:0 20px">
+      <div class="right-content">
+        <div class="right-content-inner">
+
+          <!-- Eyebrow + title -->
+          <div class="eyebrow">Final step</div>
+          <h1 class="page-title">Create your first academic year</h1>
+          <p class="page-sub">This will be the year your teachers and students work in by default. You can create additional years later and switch between them at any time.</p>
+
+          <!-- Warning -->
+          <div class="warn-banner">
+            <i data-lucide="alert-triangle" style="width:18px;height:18px;stroke:var(--amber);stroke-width:2;fill:none;stroke-linecap:round;flex-shrink:0;margin-top:1px"></i>
+            <div class="warn-text">
+              <strong>Required to access the platform.</strong> Without an academic year, your staff and students cannot log in or access any feature. You will be able to create more years later.
+            </div>
+          </div>
+
+          <!-- Year name -->
+          <div class="field-group" id="fg-yearName">
+            <label class="field-label">Academic year name <span class="req">*</span></label>
+            <input class="field-input" id="yearName" placeholder="e.g. 2025 – 2026" oninput="updatePreview()"/>
+            <div class="field-hint">This name will appear on all reports, grade sheets and bulletin headers.</div>
+            <div class="field-error">Please enter the academic year name</div>
+          </div>
+
+          <!-- School system -->
+          <div class="field-group">
+            <label class="field-label">School system <span class="req">*</span></label>
+            <div class="system-cards">
+              <div class="system-card selected" id="sys-anglophone" onclick="selectSystem('anglophone')">
+                <div class="system-card-check">
+                  <svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg>
+                </div>
+                <div class="system-card-icon" style="background:var(--teal-50)">
+                  <i data-lucide="book-open" style="width:18px;height:18px;stroke:var(--teal-900)"></i>
+                </div>
+                <div class="system-card-name">Anglophone</div>
+                <div class="system-card-desc">3 Terms × 2 Sequences = 6 sequences per year. GCE O/A Level aligned.</div>
+                <div class="system-tag" style="background:var(--teal-50);color:var(--teal-700)">6 sequences</div>
+              </div>
+              <div class="system-card" id="sys-francophone" onclick="selectSystem('francophone')">
+                <div class="system-card-check"></div>
+                <div class="system-card-icon" style="background:rgba(59,130,246,.08)">
+                  <i data-lucide="graduation-cap" style="width:18px;height:18px;stroke:var(--blue)"></i>
+                </div>
+                <div class="system-card-name">Francophone</div>
+                <div class="system-card-desc">2 Semestres × 3 Compositions/CA = 6 évaluations par an. Baccalauréat.</div>
+                <div class="system-tag" style="background:rgba(59,130,246,.08);color:var(--blue)">2 semestres</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Date range -->
+          <div class="date-row">
+            <div class="field-group">
+              <label class="field-label">Start date <span class="req">*</span></label>
+              <input class="field-input" id="startDate" type="date" onchange="updatePreview()"/>
+            </div>
+            <div class="field-group">
+              <label class="field-label">End date <span class="req">*</span></label>
+              <input class="field-input" id="endDate" type="date" onchange="updatePreview()"/>
+            </div>
+          </div>
+
+          <!-- Live preview -->
+          <div class="preview-card" id="previewCard">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+              <div>
+                <div class="preview-year" id="previewYear">2025 – 2026</div>
+                <div class="preview-system" id="previewSystem">ANGLOPHONE SYSTEM · 6 SEQUENCES</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:2px">Duration</div>
+                <div style="font-size:16px;font-weight:800;color:rgba(255,255,255,.8)" id="previewDuration">— months</div>
+              </div>
+            </div>
+            <div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:8px">Academic periods</div>
+            <div class="preview-terms" id="previewTerms">
+              <div class="preview-term-bar"><div class="preview-term-fill" style="width:33%"></div></div>
+              <div class="preview-term-bar"><div class="preview-term-fill" style="width:33%"></div></div>
+              <div class="preview-term-bar"><div class="preview-term-fill" style="width:33%"></div></div>
+            </div>
+            <div class="preview-term-labels" id="previewTermLabels">
+              <div class="preview-term-label">Term 1</div>
+              <div class="preview-term-label">Term 2</div>
+              <div class="preview-term-label">Term 3</div>
+            </div>
+          </div>
+
+          <!-- Terms configuration -->
+          <div class="terms-section">
+            <div class="terms-title">Term dates <span style="font-size:12px;font-weight:400;color:var(--surface-400)">(optional — you can set these later)</span></div>
+            <div class="terms-sub">Configure the start and end date of each term and its sequences. This is used for attendance reports and the academic calendar.</div>
+            <div id="termCards"></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <button class="btn btn-ghost" onclick="goBack()">
+              <i data-lucide="arrow-left" style="width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round"></i>
+              Back
+            </button>
+            <button class="btn btn-primary" id="submitBtn" onclick="submitYear()">
+              <div class="spinner"></div>
+              <span class="btn-label" style="display:flex;align-items:center;gap:8px">
+                Finish setup & go to dashboard
+                <i data-lucide="arrow-right" style="width:15px;height:15px;stroke:white;stroke-width:2.5;fill:none;stroke-linecap:round"></i>
+              </span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Success overlay -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-box">
+    <div class="success-icon">
+      <i data-lucide="check-circle-2" style="width:40px;height:40px;stroke:var(--teal-900);stroke-width:1.5;fill:none"></i>
+    </div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--surface-900);margin-bottom:8px">
+      Your campus is ready!
+    </h2>
+    <p style="font-size:14px;color:var(--surface-400);line-height:1.6;margin-bottom:4px">
+      Academic year created successfully.
+    </p>
+    <div class="success-year-badge">
+      <i data-lucide="calendar" style="width:15px;height:15px;stroke:var(--teal-900);stroke-width:2;fill:none"></i>
+      <span id="successYearName">2025 – 2026</span>
+    </div>
+    <p style="font-size:13px;color:var(--surface-400);margin-bottom:28px">
+      You can now enroll students, assign teachers, and start managing your school.
+    </p>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="goToDashboard()">
+      <i data-lucide="layout-dashboard" style="width:15px;height:15px;stroke:white;stroke-width:2;fill:none"></i>
+      Go to dashboard
+    </button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface-900);color:white;padding:12px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:1000;opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;box-shadow:var(--sh-lg)"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); buildTermCards(); setDefaults(); });
+
+let currentSystem = 'anglophone';
+
+// ── Defaults ─────────────────────────────────────────────
+function setDefaults() {
+  const now = new Date();
+  const yr = now.getFullYear();
+  document.getElementById('yearName').value = `${yr} – ${yr + 1}`;
+  document.getElementById('startDate').value = `${yr}-09-01`;
+  document.getElementById('endDate').value = `${yr + 1}-06-30`;
+  updatePreview();
+}
+
+// ── System selector ───────────────────────────────────────
+function selectSystem(sys) {
+  currentSystem = sys;
+  ['anglophone', 'francophone'].forEach(s => {
+    document.getElementById('sys-' + s).classList.toggle('selected', s === sys);
+    const check = document.getElementById('sys-' + s).querySelector('.system-card-check');
+    check.innerHTML = s === sys ? '<svg viewBox="0 0 12 12" style="width:11px;height:11px;stroke:white;stroke-width:2.5;fill:none;stroke-linecap:round"><polyline points="2 6 5 9 10 3"/></svg>' : '';
+  });
+  buildTermCards();
+  updatePreview();
+}
+
+// ── Build term cards ──────────────────────────────────────
+function buildTermCards() {
+  const container = document.getElementById('termCards');
+  const terms = currentSystem === 'anglophone'
+    ? [{ num: 1, name: 'First Term',  color: '#085041', light: '#E1F5EE', seqs: ['Sequence 1', 'Sequence 2'] },
+       { num: 2, name: 'Second Term', color: '#3B82F6', light: '#EFF6FF', seqs: ['Sequence 3', 'Sequence 4'] },
+       { num: 3, name: 'Third Term',  color: '#8B5CF6', light: '#F5F3FF', seqs: ['Sequence 5', 'Sequence 6'] }]
+    : [{ num: 1, name: 'Premier Semestre', color: '#085041', light: '#E1F5EE', seqs: ['Composition 1', 'CA 1', 'Composition 2'] },
+       { num: 2, name: 'Deuxième Semestre', color: '#3B82F6', light: '#EFF6FF', seqs: ['Composition 3', 'CA 2', 'Composition 4'] }];
+  container.innerHTML = '';
+  terms.forEach((t, i) => {
+    const card = document.createElement('div');
+    card.className = 'term-card';
+    card.id = 'term-card-' + t.num;
+    card.innerHTML = `
+      <div class="term-header" onclick="toggleTerm(${t.num})">
+        <div class="term-header-left">
+          <div class="term-number" style="background:${t.light};color:${t.color}">${t.num}</div>
+          <div>
+            <div class="term-name">${t.name}</div>
+            <div class="term-dates-preview" id="term-preview-${t.num}">Dates not set</div>
+          </div>
+        </div>
+        <div class="term-toggle">
+          <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--surface-400);stroke-width:2;fill:none;stroke-linecap:round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="term-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+          <div>
+            <label style="font-size:11.5px;font-weight:700;color:var(--surface-500);display:block;margin-bottom:6px">Start date</label>
+            <input class="field-input" type="date" id="term-${t.num}-start" style="height:42px" onchange="updateTermPreview(${t.num})"/>
+          </div>
+          <div>
+            <label style="font-size:11.5px;font-weight:700;color:var(--surface-500);display:block;margin-bottom:6px">End date</label>
+            <input class="field-input" type="date" id="term-${t.num}-end" style="height:42px" onchange="updateTermPreview(${t.num})"/>
+          </div>
+        </div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--surface-400);margin-bottom:12px">${currentSystem === 'anglophone' ? 'Sequences' : 'Évaluations'}</div>
+        ${t.seqs.map((seq, si) => `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;padding-bottom:10px;${si < t.seqs.length - 1 ? 'border-bottom:1px solid var(--surface-50)' : ''}">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:${t.color};display:block;margin-bottom:5px">${seq} — Start</label>
+              <input class="field-input" type="date" style="height:38px;font-size:13px"/>
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:${t.color};display:block;margin-bottom:5px">${seq} — End</label>
+              <input class="field-input" type="date" style="height:38px;font-size:13px"/>
+            </div>
+          </div>`).join('')}
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function toggleTerm(num) {
+  const card = document.getElementById('term-card-' + num);
+  card.classList.toggle('open');
+  lucide.createIcons();
+}
+
+function updateTermPreview(num) {
+  const start = document.getElementById(`term-${num}-start`).value;
+  const end = document.getElementById(`term-${num}-end`).value;
+  const preview = document.getElementById(`term-preview-${num}`);
+  if (start && end) {
+    const fmt = d => new Date(d).toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' });
+    preview.textContent = `${fmt(start)} → ${fmt(end)}`;
+  } else {
+    preview.textContent = 'Dates not set';
+  }
+}
+
+// ── Live preview ──────────────────────────────────────────
+function updatePreview() {
+  const name = document.getElementById('yearName').value.trim() || '— – —';
+  const start = document.getElementById('startDate').value;
+  const end = document.getElementById('endDate').value;
+  document.getElementById('previewYear').textContent = name;
+  document.getElementById('successYearName').textContent = name;
+  document.getElementById('previewSystem').textContent = currentSystem === 'anglophone'
+    ? 'ANGLOPHONE SYSTEM · 6 SEQUENCES'
+    : 'FRANCOPHONE SYSTEM · 2 SEMESTRES';
+  if (start && end) {
+    const s = new Date(start), e = new Date(end);
+    const months = Math.max(0, Math.round((e - s) / (1000 * 60 * 60 * 24 * 30)));
+    document.getElementById('previewDuration').textContent = months + ' months';
+  }
+  // Term labels
+  const labels = currentSystem === 'anglophone'
+    ? ['Term 1', 'Term 2', 'Term 3']
+    : ['Sem. 1', 'Sem. 2'];
+  const labelsEl = document.getElementById('previewTermLabels');
+  const barsEl = document.getElementById('previewTerms');
+  labelsEl.innerHTML = labels.map(l => `<div class="preview-term-label">${l}</div>`).join('');
+  barsEl.innerHTML = labels.map(() => `<div class="preview-term-bar"><div class="preview-term-fill" style="width:33%"></div></div>`).join('');
+}
+
+// ── Validation & submit ───────────────────────────────────
+function validate() {
+  let ok = true;
+  const name = document.getElementById('yearName').value.trim();
+  const fg = document.getElementById('fg-yearName');
+  if (!name) { fg.classList.add('has-error'); document.getElementById('yearName').classList.add('error'); ok = false; }
+  else { fg.classList.remove('has-error'); document.getElementById('yearName').classList.remove('error'); }
+  return ok;
+}
+
+document.getElementById('yearName').addEventListener('input', function() {
+  this.classList.remove('error');
+  document.getElementById('fg-yearName').classList.remove('has-error');
+});
+
+async function submitYear() {
+  if (!validate()) { showToast('Please fill in the required fields'); return; }
+  const btn = document.getElementById('submitBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+  await new Promise(r => setTimeout(r, 1800));
+  btn.classList.remove('loading'); btn.disabled = false;
+  document.getElementById('successOverlay').classList.add('show');
+}
+
+function goToDashboard() { showToast('Redirecting to dashboard...'); }
+function goBack() { showToast('Going back to previous step...'); }
+
+// ── Toast ─────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  t.style.opacity = '1';
+  setTimeout(() => { t.style.transform = 'translateX(-50%) translateY(80px)'; t.style.opacity = '0'; }, 2800);
+}
+</script>
+</body>
+</html>
