@@ -7,7 +7,14 @@ class ClassService {
       schoolId: row.school_id,
       name: row.name,
       classTeacherId: row.class_teacher_id,
+      teacherName: row.teacher_name || row.teacher_first_name
+        ? `${row.teacher_first_name || ''} ${row.teacher_last_name || ''}`.trim()
+        : null,
+      teacherFirstName: row.teacher_first_name,
+      teacherLastName: row.teacher_last_name,
+      teacherEmail: row.teacher_email,
       academicYearId: row.academic_year_id,
+      academicYearName: row.academic_year_name,
       capacity: row.capacity,
       studentCount: row.student_count || 0,
     };
@@ -26,8 +33,14 @@ class ClassService {
   async getById(schoolId, classId) {
     const rows = await sql`
       SELECT c.*,
+        u.first_name AS teacher_first_name,
+        u.last_name AS teacher_last_name,
+        u.email AS teacher_email,
+        ay.name AS academic_year_name,
         (SELECT COUNT(*) FROM enrollments e WHERE e.class_id = c.class_id AND e.status = 'active')::int AS student_count
       FROM classes c
+      LEFT JOIN users u ON c.class_teacher_id = u.user_id
+      LEFT JOIN academic_years ay ON c.academic_year_id = ay.academic_year_id
       WHERE c.class_id = ${classId} AND c.school_id = ${schoolId}
     `;
     if (rows.length === 0) throw new Error('Class not found');
@@ -40,8 +53,13 @@ class ClassService {
 
     const rows = await sql`
       SELECT c.*,
+        u.first_name AS teacher_first_name,
+        u.last_name AS teacher_last_name,
+        ay.name AS academic_year_name,
         (SELECT COUNT(*) FROM enrollments e WHERE e.class_id = c.class_id AND e.status = 'active')::int AS student_count
       FROM classes c
+      LEFT JOIN users u ON c.class_teacher_id = u.user_id
+      LEFT JOIN academic_years ay ON c.academic_year_id = ay.academic_year_id
       WHERE c.school_id = ${schoolId}
       ORDER BY c.name ASC
       LIMIT ${limit} OFFSET ${offset}

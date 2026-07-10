@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Select Academic Year — Akademee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal-900:#085041;--teal-700:#0F6E56;--teal-600:#1D9E75;
+  --teal-400:#5DCAA5;--teal-100:#C8F0E4;--teal-50:#E1F5EE;
+  --surface-900:#1A1F1B;--surface-800:#2A3029;--surface-700:#434D45;
+  --surface-600:#5C665E;--surface-500:#6E7A70;--surface-400:#9BA59C;
+  --surface-300:#BFC4BB;--surface-200:#D8DBD5;--surface-100:#EEF0EC;
+  --surface-50:#F7F8F6;--white:#fff;
+  --red:#EF4444;--amber:#F59E0B;--blue:#3B82F6;--purple:#8B5CF6;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:20px;--r-2xl:28px;
+  --sh-sm:0 2px 8px rgba(0,0,0,.05);--sh-md:0 6px 28px rgba(0,0,0,.09);--sh-lg:0 20px 60px rgba(0,0,0,.16);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--surface-50);color:var(--surface-900);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.93) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.8;transform:scale(1.04)}}
+@keyframes gradPan{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes dotBlink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── Layout ── */
+.page{min-height:100vh;display:flex;flex-direction:column}
+
+/* ── Top nav ── */
+.top-nav{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:white;border-bottom:1.5px solid var(--surface-100);flex-shrink:0;animation:fadeIn .4s cubic-bezier(.16,1,.3,1) both}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo-icon{width:34px;height:34px;border-radius:9px;background:var(--teal-900);display:flex;align-items:center;justify-content:center}
+.nav-logo-name{font-family:'Playfair Display',serif;font-size:18px;color:var(--surface-900);font-weight:600}
+.nav-school{display:flex;align-items:center;gap:10px}
+.nav-school-avatar{width:32px;height:32px;border-radius:50%;background:var(--teal-50);border:2px solid var(--teal-100);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--teal-900)}
+.nav-school-name{font-size:13.5px;font-weight:700;color:var(--surface-900)}
+.nav-school-meta{font-size:11.5px;color:var(--surface-400)}
+.nav-logout{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--surface-400);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:8px 12px;border-radius:var(--r-md);transition:all .15s}
+.nav-logout:hover{background:var(--surface-50);color:var(--surface-700)}
+
+/* ── Hero section ── */
+.hero{background:linear-gradient(135deg,var(--teal-900) 0%,#0a6650 60%,var(--teal-700) 100%);background-size:200% 200%;animation:gradPan 10s ease infinite;padding:52px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
+.hero-content{position:relative;z-index:1;max-width:600px;margin:0 auto;animation:fadeUp .6s cubic-bezier(.16,1,.3,1) both}
+.hero-greeting{font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:10px}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,38px);font-weight:700;color:white;line-height:1.2;margin-bottom:8px}
+.hero-sub{font-size:14px;color:rgba(255,255,255,.6);line-height:1.6}
+
+/* ── Main content ── */
+.main{flex:1;max-width:800px;width:100%;margin:0 auto;padding:40px 24px 80px}
+
+/* ── Section head ── */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;animation:fadeUp .5s .1s cubic-bezier(.16,1,.3,1) both}
+.section-head-title{font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--surface-500);text-transform:uppercase;font-size:11px;letter-spacing:1.5px}
+
+/* ── Year cards ── */
+.year-card{background:white;border-radius:var(--r-xl);border:2px solid var(--surface-100);padding:0;margin-bottom:12px;cursor:pointer;transition:all .25s cubic-bezier(.34,1.56,.64,1);overflow:hidden;position:relative}
+.year-card::before{content:'';position:absolute;top:0;left:-100%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);opacity:0;transition:opacity .2s}
+.year-card:hover::before{opacity:1;animation:shimmer .5s ease-in-out}
+.year-card:hover{border-color:var(--surface-200);transform:translateY(-3px);box-shadow:var(--sh-md)}
+.year-card.active-year:hover{border-color:var(--teal-400)}
+.year-card.selected{transform:translateY(-4px);box-shadow:var(--sh-lg)}
+.year-card.active-year.selected{border-color:var(--teal-600);box-shadow:0 12px 40px rgba(8,80,65,.18)}
+.year-card.archive-year.selected{border-color:var(--amber);box-shadow:0 12px 40px rgba(245,158,11,.15)}
+.year-card.future-year.selected{border-color:var(--blue);box-shadow:0 12px 40px rgba(59,130,246,.15)}
+.year-card-accent{height:5px;width:100%}
+.year-card-body{padding:20px 22px}
+.year-card-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.year-card-left{display:flex;align-items:center;gap:16px}
+.year-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.year-card:hover .year-icon{transform:scale(1.1) rotate(-3deg)}
+.year-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--surface-900);line-height:1.1;margin-bottom:4px}
+.year-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.year-meta-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--surface-400)}
+.year-meta-item svg{width:12px;height:12px;stroke:currentColor;stroke-width:1.8;fill:none}
+.year-badge{font-size:11px;font-weight:700;padding:4px 12px;border-radius:50px;display:inline-flex;align-items:center;gap:6px}
+.year-badge-active{background:var(--teal-50);color:var(--teal-900);border:1.5px solid var(--teal-100)}
+.year-badge-archive{background:rgba(245,158,11,.09);color:var(--amber);border:1.5px solid rgba(245,158,11,.2)}
+.year-badge-future{background:rgba(59,130,246,.08);color:var(--blue);border:1.5px solid rgba(59,130,246,.18)}
+.year-badge-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.badge-dot-active{background:var(--teal-600);animation:dotBlink 2s ease-in-out infinite}
+.badge-dot-archive{background:var(--amber)}
+.badge-dot-future{background:var(--blue)}
+.year-stats{display:flex;gap:20px;flex-wrap:wrap}
+.year-stat{text-align:center;padding:10px 16px;background:var(--surface-50);border-radius:var(--r-md);min-width:64px;border:1.5px solid var(--surface-100)}
+.year-stat-val{font-size:18px;font-weight:800;color:var(--surface-900);line-height:1;margin-bottom:3px}
+.year-stat-lbl{font-size:10px;color:var(--surface-400);font-weight:500}
+.year-radio{width:22px;height:22px;border-radius:50%;border:2px solid var(--surface-200);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .25s cubic-bezier(.34,1.56,.64,1);align-self:center}
+.year-card.selected .year-radio{transform:scale(1.1)}
+.year-card.active-year.selected .year-radio{background:var(--teal-900);border-color:var(--teal-900)}
+.year-card.archive-year.selected .year-radio{background:var(--amber);border-color:var(--amber)}
+.year-card.future-year.selected .year-radio{background:var(--blue);border-color:var(--blue)}
+.year-radio-dot{width:8px;height:8px;border-radius:50%;background:white;opacity:0;transform:scale(0);transition:all .2s cubic-bezier(.34,1.56,.64,1)}
+.year-card.selected .year-radio-dot{opacity:1;transform:scale(1)}
+.year-card-footer{padding:12px 22px;border-top:1.5px solid var(--surface-50);background:var(--surface-50);display:flex;align-items:center;justify-content:space-between}
+.year-progress-wrap{flex:1;max-width:300px}
+.year-progress-label{display:flex;justify-content:space-between;margin-bottom:5px}
+.year-progress-track{height:5px;background:var(--surface-200);border-radius:50px;overflow:hidden}
+.year-progress-fill{height:100%;border-radius:50px;transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+.year-action-hint{font-size:12px;color:var(--surface-400);display:flex;align-items:center;gap:5px}
+.year-action-hint svg{width:13px;height:13px;stroke:currentColor;stroke-width:1.8;fill:none}
+
+/* ── Archive notice ── */
+.archive-notice{display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(245,158,11,.06);border:1.5px solid rgba(245,158,11,.18);border-radius:var(--r-lg);font-size:13px;color:var(--surface-700);margin-bottom:16px;animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both;display:none}
+.archive-notice.show{display:flex}
+.archive-notice svg{width:16px;height:16px;stroke:var(--amber);stroke-width:2;fill:none;flex-shrink:0}
+
+/* ── No year state ── */
+.no-year-state{text-align:center;padding:60px 20px;animation:scaleIn .5s cubic-bezier(.34,1.56,.64,1) both}
+.no-year-icon{width:80px;height:80px;border-radius:50%;background:var(--surface-100);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.no-year-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--surface-900);margin-bottom:8px}
+.no-year-sub{font-size:14px;color:var(--surface-400);line-height:1.6;max-width:380px;margin:0 auto 28px}
+
+/* ── Submit area ── */
+.submit-area{position:sticky;bottom:0;background:linear-gradient(to top,var(--surface-50) 60%,transparent);padding:24px 24px 32px;margin:0 -24px;display:flex;align-items:center;justify-content:center;gap:12px;animation:fadeUp .5s .3s cubic-bezier(.16,1,.3,1) both}
+.btn{display:inline-flex;align-items:center;gap:8px;height:52px;padding:0 28px;border-radius:var(--r-xl);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;border:none;transition:all .2s;text-decoration:none}
+.btn-primary{background:var(--teal-900);color:white;box-shadow:0 6px 20px rgba(8,80,65,.25),0 2px 6px rgba(8,80,65,.15)}
+.btn-primary:hover{background:var(--teal-700);transform:translateY(-3px);box-shadow:0 14px 36px rgba(8,80,65,.32)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{background:white;color:var(--surface-700);border:1.5px solid var(--surface-200)}
+.btn-ghost:hover{background:var(--surface-50)}
+.btn svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
+.btn .spinner{width:17px;height:17px;border:2.5px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.btn.loading .spinner{display:block}
+.btn.loading .btn-label{display:none}
+
+/* ── Entering animation for year cards ── */
+.year-card{animation:fadeUp .5s cubic-bezier(.16,1,.3,1) both}
+.year-card:nth-child(1){animation-delay:.08s}
+.year-card:nth-child(2){animation-delay:.14s}
+.year-card:nth-child(3){animation-delay:.20s}
+.year-card:nth-child(4){animation-delay:.26s}
+
+/* ── Read-only badge on archive selection ── */
+.readonly-strip{background:rgba(245,158,11,.07);border-radius:0 0 var(--r-xl) var(--r-xl);padding:10px 22px;font-size:12.5px;color:var(--amber);font-weight:600;display:flex;align-items:center;gap:7px;display:none}
+.readonly-strip.show{display:flex}
+
+/* ── Loading overlay ── */
+.loading-overlay{position:fixed;inset:0;background:rgba(250,250,248,.92);backdrop-filter:blur(6px);z-index:999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;animation:fadeIn .2s}
+.loading-overlay.show{display:flex}
+.loading-ring{width:52px;height:52px;border:4px solid var(--surface-100);border-top-color:var(--teal-600);border-radius:50%;animation:spin .8s linear infinite}
+.loading-text{font-size:14px;font-weight:600;color:var(--surface-600)}
+.loading-sub{font-size:12px;color:var(--surface-400)}
+
+/* ── Responsive ── */
+@media(max-width:640px){.year-stats{display:none}.top-nav{padding:14px 20px}.hero{padding:36px 20px}.main{padding:28px 16px 80px}.nav-school-meta{display:none}}
+@media(max-width:420px){.year-card-row{flex-direction:column;align-items:flex-start}.year-radio{display:none}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Top nav ── -->
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <div class="nav-logo-icon">
+        <i data-lucide="home" style="width:17px;height:17px;stroke:white;stroke-width:2;fill:none"></i>
+      </div>
+      <span class="nav-logo-name">Akademee</span>
+    </div>
+    <div class="nav-school">
+      <div class="nav-school-avatar">GB</div>
+      <div>
+        <div class="nav-school-name">Grace Bilingual Academy</div>
+        <div class="nav-school-meta">grace-bilingual.akademee.cm</div>
+      </div>
+    </div>
+    <button class="nav-logout" onclick="showToast('Logging out...')">
+      <i data-lucide="log-out" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none"></i>
+      Sign out
+    </button>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <div class="hero">
+    <div class="hero-content">
+      <div class="hero-greeting">Welcome back</div>
+      <h1 class="hero-title">Select the academic year<br/>you want to work in</h1>
+      <p class="hero-sub">Choose the current year to manage your school, or select a past year to consult archived data.</p>
+    </div>
+  </div>
+
+  <!-- ── Main ── -->
+  <div class="main">
+
+    <!-- Archive warning (shows when archive year is selected) -->
+    <div class="archive-notice" id="archiveNotice">
+      <i data-lucide="archive" style="width:16px;height:16px;stroke:var(--amber);stroke-width:2;fill:none;flex-shrink:0"></i>
+      You are about to enter <strong id="archiveYearName" style="margin:0 3px">&nbsp;</strong> in <strong>read-only mode</strong>. You will be able to view grades, reports and records, but not make any changes.
+    </div>
+
+    <!-- Current / active year -->
+    <div class="section-head">
+      <div class="section-head-title">Current year</div>
+    </div>
+
+    <!-- ACTIVE YEAR CARD -->
+    <div class="year-card active-year" id="card-2025" onclick="selectYear('2025', 'active')">
+      <div class="year-card-accent" style="background:linear-gradient(90deg,var(--teal-900),var(--teal-400))"></div>
+      <div class="year-card-body">
+        <div class="year-card-row">
+          <div class="year-card-left">
+            <div class="year-icon" style="background:var(--teal-50)">
+              <i data-lucide="calendar-check-2" style="width:22px;height:22px;stroke:var(--teal-900);stroke-width:1.8;fill:none"></i>
+            </div>
+            <div>
+              <div class="year-name">2024 – 2025</div>
+              <div class="year-meta">
+                <div class="year-meta-item">
+                  <i data-lucide="book-open" style="width:12px;height:12px;stroke:currentColor;stroke-width:1.8;fill:none"></i>
+                  Anglophone
+                </div>
+                <div class="year-meta-item">
+                  <i data-lucide="layers" style="width:12px;height:12px;stroke:currentColor;stroke-width:1.8;fill:none"></i>
+                  6 sequences
+                </div>
+                <div class="year-meta-item">
+                  <i data-lucide="calendar" style="width:12px;height:12px;stroke:currentColor;stroke-width:1.8;fill:none"></i>
+                  Sep 2024 – Jun 2025
+                </div>
+                <span class="year-badge year-badge-active">
+                  <span class="year-badge-dot badge-dot-active"></span>
+                  Active
+                </span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <div class="year-stats">
+              <div class="year-stat">
+                <div class="year-stat-val">312</div>
+                <div class="year-stat-lbl">Students</div>
+              </div>
+              <div class="year-stat">
+                <div class="year-stat-val">24</div>
+                <div class="year-stat-lbl">Teachers</div>
+              </div>
+              <div class="year-stat">
+                <div class="year-stat-val">18</div>
+                <div class="year-stat-lbl">Classes</div>
+              </div>
+            </div>
+            <div class="year-radio" id="radio-2025">
+              <div class="year-radio-dot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="year-card-footer">
+        <div class="year-progress-wrap">
+          <div class="year-progress-label">
+            <span style="font-size:11.5px;color:var(--surface-500);font-weight:600">Year progress</span>
+            <span style="font-size:11.5px;font-weight:700;color:var(--teal-700)">Sequence 3 of 6</span>
+          </div>
+          <div class="year-progress-track">
+            <div class="year-progress-fill" style="width:0%;background:linear-gradient(90deg,var(--teal-900),var(--teal-400))" data-target="50"></div>
+          </div>
+        </div>
+        <div class="year-action-hint">
+          <i data-lucide="arrow-right" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none"></i>
+          Full access
+        </div>
+      </div>
+    </div>
+
+    <!-- Past / archived years -->
+    <div class="section-head" style="margin-top:28px">
+      <div class="section-head-title">Past years — Archives</div>
+      <span style="font-size:12px;color:var(--surface-400);background:var(--surface-100);padding:3px 10px;border-radius:50px;font-weight:600">Read-only</span>
+    </div>
+
+    <!-- ARCHIVE YEAR 1 -->
+    <div class="year-card archive-year" id="card-2024" onclick="selectYear('2024', 'archive', '2023 – 2024')">
+      <div class="year-card-accent" style="background:linear-gradient(90deg,var(--amber),#FCD34D)"></div>
+      <div class="year-card-body">
+        <div class="year-card-row">
+          <div class="year-card-left">
+            <div class="year-icon" style="background:rgba(245,158,11,.09)">
+              <i data-lucide="archive" style="width:22px;height:22px;stroke:var(--amber);stroke-width:1.8;fill:none"></i>
+            </div>
+            <div>
+              <div class="year-name" style="color:var(--surface-700)">2023 – 2024</div>
+              <div class="year-meta">
+                <div class="year-meta-item">
+                  <i data-lucide="book-open" style="width:12px;height:12px;stroke:currentColor;stroke-width:1.8;fill:none"></i>
+                  Anglophone
+                </div>
+                <div class="year-meta-item">
+                  <i data-lucide="calendar" style="width:12px;height:12px;stroke:currentColor;stroke-width:1.8;fill:none"></i>
+                  Sep 2023 – Jun 2024
+                </div>
+                <span class="year-badge year-badge-archive">
+                  <span class="year-badge-dot badge-dot-archive"></span>
+                  Completed
+                </span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <div class="year-stats">
+              <div class="year-stat">
+                <div class="year-stat-val">294</div>
+                <div class="year-stat-lbl">Students</div>
+              </div>
+              <div class="year-stat">
+                <div class="year-stat-val">22</div>
+                <div class="year-stat-lbl">Teachers</div>
+              </div>
+              <div class="year-stat">
+                <div class="year-stat-val">16</div>
+                <div class="year-stat-lbl">Classes</div>
+              </div>
+            </div>
+            <div class="year-radio" id="radio-2024">
+              <div class="year-radio-dot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="year-card-footer">
+        <div class="year-progress-wrap">
+          <div class="year-progress-label">
+            <span style="font-size:11.5px;color:var(--surface-500);font-weight:600">GCE pass rate</span>
+            <span style="font-size:11.5px;font-weight:700;color:var(--amber)">87%</span>
+          </div>
+          <div class="year-progress-track">
+            <div class="year-progress-fill" style="width:0%;background:linear-gradient(90deg,var(--amber),#FCD34D)" data-target="87"></div>
+          </div>
+        </div>
+        <div class="year-action-hint" style="color:var(--amber)">
+          <i data-lucide="eye" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none"></i>
+          View only
+        </div>
+      </div>
+    </div>
+
+    <!-- ARCHIVE YEAR 2 -->
+    <div class="year-card archive-year" id="card-2023" onclick="selectYear('2023', 'archive', '2022 – 2023')">
+      <div class="year-card-accent" style="background:linear-gradient(90deg,#B45309,var(--amber))"></div>
+      <div class="year-card-body">
+        <div class="year-card-row">
+          <div class="year-card-left">
+            <div class="year-icon" style="background:rgba(245,158,11,.06)">
+              <i data-lucide="archive" style="width:22px;height:22px;stroke:#B45309;stroke-width:1.8;fill:none"></i>
+            </div>
+            <div>
+              <div class="year-name" style="color:var(--surface-600)">2022 – 2023</div>
+              <div class="year-meta">
+                <div class="year-meta-item">
+                  <i data-lucide="book-open" style="width:12px;height:12px;stroke:currentColor;stroke-width:1.8;fill:none"></i>
+                  Anglophone
+                </div>
+                <div class="year-meta-item">
+                  <i data-lucide="calendar" style="width:12px;height:12px;stroke:currentColor;stroke-width:1.8;fill:none"></i>
+                  Sep 2022 – Jun 2023
+                </div>
+                <span class="year-badge year-badge-archive">
+                  <span class="year-badge-dot badge-dot-archive"></span>
+                  Completed
+                </span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <div class="year-stats">
+              <div class="year-stat">
+                <div class="year-stat-val">271</div>
+                <div class="year-stat-lbl">Students</div>
+              </div>
+              <div class="year-stat">
+                <div class="year-stat-val">20</div>
+                <div class="year-stat-lbl">Teachers</div>
+              </div>
+              <div class="year-stat">
+                <div class="year-stat-val">14</div>
+                <div class="year-stat-lbl">Classes</div>
+              </div>
+            </div>
+            <div class="year-radio" id="radio-2023">
+              <div class="year-radio-dot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="year-card-footer">
+        <div class="year-progress-wrap">
+          <div class="year-progress-label">
+            <span style="font-size:11.5px;color:var(--surface-500);font-weight:600">GCE pass rate</span>
+            <span style="font-size:11.5px;font-weight:700;color:#B45309">79%</span>
+          </div>
+          <div class="year-progress-track">
+            <div class="year-progress-fill" style="width:0%;background:linear-gradient(90deg,#B45309,var(--amber))" data-target="79"></div>
+          </div>
+        </div>
+        <div class="year-action-hint" style="color:#B45309">
+          <i data-lucide="eye" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none"></i>
+          View only
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming year -->
+    <div class="section-head" style="margin-top:28px">
+      <div class="section-head-title">Upcoming year</div>
+    </div>
+
+    <!-- FUTURE YEAR CARD -->
+    <div class="year-card future-year" id="card-2026" onclick="selectYear('2026', 'future', '2025 – 2026')">
+      <div class="year-card-accent" style="background:linear-gradient(90deg,var(--blue),#93C5FD)"></div>
+      <div class="year-card-body">
+        <div class="year-card-row">
+          <div class="year-card-left">
+            <div class="year-icon" style="background:rgba(59,130,246,.08)">
+              <i data-lucide="calendar-plus" style="width:22px;height:22px;stroke:var(--blue);stroke-width:1.8;fill:none"></i>
+            </div>
+            <div>
+              <div class="year-name" style="color:var(--blue)">2025 – 2026</div>
+              <div class="year-meta">
+                <div class="year-meta-item">
+                  <i data-lucide="book-open" style="width:12px;height:12px;stroke:currentColor;stroke-width:1.8;fill:none"></i>
+                  Anglophone
+                </div>
+                <div class="year-meta-item">
+                  <i data-lucide="calendar" style="width:12px;height:12px;stroke:currentColor;stroke-width:1.8;fill:none"></i>
+                  Starts Sep 2025
+                </div>
+                <span class="year-badge year-badge-future">
+                  <span class="year-badge-dot badge-dot-future"></span>
+                  Planned
+                </span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <div class="year-stats">
+              <div class="year-stat">
+                <div class="year-stat-val" style="color:var(--surface-300)">—</div>
+                <div class="year-stat-lbl">Students</div>
+              </div>
+              <div class="year-stat">
+                <div class="year-stat-val" style="color:var(--surface-300)">—</div>
+                <div class="year-stat-lbl">Teachers</div>
+              </div>
+              <div class="year-stat">
+                <div class="year-stat-val" style="color:var(--surface-300)">—</div>
+                <div class="year-stat-lbl">Classes</div>
+              </div>
+            </div>
+            <div class="year-radio" id="radio-2026">
+              <div class="year-radio-dot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="year-card-footer">
+        <div style="font-size:12.5px;color:var(--blue);font-weight:600;display:flex;align-items:center;gap:6px">
+          <i data-lucide="settings" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none"></i>
+          Configure classes and enrollment before the year starts
+        </div>
+        <div class="year-action-hint" style="color:var(--blue)">
+          <i data-lucide="pencil" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none"></i>
+          Setup mode
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit area -->
+    <div class="submit-area">
+      <button class="btn btn-ghost" onclick="showToast('Creating new academic year...')">
+        <i data-lucide="plus" style="width:15px;height:15px;stroke:currentColor;stroke-width:2.5;fill:none"></i>
+        New academic year
+      </button>
+      <button class="btn btn-primary" id="enterBtn" onclick="enterYear()" disabled>
+        <div class="spinner"></div>
+        <span class="btn-label" style="display:flex;align-items:center;gap:8px" id="enterBtnLabel">
+          Select a year to continue
+        </span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-ring"></div>
+  <div class="loading-text" id="loadingText">Loading academic year...</div>
+  <div class="loading-sub" id="loadingSub">Preparing your workspace</div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface-900);color:white;padding:12px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:1000;opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;box-shadow:var(--sh-lg)"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  lucide.createIcons();
+  // Animate progress bars after page load
+  setTimeout(() => {
+    document.querySelectorAll('.year-progress-fill').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+  }, 400);
+});
+
+let selectedYearId = null;
+let selectedYearType = null;
+
+function selectYear(id, type, displayName) {
+  // Deselect all
+  document.querySelectorAll('.year-card').forEach(c => c.classList.remove('selected'));
+  // Select clicked
+  const card = document.getElementById('card-' + id);
+  card.classList.add('selected');
+  // Radio dots
+  document.querySelectorAll('.year-radio-dot').forEach(d => { d.style.opacity = '0'; d.style.transform = 'scale(0)'; });
+  document.querySelector('#radio-' + id + ' .year-radio-dot').style.opacity = '1';
+  document.querySelector('#radio-' + id + ' .year-radio-dot').style.transform = 'scale(1)';
+
+  selectedYearId = id;
+  selectedYearType = type;
+
+  // Archive notice
+  const notice = document.getElementById('archiveNotice');
+  if (type === 'archive') {
+    notice.classList.add('show');
+    document.getElementById('archiveYearName').textContent = displayName;
+  } else {
+    notice.classList.remove('show');
+  }
+
+  // Submit button
+  const btn = document.getElementById('enterBtn');
+  const label = document.getElementById('enterBtnLabel');
+  btn.disabled = false;
+
+  const icons = { active: 'layout-dashboard', archive: 'archive', future: 'settings' };
+  const labels = { active: 'Enter 2024 – 2025', archive: `View ${displayName || 'archive'}`, future: 'Configure 2025 – 2026' };
+  const colors = { active: '', archive: 'background:var(--amber)', future: 'background:var(--blue)' };
+
+  label.innerHTML = `
+    <i data-lucide="${icons[type]}" style="width:15px;height:15px;stroke:white;stroke-width:2;fill:none"></i>
+    ${labels[type]}
+    <i data-lucide="arrow-right" style="width:15px;height:15px;stroke:white;stroke-width:2.5;fill:none;stroke-linecap:round"></i>`;
+
+  if (type === 'archive') btn.style.background = 'var(--amber)';
+  else if (type === 'future') btn.style.background = 'var(--blue)';
+  else btn.style.cssText = '';
+
+  lucide.createIcons();
+}
+
+async function enterYear() {
+  if (!selectedYearId) return;
+  const btn = document.getElementById('enterBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+
+  const overlay = document.getElementById('loadingOverlay');
+  const overlayText = document.getElementById('loadingText');
+  const overlaySub = document.getElementById('loadingSub');
+
+  const messages = {
+    active: ['Entering 2024 – 2025...', 'Loading your dashboard'],
+    archive: ['Loading archive...', 'Read-only mode — preparing data'],
+    future: ['Opening planning mode...', 'Loading 2025 – 2026 setup'],
+  };
+  overlayText.textContent = messages[selectedYearType][0];
+  overlaySub.textContent = messages[selectedYearType][1];
+  overlay.classList.add('show');
+
+  await new Promise(r => setTimeout(r, 2200));
+  overlay.classList.remove('show');
+  btn.classList.remove('loading'); btn.disabled = false;
+  showToast('Redirecting to dashboard...');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  t.style.opacity = '1';
+  setTimeout(() => { t.style.transform = 'translateX(-50%) translateY(80px)'; t.style.opacity = '0'; }, 2800);
+}
+</script>
+</body>
+</html>

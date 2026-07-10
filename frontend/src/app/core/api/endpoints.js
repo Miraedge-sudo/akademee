@@ -53,7 +53,12 @@ export const API_ENDPOINTS = {
   ACADEMIC: {
     YEARS: "/api/academics/years",
     CLASSES: "/api/classes",
+    CLASS: (id) => `/api/classes/${id}`,
+    CLASS_STUDENTS: (id) => `/api/classes/${id}/students`,
+    CLASS_STUDENT: (classId, studentId) => `/api/classes/${classId}/students/${studentId}`,
     SUBJECTS: "/api/subjects",
+    CLASS_SUBJECTS: "/api/class-subjects",
+    CLASS_SUBJECTS_BY_CLASS: (classId) => `/api/class-subjects/class/${classId}`,
   },
 
   // Grades
