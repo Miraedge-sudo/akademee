@@ -14,7 +14,7 @@ export default defineConfig({
     allowedHosts: ['.lvh.me', 'localhost'],
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:1000',
         changeOrigin: true,
       },
     },
