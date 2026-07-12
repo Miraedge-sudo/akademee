@@ -4,9 +4,9 @@ const academicYearService = require('../services/academicYear.service');
 class AcademicYearController {
   async createAcademicYear(req, res, next) {
     try {
-      const { year, startDate, endDate } = req.body;
+      const { year, startDate, endDate, name } = req.body;
       const { schoolId } = req;
-      const result = await academicYearService.create(schoolId, { year, startDate, endDate });
+      const result = await academicYearService.create(schoolId, { year, startDate, endDate, name });
       response.success(res, 'Academic year created', result, 201);
     } catch (error) {
       next(error);

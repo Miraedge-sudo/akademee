@@ -5,7 +5,7 @@ const createPeriodValidator = [
   body('type').isIn(['term', 'semester', 'sequence', 'ca', 'exam']).withMessage('Invalid period type'),
   body('startDate').isISO8601().withMessage('Valid start date is required'),
   body('endDate').isISO8601().withMessage('Valid end date is required'),
-  body('academicYearId').optional().isInt(),
+  body('academicYearId').optional().isUUID().withMessage('Academic year ID must be a valid UUID'),
 ];
 
 const updatePeriodValidator = [

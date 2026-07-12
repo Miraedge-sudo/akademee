@@ -230,7 +230,7 @@ export default function ClassDetailPage() {
                     color: pc,
                   }}
                 >
-                  {cls.academicYearName || "2024/2025"}
+                  {cls.academicYearName || t("class.academicYearNotSet", "N/A")}
                 </span>
               </div>
             </div>
