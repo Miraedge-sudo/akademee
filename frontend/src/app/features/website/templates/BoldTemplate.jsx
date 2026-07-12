@@ -7,12 +7,18 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-const SECTIONS = ["about", "classes", "gallery", "testimonials", "contact"];
+const SECTIONS = ["about", "classes", "gallery", "testimonials", "enrol", "contact"];
 const CLASS_LEVELS = ["All", "Junior", "Senior", "O Level", "A Level"];
 
 // ──────────────────────────── Reusable sub-components ────────────────────────────
 
-import { FiHome, FiLogIn, FiPhone, FiMail, FiMapPin, FiArrowRight, FiStar, FiUsers, FiImage, FiPlay, FiCalendar, FiMessageCircle, FiClock, FiChevronLeft, FiChevronRight, FiX, FiSearch, FiCrosshair, FiHeart } from "react-icons/fi";
+import { FiHome, FiLogIn, FiPhone, FiMail, FiMapPin, FiArrowRight, FiStar, FiUsers, FiImage, FiPlay, FiCalendar, FiMessageCircle, FiClock, FiChevronLeft, FiChevronRight, FiX, FiSearch, FiCrosshair, FiHeart, FiEdit3 } from "react-icons/fi";
+import EnrollmentForm from "../components/EnrollmentForm";
+import { useScrollProgress, ScrollProgressBar, BackToTopButton } from "../hooks/useScrollProgress.jsx";
+import { useCursorGlow } from "../hooks/useCursorGlow.jsx";
+import { useActiveSection } from "../hooks/useActiveSection.jsx";
+import { useWebsiteLanguage, LanguageToggle } from "../hooks/useWebsiteLanguage.jsx";
+import { TRANSLATIONS } from "../hooks/websiteTranslations.js";
 
 const PATH_TO_ICON = {
   building: FiHome,
@@ -186,7 +192,9 @@ export default function BoldTemplate({ school }) {
 
   const year = new Date().getFullYear();
   const location = [s.city, s.region].filter(Boolean).join(", ");
-  const initials = (s.schoolName || "SC").split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase();
+  const schoolName = s.name || s.schoolName || "School Name";
+  const schoolShort = schoolName.split(" ")[0];
+  const initials = schoolName.split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase();
 
   // State
   const [scrolled, setScrolled] = useState(false);
@@ -196,6 +204,12 @@ export default function BoldTemplate({ school }) {
   const [lightboxIdx, setLightboxIdx] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [parallaxOffset, setParallaxOffset] = useState(0);
+
+  // Interactive hooks
+  const { progress, showBackToTop } = useScrollProgress(300);
+  const { CursorGlow } = useCursorGlow(pc, 500, 0.04);
+  const activeSection = useActiveSection(SECTIONS, 100);
+  const { lang, isBilingual, toggleLang, t } = useWebsiteLanguage(s.educationalSystems);
 
   // Scroll handler
   useEffect(() => {
@@ -226,10 +240,10 @@ export default function BoldTemplate({ school }) {
   // Data
   const stats = s.websiteStats || {};
   const statItems = [
-    { end: stats.studentsEnrolled || 248, label: "Students", icon: PATHS.users },
-    { end: stats.teachers || 32, label: "Teachers", icon: PATHS.star },
-    { end: s.examPassRate ? parseInt(s.examPassRate) : 94, suffix: "%", label: `${s.examType || "GCE"} Pass Rate`, icon: PATHS.target },
-    { end: s.yearFounded ? parseInt(s.yearFounded) : 1998, label: "Founded", icon: PATHS.calendar },
+    { end: stats.studentsEnrolled || 248, label: t(TRANSLATIONS.classes.students), icon: PATHS.users },
+    { end: stats.teachers || 32, label: t(TRANSLATIONS.about.faculty), icon: PATHS.star },
+    { end: s.examPassRate ? parseInt(s.examPassRate) : 94, suffix: "%", label: `${s.examType || "GCE"} ${t(TRANSLATIONS.about.passRate)}`, icon: PATHS.target },
+    { end: s.yearFounded ? parseInt(s.yearFounded) : 1998, label: t(TRANSLATIONS.about.founded), icon: PATHS.calendar },
   ];
 
   const values = s.websiteValues?.length > 0 ? s.websiteValues : [
@@ -254,20 +268,22 @@ export default function BoldTemplate({ school }) {
   const gallery = s.gallery?.length > 0 ? s.gallery : (s.aboutPhotos || []);
 
   const testimonials = [
-    { quote: "This school gave my children not just an education, but the confidence and skills to succeed anywhere in the world. The bilingual programme is exceptional.", author: "Parent", role: `${s.schoolName || "School"} Parent` },
+    { quote: "This school gave my children not just an education, but the confidence and skills to succeed anywhere in the world. The bilingual programme is exceptional.", author: "Parent", role: `$                  {schoolName} Parent` },
     { quote: "The teachers here genuinely care about each student. My son has grown tremendously both academically and personally since joining.", author: "Parent", role: `Current Parent` },
     { quote: "I was well prepared for university thanks to the rigorous A-Level programme and the personal mentorship I received.", author: "Alumnus", role: `Class of ${(parseInt(s.yearFounded) || 2020) + 5}` },
   ];
 
   const contactItems = [
-    { icon: PATHS.pin, label: "Address", value: s.address || `${s.city || "City"}, ${s.region || "Region"}` },
-    { icon: PATHS.phone, label: "Phone", value: s.phone || "+237 6XX XXX XXX" },
-    { icon: PATHS.mail, label: "Email", value: s.email || "info@yourschool.cm" },
-    { icon: PATHS.clock, label: "Hours", value: "Mon – Fri · 7:30 AM – 4:00 PM" },
+    { icon: PATHS.pin, label: t(TRANSLATIONS.contact.address), value: s.address || `${s.city || "City"}, ${s.region || "Region"}` },
+    { icon: PATHS.phone, label: t(TRANSLATIONS.contact.phone), value: s.phone || "+237 6XX XXX XXX" },
+    { icon: PATHS.mail, label: t(TRANSLATIONS.contact.email), value: s.email || "info@yourschool.cm" },
+    { icon: PATHS.clock, label: t(TRANSLATIONS.contact.hours), value: "Mon – Fri · 7:30 AM – 4:00 PM" },
   ];
 
   return (
-    <div className="font-sans antialiased bg-[#080808] text-white overflow-x-hidden" style={{ "--p": pc, "--pl": pcl, "--pm": pcm }}>
+    <div className="font-sans antialiased bg-[#080808] text-white overflow-x-hidden relative" style={{ "--p": pc, "--pl": pcl, "--pm": pcm }}>
+      <CursorGlow />
+      <ScrollProgressBar progress={progress} color={pc} />
       <style>{`
         /* ─── Scroll reveals ─── */
         [data-reveal] { opacity: 0; transform: translateY(40px); transition: opacity .7s cubic-bezier(.2,.9,.3,1), transform .7s cubic-bezier(.2,.9,.3,1); }
@@ -308,29 +324,43 @@ export default function BoldTemplate({ school }) {
                 {!s.logoUrl && <span className="text-[13px] font-bold text-white">{initials}</span>}
               </div>
               <div className="hidden sm:block">
-                <div className="text-[15px] font-semibold text-white leading-tight">{s.schoolName || "School Name"}</div>
+                <div className="text-[15px] font-semibold text-white leading-tight">            {schoolName}</div>
                 <div className="text-[11px] text-white/40">{location || s.city || "Campus"}</div>
               </div>
             </a>
 
             {/* Desktop Nav */}
             <ul className="hidden md:flex items-center gap-0.5 list-none m-0 p-0">
-              {SECTIONS.map((item) => (
-                <li key={item}>
-                  <a href={`#${item}`} className="text-[13px] font-medium text-white/50 px-3.5 py-2 rounded-lg no-underline transition-all duration-200 hover:text-white hover:bg-white/5">
-                    {item === "testimonials" ? "Testimonials" : item.charAt(0).toUpperCase() + item.slice(1)}
-                  </a>
-                </li>
-              ))}
+              {SECTIONS.map((item) => {
+                const isActive = activeSection === item;
+                return (
+                  <li key={item}>
+                    <a
+                      href={`#${item}`}
+                      className={`text-[13px] font-medium px-3.5 py-2 rounded-lg no-underline transition-all duration-200 ${
+                        isActive
+                          ? "text-white bg-white/10"
+                          : "text-white/50 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      {t(TRANSLATIONS.nav[item] || { en: item.charAt(0).toUpperCase() + item.slice(1), fr: item.charAt(0).toUpperCase() + item.slice(1) })}
+                      {isActive && (
+                        <span className="inline-block w-1 h-1 rounded-full ml-1.5" style={{ background: pc }} />
+                      )}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-2.5">
+              <LanguageToggle lang={lang} isBilingual={isBilingual} onToggle={toggleLang} variant="dark" />
               <a href="/login" className="h-9 px-4 rounded-xl text-[13px] font-medium text-white/70 no-underline inline-flex items-center transition-colors hover:text-white">
-                Sign in
+                {t(TRANSLATIONS.nav.signIn)}
               </a>
               <a href="/login" className="h-9 px-4 rounded-xl text-[13px] font-semibold text-white no-underline inline-flex items-center gap-1.5 transition-all duration-200 hover:brightness-110" style={{ background: pc }}>
-                <Icon path={PATHS.login} className="w-3.5 h-3.5" /> Portal
+                <Icon path={PATHS.login} className="w-3.5 h-3.5" /> {t(TRANSLATIONS.nav.portal)}
               </a>
             </div>
 
@@ -357,12 +387,12 @@ export default function BoldTemplate({ school }) {
             onClick={() => setMobileOpen(false)}
             className="text-[20px] font-medium py-3.5 text-white/70 border-b border-white/5 no-underline hover:text-white transition-colors"
           >
-            {item === "testimonials" ? "Testimonials" : item.charAt(0).toUpperCase() + item.slice(1)}
+            {t(TRANSLATIONS.nav[item] || { en: item.charAt(0).toUpperCase() + item.slice(1), fr: item.charAt(0).toUpperCase() + item.slice(1) })}
           </a>
         ))}
         <div className="flex flex-col gap-2.5 mt-6">
           <a href="/login" className="h-12 flex items-center justify-center rounded-xl text-[15px] font-semibold text-white no-underline" style={{ background: pc }}>
-            <Icon path={PATHS.login} className="w-4 h-4 mr-2" /> Student Portal
+            <Icon path={PATHS.login} className="w-4 h-4 mr-2" /> {t(TRANSLATIONS.nav.studentPortal)}
           </a>
         </div>
       </div>
@@ -426,7 +456,7 @@ export default function BoldTemplate({ school }) {
               </div>
 
               <h1 className="text-[clamp(44px,7vw,88px)] font-bold leading-[1.02] tracking-[-2px] mb-6" data-reveal>
-                {s.schoolName || "Your School"}
+                {schoolName}
               </h1>
 
               <p className="text-[clamp(17px,2vw,21px)] text-white/50 leading-[1.7] mb-10 max-w-[600px]" data-reveal>
@@ -443,14 +473,14 @@ export default function BoldTemplate({ school }) {
                   style={{ background: pc, boxShadow: `0 8px 32px ${hexToRgba(pc, 0.35)}` }}
                 >
                   <Icon path={PATHS.phone} className="w-[18px] h-[18px]" />
-                  Enrol now
+                  {t(TRANSLATIONS.hero.enrolNow)}
                 </MagneticButton>
                 <MagneticButton
                   href="#about"
                   className="h-[56px] px-7 rounded-xl text-[15px] font-medium text-white/80 hover:text-white border border-white/10 hover:border-white/20"
                 >
                   <Icon path={PATHS.play} className="w-[18px] h-[18px]" />
-                  Discover more
+                  {t(TRANSLATIONS.hero.discover)}
                 </MagneticButton>
               </div>
             </div>
@@ -482,9 +512,9 @@ export default function BoldTemplate({ school }) {
         <div className="max-w-[1280px] mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-md:gap-10 items-center">
             <div>
-              <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-3" style={{ color: pc }} data-reveal>About us</p>
+              <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-3" style={{ color: pc }} data-reveal>{t(TRANSLATIONS.about.aboutUs)}</p>
               <h2 className="text-[clamp(30px,4vw,48px)] font-bold leading-[1.1] tracking-[-0.5px] mb-6" data-reveal>
-                A legacy of <br /><em className="italic" style={{ color: pc }}>excellence</em>
+                {t(TRANSLATIONS.bold.legacy)} <br /><em className="italic" style={{ color: pc }}>{t(TRANSLATIONS.bold.excellence)}</em>
               </h2>
               <p className="text-[16px] text-white/45 leading-[1.8] mb-8" data-reveal>
                 {s.websiteDescription || `${s.schoolName || "Our school"} is dedicated to providing a supportive, challenging environment where every student can thrive and achieve their full potential. Our approach combines academic rigour with personal development.`}
@@ -493,9 +523,9 @@ export default function BoldTemplate({ school }) {
               {/* Key facts */}
               <div className="flex flex-wrap gap-3" data-reveal>
                 {[
-                  { value: s.examType || "GCE", label: "Examination" },
-                  { value: s.examPassRate ? `${s.examPassRate}%` : "94%", label: "Pass Rate" },
-                  { value: s.ranking || "Top 5", label: s.rankingCity || "Regional Rank" },
+                  { value: s.examType || "GCE", label: t(TRANSLATIONS.about.examination) },
+                  { value: s.examPassRate ? `${s.examPassRate}%` : "94%", label: t(TRANSLATIONS.about.passRate) },
+                  { value: s.ranking || "Top 5", label: s.rankingCity || t(TRANSLATIONS.about.ranking) },
                 ].map((item, i) => (
                   <div key={i} className="bold-glass rounded-xl px-5 py-3.5 text-center min-w-[110px] transition-all duration-200 hover:brightness-125" style={{ animation: i === 0 ? `bold-glow 4s ease-in-out ${i}s infinite` : "none" }}>
                     <div className="text-lg font-bold text-white">{item.value}</div>
@@ -537,9 +567,9 @@ export default function BoldTemplate({ school }) {
         <div className="absolute top-1/2 right-0 w-[500px] h-[500px] rounded-full opacity-[0.03]" style={{ background: pc, filter: "blur(100px)" }} />
         <div className="relative max-w-[1280px] mx-auto px-6">
           <div className="text-center mb-16">
-            <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-4" style={{ color: pc }} data-reveal>Our values</p>
+            <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-4" style={{ color: pc }} data-reveal>{t(TRANSLATIONS.values.ourValues)}</p>
             <h2 className="text-[clamp(28px,4vw,44px)] font-bold leading-[1.1]" data-reveal>
-              What makes us <span className="italic" style={{ color: pc }}>different</span>
+              {t(TRANSLATIONS.values.whatMakesUs)} <span className="italic" style={{ color: pc }}>{t(TRANSLATIONS.values.different)}</span>
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -580,15 +610,15 @@ export default function BoldTemplate({ school }) {
         <section className="py-28 max-md:py-16" id="academics">
           <div className="max-w-[1280px] mx-auto px-6">
             <div className="text-center mb-16">
-              <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-4" style={{ color: pc }} data-reveal>Our record</p>
+              <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-4" style={{ color: pc }} data-reveal>{t(TRANSLATIONS.about.ourRecord)}</p>
               <h2 className="text-[clamp(28px,4vw,44px)] font-bold leading-[1.1]" data-reveal>
-                Academic <span className="italic" style={{ color: pc }}>achievements</span>
+                {t(TRANSLATIONS.about.ourAcademic)} <span className="italic" style={{ color: pc }}>{t(TRANSLATIONS.achievements.record)}</span>
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {s.examType && (
                 <div className="bold-glass rounded-2xl p-10 text-center transition-all duration-300 hover:-translate-y-1" data-reveal>
-                  <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-2 text-white/30">Examination</p>
+                  <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-2 text-white/30">{t(TRANSLATIONS.about.examination)}</p>
                   <p className="text-3xl font-bold text-white">{s.examType}</p>
                   <div className="mt-4 w-full h-1 rounded-full bg-white/5">
                     <div className="h-full rounded-full" style={{ width: "100%", background: pc, opacity: 0.5 }} />
@@ -598,7 +628,7 @@ export default function BoldTemplate({ school }) {
               {s.examPassRate && (
                 <div className="rounded-2xl p-10 text-center relative overflow-hidden transition-all duration-300 hover:-translate-y-1" style={{ background: pcl, border: `1px solid ${pcm}` }} data-reveal>
                   <div className="absolute inset-0 opacity-10" style={{ background: `linear-gradient(135deg, ${pc}, transparent)`, animation: "bold-pulse 5s ease-in-out infinite" }} />
-                  <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-2 relative" style={{ color: pcm }}>Pass Rate</p>
+                  <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-2 relative" style={{ color: pcm }}>{t(TRANSLATIONS.about.passRate)}</p>
                   <p className="text-6xl font-bold relative" style={{ color: pc }}>{s.examPassRate}%</p>
                   <div className="mt-4 w-full h-1.5 rounded-full bg-white/5 relative">
                     <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(parseInt(s.examPassRate) || 94, 100)}%`, background: pc }} />
@@ -607,9 +637,9 @@ export default function BoldTemplate({ school }) {
               )}
               {s.ranking && (
                 <div className="bold-glass rounded-2xl p-10 text-center transition-all duration-300 hover:-translate-y-1" data-reveal>
-                  <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-2 text-white/30">Ranking</p>
+                  <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-2 text-white/30">{t(TRANSLATIONS.about.ranking)}</p>
                   <p className="text-3xl font-bold text-white">{s.ranking}</p>
-                  {s.rankingCity && <p className="text-[13px] text-white/30 mt-1">in {s.rankingCity}</p>}
+                  {s.rankingCity && <p className="text-[13px] text-white/30 mt-1">{t(TRANSLATIONS.about.inRanking)} {s.rankingCity}</p>}
                   <div className="mt-4 w-full h-1 rounded-full bg-white/5">
                     <div className="h-full rounded-full" style={{ width: "85%", background: pc, opacity: 0.5 }} />
                   </div>
@@ -624,9 +654,9 @@ export default function BoldTemplate({ school }) {
       <section className="py-28 max-md:py-16" style={{ background: "#0d0d0d" }} id="classes">
         <div className="max-w-[1280px] mx-auto px-6">
           <div className="text-center mb-12">
-            <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-4" style={{ color: pc }} data-reveal>Academics</p>
+            <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-4" style={{ color: pc }} data-reveal>{t(TRANSLATIONS.classes.academics)}</p>
             <h2 className="text-[clamp(28px,4vw,44px)] font-bold leading-[1.1]" data-reveal>
-              Our classes & <span className="italic" style={{ color: pc }}>streams</span>
+              {t(TRANSLATIONS.classes.ourClasses)} <span className="italic" style={{ color: pc }}>{t(TRANSLATIONS.classes.streams)}</span>
             </h2>
           </div>
 
@@ -678,9 +708,9 @@ export default function BoldTemplate({ school }) {
       <section className="py-28 max-md:py-16 relative overflow-hidden" id="testimonials">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-[0.04]" style={{ background: pc, filter: "blur(120px)" }} />
         <div className="relative max-w-[800px] mx-auto px-6 text-center">
-          <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-4" style={{ color: pc }} data-reveal>Testimonials</p>
+          <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-4" style={{ color: pc }} data-reveal>{t(TRANSLATIONS.testimonials.testimonials)}</p>
           <h2 className="text-[clamp(28px,4vw,44px)] font-bold leading-[1.1] mb-12" data-reveal>
-            What people <span className="italic" style={{ color: pc }}>say</span>
+            {t(TRANSLATIONS.testimonials.whatPeopleSay)} <span className="italic" style={{ color: pc }}>{t(TRANSLATIONS.values.different)}</span>
           </h2>
 
           {/* Carousel */}
@@ -749,32 +779,32 @@ export default function BoldTemplate({ school }) {
       <section className="py-28 max-md:py-16" style={{ background: "#0d0d0d" }} id="gallery">
         <div className="max-w-[1280px] mx-auto px-6">
           <div className="text-center mb-14">
-            <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-4" style={{ color: pc }} data-reveal>Gallery</p>
+            <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-4" style={{ color: pc }} data-reveal>{t(TRANSLATIONS.gallery.gallery)}</p>
             <h2 className="text-[clamp(28px,4vw,44px)] font-bold leading-[1.1]" data-reveal>
-              Life at {s.schoolName?.split(" ")[0] || "School"}
+              {t(TRANSLATIONS.gallery.lifeAt)} {schoolShort || "School"}
             </h2>
           </div>
 
           {gallery.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                 {gallery.slice(0, 5).map((img, i) => (
                   <div
                     key={i}
                     className={`relative overflow-hidden rounded-2xl group cursor-pointer ${i === 0 ? "md:col-span-2 md:row-span-2" : ""}`}
-                    style={{ minHeight: i === 0 ? "480px" : "220px" }}
+                    style={{ maxHeight: i === 0 ? "min(340px, 40vw)" : "min(170px, 25vw)" }}
                     onClick={() => setLightboxIdx(i)}
                     data-reveal
                   >
                     <img src={img.url} alt={img.caption || ""} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur flex items-center justify-center">
-                        <Icon path={PATHS.search} className="w-5 h-5 text-white" />
+                      <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur flex items-center justify-center">
+                        <Icon path={PATHS.search} className="w-4 h-4 text-white" />
                       </div>
                     </div>
                     {img.caption && (
-                      <p className="absolute bottom-3 left-3 text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">{img.caption}</p>
+                      <p className="absolute bottom-2 left-2 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">{img.caption}</p>
                     )}
                   </div>
                 ))}
@@ -783,7 +813,7 @@ export default function BoldTemplate({ school }) {
               {gallery.length > 5 && (
                 <div className="text-center mt-8" data-reveal>
                   <button className="inline-flex items-center gap-2 h-11 px-6 rounded-xl text-[13px] font-medium text-white/60 no-underline border border-white/10 hover:text-white hover:border-white/30 transition-all cursor-pointer bg-transparent">
-                    View all {gallery.length} photos <Icon path={PATHS.arrow} className="w-4 h-4" />
+                    {t(TRANSLATIONS.gallery.viewAll)} {gallery.length} {t(TRANSLATIONS.gallery.photos)} <Icon path={PATHS.arrow} className="w-4 h-4" />
                   </button>
                 </div>
               )}
@@ -809,6 +839,48 @@ export default function BoldTemplate({ school }) {
         <Lightbox images={gallery.length > 0 ? gallery : []} index={lightboxIdx} onClose={() => setLightboxIdx(null)} />
       )}
 
+      {/* ════════════════ ENROLMENT FORM ════════════════ */}
+      <section className="py-28 max-md:py-16" style={{ background: "#0d0d0d" }} id="enrol">
+        <div className="max-w-[1280px] mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-md:gap-10 items-start">
+            <div>
+              <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-3" style={{ color: pc }} data-reveal>{t(TRANSLATIONS.enrolment.enrolment)}</p>
+              <h2 className="text-[clamp(28px,4vw,44px)] font-bold leading-[1.1] mb-5" data-reveal>
+                {t(TRANSLATIONS.enrolment.apply)} <span className="italic" style={{ color: pc }}>{t(TRANSLATIONS.enrolment.admission)}</span>
+              </h2>
+              <p className="text-[16px] text-white/45 leading-[1.7] mb-8 max-w-[440px]" data-reveal>
+                {t(TRANSLATIONS.bold.quickResponseDesc)}
+              </p>
+              <div className="flex flex-col gap-4" data-reveal>
+                {[
+                  { label: t(TRANSLATIONS.bold.quickResponse), desc: t(TRANSLATIONS.bold.quickResponseDesc) },
+                  { label: t(TRANSLATIONS.bold.campusTour), desc: t(TRANSLATIONS.bold.campusTourDesc) },
+                  { label: t(TRANSLATIONS.bold.noObligation), desc: t(TRANSLATIONS.bold.noObligationDesc) },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3.5 group">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 transition-all duration-200 group-hover:scale-110" style={{ background: pcl }}>
+                      <FiEdit3 className="w-4 h-4" style={{ color: pc }} />
+                    </div>
+                    <div>
+                      <p className="text-[15px] font-semibold text-white">{item.label}</p>
+                      <p className="text-[13px] text-white/40">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="relative" data-reveal>
+              <div className="bold-glass rounded-2xl p-8" style={{ borderColor: pcm }}>
+                <EnrollmentForm
+                  variant="dark"
+                  primaryColor={pc}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ════════════════ CTA ════════════════ */}
       <section className="py-28 max-md:py-16 relative overflow-hidden text-center">
         <div className="absolute inset-0 z-0">
@@ -816,10 +888,10 @@ export default function BoldTemplate({ school }) {
         </div>
         <div className="relative z-10 max-w-[600px] mx-auto px-6">
           <h2 className="text-[clamp(28px,4vw,44px)] font-bold leading-[1.1] mb-5" data-reveal>
-            Ready to join <span className="italic" style={{ color: pc }}>{s.schoolName?.split(" ")[0] || "us"}</span>?
+            {t(TRANSLATIONS.cta.readyToJoin)} <span className="italic" style={{ color: pc }}>{schoolShort || t(TRANSLATIONS.cta.us)}</span>?
           </h2>
           <p className="text-[16px] text-white/45 leading-[1.7] mb-8" data-reveal>
-            Enrolment is open for the upcoming academic year. Contact our admissions team to schedule a campus tour.
+            {t(TRANSLATIONS.enrolment.contactAdmissions)}
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap" data-reveal>
             <MagneticButton
@@ -827,13 +899,13 @@ export default function BoldTemplate({ school }) {
               className="h-[54px] px-8 rounded-xl text-[15px] font-semibold text-white"
               style={{ background: pc }}
             >
-              <Icon path={PATHS.phone} className="w-[18px] h-[18px]" /> Contact admissions
+              <Icon path={PATHS.phone} className="w-[18px] h-[18px]" /> {t(TRANSLATIONS.enrolment.contactAdmissions)}
             </MagneticButton>
             <MagneticButton
               href="/login"
               className="h-[54px] px-7 rounded-xl text-[15px] font-medium text-white/70 hover:text-white border border-white/10"
             >
-              <Icon path={PATHS.login} className="w-[18px] h-[18px]" /> Student portal
+              <Icon path={PATHS.login} className="w-[18px] h-[18px]" /> {t(TRANSLATIONS.nav.studentPortal)}
             </MagneticButton>
           </div>
         </div>
@@ -844,12 +916,11 @@ export default function BoldTemplate({ school }) {
         <div className="max-w-[1280px] mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-md:gap-10">
             <div>
-              <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-3" style={{ color: pc }} data-reveal>Contact</p>
+              <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-3" style={{ color: pc }} data-reveal>{t(TRANSLATIONS.contact.contact)}</p>
               <h2 className="text-[clamp(28px,4vw,44px)] font-bold leading-[1.1] mb-5" data-reveal>
-                Visit our <span className="italic" style={{ color: pc }}>campus</span>
-              </h2>
+                {t(TRANSLATIONS.contact.visitCampus)}</h2>
               <p className="text-[16px] text-white/45 leading-[1.7] mb-8 max-w-[440px]" data-reveal>
-                We welcome families to visit. Our admissions team is available Monday to Friday.
+                {t(TRANSLATIONS.contact.getInTouch)}
               </p>
               <div className="flex flex-col gap-5">
                 {contactItems.map((item, i) => (
@@ -871,7 +942,7 @@ export default function BoldTemplate({ school }) {
               data-reveal
             >
               <Icon path={PATHS.pin} className="w-12 h-12" style={{ color: pc }} />
-              <p className="text-[16px] font-medium text-white/70">{s.schoolName || "School"}</p>
+              <p className="text-[16px] font-medium text-white/70">{schoolName}</p>
               <p className="text-[13px] text-white/40">{location || "City, Region"}</p>
               <a
                 href={`https://maps.google.com/?q=${encodeURIComponent(s.address || `${s.city || ""} ${s.region || ""}`)}`}
@@ -880,7 +951,7 @@ export default function BoldTemplate({ school }) {
                 className="inline-flex items-center gap-2 h-10 px-5 rounded-xl text-[12px] font-medium text-white no-underline transition-all duration-200 hover:brightness-110 mt-2"
                 style={{ background: pc }}
               >
-                <Icon path={PATHS.pin} className="w-3.5 h-3.5" /> Open in Maps
+                <Icon path={PATHS.pin} className="w-3.5 h-3.5" /> {t(TRANSLATIONS.contact.openInMaps)}
               </a>
             </div>
           </div>
@@ -897,16 +968,16 @@ export default function BoldTemplate({ school }) {
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: pc }}>
                   <Icon path={PATHS.building} className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-[16px] font-semibold text-white">{s.schoolName || "School"}</span>
+                <span className="text-[16px] font-semibold text-white">{schoolName}</span>
               </div>
-              <p className="text-[13px] text-white/30 leading-relaxed">Shaping the leaders of tomorrow since {s.yearFounded || "1998"}.</p>
+              <p className="text-[13px] text-white/30 leading-relaxed">{t(TRANSLATIONS.footer.shaping)} {s.yearFounded || "1998"}.</p>
             </div>
 
             {/* Nav columns */}
             {[
-              { title: "Navigate", links: [{ label: "About", href: "#about" }, { label: "Classes", href: "#classes" }, { label: "Gallery", href: "#gallery" }, { label: "Contact", href: "#contact" }] },
-              { title: "Portals", links: [{ label: "Student Portal", href: "/login" }, { label: "Parent Login", href: "/login" }, { label: "Teacher Login", href: "/login" }] },
-              { title: "Academic", links: [{ label: "Results", href: "#academics" }, { label: "Curriculum", href: "#classes" }, { label: "Fees", href: "#" }, { label: "Admissions", href: "#contact" }] },
+              { title: t(TRANSLATIONS.footer.navigate), links: [{ label: t(TRANSLATIONS.nav.about), href: "#about" }, { label: t(TRANSLATIONS.nav.classes), href: "#classes" }, { label: t(TRANSLATIONS.nav.gallery), href: "#gallery" }, { label: t(TRANSLATIONS.nav.contact), href: "#contact" }] },
+              { title: t(TRANSLATIONS.footer.portals), links: [{ label: t(TRANSLATIONS.nav.studentPortal), href: "/login" }, { label: t(TRANSLATIONS.nav.parentPortal), href: "/login" }, { label: t(TRANSLATIONS.nav.teacherLogin), href: "/login" }] },
+              { title: t(TRANSLATIONS.footer.academic), links: [{ label: t(TRANSLATIONS.footer.results), href: "#academics" }, { label: t(TRANSLATIONS.footer.curriculum), href: "#classes" }, { label: t(TRANSLATIONS.footer.fees), href: "#" }, { label: t(TRANSLATIONS.footer.admissions), href: "#contact" }] },
             ].map((col, i) => (
               <div key={i}>
                 <p className="text-[11px] font-semibold tracking-wider uppercase mb-4" style={{ color: pcm }}>{col.title}</p>
@@ -921,17 +992,20 @@ export default function BoldTemplate({ school }) {
 
           {/* Bottom */}
           <div className="border-t border-white/5 pt-6 flex items-center justify-between gap-4 flex-wrap max-md:flex-col max-md:items-start">
-            <p className="text-[13px] text-white/20">&copy; {year} {s.schoolName || "School"}. All rights reserved.</p>
-            <p className="text-[13px] text-white/20">Powered by <strong className="font-semibold" style={{ color: pcm }}>Akademee</strong></p>
+            <p className="text-[13px] text-white/20">&copy; {year} {schoolName}. {t(TRANSLATIONS.footer.rights)}</p>
+            <p className="text-[13px] text-white/20">{t(TRANSLATIONS.footer.poweredBy)} <strong className="font-semibold" style={{ color: pcm }}>Akademee</strong></p>
           </div>
         </div>
       </footer>
 
       {/* Sticky mobile CTA */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-3 pb-[max(12px,env(safe-area-inset-bottom))] flex gap-2.5" style={{ background: "rgba(8,8,8,0.95)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <a href="/login" className="flex-1 h-12 flex items-center justify-center rounded-xl text-[14px] font-semibold text-white no-underline" style={{ background: pc }}>Student Portal</a>
-        <a href="#contact" className="flex-1 h-12 flex items-center justify-center rounded-xl text-[14px] font-medium text-white/70 no-underline border border-white/10">Contact</a>
+        <a href="/login" className="flex-1 h-12 flex items-center justify-center rounded-xl text-[14px] font-semibold text-white no-underline" style={{ background: pc }}>{t(TRANSLATIONS.nav.studentPortal)}</a>
+        <a href="#contact" className="flex-1 h-12 flex items-center justify-center rounded-xl text-[14px] font-medium text-white/70 no-underline border border-white/10">{t(TRANSLATIONS.nav.contact)}</a>
       </div>
+
+      {/* Back to top */}
+      <BackToTopButton show={showBackToTop} color={pc} variant="dark" />
     </div>
   );
 }

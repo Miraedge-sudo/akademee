@@ -29,6 +29,7 @@ class WebsiteService {
         s.website_published,
         s.onboarding_completed,
         s.subscription_plan,
+        s.educational_systems,
         wt.template_id,
         wt.template_code,
         wt.name AS template_name,
@@ -67,6 +68,7 @@ class WebsiteService {
       websitePublished: school.website_published,
       onboardingCompleted: school.onboarding_completed,
       subscriptionPlan: school.subscription_plan,
+      educationalSystems: school.educational_systems || [],
       gallery: gallery.map((g) => ({ url: g.url, caption: g.caption })),
       template: {
         id: school.template_id,

@@ -10,6 +10,11 @@ import {
   FiSearch,
   FiChevronDown,
   FiChevronRight,
+  FiHome,
+  FiUsers,
+  FiBook,
+  FiAlertTriangle,
+  FiUser,
 } from "react-icons/fi";
 
 // ── Level metadata (from the design HTML) ──
@@ -290,7 +295,7 @@ function LevelGroup({ levelKey, meta, classes, collapsed, onToggle, pc, lang }) 
                         color: lvlColor,
                       }}
                     >
-                      {cls.classTeacherId ? "👤" : "—"}
+                      {cls.classTeacherId ? <FiUser className="w-3.5 h-3.5" /> : "—"}
                     </div>
                     <span className="text-xs text-surface-500">
                       {cls.teacherName || (isFr ? "Aucun titulaire" : "No teacher")}
@@ -492,10 +497,10 @@ export default function ClassesChildrenSection() {
       {/* ── Stats Strip ── */}
       {!loading && totalClasses > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7 animate-fadeIn" style={{ animationDelay: "0.05s" }}>
-          <StatCard icon="🏫" value={stats.totalClasses} label={isFr ? "Total classes" : "Total classes"} color={pc} />
-          <StatCard icon="👩‍🎓" value={stats.totalStudents} label={isFr ? "Total élèves" : "Total students"} color="#1D9E75" />
-          <StatCard icon="📚" value={stats.levelCount} label={isFr ? "Niveaux actifs" : "Levels active"} color="#0EA5E9" />
-          <StatCard icon="⚠️" value={stats.almostFull} label={isFr ? "Presque pleines" : "Almost full"} color="#EF4444" />
+          <StatCard icon={<FiHome className="w-5 h-5" />} value={stats.totalClasses} label={isFr ? "Total classes" : "Total classes"} color={pc} />
+          <StatCard icon={<FiUsers className="w-5 h-5" />} value={stats.totalStudents} label={isFr ? "Total élèves" : "Total students"} color="#1D9E75" />
+          <StatCard icon={<FiBook className="w-5 h-5" />} value={stats.levelCount} label={isFr ? "Niveaux actifs" : "Levels active"} color="#0EA5E9" />
+          <StatCard icon={<FiAlertTriangle className="w-5 h-5" />} value={stats.almostFull} label={isFr ? "Presque pleines" : "Almost full"} color="#EF4444" />
         </div>
       )}
 

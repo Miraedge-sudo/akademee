@@ -30,6 +30,9 @@ export const API_ENDPOINTS = {
     PUBLIC: "/api/website/public",
     DATA: "/api/website/data",
     TEMPLATE_UPDATE: "/api/website/template/update",
+    ENROL: "/api/website/enrol",
+    INQUIRIES: "/api/website/inquiries",
+    INQUIRY_STATUS: (id) => `/api/website/inquiries/${id}/status`,
   },
 
   // Students
@@ -52,6 +55,10 @@ export const API_ENDPOINTS = {
   // Academic
   ACADEMIC: {
     YEARS: "/api/academics/years",
+    YEAR: (id) => `/api/academics/years/${id}`,
+    ACTIVATE_YEAR: (id) => `/api/academics/years/${id}/activate`,
+    TERMS: "/api/academics/terms",
+    TERM: (id) => `/api/academics/terms/${id}`,
     CLASSES: "/api/classes",
     CLASS: (id) => `/api/classes/${id}`,
     CLASS_STUDENTS: (id) => `/api/classes/${id}/students`,
@@ -61,12 +68,61 @@ export const API_ENDPOINTS = {
     CLASS_SUBJECTS_BY_CLASS: (classId) => `/api/class-subjects/class/${classId}`,
   },
 
+  // Subjects
+  SUBJECTS: {
+    LIST: "/api/subjects",
+    CREATE: "/api/subjects",
+    GET: (id) => `/api/subjects/${id}`,
+    UPDATE: (id) => `/api/subjects/${id}`,
+    DELETE: (id) => `/api/subjects/${id}`,
+    CLASS: (classId) => `/api/subjects/class/${classId}`,
+  },
+
+  // Subject-Teachers assignments
+  SUBJECT_TEACHERS: {
+    LIST: "/api/subject-teachers",
+    ASSIGN: "/api/subject-teachers",
+    BY_SUBJECT: (subjectId) => `/api/subject-teachers/subject/${subjectId}`,
+    BY_TEACHER: (teacherId) => `/api/subject-teachers/teacher/${teacherId}`,
+    DELETE: (id) => `/api/subject-teachers/${id}`,
+  },
+
+  // User Management (Teachers & Staff)
+  USERS_MANAGE: {
+    LIST: "/api/users/manage",
+    CREATE: "/api/users/manage",
+    GET: (id) => `/api/users/manage/${id}`,
+    UPDATE: (id) => `/api/users/manage/${id}`,
+    DELETE: (id) => `/api/users/manage/${id}`,
+  },
+
+  // Roles
+  ROLES: {
+    LIST: "/api/roles",
+    PERMISSIONS: "/api/roles/permissions",
+    USER_ROLES: (userId) => `/api/roles/${userId}`,
+    ASSIGN: (userId) => `/api/roles/${userId}/assign`,
+    REMOVE: (userId, roleCode) => `/api/roles/${userId}/role/${roleCode}`,
+  },
+
   // Grades
   GRADES: {
     LIST: "/api/grades",
     CREATE: "/api/grades",
     STUDENT: (id) => `/api/grades/student/${id}`,
+    CLASS: (classId) => `/api/grades/class/${classId}`,
+    PERIOD_CLASS: (periodId, classId) => `/api/grades/period/${periodId}/class/${classId}`,
+    REPORT: (studentId) => `/api/grades/report/${studentId}`,
+    CALCULATE: "/api/grades/calculate",
     UPDATE: (id) => `/api/grades/${id}`,
+    DELETE: (id) => `/api/grades/${id}`,
+    BULK_UPLOAD: "/api/grades/bulk-upload",
+  },
+
+  // Grade Calculations
+  GRADE_CALCULATIONS: {
+    AVERAGES: (studentId) => `/api/grade-calculations/averages/${studentId}`,
+    RANKINGS: (classId) => `/api/grade-calculations/rankings/${classId}`,
   },
 
   // Attendance
@@ -74,19 +130,55 @@ export const API_ENDPOINTS = {
     LIST: "/api/attendance",
     CREATE: "/api/attendance",
     STUDENT: (id) => `/api/attendance/student/${id}`,
+    CLASS_DATE: (classId, date) => `/api/attendance/class/${classId}/date/${date}`,
+    CLASS: (classId) => `/api/attendance/class/${classId}`,
+    STATISTICS: "/api/attendance/statistics",
+    UPDATE: (id) => `/api/attendance/${id}`,
+    BULK: "/api/attendance/bulk",
+  },
+
+  // Attendance Stats
+  ATTENDANCE_STATS: {
+    STUDENT: (studentId) => `/api/attendance-stats/student/${studentId}`,
+    CLASS: (classId) => `/api/attendance-stats/class/${classId}`,
+    MONTHLY_TRENDS: "/api/attendance-stats/trends/monthly",
   },
 
   // Finance
   FINANCE: {
     FEES: "/api/finance/fees",
-    PAYMENTS: "/api/payments",
-    PAYMENT: (id) => `/api/payments/${id}`,
+    FEE: (id) => `/api/finance/fees/${id}`,
+    ASSIGN_FEES: "/api/finance/fees/assign",
+    STUDENT_FEE_STATUS: (studentId) => `/api/finance/student/${studentId}`,
+    REPORTS: "/api/finance/reports",
+  },
+
+  // Payments
+  PAYMENTS: {
+    LIST: "/api/payments",
+    CREATE: "/api/payments",
+    GET: (id) => `/api/payments/${id}`,
+    STUDENT: (studentId) => `/api/payments/student/${studentId}`,
+    VERIFY: (id) => `/api/payments/${id}/verify`,
+    REPORT: "/api/payments/report/generate",
+  },
+
+  // Fee Calculations
+  FEE_CALCULATIONS: {
+    RECALCULATE: "/api/fee-calculations/recalculate",
+    STUDENT_STATUS: (studentId) => `/api/fee-calculations/student/${studentId}`,
+    STUDENT_SUMMARY: (studentId) => `/api/fee-calculations/student/${studentId}/summary`,
   },
 
   // Reports
   REPORTS: {
-    BULLETIN: (id) => `/api/reports/bulletin/${id}`,
-    CLASS: (id) => `/api/reports/class/${id}`,
+    BULLETIN: (studentId, periodId) => `/api/reports/bulletin/${studentId}/${periodId}`,
+    BULLETIN_SIMPLE: (id) => `/api/reports/bulletin/${id}`,
+    BULLETIN_DOWNLOAD: (studentId, periodId) => `/api/reports/bulletin/${studentId}/${periodId}/download`,
+    CLASS: (classId, periodId) => `/api/reports/class/${classId}/${periodId}`,
+    CLASS_SIMPLE: (id) => `/api/reports/class/${id}`,
+    PERFORMANCE: (studentId) => `/api/reports/performance/${studentId}`,
+    EXPORT: (reportId) => `/api/reports/export/${reportId}`,
   },
 
   // Notifications

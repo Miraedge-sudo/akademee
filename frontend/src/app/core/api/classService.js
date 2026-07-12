@@ -83,10 +83,10 @@ export async function getClassSubjects(classId) {
   return response.data.data;
 }
 
+import { getAcademicYears as getYearsFromService } from './academicYearService';
+
 /**
  * Récupère la liste des années académiques
+ * @deprecated Use academicYearService.getAcademicYears() instead
  */
-export async function getAcademicYears() {
-  const response = await api.get(API_ENDPOINTS.ACADEMIC.YEARS);
-  return response.data.data;
-}
+export const getAcademicYears = getYearsFromService;

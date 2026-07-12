@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { FiHome, FiLogIn, FiPhone, FiMail, FiMapPin, FiArrowRight, FiStar, FiUsers, FiImage, FiPlay, FiMessageCircle, FiBookOpen, FiClock, FiFeather, FiAward } from "react-icons/fi";
+import { FiHome, FiLogIn, FiPhone, FiMail, FiMapPin, FiArrowRight, FiStar, FiUsers, FiImage, FiPlay, FiMessageCircle, FiBookOpen, FiClock, FiFeather, FiAward, FiEdit3 } from "react-icons/fi";
+import EnrollmentForm from "../components/EnrollmentForm";
+import { useScrollProgress, ScrollProgressBar, BackToTopButton } from "../hooks/useScrollProgress.jsx";
+import { useActiveSection } from "../hooks/useActiveSection.jsx";
+import { useCursorGlow } from "../hooks/useCursorGlow.jsx";
+import { useWebsiteLanguage, LanguageToggle } from "../hooks/useWebsiteLanguage.jsx";
+import { TRANSLATIONS } from "../hooks/websiteTranslations.js";
 
 function hexToRgba(hex, alpha) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -8,7 +14,7 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-const SECTIONS = ["about", "classes", "gallery", "contact"];
+const SECTIONS = ["about", "classes", "gallery", "enrol", "contact"];
 
 // ──────────────────── Icons ────────────────────
 
@@ -106,10 +112,19 @@ export default function PremiumTemplate({ school }) {
 
   const year = new Date().getFullYear();
   const location = [s.city, s.region].filter(Boolean).join(", ");
-  const initials = (s.schoolName || "SC").split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase();
+  const schoolName = s.name || s.schoolName || "School Name";
+  const schoolShort = schoolName.split(" ")[0];
+  const initials = schoolName.split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase();
 
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Interactive hooks
+  const { progress, showBackToTop } = useScrollProgress(300);
+  const { CursorGlow } = useCursorGlow(pc, 500, 0.025);
+  const PREMIUM_SECTIONS = [...SECTIONS, "heritage", "testimonials"];
+  const activeSection = useActiveSection(PREMIUM_SECTIONS, 100);
+  const { lang, isBilingual, toggleLang, t } = useWebsiteLanguage(s.educationalSystems);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -126,10 +141,10 @@ export default function PremiumTemplate({ school }) {
 
   const stats = s.websiteStats || {};
   const statItems = [
-    { end: stats.studentsEnrolled || 248, label: "Students" },
-    { end: stats.teachers || 32, label: "Faculty" },
-    { end: s.examPassRate ? parseInt(s.examPassRate) : 94, suffix: "%", label: `${s.examType || "GCE"} Pass Rate` },
-    { end: s.yearFounded ? parseInt(s.yearFounded) : 1998, label: "Founded" },
+    { end: stats.studentsEnrolled || 248, label: t(TRANSLATIONS.classes.students) },
+    { end: stats.teachers || 32, label: t(TRANSLATIONS.about.faculty) },
+    { end: s.examPassRate ? parseInt(s.examPassRate) : 94, suffix: "%", label: `${s.examType || "GCE"} ${t(TRANSLATIONS.about.passRate)}` },
+    { end: s.yearFounded ? parseInt(s.yearFounded) : 1998, label: t(TRANSLATIONS.about.founded) },
   ];
 
   const values = s.websiteValues?.length > 0 ? s.websiteValues : [
@@ -148,24 +163,26 @@ export default function PremiumTemplate({ school }) {
   ];
 
   const milestones = [
-    { year: s.yearFounded || "1998", title: "Founded", desc: "Established with a vision to provide world-class bilingual education." },
+    { year: s.yearFounded || "1998", title: t(TRANSLATIONS.premium.founded), desc: "Established with a vision to provide world-class bilingual education." },
     { year: "2005", title: "First GCE Cohort", desc: "First batch of students sat for the GCE examinations with outstanding results." },
     { year: "2012", title: "Bilingual Excellence", desc: "Recognised as a leading bilingual institution in the region." },
     { year: "2018", title: "Top Ranking", desc: "Achieved top ranking in regional academic performance tables." },
-    { year: String(year), title: "Present Day", desc: "Continuing our legacy of excellence, innovation, and community impact." },
+    { year: String(year), title: t(TRANSLATIONS.premium.presentDay), desc: "Continuing our legacy of excellence, innovation, and community impact." },
   ];
 
   const gallery = s.gallery?.length > 0 ? s.gallery : (s.aboutPhotos || []);
 
   const contactItems = [
-    { icon: PATHS.pin, label: "Address", value: s.address || `${s.city || "City"}, ${s.region || "Region"}` },
-    { icon: PATHS.phone, label: "Telephone", value: s.phone || "+237 6XX XXX XXX" },
-    { icon: PATHS.mail, label: "Email", value: s.email || "info@yourschool.cm" },
-    { icon: PATHS.clock, label: "Office Hours", value: "Monday \u2013 Friday \u00b7 7:30 AM \u2013 4:00 PM" },
+    { icon: PATHS.pin, label: t(TRANSLATIONS.contact.address), value: s.address || `${s.city || "City"}, ${s.region || "Region"}` },
+    { icon: PATHS.phone, label: t(TRANSLATIONS.premium.telephone), value: s.phone || "+237 6XX XXX XXX" },
+    { icon: PATHS.mail, label: t(TRANSLATIONS.contact.email), value: s.email || "info@yourschool.cm" },
+    { icon: PATHS.clock, label: t(TRANSLATIONS.premium.officeHours), value: "Monday \u2013 Friday \u00b7 7:30 AM \u2013 4:00 PM" },
   ];
 
   return (
     <div className="antialiased bg-[#fcfaf7] text-[#2d2a24] overflow-x-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif", "--p": pc, "--pl": pcl, "--pm": pcm }}>
+      <CursorGlow />
+      <ScrollProgressBar progress={progress} color={pc} />
       <style>{`
         /* ─── Fonts ─── */
         .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
@@ -214,32 +231,40 @@ export default function PremiumTemplate({ school }) {
                 {!s.logoUrl && <span className="text-sm font-bold text-white tracking-wider serif">{initials}</span>}
               </div>
               <div>
-                <div className="serif text-[17px] font-semibold text-[#2d2a24] leading-tight">{s.schoolName || "School"}</div>
+                <div className="serif text-[17px] font-semibold text-[#2d2a24] leading-tight">{schoolName}</div>
                 <div className="text-[10px] text-[#9a948a] tracking-wide uppercase">{location || s.city || "Campus"}</div>
               </div>
             </a>
 
             <ul className="hidden md:flex items-center gap-1 list-none m-0 p-0">
-              {SECTIONS.map((item) => (
-                <li key={item}>
-                  <a
-                    href={`#${item}`}
-                    className="text-[12.5px] font-medium text-[#9a948a] px-4 py-2 no-underline transition-colors duration-200 hover:text-[#2d2a24] premium-hover-link"
-                  >
-                    {item.charAt(0).toUpperCase() + item.slice(1)}
-                  </a>
-                </li>
-              ))}
+              {SECTIONS.map((item) => {
+                const isActive = activeSection === item;
+                return (
+                  <li key={item}>
+                    <a
+                      href={`#${item}`}
+                      className={`text-[12.5px] font-medium px-4 py-2 no-underline transition-all duration-200 ${
+                        isActive
+                          ? "text-[#2d2a24]"
+                          : "text-[#9a948a] hover:text-[#2d2a24]"
+                      } ${isActive ? "premium-hover-link" : "premium-hover-link"}`}
+                    >
+                      {t(TRANSLATIONS.nav[item] || { en: item.charAt(0).toUpperCase() + item.slice(1), fr: item.charAt(0).toUpperCase() + item.slice(1) })}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
 
-            <div className="hidden md:flex items-center gap-4">
-              <a href="/login" className="text-[12.5px] font-medium text-[#9a948a] no-underline hover:text-[#2d2a24] transition-colors premium-hover-link">Sign in</a>
+            <div className="hidden md:flex items-center gap-3">
+              <LanguageToggle lang={lang} isBilingual={isBilingual} onToggle={toggleLang} variant="light" />
+              <a href="/login" className="text-[12.5px] font-medium text-[#9a948a] no-underline hover:text-[#2d2a24] transition-colors premium-hover-link">{t(TRANSLATIONS.nav.signIn)}</a>
               <a
                 href="/login"
                 className="h-9 px-5 text-[12px] font-semibold text-white no-underline inline-flex items-center gap-1.5 transition-all duration-200 hover:opacity-90"
                 style={{ background: pc, borderRadius: "2px" }}
               >
-                <Icon path={PATHS.login} className="w-3 h-3" /> Portal
+                <Icon path={PATHS.login} className="w-3 h-3" /> {t(TRANSLATIONS.nav.portal)}
               </a>
             </div>
 
@@ -266,7 +291,7 @@ export default function PremiumTemplate({ school }) {
             onClick={() => setMobileOpen(false)}
             className="serif text-[26px] font-medium py-3.5 text-[#2d2a24] border-b border-[#e8e4de] no-underline hover:text-[var(--p)] transition-colors"
           >
-            {item.charAt(0).toUpperCase() + item.slice(1)}
+            {t(TRANSLATIONS.nav[item] || { en: item.charAt(0).toUpperCase() + item.slice(1), fr: item.charAt(0).toUpperCase() + item.slice(1) })}
           </a>
         ))}
         <a
@@ -274,7 +299,7 @@ export default function PremiumTemplate({ school }) {
           className="mt-6 h-12 flex items-center justify-center text-[14px] font-semibold text-white no-underline"
           style={{ background: pc, borderRadius: "2px" }}
         >
-          Student Portal
+          {t(TRANSLATIONS.nav.studentPortal)}
         </a>
       </div>
 
@@ -321,7 +346,7 @@ export default function PremiumTemplate({ school }) {
               </div>
 
               <h1 className="serif text-[clamp(44px,7vw,80px)] font-semibold leading-[1.02] tracking-[-0.5px] mb-6 text-[#2d2a24]" data-reveal-pr>
-                {s.schoolName || "Your School"}
+                {schoolName}
               </h1>
 
               <p className="text-[16px] text-[#7a746a] leading-[1.85] mb-10 max-w-[500px]" data-reveal-pr>
@@ -334,13 +359,13 @@ export default function PremiumTemplate({ school }) {
                   className="inline-flex items-center gap-2.5 h-[50px] px-7 text-[13px] font-semibold text-white no-underline transition-all duration-200 hover:opacity-90"
                   style={{ background: pc, borderRadius: "2px" }}
                 >
-                  Enrolment enquiries
+                  {t(TRANSLATIONS.premium.enrolmentEnquiries)}
                 </a>
                 <a
                   href="#about"
                   className="inline-flex items-center gap-1.5 h-[50px] text-[13px] font-medium text-[#2d2a24] no-underline transition-all duration-200 premium-hover-link"
                 >
-                  Discover our heritage <Icon path={PATHS.arrow} className="w-3.5 h-3.5" />
+                  {t(TRANSLATIONS.premium.discoverHeritage)} <Icon path={PATHS.arrow} className="w-3.5 h-3.5" />
                 </a>
               </div>
             </div>
@@ -365,9 +390,9 @@ export default function PremiumTemplate({ school }) {
         <div className="max-w-[1200px] mx-auto px-8">
           <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-16 max-md:gap-10 items-center">
             <div>
-              <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>About us</p>
+              <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>{t(TRANSLATIONS.about.aboutUs)}</p>
               <h2 className="serif text-[clamp(32px,4vw,50px)] font-semibold leading-[1.1] mb-6" data-reveal-pr>
-                A tradition of <em className="italic" style={{ color: pc }}>excellence</em>
+                {t(TRANSLATIONS.premium.tradition)} <em className="italic" style={{ color: pc }}>{t(TRANSLATIONS.bold.excellence)}</em>
               </h2>
               <div className="w-12 h-px premium-line mb-6" data-reveal-pr />
               <p className="text-[15px] text-[#7a746a] leading-[1.85] mb-8" data-reveal-pr>
@@ -377,17 +402,17 @@ export default function PremiumTemplate({ school }) {
               <div className="flex flex-wrap gap-6" data-reveal-pr>
                 <div>
                   <p className="serif text-2xl font-semibold text-[#2d2a24]">{s.examPassRate ? `${s.examPassRate}%` : "94%"}</p>
-                  <p className="text-[11px] text-[#9a948a] tracking-wide uppercase">{s.examType || "GCE"} Pass Rate</p>
+                  <p className="text-[11px] text-[#9a948a] tracking-wide uppercase">{s.examType || "GCE"} {t(TRANSLATIONS.about.passRate)}</p>
                 </div>
                 <div className="w-px bg-[#e8e4de]" />
                 <div>
                   <p className="serif text-2xl font-semibold text-[#2d2a24]">{s.ranking || "Top 5"}</p>
-                  <p className="text-[11px] text-[#9a948a] tracking-wide uppercase">{s.rankingCity ? `in ${s.rankingCity}` : "Regional Ranking"}</p>
+                  <p className="text-[11px] text-[#9a948a] tracking-wide uppercase">{s.rankingCity ? `${t(TRANSLATIONS.about.inRanking)} ${s.rankingCity}` : t(TRANSLATIONS.about.ranking)}</p>
                 </div>
                 <div className="w-px bg-[#e8e4de]" />
                 <div>
                   <p className="serif text-2xl font-semibold text-[#2d2a24]">{stats.teachers || 32}</p>
-                  <p className="text-[11px] text-[#9a948a] tracking-wide uppercase">Faculty</p>
+                  <p className="text-[11px] text-[#9a948a] tracking-wide uppercase">{t(TRANSLATIONS.about.faculty)}</p>
                 </div>
               </div>
             </div>
@@ -429,9 +454,9 @@ export default function PremiumTemplate({ school }) {
       <section className="py-32 max-md:py-20" style={{ background: "#f5f2ed" }}>
         <div className="max-w-[1200px] mx-auto px-8">
           <div className="text-center mb-16">
-            <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>Our foundations</p>
+            <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>{t(TRANSLATIONS.values.ourFoundations)}</p>
             <h2 className="serif text-[clamp(28px,4vw,46px)] font-semibold leading-[1.1]" data-reveal-pr>
-              What we <em className="italic" style={{ color: pc }}>stand for</em>
+              {t(TRANSLATIONS.values.standFor)}
             </h2>
             <div className="w-12 h-px premium-line mx-auto mt-4" data-reveal-pr />
           </div>
@@ -459,9 +484,9 @@ export default function PremiumTemplate({ school }) {
       <section className="py-32 max-md:py-20" id="heritage">
         <div className="max-w-[900px] mx-auto px-8">
           <div className="text-center mb-16">
-            <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>Our heritage</p>
+            <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>{t(TRANSLATIONS.nav.heritage)}</p>
             <h2 className="serif text-[clamp(28px,4vw,46px)] font-semibold leading-[1.1]" data-reveal-pr>
-              A journey through <em className="italic" style={{ color: pc }}>time</em>
+              {t(TRANSLATIONS.premium.journey)} <em className="italic" style={{ color: pc }}>{t(TRANSLATIONS.premium.time)}</em>
             </h2>
             <div className="w-12 h-px premium-line mx-auto mt-4" data-reveal-pr />
           </div>
@@ -503,9 +528,9 @@ export default function PremiumTemplate({ school }) {
         <section className="py-32 max-md:py-20" style={{ background: "#f5f2ed" }} id="academics">
           <div className="max-w-[1200px] mx-auto px-8">
             <div className="text-center mb-16">
-              <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>Achievements</p>
+              <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>{t(TRANSLATIONS.achievements.achievements)}</p>
               <h2 className="serif text-[clamp(28px,4vw,46px)] font-semibold leading-[1.1]" data-reveal-pr>
-                Our academic <em className="italic" style={{ color: pc }}>record</em>
+                {t(TRANSLATIONS.achievements.ourAcademic)} <em className="italic" style={{ color: pc }}>{t(TRANSLATIONS.achievements.record)}</em>
               </h2>
               <div className="w-12 h-px premium-line mx-auto mt-4" data-reveal-pr />
             </div>
@@ -514,23 +539,23 @@ export default function PremiumTemplate({ school }) {
               {s.examType && (
                 <div className="bg-[#fcfaf7] p-10 text-center border border-[#e8e4de] transition-all duration-300 hover:shadow-md" style={{ borderRadius: "2px" }} data-reveal-pr>
                   <Icon path={PATHS.award} className="w-8 h-8 mx-auto mb-4" style={{ color: pc }} />
-                  <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-2">Examination</p>
+                  <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-2">{t(TRANSLATIONS.about.examination)}</p>
                   <p className="serif text-2xl font-semibold text-[#2d2a24]">{s.examType}</p>
                 </div>
               )}
               {s.examPassRate && (
                 <div className="p-10 text-center border" style={{ background: pcl, borderColor: pcm, borderRadius: "2px" }} data-reveal-pr>
                   <Icon path={PATHS.star} className="w-8 h-8 mx-auto mb-4" style={{ color: pc }} />
-                  <p className="text-[10px] font-medium tracking-[3px] uppercase mb-2" style={{ color: pcm }}>Pass Rate</p>
+                  <p className="text-[10px] font-medium tracking-[3px] uppercase mb-2" style={{ color: pcm }}>{t(TRANSLATIONS.about.passRate)}</p>
                   <p className="serif text-5xl font-semibold" style={{ color: pc }}>{s.examPassRate}%</p>
                 </div>
               )}
               {s.ranking && (
                 <div className="bg-[#fcfaf7] p-10 text-center border border-[#e8e4de] transition-all duration-300 hover:shadow-md" style={{ borderRadius: "2px" }} data-reveal-pr>
                   <Icon path={PATHS.award} className="w-8 h-8 mx-auto mb-4" style={{ color: pc }} />
-                  <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-2">Ranking</p>
+                  <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-2">{t(TRANSLATIONS.about.ranking)}</p>
                   <p className="serif text-2xl font-semibold text-[#2d2a24]">{s.ranking}</p>
-                  {s.rankingCity && <p className="text-[12px] text-[#9a948a] mt-1">in {s.rankingCity}</p>}
+                  {s.rankingCity && <p className="text-[12px] text-[#9a948a] mt-1">{t(TRANSLATIONS.about.inRanking)} {s.rankingCity}</p>}
                 </div>
               )}
             </div>
@@ -542,9 +567,9 @@ export default function PremiumTemplate({ school }) {
       <section className="py-32 max-md:py-20" id="classes">
         <div className="max-w-[1200px] mx-auto px-8">
           <div className="text-center mb-16">
-            <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>Academics</p>
+            <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>{t(TRANSLATIONS.classes.academics)}</p>
             <h2 className="serif text-[clamp(28px,4vw,46px)] font-semibold leading-[1.1]" data-reveal-pr>
-              Our classes & <em className="italic" style={{ color: pc }}>streams</em>
+              {t(TRANSLATIONS.classes.ourClasses)} <em className="italic" style={{ color: pc }}>{t(TRANSLATIONS.classes.streams)}</em>
             </h2>
             <div className="w-12 h-px premium-line mx-auto mt-4" data-reveal-pr />
           </div>
@@ -577,7 +602,7 @@ export default function PremiumTemplate({ school }) {
         <div className="relative max-w-[680px] mx-auto px-8 text-center">
           <Icon path={PATHS.quote} className="w-10 h-10 mx-auto mb-6" style={{ color: pcm }} data-reveal-pr />
           <p className="serif text-[clamp(20px,2.5vw,30px)] font-normal italic leading-[1.6] text-[#5a544a] mb-8" data-reveal-pr>
-            &ldquo;{s.schoolName || "School"} gave my children not just an education, but the confidence and skills to succeed anywhere in the world. The bilingual programme is truly exceptional.&rdquo;
+            &ldquo;{schoolName} gave my children not just an education, but the confidence and skills to succeed anywhere in the world. The bilingual programme is truly exceptional.&rdquo;
           </p>
           <div className="w-12 h-px premium-line mx-auto mb-6" data-reveal-pr />
           <div className="flex items-center justify-center gap-3.5" data-reveal-pr>
@@ -589,7 +614,7 @@ export default function PremiumTemplate({ school }) {
             </div>
             <div className="text-left">
               <p className="serif text-[16px] font-semibold text-[#2d2a24]">Parent</p>
-              <p className="text-[12px] text-[#9a948a]">{s.schoolName || "School"} \u00b7 {location || "City"}</p>
+              <p className="text-[12px] text-[#9a948a]">{schoolName} \u00b7 {location || "City"}</p>
             </div>
           </div>
         </div>
@@ -599,20 +624,23 @@ export default function PremiumTemplate({ school }) {
       <section className="py-32 max-md:py-20" id="gallery">
         <div className="max-w-[1200px] mx-auto px-8">
           <div className="text-center mb-16">
-            <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>Gallery</p>
+            <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>{t(TRANSLATIONS.gallery.gallery)}</p>
             <h2 className="serif text-[clamp(28px,4vw,46px)] font-semibold leading-[1.1]" data-reveal-pr>
-              Life at {s.schoolName?.split(" ")[0] || "School"}
+              {t(TRANSLATIONS.gallery.lifeAt)} {schoolShort || "School"}
             </h2>
             <div className="w-12 h-px premium-line mx-auto mt-4" data-reveal-pr />
           </div>
 
           {gallery.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
               {gallery.slice(0, 5).map((img, i) => (
                 <div
                   key={i}
                   className={`overflow-hidden group cursor-pointer ${i === 0 ? "md:col-span-2 md:row-span-2" : ""}`}
-                  style={{ borderRadius: "2px", minHeight: i === 0 ? "480px" : "220px" }}
+                  style={{
+                    borderRadius: "2px",
+                    maxHeight: i === 0 ? "min(340px, 40vw)" : "min(170px, 25vw)",
+                  }}
                   data-reveal-pr
                 >
                   <img src={img.url} alt={img.caption || ""} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" />
@@ -636,14 +664,38 @@ export default function PremiumTemplate({ school }) {
         </div>
       </section>
 
+      {/* ════════════════ ENROLMENT FORM ════════════════ */}
+      <section className="py-32 max-md:py-20" id="enrol">
+        <div className="max-w-[1200px] mx-auto px-8">
+          <div className="text-center mb-16">
+            <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>{t(TRANSLATIONS.enrolment.enrolment)}</p>
+            <h2 className="serif text-[clamp(28px,4vw,46px)] font-semibold leading-[1.1]" data-reveal-pr>
+              {t(TRANSLATIONS.enrolment.apply)} <em className="italic" style={{ color: pc }}>{t(TRANSLATIONS.enrolment.admission)}</em>
+            </h2>
+            <div className="w-12 h-px mx-auto mt-4" style={{ background: pc }} data-reveal-pr />
+            <p className="text-[14px] text-[#7a746a] max-w-[500px] mx-auto mt-6" data-reveal-pr>
+              We welcome applications from families who share our commitment to academic excellence and character formation.
+            </p>
+          </div>
+          <div className="max-w-[680px] mx-auto" data-reveal-pr>
+            <div className="bg-[#fcfaf7] p-10 border border-[#e8e4de]" style={{ borderRadius: "2px" }}>
+              <EnrollmentForm
+                variant="premium"
+                primaryColor={pc}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ════════════════ CONTACT ════════════════ */}
       <section className="py-32 max-md:py-20" style={{ background: "#f5f2ed" }} id="contact">
         <div className="max-w-[1200px] mx-auto px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-md:gap-10">
             <div>
-              <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>Visit us</p>
+              <p className="text-[10px] font-medium tracking-[3px] uppercase text-[#9a948a] mb-4" data-reveal-pr>{t(TRANSLATIONS.contact.visitUs)}</p>
               <h2 className="serif text-[clamp(28px,4vw,46px)] font-semibold leading-[1.1] mb-5" data-reveal-pr>
-                We welcome <em className="italic" style={{ color: pc }}>you</em>
+                {t(TRANSLATIONS.contact.getInTouch)}
               </h2>
               <div className="w-12 h-px premium-line mb-6" data-reveal-pr />
               <p className="text-[15px] text-[#7a746a] leading-[1.7] mb-8 max-w-[420px]" data-reveal-pr>
@@ -669,7 +721,7 @@ export default function PremiumTemplate({ school }) {
               data-reveal-pr
             >
               <Icon path={PATHS.pin} className="w-10 h-10" style={{ color: pc }} />
-              <p className="serif text-[16px] font-medium" style={{ color: pcm }}>{s.schoolName || "School"}</p>
+              <p className="serif text-[16px] font-medium" style={{ color: pcm }}>{schoolName}</p>
               <p className="text-[13px] text-[#9a948a]">{location || "City, Region"}</p>
               <a
                 href={`https://maps.google.com/?q=${encodeURIComponent(s.address || `${s.city || ""} ${s.region || ""}`)}`}
@@ -678,7 +730,7 @@ export default function PremiumTemplate({ school }) {
                 className="inline-flex items-center gap-2 h-9 px-5 text-[11px] font-medium text-white no-underline transition-all duration-200 hover:opacity-90 mt-2"
                 style={{ background: pc, borderRadius: "2px" }}
               >
-                Open in Maps
+                {t(TRANSLATIONS.contact.openInMaps)}
               </a>
             </div>
           </div>
@@ -694,14 +746,14 @@ export default function PremiumTemplate({ school }) {
                 <div className="w-10 h-10 flex items-center justify-center flex-shrink-0" style={{ background: pc, borderRadius: "2px" }}>
                   <Icon path={PATHS.building} className="w-[18px] h-[18px] text-white" />
                 </div>
-                <span className="serif text-[18px] font-semibold text-[#2d2a24]">{s.schoolName || "School"}</span>
+                <span className="serif text-[18px] font-semibold text-[#2d2a24]">{schoolName}</span>
               </div>
-              <p className="text-[13px] text-[#9a948a] leading-relaxed">Shaping leaders since {s.yearFounded || "1998"}.</p>
+              <p className="text-[13px] text-[#9a948a] leading-relaxed">{t(TRANSLATIONS.footer.shaping)} {s.yearFounded || "1998"}.</p>
             </div>
             {[
-              { title: "Navigate", links: [{ label: "About", href: "#about" }, { label: "Classes", href: "#classes" }, { label: "Gallery", href: "#gallery" }, { label: "Contact", href: "#contact" }] },
-              { title: "Portals", links: [{ label: "Student Portal", href: "/login" }, { label: "Parent Portal", href: "/login" }] },
-              { title: "Academic", links: [{ label: "Curriculum", href: "#classes" }, { label: "Results", href: "#academics" }, { label: "Admissions", href: "#contact" }] },
+              { title: t(TRANSLATIONS.footer.navigate), links: [{ label: t(TRANSLATIONS.nav.about), href: "#about" }, { label: t(TRANSLATIONS.nav.classes), href: "#classes" }, { label: t(TRANSLATIONS.nav.gallery), href: "#gallery" }, { label: t(TRANSLATIONS.nav.contact), href: "#contact" }] },
+              { title: t(TRANSLATIONS.footer.portals), links: [{ label: t(TRANSLATIONS.nav.studentPortal), href: "/login" }, { label: t(TRANSLATIONS.nav.parentPortal), href: "/login" }] },
+              { title: t(TRANSLATIONS.footer.academic), links: [{ label: t(TRANSLATIONS.footer.curriculum), href: "#classes" }, { label: t(TRANSLATIONS.footer.results), href: "#academics" }, { label: t(TRANSLATIONS.footer.admissions), href: "#contact" }] },
             ].map((col, i) => (
               <div key={i}>
                 <p className="text-[10px] font-medium tracking-[3px] uppercase mb-4" style={{ color: pcm }}>{col.title}</p>
@@ -714,8 +766,8 @@ export default function PremiumTemplate({ school }) {
             ))}
           </div>
           <div className="border-t border-[#e8e4de] pt-6 flex items-center justify-between gap-4 flex-wrap max-md:flex-col max-md:items-start">
-            <p className="text-[12px] text-[#9a948a]">&copy; {year} {s.schoolName || "School"}. All rights reserved.</p>
-            <p className="text-[12px] text-[#9a948a]">Managed with <strong className="font-semibold" style={{ color: pc }}>Akademee</strong></p>
+            <p className="text-[12px] text-[#9a948a]">&copy; {year} {schoolName}. {t(TRANSLATIONS.footer.rights)}</p>
+            <p className="text-[12px] text-[#9a948a]">{t(TRANSLATIONS.footer.managedWith)} <strong className="font-semibold" style={{ color: pc }}>Akademee</strong></p>
           </div>
         </div>
       </footer>
@@ -727,16 +779,19 @@ export default function PremiumTemplate({ school }) {
           className="flex-1 h-12 flex items-center justify-center text-[13px] font-semibold text-white no-underline"
           style={{ background: pc, borderRadius: "2px" }}
         >
-          Portal
+          {t(TRANSLATIONS.nav.portal)}
         </a>
         <a
           href="#contact"
           className="flex-1 h-12 flex items-center justify-center text-[13px] font-medium text-[#2d2a24] no-underline border border-[#d8d4ce]"
           style={{ borderRadius: "2px" }}
         >
-          Contact
+          {t(TRANSLATIONS.nav.contact)}
         </a>
       </div>
+
+      {/* Back to top */}
+      <BackToTopButton show={showBackToTop} color={pc} variant="premium" />
     </div>
   );
 }

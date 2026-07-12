@@ -14,12 +14,15 @@ import DashboardPage from "./app/features/dashboard/pages/DashboardPage";
 import StudentsListPage from "./app/features/students/pages/StudentsListPage";
 import StudentProfilePage from "./app/features/students/pages/StudentProfilePage";
 import TeachersListPage from "./app/features/teachers/pages/TeachersListPage";
+import SubjectsListPage from "./app/features/subjects/pages/SubjectsListPage";
+import ClassSubjectsPage from "./app/features/subjects/pages/ClassSubjectsPage";
 import GradesPage from "./app/features/grades/pages/GradesPage";
 import ReportCardsPage from "./app/features/grades/pages/ReportCardsPage";
 import AttendancePage from "./app/features/attendance/pages/AttendancePage";
 import FinancePage from "./app/features/finance/pages/FinancePage";
 import SettingsPage from "./app/features/settings/pages/SettingsPage";
 import WebsiteSettingsPage from "./app/features/settings/pages/WebsiteSettingsPage";
+import AcademicYearsPage from "./app/features/settings/pages/AcademicYearsPage";
 
 // Educational system pages
 import ExamsSection from "./app/features/exams/pages/ExamsSection";
@@ -83,7 +86,8 @@ function App() {
 
           {/* Academic base sections */}
           <Route path="classes" element={<ClassesChildrenSection />} />
-          <Route path="subjects" element={<div className="p-6">Subjects — coming soon</div>} />
+          <Route path="subjects" element={<SubjectsListPage />} />
+          <Route path="subject-classes" element={<ClassSubjectsPage />} />
           <Route path="teachers" element={<TeachersListPage />} />
 
           {/* Exam routes (system-specific) */}
@@ -154,6 +158,7 @@ function App() {
           {/* Settings */}
           <Route path="settings" element={<SettingsPage />} />
           <Route path="website" element={<WebsiteSettingsPage />} />
+          <Route path="academic-years" element={<AcademicYearsPage />} />
 
           {/* Teacher-specific routes */}
           <Route path="my-classes" element={<div className="p-6">My Classes — coming soon</div>} />

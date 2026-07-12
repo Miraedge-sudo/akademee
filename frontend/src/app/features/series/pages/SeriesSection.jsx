@@ -1,45 +1,45 @@
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FiBook } from "react-icons/fi";
+import { FiBook, FiTrendingUp, FiMonitor } from "react-icons/fi";
 
 const SERIES_META = {
   arts: {
-    icon: "🎨",
+    icon: <FiBook className="w-6 h-6" />,
     titleKey: "series.arts",
     system: "Anglophone General",
     description: "Series A1 (Lit., Fr., Hist.) – A8 (Arts & Culture)",
     descriptionFr: "Séries A1 (Litt., Fr., Hist.) – A8 (Arts & Culture)",
   },
   science: {
-    icon: "🔬",
+    icon: <FiMonitor className="w-6 h-6" />,
     titleKey: "series.science",
     system: "Anglophone General",
     description: "Series S1 (Math, Chem, Phys) – S4 (Bio, Chem, Geo)",
     descriptionFr: "Séries S1 (Math, Chim, Phys) – S4 (Bio, Chim, Géo)",
   },
   literary: {
-    icon: "📖",
+    icon: <FiBook className="w-6 h-6" />,
     titleKey: "series.literary",
     system: "Francophone General",
     description: "Séries A (Lettres), A1–A5 (Langues, Philosophie)",
     descriptionFr: "Séries A (Lettres), A1–A5 (Langues, Philosophie)",
   },
   scientific: {
-    icon: "🧪",
+    icon: <FiMonitor className="w-6 h-6" />,
     titleKey: "series.scientific",
     system: "Francophone General",
     description: "Séries C (Math-Phys), D (Math-SVT), E (Math-Tech)",
     descriptionFr: "Séries C (Math-Phys), D (Math-SVT), E (Math-Tech)",
   },
   economic: {
-    icon: "📈",
+    icon: <FiTrendingUp className="w-6 h-6" />,
     titleKey: "series.economic",
     system: "Francophone General",
     description: "Série B (Sciences Économiques et Sociales)",
     descriptionFr: "Série B (Sciences Économiques et Sociales)",
   },
   technical: {
-    icon: "💻",
+    icon: <FiMonitor className="w-6 h-6" />,
     titleKey: "series.tech",
     system: "Francophone General",
     description: "Série TI (Technologies de l'Information)",
@@ -52,7 +52,7 @@ export default function SeriesSection() {
   const location = useLocation();
   const seriesSlug = location.pathname.replace("/dashboard/series/", "");
   const meta = SERIES_META[seriesSlug] || {
-    icon: "📚",
+    icon: <FiBook className="w-6 h-6" />,
     titleKey: "series.title",
     system: "",
     description: "Series & specialties",

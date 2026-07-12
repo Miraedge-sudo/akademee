@@ -1,4 +1,4 @@
-import { FiChevronRight } from "react-icons/fi";
+import { FiChevronRight, FiGlobe, FiSettings, FiUsers, FiBell, FiCalendar } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
@@ -9,8 +9,17 @@ export default function SettingsPage() {
 
   const settingsItems = [
     {
+      key: "academic-years",
+      icon: <FiCalendar className="w-5 h-5" />,
+      label: "Academic Years",
+      labelFr: "Années scolaires",
+      desc: "Manage school years, terms and periods",
+      descFr: "Gérer les années scolaires et trimestres",
+      path: "/dashboard/academic-years",
+    },
+    {
       key: "website",
-      icon: "🌐",
+      icon: <FiGlobe className="w-5 h-5" />,
       label: "Campus Website",
       labelFr: "Site Vitrine",
       desc: "Configure your school's public website",
@@ -19,7 +28,7 @@ export default function SettingsPage() {
     },
     {
       key: "general",
-      icon: "⚙️",
+      icon: <FiSettings className="w-5 h-5" />,
       label: "General Settings",
       labelFr: "Paramètres généraux",
       desc: "School info, branding, localization",
@@ -28,7 +37,7 @@ export default function SettingsPage() {
     },
     {
       key: "users",
-      icon: "👥",
+      icon: <FiUsers className="w-5 h-5" />,
       label: "Users & Roles",
       labelFr: "Utilisateurs & Rôles",
       desc: "Manage staff accounts and permissions",
@@ -37,7 +46,7 @@ export default function SettingsPage() {
     },
     {
       key: "notifications",
-      icon: "🔔",
+      icon: <FiBell className="w-5 h-5" />,
       label: "Notifications",
       labelFr: "Notifications",
       desc: "Configure email & SMS alerts",
