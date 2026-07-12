@@ -1,6 +1,13 @@
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FiBook, FiTrendingUp, FiMonitor } from "react-icons/fi";
+import {
+  FiBook,
+  FiTrendingUp,
+  FiMonitor,
+  BookOpen,
+  FlaskConical,
+  Laptop,
+} from "react-icons/fi";
 
 const SERIES_META = {
   arts: {
@@ -14,32 +21,32 @@ const SERIES_META = {
     icon: <FiMonitor className="w-6 h-6" />,
     titleKey: "series.science",
     system: "Anglophone General",
-    description: "Series S1 (Math, Chem, Phys) – S4 (Bio, Chem, Geo)",
-    descriptionFr: "Séries S1 (Math, Chim, Phys) – S4 (Bio, Chim, Géo)",
+    description: "Series focused on science and technology",
+    descriptionFr: "Séries axées sur les sciences et la technologie",
   },
   literary: {
-    icon: <FiBook className="w-6 h-6" />,
+    icon: BookOpen,
     titleKey: "series.literary",
     system: "Francophone General",
     description: "Séries A (Lettres), A1–A5 (Langues, Philosophie)",
     descriptionFr: "Séries A (Lettres), A1–A5 (Langues, Philosophie)",
   },
   scientific: {
-    icon: <FiMonitor className="w-6 h-6" />,
+    icon: FlaskConical,
     titleKey: "series.scientific",
     system: "Francophone General",
     description: "Séries C (Math-Phys), D (Math-SVT), E (Math-Tech)",
     descriptionFr: "Séries C (Math-Phys), D (Math-SVT), E (Math-Tech)",
   },
   economic: {
-    icon: <FiTrendingUp className="w-6 h-6" />,
+    icon: FiTrendingUp,
     titleKey: "series.economic",
     system: "Francophone General",
     description: "Série B (Sciences Économiques et Sociales)",
     descriptionFr: "Série B (Sciences Économiques et Sociales)",
   },
   technical: {
-    icon: <FiMonitor className="w-6 h-6" />,
+    icon: Laptop,
     titleKey: "series.tech",
     system: "Francophone General",
     description: "Série TI (Technologies de l'Information)",
@@ -52,23 +59,29 @@ export default function SeriesSection() {
   const location = useLocation();
   const seriesSlug = location.pathname.replace("/dashboard/series/", "");
   const meta = SERIES_META[seriesSlug] || {
-    icon: <FiBook className="w-6 h-6" />,
+    icon: FiBook,
     titleKey: "series.title",
     system: "",
     description: "Series & specialties",
     descriptionFr: "Séries & spécialités",
   };
   const lang = i18n.language === "fr" ? "fr" : "en";
+  const IconComponent = meta.icon;
 
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-14 h-14 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center text-2xl shadow-lg">
-          {meta.icon}
+        <div className="w-14 h-14 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center text-primary-600 dark:text-primary-400 shadow-lg">
+          <IconComponent className="w-7 h-7" />
         </div>
         <div>
           <h1 className="text-xl font-semibold text-surface-800 dark:text-surface-100">
-            {t(meta.titleKey, seriesSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()))}
+            {t(
+              meta.titleKey,
+              seriesSlug
+                .replace(/-/g, " ")
+                .replace(/\b\w/g, (c) => c.toUpperCase()),
+            )}
           </h1>
           <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
             {lang === "fr" ? meta.descriptionFr : meta.description}

@@ -3,7 +3,7 @@ const { body } = require('express-validator');
 const createEnrollmentValidator = [
   body('studentId').isInt().withMessage('studentId is required'),
   body('classId').isInt().withMessage('classId is required'),
-  body('academicYearId').optional().isInt(),
+  body('academicYearId').optional().isUUID().withMessage('Academic year ID must be a valid UUID'),
 ];
 
 const updateEnrollmentStatusValidator = [

@@ -17,6 +17,16 @@ class PeriodService {
 
   async create(schoolId, data) {
     const { academicYearId, name, type, startDate, endDate, sortOrder } = data;
+
+    if (academicYearId) {
+      const yearExists = await sql`
+        SELECT 1 FROM academic_years WHERE academic_year_id = ${academicYearId} AND school_id = ${schoolId}
+      `;
+      if (yearExists.length === 0) {
+        throw new Error('Academic year not found or does not belong to this school');
+      }
+    }
+
     const rows = await sql`
       INSERT INTO periods (school_id, academic_year_id, name, type, start_date, end_date, sort_order)
       VALUES (${schoolId}, ${academicYearId}, ${name}, ${type || 'term'}, ${startDate || null}, ${endDate || null}, ${sortOrder || 0})
