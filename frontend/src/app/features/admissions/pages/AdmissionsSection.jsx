@@ -1,16 +1,16 @@
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FiUsers } from "react-icons/fi";
+import { FiUsers, FiClipboard, FiBarChart2 } from "react-icons/fi";
 
 const ADMISSIONS_META = {
   applications: {
-    icon: "📋",
+    icon: <FiClipboard className="w-6 h-6" />,
     titleKey: "admissions.applications",
     description: "Manage admission applications",
     descriptionFr: "Gérer les demandes d'admission",
   },
   enrollment: {
-    icon: "📊",
+    icon: <FiBarChart2 className="w-6 h-6" />,
     titleKey: "admissions.enrollment",
     description: "Enrollment statistics & tracking",
     descriptionFr: "Statistiques et suivi des inscriptions",
@@ -22,7 +22,7 @@ export default function AdmissionsSection() {
   const location = useLocation();
   const admissionSlug = location.pathname.replace("/dashboard/admissions/", "");
   const meta = ADMISSIONS_META[admissionSlug] || {
-    icon: "📋",
+    icon: <FiClipboard className="w-6 h-6" />,
     titleKey: "admissions.title",
     description: "Admissions",
     descriptionFr: "Admissions",

@@ -4,19 +4,19 @@ import { FiAward } from "react-icons/fi";
 
 const PROGRAMS_META = {
   licence: {
-    icon: "🎓",
+    icon: <FiAward className="w-6 h-6" />,
     titleKey: "programs.licence",
     description: "Licence (Bac+3) · Bachelor degree",
     descriptionFr: "Licence (Bac+3) · Bachelor",
   },
   master: {
-    icon: "🎓",
+    icon: <FiAward className="w-6 h-6" />,
     titleKey: "programs.master",
     description: "Master (Bac+5) · Advanced degree",
     descriptionFr: "Master (Bac+5) · Diplôme avancé",
   },
   doctorate: {
-    icon: "🎓",
+    icon: <FiAward className="w-6 h-6" />,
     titleKey: "programs.doctorate",
     description: "Doctorat (Bac+8) · PhD",
     descriptionFr: "Doctorat (Bac+8) · PhD",
@@ -28,7 +28,7 @@ export default function ProgramsSection() {
   const location = useLocation();
   const programSlug = location.pathname.replace("/dashboard/programs/", "");
   const meta = PROGRAMS_META[programSlug] || {
-    icon: "🎓",
+    icon: <FiAward className="w-6 h-6" />,
     titleKey: "programs.title",
     description: "LMD Programs",
     descriptionFr: "Programmes LMD",

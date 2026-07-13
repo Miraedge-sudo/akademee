@@ -11,6 +11,7 @@ import {
   FiPlus,
   FiMinus,
   FiLoader,
+  FiUser,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 
@@ -234,7 +235,7 @@ export default function CreateClassPage() {
       {showSuccess && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center animate-fadeIn">
           <div className="bg-white dark:bg-surface-800 rounded-2xl p-10 text-center shadow-2xl animate-scaleIn">
-            <div className="text-5xl mb-3">🎉</div>
+            <FiCheck className="w-12 h-12 mx-auto mb-3 text-green-500" />
             <h3
               className="font-display text-xl font-bold text-surface-800 dark:text-surface-100 mb-2"
             >
@@ -600,8 +601,7 @@ export default function CreateClassPage() {
                     border: `1.5px solid ${formData.classTeacherId ? hexToRgba(pColor, 0.2) : "#E8E8E8"}`,
                     color: formData.classTeacherId ? pColor : "#9BA59C",
                   }}
-                >
-                  {formData.classTeacherId ? "👤" : "—"}
+                >                    {formData.classTeacherId ? <FiUser className="w-3.5 h-3.5" /> : "—"}
                 </div>
                 <span className="text-xs text-surface-500">
                   {formData.classTeacherId

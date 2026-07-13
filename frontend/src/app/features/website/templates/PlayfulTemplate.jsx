@@ -7,11 +7,16 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-const SECTIONS = ["about", "classes", "gallery", "contact"];
+const SECTIONS = ["about", "classes", "gallery", "enrol", "contact"];
 
 // ──────────────────── Icons ────────────────────
 
-import { FiHome, FiLogIn, FiPhone, FiMail, FiMapPin, FiArrowRight, FiStar, FiUsers, FiImage, FiPlay, FiCalendar, FiClock, FiChevronDown, FiHeart, FiSmile } from "react-icons/fi";
+import { FiHome, FiLogIn, FiPhone, FiMail, FiMapPin, FiArrowRight, FiStar, FiUsers, FiImage, FiPlay, FiCalendar, FiClock, FiChevronDown, FiHeart, FiSmile, FiEdit3, FiAward, FiBook, FiBookOpen, FiCamera, FiClipboard, FiCrosshair, FiInfo, FiTrendingUp, FiDollarSign, FiBarChart2, FiFeather, FiMessageCircle } from "react-icons/fi";
+import EnrollmentForm from "../components/EnrollmentForm";
+import { useScrollProgress, ScrollProgressBar, BackToTopButton } from "../hooks/useScrollProgress.jsx";
+import { useActiveSection } from "../hooks/useActiveSection.jsx";
+import { useWebsiteLanguage, LanguageToggle } from "../hooks/useWebsiteLanguage.jsx";
+import { TRANSLATIONS } from "../hooks/websiteTranslations.js";
 
 const PATH_TO_ICON = {
   building: FiHome,
@@ -30,6 +35,19 @@ const PATH_TO_ICON = {
   chevronDown: FiChevronDown,
   heart: FiHeart,
   clock: FiClock,
+  award: FiAward,
+  book: FiBook,
+  bookOpen: FiBookOpen,
+  camera: FiCamera,
+  clipboard: FiClipboard,
+  crosshair: FiCrosshair,
+  info: FiInfo,
+  trendingUp: FiTrendingUp,
+  dollarSign: FiDollarSign,
+  barChart: FiBarChart2,
+  feather: FiFeather,
+  messageCircle: FiMessageCircle,
+  edit3: FiEdit3,
 };
 
 const PATHS = Object.fromEntries(Object.keys(PATH_TO_ICON).map(k => [k, k]));
@@ -173,7 +191,9 @@ export default function PlayfulTemplate({ school }) {
 
   const year = new Date().getFullYear();
   const location = [s.city, s.region].filter(Boolean).join(", ");
-  const initials = (s.schoolName || "SC").split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase();
+  const schoolName = s.name || s.schoolName || "School Name";
+  const schoolShort = schoolName.split(" ")[0];
+  const initials = schoolName.split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase();
 
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -181,6 +201,11 @@ export default function PlayfulTemplate({ school }) {
   const [galleryIdx, setGalleryIdx] = useState(0);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
   const galleryRef = useRef(null);
+
+  // Interactive hooks
+  const { progress, showBackToTop } = useScrollProgress(300);
+  const activeSection = useActiveSection(SECTIONS, 80);
+  const { lang, isBilingual, toggleLang, t } = useWebsiteLanguage(s.educationalSystems);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -210,24 +235,24 @@ export default function PlayfulTemplate({ school }) {
 
   const stats = s.websiteStats || {};
   const statItems = [
-    { end: stats.studentsEnrolled || 248, label: "Happy Students", icon: PATHS.users },
-    { end: stats.teachers || 32, label: "Amazing Teachers", icon: PATHS.heart },
-    { end: s.examPassRate ? parseInt(s.examPassRate) : 94, suffix: "%", label: `${s.examType || "GCE"} Success`, icon: PATHS.star },
+    { end: stats.studentsEnrolled || 248, label: t(TRANSLATIONS.playful.happyStudents), icon: PATHS.users },
+    { end: stats.teachers || 32, label: t(TRANSLATIONS.playful.amazingTeachers), icon: PATHS.heart },
+    { end: s.examPassRate ? parseInt(s.examPassRate) : 94, suffix: "%", label: `${s.examType || "GCE"} ${t(TRANSLATIONS.playful.success)}`, icon: PATHS.star },
   ];
 
   const values = s.websiteValues?.length > 0 ? s.websiteValues : [
-    { label: "🌟 Excellence", description: "We aim high and achieve together" },
-    { label: "💬 Bilingual", description: "English & French, side by side" },
-    { label: "🤝 Community", description: "Like a big happy family" },
-    { label: "🏆 Achievement", description: "Every student shines bright" },
+    { label: "Excellence", description: "We aim high and achieve together", icon: PATHS.star },
+    { label: "Bilingual", description: "English & French, side by side", icon: PATHS.messageCircle },
+    { label: "Community", description: "Like a big happy family", icon: PATHS.users },
+    { label: "Achievement", description: "Every student shines bright", icon: PATHS.award },
   ];
 
   const classesConfig = s.classesConfig?.length > 0 ? s.classesConfig : [
-    { level: "🎒 Junior", name: "Form 1 & 2", desc: "Foundation years. Core subjects: English, French, Maths, Science.", age: "Ages 12–13", details: "Students explore a broad curriculum with dedicated form tutors. Emphasis on building confidence, curiosity, and strong foundations in all core subjects." },
-    { level: "📚 Junior", name: "Form 3 & 4", desc: "O/L preparation with stream choices.", age: "Ages 14–15", details: "Students begin preparing for the GCE O-Level examination. Science and Arts streams are introduced, allowing students to follow their interests." },
-    { level: "🎯 O Level", name: "Form 5", desc: "GCE Ordinary Level exam year.", age: "Age 16", details: "The culmination of the O-Level programme. Intensive exam preparation with mock examinations, revision sessions, and individual mentorship." },
-    { level: "📖 A Level", name: "Lower Sixth", desc: "Advanced Level entry year.", age: "Age 17", details: "First year of the A-Level programme. Students specialise in 3-4 subjects of their choice, with guidance from subject specialists." },
-    { level: "🎓 A Level", name: "Upper Sixth", desc: "GCE Advanced Level exam.", age: "Age 18", details: "Final year. Students complete their A-Level curriculum and sit for the national examinations. University application guidance is provided." },
+    { level: "Junior", name: "Form 1 & 2", desc: "Foundation years. Core subjects: English, French, Maths, Science.", age: "Ages 12–13", details: "Students explore a broad curriculum with dedicated form tutors. Emphasis on building confidence, curiosity, and strong foundations in all core subjects." },
+    { level: "Junior", name: "Form 3 & 4", desc: "O/L preparation with stream choices.", age: "Ages 14–15", details: "Students begin preparing for the GCE O-Level examination. Science and Arts streams are introduced, allowing students to follow their interests." },
+    { level: "O Level", name: "Form 5", desc: "GCE Ordinary Level exam year.", age: "Age 16", details: "The culmination of the O-Level programme. Intensive exam preparation with mock examinations, revision sessions, and individual mentorship." },
+    { level: "A Level", name: "Lower Sixth", desc: "Advanced Level entry year.", age: "Age 17", details: "First year of the A-Level programme. Students specialise in 3-4 subjects of their choice, with guidance from subject specialists." },
+    { level: "A Level", name: "Upper Sixth", desc: "GCE Advanced Level exam.", age: "Age 18", details: "Final year. Students complete their A-Level curriculum and sit for the national examinations. University application guidance is provided." },
   ];
 
   const testimonials = [
@@ -238,14 +263,15 @@ export default function PlayfulTemplate({ school }) {
   ];
 
   const contactItems = [
-    { icon: PATHS.pin, label: "📍 Address", value: s.address || `${s.city || "City"}, ${s.region || "Region"}` },
-    { icon: PATHS.phone, label: "📞 Phone", value: s.phone || "+237 6XX XXX XXX" },
-    { icon: PATHS.mail, label: "✉️ Email", value: s.email || "info@yourschool.cm" },
-    { icon: PATHS.clock, label: "🕐 Hours", value: "Mon – Fri · 7:30 AM – 4:00 PM" },
+    { icon: PATHS.pin, label: t(TRANSLATIONS.contact.address), value: s.address || `${s.city || "City"}, ${s.region || "Region"}` },
+    { icon: PATHS.phone, label: t(TRANSLATIONS.contact.phone), value: s.phone || "+237 6XX XXX XXX" },
+    { icon: PATHS.mail, label: t(TRANSLATIONS.contact.email), value: s.email || "info@yourschool.cm" },
+    { icon: PATHS.clock, label: t(TRANSLATIONS.contact.hours), value: "Mon – Fri · 7:30 AM – 4:00 PM" },
   ];
 
   return (
     <div className="font-sans antialiased bg-[#faf9f7] text-[#1a1a1a] overflow-x-hidden" style={{ "--p": pc, "--pl": pcl, "--pm": pcm }}>
+      <ScrollProgressBar progress={progress} color={pc} />
       <style>{`
         /* ─── Scroll reveals ─── */
         [data-reveal-p] { opacity: 0; transform: translateY(30px) scale(0.97); transition: opacity .6s cubic-bezier(.22,1,.36,1), transform .6s cubic-bezier(.22,1,.36,1); }
@@ -300,31 +326,41 @@ export default function PlayfulTemplate({ school }) {
                 {!s.logoUrl && <span className="text-sm font-bold text-white">{initials}</span>}
               </div>
               <div>
-                <div className="text-[16px] font-bold text-[#1a1a1a] leading-tight">{s.schoolName || "School"}</div>
+                <div className="text-[16px] font-bold text-[#1a1a1a] leading-tight">{schoolName}</div>
                 <div className="text-[11px] text-[#8a8a8a]">{location || s.city || "Campus"}</div>
               </div>
             </a>
 
             <ul className="hidden md:flex items-center gap-1 list-none m-0 p-0">
-              {SECTIONS.map((item) => (
-                <li key={item}>
-                  <a
-                    href={`#${item}`}
-                    className="text-[14px] font-semibold text-[#6a6a6a] px-3.5 py-2 rounded-xl no-underline transition-all duration-200 hover:text-[var(--p)] hover:bg-[var(--pl)]"
-                  >
-                    {item.charAt(0).toUpperCase() + item.slice(1)}
-                  </a>
-                </li>
-              ))}
+              {SECTIONS.map((item) => {
+                const isActive = activeSection === item;
+                return (
+                  <li key={item}>
+                    <a
+                      href={`#${item}`}
+                      className={`text-[14px] font-semibold px-3.5 py-2 rounded-xl no-underline transition-all duration-200 ${
+                        isActive
+                          ? "text-[var(--p)] bg-[var(--pl)]"
+                          : "text-[#6a6a6a] hover:text-[var(--p)] hover:bg-[var(--pl)]"
+                      }`}
+                    >
+                      {t(TRANSLATIONS.nav[item] || { en: item.charAt(0).toUpperCase() + item.slice(1), fr: item.charAt(0).toUpperCase() + item.slice(1) })}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
 
-            <a
-              href="/login"
-              className="playful-btn h-9 px-5 rounded-full text-[13px] font-bold text-white no-underline inline-flex items-center gap-1.5 shadow-md"
-              style={{ background: pc, boxShadow: `0 4px 12px ${pcm}` }}
-            >
-              <Icon path={PATHS.login} className="w-3.5 h-3.5" /> Portal
-            </a>
+            <div className="hidden md:flex items-center gap-2">
+              <LanguageToggle lang={lang} isBilingual={isBilingual} onToggle={toggleLang} variant="light" />
+              <a
+                href="/login"
+                className="playful-btn h-9 px-5 rounded-full text-[13px] font-bold text-white no-underline inline-flex items-center gap-1.5 shadow-md"
+                style={{ background: pc, boxShadow: `0 4px 12px ${pcm}` }}
+              >
+                <Icon path={PATHS.login} className="w-3.5 h-3.5" /> {t(TRANSLATIONS.nav.portal)}
+              </a>
+            </div>
 
             <button
               onClick={() => setMobileOpen((v) => !v)}
@@ -351,7 +387,7 @@ export default function PlayfulTemplate({ school }) {
             onClick={() => setMobileOpen(false)}
             className="text-[22px] font-bold py-3.5 text-[#1a1a1a] border-b-2 border-[#eee] no-underline transition-all hover:text-[var(--p)]"
           >
-            {item.charAt(0).toUpperCase() + item.slice(1)}
+            {t(TRANSLATIONS.nav[item] || { en: item.charAt(0).toUpperCase() + item.slice(1), fr: item.charAt(0).toUpperCase() + item.slice(1) })}
           </a>
         ))}
         <a
@@ -359,7 +395,7 @@ export default function PlayfulTemplate({ school }) {
           className="playful-btn mt-6 h-12 flex items-center justify-center rounded-full text-[16px] font-bold text-white no-underline shadow-lg"
           style={{ background: pc }}
         >
-          🚪 Student Portal
+          <Icon path={PATHS.login} className="w-5 h-5 mr-2" /> {t(TRANSLATIONS.nav.studentPortal)}
         </a>
       </div>
 
@@ -372,7 +408,7 @@ export default function PlayfulTemplate({ school }) {
         <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full opacity-10" style={{ background: pc, filter: "blur(60px)", animation: "playful-float 10s ease-in-out infinite reverse" }} />
 
         {s.heroImageUrl && (
-          <img src={s.heroImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-8" />
+          <img src={s.heroImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
         )}
 
         <div className="relative z-10 max-w-[1200px] mx-auto px-5">
@@ -402,7 +438,7 @@ export default function PlayfulTemplate({ school }) {
             </div>
 
             <h1 className="text-[clamp(38px,6vw,72px)] font-bold leading-[1.08] tracking-[-0.5px] mb-4 max-w-[800px]" data-reveal-p>
-              Welcome to <span style={{ color: pc }}>{s.schoolName || "Your School"}</span> 🎉
+              {t(TRANSLATIONS.playful.welcomeTo)} <span style={{ color: pc }}>{schoolName}</span> <Icon path={PATHS.smile} className="w-8 h-8 inline-block" style={{ color: pc }} />
             </h1>
 
             <p className="text-[clamp(16px,2vw,20px)] text-[#6a6a6a] leading-[1.7] mb-8 max-w-[560px]" data-reveal-p>
@@ -415,14 +451,14 @@ export default function PlayfulTemplate({ school }) {
                 className="playful-btn inline-flex items-center gap-2 h-[54px] px-7 rounded-full text-[15px] font-bold text-white no-underline shadow-xl"
                 style={{ background: pc, boxShadow: `0 8px 28px ${pcm}` }}
               >
-                <Icon path={PATHS.phone} className="w-[18px] h-[18px]" /> Enrol now 🎒
+                <Icon path={PATHS.phone} className="w-[18px] h-[18px]" /> {t(TRANSLATIONS.hero.enrolNow)}
               </a>
               <a
                 href="#about"
                 className="playful-btn inline-flex items-center gap-2 h-[54px] px-7 rounded-full text-[15px] font-bold text-[#1a1a1a] no-underline border-2 transition-all"
                 style={{ borderColor: "#e0ddd8" }}
               >
-                <Icon path={PATHS.play} className="w-[18px] h-[18px]" /> Explore
+                <Icon path={PATHS.play} className="w-[18px] h-[18px]" /> {t(TRANSLATIONS.hero.explore)}
               </a>
             </div>
           </div>
@@ -456,22 +492,21 @@ export default function PlayfulTemplate({ school }) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 max-md:gap-8 items-center">
             <div>
               <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
-                📖 About us
+                <Icon path={PATHS.book} className="w-3.5 h-3.5 inline-block mr-1" /> {t(TRANSLATIONS.about.aboutUs)}
               </p>
               <h2 className="text-[clamp(30px,4vw,44px)] font-bold leading-[1.12] mb-5" data-reveal-p>
-                Our <span className="inline-block" style={{ color: pc }}>story</span>
-              </h2>
+                {t(TRANSLATIONS.about.ourStory)}</h2>
               <p className="text-[16px] text-[#6a6a6a] leading-[1.8] mb-6" data-reveal-p>
                 {s.websiteDescription || `${s.schoolName || "Our school"} is a vibrant learning community where every student is known, valued, and supported to reach their full potential.`}
               </p>
               <div className="flex flex-wrap gap-3" data-reveal-p>
                 {[
-                  { icon: "📅", label: "Founded", value: s.yearFounded || "1998" },
-                  { icon: "👩‍🏫", label: "Teachers", value: stats.teachers || 32 },
-                  { icon: "🎯", label: "Pass Rate", value: `${s.examPassRate || 94}%` },
+                  { icon: PATHS.calendar, label: t(TRANSLATIONS.about.founded), value: s.yearFounded || "1998" },
+                  { icon: PATHS.users, label: t(TRANSLATIONS.about.faculty), value: stats.teachers || 32 },
+                  { icon: PATHS.crosshair, label: t(TRANSLATIONS.about.passRate), value: `${s.examPassRate || 94}%` },
                 ].map((item, i) => (
                   <div key={i} className="inline-flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-white border-2 border-[#f0eeea] text-sm font-semibold transition-all hover:border-[var(--p)] hover:shadow-md">
-                    <span className="text-lg">{item.icon}</span>
+                    <Icon path={item.icon} className="w-5 h-5" />
                     <span>{item.value}</span>
                     <span className="text-[#8a8a8a] font-normal">{item.label}</span>
                   </div>
@@ -486,7 +521,7 @@ export default function PlayfulTemplate({ school }) {
                   <img src={s.heroImageUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center" style={{ background: pcl }}>
-                    <span className="text-6xl">📸</span>
+                    <Icon path={PATHS.camera} className="w-12 h-12" />
                   </div>
                 )}
               </div>
@@ -499,7 +534,7 @@ export default function PlayfulTemplate({ school }) {
                 </div>
               )}
               {/* Decorative */}
-              <div className="absolute -top-6 -right-6 text-4xl opacity-20" style={{ animation: "playful-float 6s ease-in-out infinite" }}>✨</div>
+              <div className="absolute -top-6 -right-6 opacity-20" style={{ animation: "playful-float 6s ease-in-out infinite" }}><Icon path={PATHS.star} className="w-8 h-8" /></div>
             </div>
           </div>
         </div>
@@ -508,12 +543,11 @@ export default function PlayfulTemplate({ school }) {
       {/* ════════════════ VALUES ════════════════ */}
       <section className="py-24 max-md:py-16" style={{ background: "#fff" }}>
         <div className="max-w-[1200px] mx-auto px-5">
-          <div className="text-center mb-14">
-            <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
-              💎 Our values
-            </p>
+          <div className="text-center mb-14">              <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
+                <Icon path={PATHS.star} className="w-3.5 h-3.5 inline-block mr-1" /> {t(TRANSLATIONS.values.ourValues)}
+              </p>
             <h2 className="text-[clamp(28px,4vw,42px)] font-bold leading-[1.12]" data-reveal-p>
-              What makes us <span className="inline-block" style={{ color: pc }}>special</span> ✨
+              {t(TRANSLATIONS.values.whatMakesUs)} <span className="inline-block" style={{ color: pc }}>{t(TRANSLATIONS.values.special)}</span> <Icon path={PATHS.star} className="w-5 h-5 inline-block" style={{ color: pc }} />
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -524,10 +558,10 @@ export default function PlayfulTemplate({ school }) {
                 data-reveal-p
               >
                 <div
-                  className="w-14 h-14 rounded-[18px] flex items-center justify-center mb-5 text-2xl transition-all duration-200"
+                  className="w-14 h-14 rounded-[18px] flex items-center justify-center mb-5 transition-all duration-200"
                   style={{ background: pcl }}
                 >
-                  {(v.label || v).split(" ")[0]}
+                  <Icon path={v.icon || PATHS.star} className="w-6 h-6" style={{ color: pc }} />
                 </div>
                 <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">{v.label || v}</h3>
                 <p className="text-[14px] text-[#8a8a8a] leading-relaxed">{v.description || v.desc || ""}</p>
@@ -543,34 +577,34 @@ export default function PlayfulTemplate({ school }) {
           <div className="max-w-[1200px] mx-auto px-5">
             <div className="text-center mb-14">
               <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
-                🏆 Achievements
+                <Icon path={PATHS.award} className="w-3.5 h-3.5 inline-block mr-1" /> {t(TRANSLATIONS.achievements.achievements)}
               </p>
               <h2 className="text-[clamp(28px,4vw,42px)] font-bold leading-[1.12]" data-reveal-p>
-                We rock at <span className="inline-block" style={{ color: pc }}>academics</span> 🚀
+                {t(TRANSLATIONS.playful.weRock)} <span className="inline-block" style={{ color: pc }}>{t(TRANSLATIONS.classes.academics)}</span> <Icon path={PATHS.trendingUp} className="w-5 h-5 inline-block" />
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {s.examType && (
                 <div className="bg-white rounded-[28px] p-8 text-center border-2 border-[#f0eeea] shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl" data-reveal-p>
-                  <div className="text-4xl mb-3">📋</div>
-                  <p className="text-[11px] font-bold tracking-[2px] uppercase mb-2 text-[#8a8a8a]">Examination</p>
+                  <Icon path={PATHS.clipboard} className="w-10 h-10 mx-auto mb-3" />
+                  <p className="text-[11px] font-bold tracking-[2px] uppercase mb-2 text-[#8a8a8a]">{t(TRANSLATIONS.about.examination)}</p>
                   <p className="text-2xl font-bold text-[#1a1a1a]">{s.examType}</p>
                 </div>
               )}
               {s.examPassRate && (
                 <div className="rounded-[28px] p-8 text-center border-2 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl relative overflow-hidden" style={{ background: pcl, borderColor: pcm }} data-reveal-p>
-                  <div className="absolute top-4 right-4 text-3xl opacity-30" style={{ animation: "playful-wiggle 3s ease-in-out infinite" }}>🌟</div>
-                  <div className="text-4xl mb-3">🎯</div>
-                  <p className="text-[11px] font-bold tracking-[2px] uppercase mb-2" style={{ color: pcm }}>Pass Rate</p>
+                  <div className="absolute top-4 right-4 opacity-30" style={{ animation: "playful-wiggle 3s ease-in-out infinite" }}><Icon path={PATHS.star} className="w-8 h-8" /></div>
+                  <Icon path={PATHS.crosshair} className="w-10 h-10 mx-auto mb-3" />
+                  <p className="text-[11px] font-bold tracking-[2px] uppercase mb-2" style={{ color: pcm }}>{t(TRANSLATIONS.about.passRate)}</p>
                   <p className="text-5xl font-bold" style={{ color: pc }}>{s.examPassRate}%</p>
                 </div>
               )}
               {s.ranking && (
                 <div className="bg-white rounded-[28px] p-8 text-center border-2 border-[#f0eeea] shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl" data-reveal-p>
-                  <div className="text-4xl mb-3">🏅</div>
-                  <p className="text-[11px] font-bold tracking-[2px] uppercase mb-2 text-[#8a8a8a]">Ranking</p>
+                  <Icon path={PATHS.award} className="w-10 h-10 mx-auto mb-3" />
+                  <p className="text-[11px] font-bold tracking-[2px] uppercase mb-2 text-[#8a8a8a]">{t(TRANSLATIONS.about.ranking)}</p>
                   <p className="text-2xl font-bold text-[#1a1a1a]">{s.ranking}</p>
-                  {s.rankingCity && <p className="text-[13px] text-[#8a8a8a] mt-1">in {s.rankingCity}</p>}
+                  {s.rankingCity && <p className="text-[13px] text-[#8a8a8a] mt-1">{t(TRANSLATIONS.about.inRanking)} {s.rankingCity}</p>}
                 </div>
               )}
             </div>
@@ -581,12 +615,11 @@ export default function PlayfulTemplate({ school }) {
       {/* ════════════════ CLASSES (Accordion) ════════════════ */}
       <section className="py-24 max-md:py-16" style={{ background: "#fff" }} id="classes">
         <div className="max-w-[800px] mx-auto px-5">
-          <div className="text-center mb-14">
-            <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
-              📚 Academics
-            </p>
+          <div className="text-center mb-14">              <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
+                <Icon path={PATHS.bookOpen} className="w-3.5 h-3.5 inline-block mr-1" /> {t(TRANSLATIONS.classes.academics)}
+              </p>
             <h2 className="text-[clamp(28px,4vw,42px)] font-bold leading-[1.12]" data-reveal-p>
-              Our classes & <span className="inline-block" style={{ color: pc }}>streams</span>
+              {t(TRANSLATIONS.classes.ourClasses)} <span className="inline-block" style={{ color: pc }}>{t(TRANSLATIONS.classes.streams)}</span>
             </h2>
           </div>
 
@@ -626,12 +659,11 @@ export default function PlayfulTemplate({ school }) {
       {/* ════════════════ GALLERY (Carousel) ════════════════ */}
       <section className="py-24 max-md:py-16" id="gallery">
         <div className="max-w-[1200px] mx-auto px-5">
-          <div className="text-center mb-14">
-            <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
-              📸 Gallery
-            </p>
+          <div className="text-center mb-14">              <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
+                <Icon path={PATHS.camera} className="w-3.5 h-3.5 inline-block mr-1" /> {t(TRANSLATIONS.gallery.gallery)}
+              </p>
             <h2 className="text-[clamp(28px,4vw,42px)] font-bold leading-[1.12]" data-reveal-p>
-              Life at {s.schoolName?.split(" ")[0] || "School"} 🎨
+              {t(TRANSLATIONS.gallery.lifeAt)} {schoolShort || "School"} <Icon path={PATHS.feather} className="w-5 h-5 inline-block" />
             </h2>
           </div>
 
@@ -644,10 +676,10 @@ export default function PlayfulTemplate({ school }) {
                   style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                 >
                   {gallery.map((img, i) => (
-                    <div key={i} className="min-w-full flex-shrink-0 relative aspect-[16/9]">
-                      <img src={img.url} alt={img.caption || ""} className="w-full h-full object-cover" />
+                    <div key={i} className="min-w-full flex-shrink-0 relative" style={{ height: "min(380px, 50vh)", overflow: "hidden" }}>
+                      <img src={img.url} alt={img.caption || ""} className="w-full h-full object-cover" style={{ background: pcl }} />
                       {img.caption && (
-                        <div className="absolute bottom-0 left-0 right-0 p-5" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.6), transparent)" }}>
+                        <div className="absolute bottom-0 left-0 right-0 p-4" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.6), transparent)" }}>
                           <p className="text-white font-semibold text-sm">{img.caption}</p>
                         </div>
                       )}
@@ -697,7 +729,7 @@ export default function PlayfulTemplate({ school }) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((_, i) => (
                 <div key={i} className="rounded-[28px] min-h-[200px] flex items-center justify-center bg-white border-2 border-[#f0eeea]" style={{ animation: `playful-float ${5 + i}s ease-in-out ${i * 0.3}s infinite` }}>
-                  <span className="text-4xl opacity-30">📸</span>
+                  <Icon path={PATHS.camera} className="w-8 h-8 opacity-30" />
                 </div>
               ))}
             </div>
@@ -708,14 +740,14 @@ export default function PlayfulTemplate({ school }) {
       {/* ════════════════ TESTIMONIALS ════════════════ */}
       <section className="py-24 max-md:py-16 relative overflow-hidden" style={{ background: "#fff" }} id="testimonials">
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full opacity-[0.05]" style={{ background: pc, filter: "blur(70px)" }} />
-        <div className="absolute bottom-10 right-10 text-6xl opacity-[0.04]" style={{ animation: "playful-float 7s ease-in-out infinite" }}>💬</div>
+        <div className="absolute bottom-10 right-10 opacity-[0.04]" style={{ animation: "playful-float 7s ease-in-out infinite" }}><Icon path={PATHS.messageCircle} className="w-12 h-12" /></div>
 
         <div className="relative max-w-[700px] mx-auto px-5 text-center">
           <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
-            💬 Testimonials
+            <Icon path={PATHS.messageCircle} className="w-3.5 h-3.5 inline-block mr-1" /> {t(TRANSLATIONS.testimonials.testimonials)}
           </p>
           <h2 className="text-[clamp(28px,4vw,42px)] font-bold leading-[1.12] mb-10" data-reveal-p>
-            What our <span className="inline-block" style={{ color: pc }}>community says</span> ❤️
+            {t(TRANSLATIONS.testimonials.whatCommunitySays)} <Icon path={PATHS.heart} className="w-5 h-5 inline-block" style={{ color: pc }} />
           </h2>
 
           <div className="relative min-h-[220px]">
@@ -766,28 +798,52 @@ export default function PlayfulTemplate({ school }) {
         </div>
       </section>
 
+      {/* ════════════════ ENROLMENT FORM ════════════════ */}
+      <section className="py-24 max-md:py-16" style={{ background: "#fff" }} id="enrol">
+        <div className="max-w-[1200px] mx-auto px-5">
+          <div className="text-center mb-12">              <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
+                <Icon path={PATHS.edit3} className="w-3.5 h-3.5 inline-block mr-1" /> {t(TRANSLATIONS.enrolment.enrolment)}
+              </p>
+            <h2 className="text-[clamp(28px,4vw,42px)] font-bold leading-[1.12]" data-reveal-p>
+              {t(TRANSLATIONS.enrolment.joinUs)} <span className="inline-block" style={{ color: pc }}>{t(TRANSLATIONS.enrolment.schoolFamily)}</span> <Icon path={PATHS.book} className="w-5 h-5 inline-block" />
+            </h2>
+            <p className="text-[15px] text-[#6a6a6a] max-w-[500px] mx-auto mt-3" data-reveal-p>
+              {t(TRANSLATIONS.playful.weWouldLove)} {schoolShort || t(TRANSLATIONS.enrolment.schoolFamily)}! {t(TRANSLATIONS.playful.ourFriendly)}
+            </p>
+          </div>
+          <div className="max-w-[640px] mx-auto" data-reveal-p>
+            <div className="bg-[#faf9f7] rounded-[32px] p-8 border-2 border-[#f0eeea] shadow-sm">
+              <EnrollmentForm
+                variant="light"
+                primaryColor={pc}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ════════════════ CONTACT ════════════════ */}
       <section className="py-24 max-md:py-16" id="contact">
         <div className="max-w-[1200px] mx-auto px-5">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 max-md:gap-8">
             <div>
               <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
-                📞 Get in touch
+                <Icon path={PATHS.phone} className="w-3.5 h-3.5 inline-block mr-1" /> {t(TRANSLATIONS.contact.getInTouch)}
               </p>
               <h2 className="text-[clamp(28px,4vw,42px)] font-bold leading-[1.12] mb-5" data-reveal-p>
-                We'd love to hear <span className="inline-block" style={{ color: pc }}>from you</span> 💬
+                {t(TRANSLATIONS.contact.visitUs)} <Icon path={PATHS.messageCircle} className="w-5 h-5 inline-block" style={{ color: pc }} />
               </h2>
               <p className="text-[16px] text-[#6a6a6a] leading-[1.7] mb-8 max-w-[420px]" data-reveal-p>
-                Our friendly admissions team is here to help! Drop by, give us a call, or send an email. We can't wait to meet you!
+                {t(TRANSLATIONS.playful.ourFriendly)}
               </p>
               <div className="flex flex-col gap-4">
                 {contactItems.map((item, i) => (
                   <div key={i} className="flex items-start gap-4 group" data-reveal-p>
                     <div className="w-12 h-12 rounded-[18px] flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:rotate-3" style={{ background: pcl }}>
-                      <span className="text-xl">{item.label.split(" ")[0]}</span>
+                      <Icon path={item.icon} className="w-6 h-6" style={{ color: pc }} />
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold tracking-wider uppercase text-[#8a8a8a] mb-0.5">{item.label.replace(/^[^\s]+\s/, "")}</p>
+                      <p className="text-[11px] font-bold tracking-wider uppercase text-[#8a8a8a] mb-0.5">{item.label}</p>
                       <p className="text-[15px] font-semibold text-[#1a1a1a]">{item.value}</p>
                     </div>
                   </div>
@@ -799,8 +855,8 @@ export default function PlayfulTemplate({ school }) {
               style={{ background: pcl, borderColor: pcm }}
               data-reveal-p
             >
-              <span className="text-6xl" style={{ animation: "playful-float 5s ease-in-out infinite" }}>📍</span>
-              <p className="text-[16px] font-bold" style={{ color: pcm }}>{s.schoolName || "School"}</p>
+              <Icon path={PATHS.pin} className="w-12 h-12" style={{ color: pcm, animation: "playful-float 5s ease-in-out infinite" }} />
+              <p className="text-[16px] font-bold" style={{ color: pcm }}>{schoolName}</p>
               <p className="text-[13px] text-[#8a8a8a]">{location || "City, Region"}</p>
               <a
                 href={`https://maps.google.com/?q=${encodeURIComponent(s.address || `${s.city || ""} ${s.region || ""}`)}`}
@@ -809,7 +865,7 @@ export default function PlayfulTemplate({ school }) {
                 className="playful-btn inline-flex items-center gap-2 h-10 px-6 rounded-full text-[12px] font-bold text-white no-underline mt-2 shadow-md"
                 style={{ background: pc }}
               >
-                Open in Maps 🗺️
+                <Icon path={PATHS.pin} className="w-3.5 h-3.5" /> {t(TRANSLATIONS.contact.openInMaps)}
               </a>
             </div>
           </div>
@@ -825,14 +881,14 @@ export default function PlayfulTemplate({ school }) {
                 <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: pc }}>
                   <Icon path={PATHS.building} className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-[18px] font-bold text-[#1a1a1a]">{s.schoolName || "School"}</span>
+                <span className="text-[18px] font-bold text-[#1a1a1a]">{schoolName}</span>
               </div>
-              <p className="text-[13px] text-[#8a8a8a] leading-relaxed">Shaping bright futures since {s.yearFounded || "1998"} ✨</p>
+              <p className="text-[13px] text-[#8a8a8a] leading-relaxed">{t(TRANSLATIONS.footer.shaping)} {s.yearFounded || "1998"} <Icon path={PATHS.star} className="w-3 h-3 inline-block" /></p>
             </div>
             {[
-              { title: "Navigate 🧭", links: [{ label: "About", href: "#about" }, { label: "Classes", href: "#classes" }, { label: "Gallery", href: "#gallery" }, { label: "Contact", href: "#contact" }] },
-              { title: "For You 👋", links: [{ label: "Student Portal", href: "/login" }, { label: "Parent Portal", href: "/login" }, { label: "Fees 💰", href: "#" }] },
-              { title: "Info ℹ️", links: [{ label: "Results 📊", href: "#academics" }, { label: "Admissions 📝", href: "#contact" }, { label: "Calendar 📅", href: "#" }] },
+              { title: t(TRANSLATIONS.footer.navigate), links: [{ label: t(TRANSLATIONS.nav.about), href: "#about" }, { label: t(TRANSLATIONS.nav.classes), href: "#classes" }, { label: t(TRANSLATIONS.nav.gallery), href: "#gallery" }, { label: t(TRANSLATIONS.nav.contact), href: "#contact" }] },
+              { title: t(TRANSLATIONS.footer.forYou), links: [{ label: t(TRANSLATIONS.nav.studentPortal), href: "/login" }, { label: t(TRANSLATIONS.nav.parentPortal), href: "/login" }, { label: t(TRANSLATIONS.footer.fees), href: "#" }] },
+              { title: t(TRANSLATIONS.footer.info), links: [{ label: t(TRANSLATIONS.footer.results), href: "#academics" }, { label: t(TRANSLATIONS.footer.admissions), href: "#contact" }, { label: t(TRANSLATIONS.footer.calendar), href: "#" }] },
             ].map((col, i) => (
               <div key={i}>
                 <p className="text-[12px] font-bold tracking-wider uppercase mb-4" style={{ color: pcm }}>{col.title}</p>
@@ -845,8 +901,8 @@ export default function PlayfulTemplate({ school }) {
             ))}
           </div>
           <div className="border-t-2 border-[#f0eeea] pt-6 flex items-center justify-between gap-4 flex-wrap max-md:flex-col max-md:items-start">
-            <p className="text-[13px] text-[#8a8a8a]">&copy; {year} {s.schoolName || "School"}. All rights reserved.</p>
-            <p className="text-[13px] text-[#8a8a8a]">Made with ❤️ by <strong className="font-semibold" style={{ color: pc }}>Akademee</strong></p>
+            <p className="text-[13px] text-[#8a8a8a]">&copy; {year} {schoolName}. {t(TRANSLATIONS.footer.rights)}</p>
+            <p className="text-[13px] text-[#8a8a8a]">{t(TRANSLATIONS.footer.madeWith)} <Icon path={PATHS.heart} className="w-3 h-3 inline-block" style={{ color: pc }} /> {t(TRANSLATIONS.footer.by)} <strong className="font-semibold" style={{ color: pc }}>Akademee</strong></p>
           </div>
         </div>
       </footer>
@@ -858,12 +914,15 @@ export default function PlayfulTemplate({ school }) {
           className="playful-btn flex-1 h-12 flex items-center justify-center rounded-full text-[14px] font-bold text-white no-underline shadow-lg"
           style={{ background: pc, boxShadow: `0 4px 16px ${pcm}` }}
         >
-          🚪 Login
+          <Icon path={PATHS.login} className="w-4 h-4" /> {t(TRANSLATIONS.nav.signIn)}
         </a>
         <a href="#contact" className="playful-btn flex-1 h-12 flex items-center justify-center rounded-full text-[14px] font-bold text-[#1a1a1a] no-underline border-2 border-[#e0ddd8]">
-          📞 Contact
+          <Icon path={PATHS.phone} className="w-4 h-4" /> {t(TRANSLATIONS.nav.contact)}
         </a>
       </div>
+
+      {/* Back to top */}
+      <BackToTopButton show={showBackToTop} color={pc} variant="light" />
     </div>
   );
 }

@@ -1,10 +1,10 @@
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FiFileText } from "react-icons/fi";
+import { FiFileText, FiBook, FiBarChart2, FiClipboard, FiEdit3, FiAward } from "react-icons/fi";
 
 const EXAM_META = {
   "gce-o-level": {
-    icon: "📘",
+    icon: <FiBook className="w-6 h-6" />,
     titleKey: "exams.gceOLevel",
     system: "Anglophone General",
     description: "GCE Ordinary Level — Forms 1 to 5 (FSLC → O-Level)",
@@ -12,7 +12,7 @@ const EXAM_META = {
     color: "bg-blue-500",
   },
   "gce-a-level": {
-    icon: "📚",
+    icon: <FiBook className="w-6 h-6" />,
     titleKey: "exams.gceALevel",
     system: "Anglophone General",
     description: "GCE Advanced Level — Lower & Upper Sixth",
@@ -20,7 +20,7 @@ const EXAM_META = {
     color: "bg-blue-600",
   },
   "gce-results": {
-    icon: "📊",
+    icon: <FiBarChart2 className="w-6 h-6" />,
     titleKey: "exams.gceResults",
     system: "Anglophone General",
     description: "GCE results management & publication",
@@ -28,7 +28,7 @@ const EXAM_META = {
     color: "bg-blue-400",
   },
   bepc: {
-    icon: "📋",
+    icon: <FiClipboard className="w-6 h-6" />,
     titleKey: "exams.bepc",
     system: "Francophone General",
     description: "Brevet d'Études du Premier Cycle — Collège (4ᵉ année)",
@@ -36,7 +36,7 @@ const EXAM_META = {
     color: "bg-amber-500",
   },
   probatoire: {
-    icon: "📝",
+    icon: <FiEdit3 className="w-6 h-6" />,
     titleKey: "exams.probatoire",
     system: "Francophone General",
     description: "Examen probatoire — 2ᵉ année du second cycle (Lycée)",
@@ -44,7 +44,7 @@ const EXAM_META = {
     color: "bg-amber-600",
   },
   baccalaureat: {
-    icon: "🎓",
+    icon: <FiAward className="w-6 h-6" />,
     titleKey: "exams.baccalaureat",
     system: "Francophone General",
     description: "Baccalauréat Général — séries A, B, C, D, E, TI",
@@ -52,7 +52,7 @@ const EXAM_META = {
     color: "bg-amber-700",
   },
   "francophone-results": {
-    icon: "📊",
+    icon: <FiBarChart2 className="w-6 h-6" />,
     titleKey: "exams.examResults",
     system: "Francophone General",
     description: "BEPC, Probatoire & Baccalauréat results",
@@ -74,7 +74,7 @@ export default function ExamsSection() {
   const examSlug = location.pathname.replace("/dashboard/exams/", "");
 
   const meta = EXAM_META[examSlug] || {
-    icon: "📋",
+    icon: <FiClipboard className="w-6 h-6" />,
     titleKey: "exams.title",
     system: "",
     description: "Exam management",

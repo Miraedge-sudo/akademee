@@ -46,6 +46,7 @@ const userManagementRoutes = require('./routes/userManagement.routes');
 const roleRoutes = require('./routes/role.routes');
 const auditRoutes = require('./routes/audit.routes');
 const announcementRoutes = require('./routes/announcement.routes');
+const enrolmentRoutes = require('./routes/enrolment.routes');
 const swaggerRoutes = require('./routes/swagger.routes');
 
 const app = express();
@@ -111,6 +112,7 @@ app.use('/api/users/manage', userManagementRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/audit-logs', auditRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/website', enrolmentRoutes);
 
 // API documentation
 app.use('/api-docs', swaggerRoutes);

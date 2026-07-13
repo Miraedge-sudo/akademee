@@ -1,3 +1,4 @@
+import { FiFileText } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 
 export default function ReportCardsPage() {
@@ -7,7 +8,7 @@ export default function ReportCardsPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-14 h-14 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-2xl shadow-lg">📄</div>
+        <div className="w-14 h-14 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-2xl shadow-lg"><FiFileText className="w-6 h-6" /></div>
         <div>
           <h1 className="text-xl font-semibold text-surface-800 dark:text-surface-100">
             {t("reportCards.title", "Report Cards")}

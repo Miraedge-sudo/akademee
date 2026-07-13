@@ -1,158 +1,314 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getStudents } from "../../../core/api/studentService";
+import toast from "react-hot-toast";
+import { getStudents, deleteStudent } from "../../../core/api/studentService";
 import AddStudentDrawer from "../components/AddStudentDrawer";
-import { FiPlus, FiUsers, FiLoader } from "react-icons/fi";
+import { FiUsers } from "react-icons/fi";
+import {
+  Button,
+  Card,
+  Modal,
+  Badge,
+  EmptyState,
+  Table,
+  PageHeader,
+  Skeleton,
+} from "../../../components";
 
 export default function StudentsListPage() {
   const { t, i18n } = useTranslation("common");
   const lang = i18n.language === "fr" ? "fr" : "en";
+  const navigate = useNavigate();
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const loadStudents = async () => {
-    setLoading(true);
+  // Drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
+
+  // Delete modal
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletingStudent, setDeletingStudent] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const loadStudents = useCallback(async () => {
     try {
+      setLoading(true);
+      setError(null);
       const data = await getStudents();
-      setStudents(data.students || []);
+      const list = Array.isArray(data) ? data : data?.students || data?.rows || [];
+      setStudents(list);
     } catch (err) {
-      console.error("Error loading students:", err);
+      console.error("Failed to load students:", err);
+      setError(
+        lang === "fr"
+          ? "Erreur lors du chargement des élèves"
+          : "Failed to load students"
+      );
     } finally {
       setLoading(false);
     }
+  }, [lang]);
+
+  useEffect(() => {
+    loadStudents();
+  }, [loadStudents]);
+
+  // ── Drawer handlers ──
+  const openCreateDrawer = () => {
+    setEditingStudent(null);
+    setDrawerOpen(true);
   };
 
-  const handleStudentCreated = () => {
+  const openEditDrawer = (student) => {
+    setEditingStudent(student);
+    setDrawerOpen(true);
+  };
+
+  const handleDrawerSuccess = () => {
     loadStudents();
   };
 
-  return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-xl font-semibold text-surface-800 dark:text-surface-100">
-            {t("students.title", "Students")}
-          </h1>
-          <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-            {lang === "fr" ? "Gérer les élèves" : "Manage students"}
-          </p>
-        </div>
-        <button
-          onClick={() => setIsDrawerOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          <FiPlus className="w-4 h-4" />
-          {lang === "fr" ? "Ajouter un étudiant" : "Add Student"}
-        </button>
-      </div>
+  // ── Delete handler ──
+  const openDeleteModal = (student) => {
+    setDeletingStudent(student);
+    setDeleteModalOpen(true);
+  };
 
-      <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-8">
+  const handleDelete = async () => {
+    if (!deletingStudent) return;
+    setDeleting(true);
+    try {
+      await deleteStudent(deletingStudent.id);
+      toast.success(lang === "fr" ? "Élève supprimé" : "Student deleted");
+      setDeleteModalOpen(false);
+      setDeletingStudent(null);
+      loadStudents();
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        (lang === "fr"
+          ? "Erreur lors de la suppression"
+          : "Failed to delete student");
+      toast.error(msg);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // ── Table columns ──
+  const columns = [
+    {
+      key: "name",
+      label: lang === "fr" ? "Élève" : "Student",
+      sortable: true,
+      render: (_, row) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 text-sm font-semibold flex-shrink-0">
+            {((row.firstName?.[0] || "") + (row.lastName?.[0] || "")).toUpperCase() || "?"}
+          </div>
+          <div>
+            <div className="font-medium text-surface-800 dark:text-surface-100">
+              {row.firstName} {row.lastName}
+            </div>
+            <div className="text-xs text-surface-400">
+              {row.studentNumber || row.matricule || `#${row.id?.slice(0, 8)}`}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "className",
+      label: lang === "fr" ? "Classe" : "Class",
+      width: 160,
+      sortable: true,
+      render: (val) => (
+        <span className="text-sm text-surface-600 dark:text-surface-400">
+          {val || "—"}
+        </span>
+      ),
+    },
+    {
+      key: "gender",
+      label: lang === "fr" ? "Genre" : "Gender",
+      width: 90,
+      render: (val) => (
+        <span className="text-sm text-surface-500 dark:text-surface-400">
+          {val === "male"
+            ? lang === "fr" ? "M" : "M"
+            : val === "female"
+              ? lang === "fr" ? "F" : "F"
+              : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      label: lang === "fr" ? "Statut" : "Status",
+      width: 100,
+      render: (val) => (
+        <Badge status={val === "active" ? "active" : "inactive"}>
+          {val === "active"
+            ? lang === "fr" ? "Actif" : "Active"
+            : val === "inactive"
+              ? lang === "fr" ? "Inactif" : "Inactive"
+              : val || "—"}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      label: "",
+      width: 100,
+      render: (_, row) => (
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => openEditDrawer(row)}
+          >
+            {lang === "fr" ? "Modifier" : "Edit"}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-500 hover:text-red-600"
+            onClick={() => openDeleteModal(row)}
+          >
+            {lang === "fr" ? "Suppr." : "Del"}
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  // ── Render ──
+  if (error && !loading) {
+    return (
+      <div className="max-w-5xl mx-auto">
+        <PageHeader
+          icon={<FiUsers className="w-6 h-6" />}
+          title={lang === "fr" ? "Élèves" : "Students"}
+          subtitle={lang === "fr" ? "Gérer les élèves inscrits" : "Manage enrolled students"}
+        />
+        <Card>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-sm text-red-500 mb-4">{error}</p>
+            <Button variant="primary" onClick={loadStudents}>
+              {lang === "fr" ? "Réessayer" : "Retry"}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto">
+      <PageHeader
+        icon={<FiUsers className="w-6 h-6" />}
+        title={lang === "fr" ? "Élèves" : "Students"}
+        subtitle={
+          lang === "fr"
+            ? "Gérer les élèves inscrits dans l'établissement"
+            : "Manage students enrolled in your school"
+        }
+      />
+
+      <Card>
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <FiLoader className="animate-spin h-8 w-8 text-primary-600" />
+          <div className="space-y-3 p-4">
+            <Skeleton variant="table" />
           </div>
         ) : students.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="w-16 h-16 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-4">
-              <FiUsers className="w-8 h-8 text-surface-400" />
-            </div>
-            <h3 className="text-lg font-medium text-surface-700 dark:text-surface-200 mb-2">
-              {lang === "fr" ? "Aucun étudiant" : "No students yet"}
-            </h3>
-            <p className="text-sm text-surface-400 max-w-md mb-4">
-              {lang === "fr"
-                ? "Commencez par ajouter votre premier étudiant."
-                : "Start by adding your first student."}
-            </p>
-            <button
-              onClick={() => setIsDrawerOpen(true)}
-              className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              {lang === "fr" ? "Ajouter un étudiant" : "Add Student"}
-            </button>
+          <div className="py-8">
+            <EmptyState
+              icon={<FiUsers className="w-8 h-8" />}
+              title={lang === "fr" ? "Aucun élève" : "No students yet"}
+              subtitle={
+                lang === "fr"
+                  ? "Commencez par ajouter votre premier élève"
+                  : "Start by adding your first student"
+              }
+              action={
+                <Button variant="primary" onClick={openCreateDrawer}>
+                  {lang === "fr" ? "+ Ajouter un élève" : "+ Add Student"}
+                </Button>
+              }
+            />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-surface-200 dark:border-surface-700">
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-surface-600 dark:text-surface-400 uppercase tracking-wider">
-                    {lang === "fr" ? "Nom" : "Name"}
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-surface-600 dark:text-surface-400 uppercase tracking-wider">
-                    {lang === "fr" ? "Classe" : "Class"}
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-surface-600 dark:text-surface-400 uppercase tracking-wider">
-                    {lang === "fr" ? "Statut" : "Status"}
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-surface-600 dark:text-surface-400 uppercase tracking-wider">
-                    {lang === "fr" ? "Frais" : "Fees"}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student) => (
-                  <tr
-                    key={student.id}
-                    className="border-b border-surface-100 dark:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-900/50"
-                  >
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-700 dark:text-primary-300 text-xs font-semibold">
-                          {student.initials}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-surface-800 dark:text-surface-100">
-                            {student.fullName}
-                          </p>
-                          <p className="text-xs text-surface-500">
-                            {student.studentNumber}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-surface-600 dark:text-surface-400">
-                      {student.className}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          student.status === "active"
-                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                            : "bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400"
-                        }`}
-                      >
-                        {student.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          student.feeStatus === "paid"
-                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                            : student.feeStatus === "pending"
-                              ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
-                              : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-                        }`}
-                      >
-                        {student.feeStatus}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={columns}
+            data={students}
+            searchable
+            searchPlaceholder={
+              lang === "fr"
+                ? "Rechercher un élève..."
+                : "Search students..."
+            }
+            emptyMessage={
+              lang === "fr"
+                ? "Aucun élève trouvé"
+                : "No students found"
+            }
+            onRowClick={(row) => navigate(`/dashboard/students/${row.id}`)}
+            headerExtra={
+              <Button variant="primary" size="sm" onClick={openCreateDrawer}>
+                {lang === "fr" ? "+ Nouveau" : "+ New"}
+              </Button>
+            }
+          />
         )}
-      </div>
+      </Card>
 
+      {/* Create / Edit Drawer */}
       <AddStudentDrawer
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        onSuccess={handleStudentCreated}
+        isOpen={drawerOpen}
+        onClose={() => {
+          setDrawerOpen(false);
+          setEditingStudent(null);
+        }}
+        onSuccess={handleDrawerSuccess}
+        student={editingStudent}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title={lang === "fr" ? "Confirmer la suppression" : "Confirm Deletion"}
+        size="sm"
+        footer={
+          <div className="flex gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => setDeleteModalOpen(false)}
+              fullWidth
+            >
+              {lang === "fr" ? "Annuler" : "Cancel"}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDelete}
+              loading={deleting}
+              fullWidth
+            >
+              {lang === "fr" ? "Supprimer" : "Delete"}
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-surface-600 dark:text-surface-300">
+          {lang === "fr"
+            ? `Êtes-vous sûr de vouloir supprimer ${deletingStudent?.firstName} ${deletingStudent?.lastName} ? Cette action est irréversible.`
+            : `Are you sure you want to delete ${deletingStudent?.firstName} ${deletingStudent?.lastName}? This action cannot be undone.`}
+        </p>
+      </Modal>
     </div>
   );
 }

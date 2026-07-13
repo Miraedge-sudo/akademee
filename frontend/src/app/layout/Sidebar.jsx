@@ -495,6 +495,7 @@ const BASE_NAV_CONFIG = {
         },
         { key: "classes", path: "/dashboard/classes", icon: "classes" },
         { key: "subjects", path: "/dashboard/subjects", icon: "subjects" },
+        { key: "subjectAssignment", path: "/dashboard/subject-classes", icon: "subjects" },
         { key: "teachers", path: "/dashboard/teachers", icon: "teacher" },
       ],
     },

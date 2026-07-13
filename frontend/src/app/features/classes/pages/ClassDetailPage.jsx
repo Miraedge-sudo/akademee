@@ -17,6 +17,12 @@ import {
   FiTrash2,
   FiLoader,
   FiUsers,
+  FiUserCheck,
+  FiBook,
+  FiUser,
+  FiHome,
+  FiXCircle,
+  FiHelpCircle,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 
@@ -134,7 +140,7 @@ export default function ClassDetailPage() {
   if (error === "NOT_FOUND") {
     return (
       <div className="text-center py-20">
-        <div className="text-4xl mb-3">😕</div>
+        <FiHelpCircle className="w-12 h-12 mx-auto mb-3 text-surface-300" />
         <h3 className="font-display text-xl font-bold text-surface-800 dark:text-surface-100 mb-2">
           {isFr ? "Classe introuvable" : "Class not found"}
         </h3>
@@ -152,7 +158,7 @@ export default function ClassDetailPage() {
   if (error || !cls) {
     return (
       <div className="text-center py-20">
-        <div className="text-4xl mb-3">❌</div>
+        <FiXCircle className="w-12 h-12 mx-auto mb-3 text-red-400" />
         <h3 className="font-display text-xl font-bold text-surface-800 dark:text-surface-100 mb-2">
           {isFr ? "Erreur de chargement" : "Error loading class"}
         </h3>
@@ -175,9 +181,9 @@ export default function ClassDetailPage() {
   const sectionInitial = (cls.name?.match(/[A-Z]/g) || ["A"]).slice(-1)[0];
 
   const tabs = [
-    { key: "students", icon: "👩‍🎓", label: isFr ? "Élèves" : "Students", count: enrolled },
-    { key: "subjects", icon: "📚", label: isFr ? "Matières" : "Subjects", count: subjects.length },
-    { key: "teachers", icon: "👩‍🏫", label: isFr ? "Enseignants" : "Teachers" },
+    { key: "students", icon: <FiUserCheck className="w-4 h-4" />, label: isFr ? "Élèves" : "Students", count: enrolled },
+    { key: "subjects", icon: <FiBook className="w-4 h-4" />, label: isFr ? "Matières" : "Subjects", count: subjects.length },
+    { key: "teachers", icon: <FiUser className="w-4 h-4" />, label: isFr ? "Enseignants" : "Teachers" },
   ];
 
   // Note: enrolled students list must be fetched separately via the enrollment endpoint
@@ -257,11 +263,11 @@ export default function ClassDetailPage() {
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          <StatChip icon="👩‍🎓" value={enrolled} label={isFr ? "Élèves" : "Students"} />
-          <StatChip icon="🏫" value={capacity} label={isFr ? "Capacité" : "Capacity"} />
-          <StatChip icon="📚" value={subjects.length} label={isFr ? "Matières" : "Subjects"} />
+          <StatChip icon={<FiUsers className="w-5 h-5" />} value={enrolled} label={isFr ? "Élèves" : "Students"} />
+          <StatChip icon={<FiHome className="w-5 h-5" />} value={capacity} label={isFr ? "Capacité" : "Capacity"} />
+          <StatChip icon={<FiBook className="w-5 h-5" />} value={subjects.length} label={isFr ? "Matières" : "Subjects"} />
           <StatChip
-            icon="👩‍🏫"
+            icon={<FiUser className="w-5 h-5" />}
             value={cls.classTeacherId ? 1 : 0}
             label={isFr ? "Enseignants" : "Teachers"}
           />
@@ -343,7 +349,7 @@ export default function ClassDetailPage() {
 
               {filteredStudents.length === 0 ? (
                 <EmptyTab
-                  icon="👩‍🎓"
+                  icon={<FiUsers className="w-8 h-8" />}
                   title={isFr ? "Aucun élève inscrit" : "No students enrolled"}
                   subtitle={
                     isFr
@@ -456,7 +462,7 @@ export default function ClassDetailPage() {
             <div>
               {subjects.length === 0 ? (
                 <EmptyTab
-                  icon="📚"
+                  icon={<FiBook className="w-8 h-8" />}
                   title={isFr ? "Aucune matière" : "No subjects yet"}
                   subtitle={
                     isFr
@@ -525,7 +531,7 @@ export default function ClassDetailPage() {
             <div>
               {!cls.classTeacherId ? (
                 <EmptyTab
-                  icon="👩‍🏫"
+                  icon={<FiUser className="w-8 h-8" />}
                   title={isFr ? "Aucun enseignant assigné" : "No teacher assigned"}
                   subtitle={
                     isFr

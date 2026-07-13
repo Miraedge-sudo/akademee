@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Add User — Akademee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal-900:#085041;--teal-700:#0F6E56;--teal-600:#1D9E75;--teal-400:#5DCAA5;--teal-100:#C8F0E4;--teal-50:#E1F5EE;
+  --surface-900:#1A1F1B;--surface-800:#2A3029;--surface-700:#434D45;--surface-600:#5C665E;
+  --surface-500:#6E7A70;--surface-400:#9BA59C;--surface-300:#BFC4BB;
+  --surface-200:#D8DBD5;--surface-100:#EEF0EC;--surface-50:#F7F8F6;--white:#fff;
+  --red:#EF4444;--amber:#F59E0B;--blue:#3B82F6;--purple:#8B5CF6;--pink:#EC4899;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:20px;--r-2xl:28px;
+  --sh-sm:0 2px 8px rgba(0,0,0,.05);--sh-md:0 4px 24px rgba(0,0,0,.08);--sh-lg:0 16px 48px rgba(0,0,0,.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--surface-50);color:var(--surface-900);-webkit-font-smoothing:antialiased}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes popIn{0%{opacity:0;transform:scale(.6)}60%{transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes successPop{0%{opacity:0;transform:scale(.7) translateY(16px)}60%{transform:scale(1.05)}100%{opacity:1;transform:scale(1)}}
+
+.page{max-width:1060px;margin:0 auto;padding:0 0 80px}
+
+/* ── Header ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;animation:fadeUp .45s cubic-bezier(.16,1,.3,1) both}
+.breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--surface-400);margin-bottom:8px}
+.breadcrumb a{color:var(--surface-400);text-decoration:none;transition:color .15s}
+.breadcrumb a:hover{color:var(--teal-700)}
+.breadcrumb svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none}
+.page-title-wrap{display:flex;align-items:center;gap:10px}
+.page-title-bar{width:4px;height:26px;background:var(--teal-900);border-radius:2px}
+.page-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--surface-900)}
+.page-sub{font-size:13.5px;color:var(--surface-400);margin-top:3px;padding-left:14px}
+
+/* ── Layout ── */
+.layout{display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:flex-start}
+
+/* ── Card ── */
+.card{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--surface-100);padding:28px;box-shadow:var(--sh-sm);animation:fadeUp .45s .05s cubic-bezier(.16,1,.3,1) both}
+
+/* ── Role selector ── */
+.role-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:28px}
+.role-card{border:2px solid var(--surface-100);border-radius:var(--r-lg);padding:14px 12px;cursor:pointer;transition:all .2s cubic-bezier(.34,1.56,.64,1);background:var(--white);text-align:center;position:relative;overflow:hidden}
+.role-card:hover{border-color:var(--surface-200);transform:translateY(-2px);box-shadow:var(--sh-sm)}
+.role-card.selected{transform:translateY(-3px);box-shadow:var(--sh-md)}
+.role-card-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
+.role-card-name{font-size:12.5px;font-weight:700;color:var(--surface-900);margin-bottom:2px}
+.role-card-desc{font-size:10.5px;color:var(--surface-400);line-height:1.4}
+.role-check{position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;border:2px solid var(--surface-200);display:flex;align-items:center;justify-content:center;transition:all .2s cubic-bezier(.34,1.56,.64,1)}
+.role-card.selected .role-check{animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
+.role-check svg{width:9px;height:9px;stroke:white;stroke-width:2.5;fill:none;stroke-linecap:round;opacity:0}
+.role-card.selected .role-check svg{opacity:1}
+
+/* ── Sections ── */
+.section-title{font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--surface-400);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--surface-100)}
+.section-divider{height:1px;background:var(--surface-50);margin:22px 0}
+.dynamic-section{animation:slideDown .3s cubic-bezier(.16,1,.3,1) both}
+
+/* ── Fields ── */
+.field-group{margin-bottom:18px}
+.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--surface-700);margin-bottom:7px}
+.field-label .req{color:var(--teal-600);margin-left:2px}
+.field-input{width:100%;height:46px;padding:0 14px;border:1.5px solid var(--surface-100);border-radius:var(--r-lg);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--surface-900);background:var(--white);outline:none;transition:all .2s;appearance:none}
+.field-input:focus{border-color:var(--teal-600);box-shadow:0 0 0 4px rgba(8,80,65,.09)}
+.field-input.error{border-color:var(--red);box-shadow:0 0 0 4px rgba(239,68,68,.07)}
+.field-input::placeholder{color:var(--surface-300)}
+.field-hint{font-size:12px;color:var(--surface-400);margin-top:5px}
+.field-error{font-size:12px;color:var(--red);margin-top:5px;display:none}
+.has-error .field-error{display:block}
+.has-error .field-hint{display:none}
+select.field-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239BA59C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;cursor:pointer;padding-right:36px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+textarea.field-input{height:auto;padding:12px 14px;resize:vertical;line-height:1.6}
+
+/* ── Password field ── */
+.pwd-wrap{position:relative}
+.pwd-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--surface-400);display:flex;align-items:center;padding:4px}
+
+/* ── Photo upload ── */
+.photo-upload-row{display:flex;align-items:center;gap:16px;margin-bottom:22px}
+.photo-preview{width:68px;height:68px;border-radius:50%;background:var(--surface-50);border:2.5px dashed var(--surface-200);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;flex-shrink:0;transition:all .2s}
+.photo-preview:hover{border-color:var(--teal-400);background:var(--teal-50)}
+.photo-preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.photo-preview svg{width:22px;height:22px;stroke:var(--surface-300);stroke-width:1.5;fill:none;transition:stroke .2s}
+.photo-preview:hover svg{stroke:var(--teal-400)}
+
+/* ── Subject chips ── */
+.subject-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.subject-chip{padding:6px 12px;border-radius:50px;border:1.5px solid var(--surface-100);background:var(--white);font-size:12.5px;font-weight:600;color:var(--surface-600);cursor:pointer;transition:all .18s cubic-bezier(.34,1.56,.64,1);user-select:none}
+.subject-chip:hover{border-color:var(--surface-200);transform:scale(1.04)}
+.subject-chip.selected{border-color:var(--teal-600);background:var(--teal-50);color:var(--teal-900)}
+
+/* ── Guardian section ── */
+.guardian-card{background:var(--surface-50);border-radius:var(--r-lg);padding:16px;border:1.5px solid var(--surface-100);margin-bottom:10px}
+.guardian-card-title{font-size:12.5px;font-weight:700;color:var(--surface-700);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+
+/* ── Invite tab ── */
+.mode-tabs{display:flex;gap:0;background:var(--surface-50);border-radius:var(--r-lg);padding:4px;border:1.5px solid var(--surface-100);margin-bottom:24px}
+.mode-tab{flex:1;padding:9px;border-radius:var(--r-md);font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--surface-500);font-family:'DM Sans',sans-serif;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px}
+.mode-tab.active{background:var(--white);color:var(--surface-900);box-shadow:var(--sh-sm)}
+.mode-tab svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none}
+
+/* ── Preview card ── */
+.preview-card{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--surface-100);padding:22px;box-shadow:var(--sh-sm);position:sticky;top:88px;animation:fadeUp .45s .12s cubic-bezier(.16,1,.3,1) both}
+.preview-header{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--surface-400);margin-bottom:14px}
+.preview-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;margin:0 auto 10px;transition:all .3s;overflow:hidden;position:relative}
+.preview-name{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--surface-900);text-align:center;margin-bottom:2px;min-height:22px}
+.preview-role-badge{display:inline-flex;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px;margin:0 auto 14px}
+.preview-divider{height:1px;background:var(--surface-100);margin:14px 0}
+.preview-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--surface-50);font-size:12.5px}
+.preview-row:last-child{border-bottom:none}
+.preview-row-icon{width:26px;height:26px;border-radius:7px;background:var(--surface-50);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.preview-row-icon svg{width:12px;height:12px;stroke:var(--surface-400);stroke-width:1.8;fill:none}
+.preview-row-label{color:var(--surface-400);flex:1}
+.preview-row-val{color:var(--surface-900);font-weight:600;text-align:right;font-size:12px;max-width:55%}
+
+/* ── Checklist ── */
+.checklist{background:var(--surface-50);border-radius:var(--r-md);padding:14px;margin-top:14px}
+.check-head{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--surface-400);margin-bottom:10px}
+.check-item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12.5px;color:var(--surface-400);transition:color .2s}
+.check-item.done{color:var(--surface-800)}
+.check-dot{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--surface-200);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .25s cubic-bezier(.34,1.56,.64,1)}
+.check-item.done .check-dot{background:var(--teal-900);border-color:var(--teal-900);transform:scale(1.1)}
+.check-dot svg{width:9px;height:9px;stroke:white;stroke-width:2.5;fill:none;stroke-linecap:round;opacity:0;transition:opacity .15s .1s}
+.check-item.done .check-dot svg{opacity:1}
+
+/* ── Actions ── */
+.form-actions{display:flex;align-items:center;gap:12px;padding-top:8px;margin-top:4px}
+.btn{display:inline-flex;align-items:center;gap:7px;height:46px;padding:0 22px;border-radius:var(--r-lg);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:all .2s;text-decoration:none}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--teal-900);color:white;box-shadow:0 4px 14px rgba(8,80,65,.22)}
+.btn-primary:hover:not(:disabled){background:var(--teal-700);transform:translateY(-2px);box-shadow:0 8px 22px rgba(8,80,65,.3)}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed}
+.btn-ghost{background:var(--white);color:var(--surface-700);border:1.5px solid var(--surface-200)}
+.btn-ghost:hover{background:var(--surface-50)}
+.btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
+.btn .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.btn.loading .spinner{display:block}
+.btn.loading .btn-label{display:none}
+
+/* ── Success overlay ── */
+.success-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(7px);z-index:999;display:none;align-items:center;justify-content:center}
+.success-overlay.show{display:flex;animation:fadeUp .3s}
+.success-box{background:var(--white);border-radius:var(--r-2xl);padding:44px 52px;text-align:center;max-width:460px;width:90%;animation:successPop .4s cubic-bezier(.34,1.56,.64,1)}
+.success-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface-900);color:white;padding:12px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:1000;opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;box-shadow:var(--sh-lg)}
+
+/* ── Responsive ── */
+@media(max-width:860px){.layout{grid-template-columns:1fr}}
+@media(max-width:520px){.role-selector{grid-template-columns:repeat(2,1fr)}.field-row{grid-template-columns:1fr}.page{padding:0 0 80px}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Header ── -->
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb">
+        <a href="#">Dashboard</a>
+        <i data-lucide="chevron-right" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none"></i>
+        <a href="#">Users</a>
+        <i data-lucide="chevron-right" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none"></i>
+        <span style="color:var(--surface-900);font-weight:500">Add user</span>
+      </div>
+      <div class="page-title-wrap">
+        <div class="page-title-bar"></div>
+        <h1 class="page-title">Add a new user</h1>
+      </div>
+      <p class="page-sub">Create an account or send an email invitation. The role determines what the user can access.</p>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- ── FORM ── -->
+    <div>
+
+      <!-- Mode tabs -->
+      <div class="mode-tabs" style="animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both">
+        <button class="mode-tab active" id="modeCreate" onclick="switchMode('create')">
+          <i data-lucide="user-plus" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none"></i>
+          Create manually
+        </button>
+        <button class="mode-tab" id="modeInvite" onclick="switchMode('invite')">
+          <i data-lucide="mail" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none"></i>
+          Invite by email
+        </button>
+      </div>
+
+      <div class="card">
+        <input type="file" id="photoInput" accept="image/*" style="display:none"/>
+
+        <!-- ── ROLE SELECTOR ── -->
+        <div class="section-title">Select role</div>
+        <div class="role-selector" id="roleSelector"></div>
+
+        <!-- ── CREATE FORM ── -->
+        <div id="createForm">
+
+          <!-- Photo -->
+          <div class="section-title">Profile photo</div>
+          <div class="photo-upload-row">
+            <div class="photo-preview" id="photoPreview" onclick="document.getElementById('photoInput').click()">
+              <i data-lucide="camera" style="width:22px;height:22px;stroke:var(--surface-300);stroke-width:1.5;fill:none"></i>
+            </div>
+            <div>
+              <div style="font-size:13.5px;font-weight:700;color:var(--surface-900);margin-bottom:3px">Upload profile photo</div>
+              <div style="font-size:12px;color:var(--surface-400);margin-bottom:8px">JPG or PNG · Max 2MB · Recommended: square image</div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-ghost" style="height:32px;font-size:12px" onclick="document.getElementById('photoInput').click()">
+                  <i data-lucide="upload" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none"></i>
+                  Choose
+                </button>
+                <button class="btn btn-ghost" id="removePhotoBtn" style="height:32px;font-size:12px;display:none" onclick="removePhoto()">Remove</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- Personal info -->
+          <div class="section-title">Personal information</div>
+          <div class="field-row">
+            <div class="field-group" id="fg-firstName">
+              <label class="field-label">First name <span class="req">*</span></label>
+              <input class="field-input" id="firstName" placeholder="e.g. Marie" oninput="sync()"/>
+              <div class="field-error">First name is required</div>
+            </div>
+            <div class="field-group" id="fg-lastName">
+              <label class="field-label">Last name <span class="req">*</span></label>
+              <input class="field-input" id="lastName" placeholder="e.g. Abena" oninput="sync()"/>
+              <div class="field-error">Last name is required</div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Gender</label>
+              <select class="field-input" id="gender" onchange="sync()">
+                <option value="">Select gender</option>
+                <option>Female</option><option>Male</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Date of birth</label>
+              <input class="field-input" id="dob" type="date"/>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Phone number</label>
+            <input class="field-input" id="phone" type="tel" placeholder="+237 6XX XXX XXX" oninput="sync()"/>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- Account -->
+          <div class="section-title">Account & access</div>
+          <div class="field-group" id="fg-email">
+            <label class="field-label">Email address <span class="req">*</span></label>
+            <input class="field-input" id="email" type="email" placeholder="user@grace-bilingual.cm" oninput="sync()"/>
+            <div class="field-hint">Used to log in to Akademee.</div>
+            <div class="field-error">A valid email is required</div>
+          </div>
+          <div class="field-row">
+            <div class="field-group" id="fg-pwd">
+              <label class="field-label">Password <span class="req">*</span></label>
+              <div class="pwd-wrap">
+                <input class="field-input" id="pwd" type="password" placeholder="Min. 8 characters" style="padding-right:44px" oninput="sync()"/>
+                <button class="pwd-toggle" onclick="togglePwd('pwd','eyePwd')">
+                  <i data-lucide="eye" id="eyePwd" style="width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none"></i>
+                </button>
+              </div>
+              <div class="field-error">Password must be at least 8 characters</div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Confirm password <span class="req">*</span></label>
+              <div class="pwd-wrap">
+                <input class="field-input" id="pwd2" type="password" placeholder="Repeat password" style="padding-right:44px"/>
+                <button class="pwd-toggle" onclick="togglePwd('pwd2','eyePwd2')">
+                  <i data-lucide="eye" id="eyePwd2" style="width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── DYNAMIC SECTIONS ── -->
+          <div id="dynamicSections"></div>
+
+          <div class="section-divider"></div>
+          <div class="section-title">Additional notes</div>
+          <div class="field-group">
+            <label class="field-label">Internal notes</label>
+            <textarea class="field-input" id="notes" rows="3" placeholder="Any relevant information — visible to admins only"></textarea>
+          </div>
+
+          <div class="form-actions">
+            <a href="#" class="btn btn-ghost">Cancel</a>
+            <button class="btn btn-primary" id="submitBtn" onclick="submitForm()">
+              <div class="spinner"></div>
+              <span class="btn-label" style="display:flex;align-items:center;gap:7px">
+                <i data-lucide="user-plus" style="width:15px;height:15px;stroke:white;stroke-width:2;fill:none"></i>
+                Create user
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── INVITE FORM ── -->
+        <div id="inviteForm" style="display:none">
+          <div class="section-title">Invitation details</div>
+          <div class="field-group">
+            <label class="field-label">Email address <span class="req">*</span></label>
+            <input class="field-input" id="inviteEmail" type="email" placeholder="teacher@example.com"/>
+            <div class="field-hint">An invitation email with a setup link will be sent to this address.</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">First name</label>
+            <input class="field-input" id="inviteName" placeholder="Optional — personalize the email"/>
+          </div>
+          <div style="background:rgba(8,80,65,.05);border:1.5px solid var(--teal-100);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:24px;display:flex;gap:12px">
+            <i data-lucide="info" style="width:16px;height:16px;stroke:var(--teal-700);stroke-width:2;fill:none;flex-shrink:0;margin-top:1px"></i>
+            <div style="font-size:13px;color:var(--surface-700);line-height:1.6">
+              The invited user will receive an email with a link to set their own password and complete their profile. The link expires in <strong>48 hours</strong>.
+            </div>
+          </div>
+          <div class="form-actions">
+            <a href="#" class="btn btn-ghost">Cancel</a>
+            <button class="btn btn-primary" onclick="submitInvite()">
+              <i data-lucide="send" style="width:15px;height:15px;stroke:white;stroke-width:2;fill:none"></i>
+              Send invitation
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── PREVIEW ── -->
+    <div>
+      <div class="preview-card">
+        <div class="preview-header">Live preview</div>
+        <div class="preview-avatar" id="previewAvatar">
+          <span id="previewInitials" style="font-size:20px;font-weight:800">—</span>
+        </div>
+        <div class="preview-name" id="previewName" style="text-align:center">Full name</div>
+        <div style="text-align:center;margin-bottom:14px">
+          <span class="preview-role-badge" id="previewRoleBadge">— Role</span>
+        </div>
+        <div class="preview-divider"></div>
+        <div class="preview-row">
+          <div class="preview-row-icon"><i data-lucide="mail" style="width:12px;height:12px;stroke:var(--surface-400);stroke-width:1.8;fill:none"></i></div>
+          <span class="preview-row-label">Email</span>
+          <span class="preview-row-val" id="previewEmail">—</span>
+        </div>
+        <div class="preview-row">
+          <div class="preview-row-icon"><i data-lucide="phone" style="width:12px;height:12px;stroke:var(--surface-400);stroke-width:1.8;fill:none"></i></div>
+          <span class="preview-row-label">Phone</span>
+          <span class="preview-row-val" id="previewPhone">—</span>
+        </div>
+        <div class="preview-row" id="previewExtra1Row" style="display:none">
+          <div class="preview-row-icon"><i data-lucide="layers" style="width:12px;height:12px;stroke:var(--surface-400);stroke-width:1.8;fill:none"></i></div>
+          <span class="preview-row-label" id="previewExtra1Label">—</span>
+          <span class="preview-row-val" id="previewExtra1Val">—</span>
+        </div>
+        <div class="preview-row" id="previewExtra2Row" style="display:none">
+          <div class="preview-row-icon"><i data-lucide="calendar" style="width:12px;height:12px;stroke:var(--surface-400);stroke-width:1.8;fill:none"></i></div>
+          <span class="preview-row-label" id="previewExtra2Label">—</span>
+          <span class="preview-row-val" id="previewExtra2Val">—</span>
+        </div>
+
+        <!-- Checklist -->
+        <div class="checklist">
+          <div class="check-head">Checklist</div>
+          <div class="check-item" id="chk-role">
+            <div class="check-dot"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div>
+            Role selected
+          </div>
+          <div class="check-item" id="chk-name">
+            <div class="check-dot"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div>
+            Full name entered
+          </div>
+          <div class="check-item" id="chk-email">
+            <div class="check-dot"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div>
+            Email address set
+          </div>
+          <div class="check-item" id="chk-pwd">
+            <div class="check-dot"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div>
+            Password set
+          </div>
+          <div class="check-item" id="chk-extra">
+            <div class="check-dot"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span id="chkExtraLabel">Role-specific info</span>
+            <span style="font-size:10px;color:var(--surface-400);margin-left:4px">(optional)</span>
+          </div>
+          <div class="check-item" id="chk-photo">
+            <div class="check-dot"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div>
+            Photo uploaded
+            <span style="font-size:10px;color:var(--surface-400);margin-left:4px">(optional)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Success overlay -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-box">
+    <div class="success-icon" id="successIcon">
+      <i data-lucide="user-check" style="width:36px;height:36px;stroke:var(--teal-900);stroke-width:1.5;fill:none"></i>
+    </div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--surface-900);margin-bottom:8px">User created!</h2>
+    <p style="font-size:14px;color:var(--surface-400);line-height:1.6;margin-bottom:24px">
+      <strong id="successName">—</strong> has been added to Grace Bilingual Academy as <span id="successRole">—</span>.
+    </p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-ghost" onclick="addAnother()">Add another</button>
+      <button class="btn btn-primary" onclick="goToUsers()">
+        <i data-lucide="users" style="width:15px;height:15px;stroke:white;stroke-width:2;fill:none"></i>
+         <a href="UserList.html">View all users</a>
+      </button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); buildRoles(); });
+
+// ── Role config ────────────────────────────────────────
+const ROLES_CONFIG = {
+  ADMIN:     { icon:'shield-check', color:'#085041', bg:'#E1F5EE', label:'Admin',      desc:'Full school access',          badgeClass:'role-admin' },
+  TEACHER:   { icon:'book-open',    color:'#3B82F6', bg:'#EFF6FF', label:'Teacher',    desc:'Classes & grade entry',       badgeClass:'role-teacher' },
+  STUDENT:   { icon:'graduation-cap',color:'#8B5CF6',bg:'#F5F3FF', label:'Student',    desc:'Personal grades & fees',      badgeClass:'role-student' },
+  ACCOUNTANT:{ icon:'landmark',     color:'#F59E0B', bg:'#FEF3C7', label:'Accountant', desc:'Finance & fee management',    badgeClass:'role-accountant' },
+  SECRETARY: { icon:'clipboard-pen',color:'#EC4899', bg:'#FDF2F8', label:'Secretary',  desc:'Enrollment & records',        badgeClass:'role-secretary' },
+};
+
+let selectedRole = 'TEACHER';
+let hasPhoto = false;
+let selectedSubjects = new Set();
+let currentMode = 'create';
+
+function buildRoles() {
+  const container = document.getElementById('roleSelector');
+  container.innerHTML = '';
+  Object.entries(ROLES_CONFIG).forEach(([role, cfg]) => {
+    const div = document.createElement('div');
+    div.className = 'role-card' + (role === selectedRole ? ' selected' : '');
+    div.id = 'role-' + role;
+    div.onclick = () => selectRole(role);
+    div.innerHTML = `
+      <div class="role-check" style="${role === selectedRole ? `background:${cfg.color};border-color:${cfg.color}` : ''}">
+        <svg viewBox="0 0 12 12" style="width:9px;height:9px;stroke:white;stroke-width:2.5;fill:none;stroke-linecap:round${role !== selectedRole ? ';opacity:0' : ''}"><polyline points="2 6 5 9 10 3"/></svg>
+      </div>
+      <div class="role-card-icon" style="background:${cfg.bg}">
+        <i data-lucide="${cfg.icon}" style="width:17px;height:17px;stroke:${cfg.color};stroke-width:2;fill:none"></i>
+      </div>
+      <div class="role-card-name">${cfg.label}</div>
+      <div class="role-card-desc">${cfg.desc}</div>`;
+    if (role === selectedRole) {
+      div.style.borderColor = cfg.color;
+      div.style.background = `rgba(${hexToRgb(cfg.color)},.04)`;
+    }
+    container.appendChild(div);
+  });
+  buildDynamic();
+  sync();
+  setTimeout(() => lucide.createIcons(), 30);
+}
+
+function selectRole(role) {
+  selectedRole = role;
+  const cfg = ROLES_CONFIG[role];
+  Object.keys(ROLES_CONFIG).forEach(r => {
+    const c = document.getElementById('role-' + r);
+    const rc = ROLES_CONFIG[r];
+    c.classList.toggle('selected', r === role);
+    const chk = c.querySelector('.role-check');
+    const chkSvg = chk.querySelector('svg');
+    if (r === role) {
+      c.style.borderColor = cfg.color;
+      c.style.background = `rgba(${hexToRgb(cfg.color)},.04)`;
+      chk.style.background = cfg.color;
+      chk.style.borderColor = cfg.color;
+      chkSvg.style.opacity = '1';
+    } else {
+      c.style.borderColor = 'var(--surface-100)';
+      c.style.background = 'var(--white)';
+      chk.style.background = '';
+      chk.style.borderColor = 'var(--surface-200)';
+      chkSvg.style.opacity = '0';
+    }
+  });
+  selectedSubjects.clear();
+  buildDynamic();
+  sync();
+}
+
+// ── Dynamic fields by role ─────────────────────────────
+function buildDynamic() {
+  const container = document.getElementById('dynamicSections');
+  container.innerHTML = '';
+  const cfg = ROLES_CONFIG[selectedRole];
+
+  if (selectedRole === 'TEACHER') {
+    container.innerHTML = `
+      <div class="section-divider"></div>
+      <div class="section-title dynamic-section">Teaching assignment</div>
+      <div class="field-group dynamic-section">
+        <label class="field-label">Employment type</label>
+        <select class="field-input" id="empType" onchange="sync()">
+          <option value="">Select type</option>
+          <option>Full-time</option><option>Part-time</option><option>Contract</option>
+        </select>
+      </div>
+      <div class="field-group dynamic-section">
+        <label class="field-label">Qualifications</label>
+        <input class="field-input" id="qualif" placeholder="e.g. MSc Mathematics, University of Yaoundé I" oninput="sync()"/>
+      </div>
+      <div class="field-group dynamic-section">
+        <label class="field-label">Subjects to teach</label>
+        <div class="subject-chips" id="subjectChips"></div>
+      </div>
+      <div class="field-group dynamic-section">
+        <label class="field-label">Assigned classes</label>
+        <select class="field-input" id="classAssign" onchange="addClassTag(this.value)">
+          <option value="">+ Add a class</option>
+          <option>Form 1A</option><option>Form 2A</option><option>Form 3A</option><option>Form 3B</option>
+          <option>Form 4A</option><option>Form 5A</option><option>Lower 6th Sci.</option><option>Upper 6th Sci.</option>
+        </select>
+        <div id="classTags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+      </div>`;
+    buildSubjectChips();
+  }
+
+  else if (selectedRole === 'STUDENT') {
+    container.innerHTML = `
+      <div class="section-divider"></div>
+      <div class="section-title dynamic-section">Academic information</div>
+      <div class="field-row dynamic-section">
+        <div class="field-group">
+          <label class="field-label">Class <span class="req">*</span></label>
+          <select class="field-input" id="studentClass" onchange="sync()">
+            <option value="">Select class</option>
+            <option>Form 1A</option><option>Form 2A</option><option>Form 3A</option><option>Form 3B</option>
+            <option>Form 4A</option><option>Form 5A</option><option>Lower 6th Sci.</option><option>Upper 6th Sci.</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Matricule</label>
+          <input class="field-input" id="matricule" placeholder="Auto-generated if empty" oninput="sync()"/>
+          <div class="field-hint">Leave empty to auto-generate</div>
+        </div>
+      </div>
+      <div class="field-row dynamic-section">
+        <div class="field-group">
+          <label class="field-label">Enrollment type</label>
+          <select class="field-input" id="enrollType">
+            <option>New student</option><option>Returning</option><option>Transfer</option><option>Repeating</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Nationality</label>
+          <input class="field-input" id="nationality" placeholder="e.g. Cameroonian"/>
+        </div>
+      </div>
+      <div class="section-divider"></div>
+      <div class="section-title dynamic-section">Guardian / Parent</div>
+      <div class="guardian-card dynamic-section">
+        <div class="guardian-card-title">
+          <i data-lucide="user" style="width:13px;height:13px;stroke:var(--surface-500);stroke-width:2;fill:none"></i>
+          Primary guardian
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">First name</label>
+            <input class="field-input" id="guardianFn" placeholder="Parent first name" oninput="sync()"/>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Last name</label>
+            <input class="field-input" id="guardianLn" placeholder="Parent last name"/>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Relationship</label>
+            <select class="field-input">
+              <option>Father</option><option>Mother</option><option>Guardian</option><option>Other</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Phone</label>
+            <input class="field-input" placeholder="+237 6XX XXX XXX"/>
+          </div>
+        </div>
+      </div>
+      <div class="section-divider"></div>
+      <div class="section-title dynamic-section">Fees</div>
+      <div class="field-row dynamic-section">
+        <div class="field-group">
+          <label class="field-label">Annual fee (FCFA)</label>
+          <input class="field-input" id="feeAmount" type="number" placeholder="e.g. 120000" oninput="sync()"/>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Payment deadline</label>
+          <input class="field-input" type="date"/>
+        </div>
+      </div>`;
+  }
+
+  else if (selectedRole === 'ACCOUNTANT' || selectedRole === 'SECRETARY') {
+    container.innerHTML = `
+      <div class="section-divider"></div>
+      <div class="section-title dynamic-section">Employment details</div>
+      <div class="field-row dynamic-section">
+        <div class="field-group">
+          <label class="field-label">Employment type</label>
+          <select class="field-input">
+            <option>Full-time</option><option>Part-time</option><option>Contract</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Start date</label>
+          <input class="field-input" type="date"/>
+        </div>
+      </div>
+      <div class="field-group dynamic-section">
+        <label class="field-label">Qualifications / Notes</label>
+        <input class="field-input" placeholder="e.g. Licensed accountant, 5 years experience"/>
+      </div>`;
+  }
+
+  setTimeout(() => lucide.createIcons(), 20);
+}
+
+function buildSubjectChips() {
+  const subjects = ['Mathematics','English Language','French','Physics','Chemistry','Biology','History','Geography','Computer Science','Economics'];
+  const container = document.getElementById('subjectChips');
+  if (!container) return;
+  container.innerHTML = '';
+  subjects.forEach(s => {
+    const chip = document.createElement('div');
+    chip.className = 'subject-chip' + (selectedSubjects.has(s) ? ' selected' : '');
+    chip.textContent = s;
+    chip.onclick = () => {
+      selectedSubjects.has(s) ? selectedSubjects.delete(s) : selectedSubjects.add(s);
+      chip.classList.toggle('selected', selectedSubjects.has(s));
+      sync();
+    };
+    container.appendChild(chip);
+  });
+}
+
+const selectedClasses = new Set();
+function addClassTag(val) {
+  if (!val || selectedClasses.has(val)) return;
+  selectedClasses.add(val);
+  const tags = document.getElementById('classTags');
+  const tag = document.createElement('div');
+  tag.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 12px;border-radius:50px;background:var(--teal-50);border:1.5px solid var(--teal-100);color:var(--teal-900);font-size:12px;font-weight:600;animation:popIn .25s cubic-bezier(.34,1.56,.64,1)';
+  tag.innerHTML = `${val} <button style="background:rgba(8,80,65,.15);border:none;border-radius:50%;width:16px;height:16px;cursor:pointer;color:var(--teal-900);font-size:10px;display:flex;align-items:center;justify-content:center" onclick="removeTag('${val}')">×</button>`;
+  tags.appendChild(tag);
+  document.getElementById('classAssign').value = '';
+  sync();
+}
+function removeTag(val) {
+  selectedClasses.delete(val);
+  document.getElementById('classTags').querySelectorAll('div').forEach(t => { if (t.textContent.startsWith(val)) t.remove(); });
+  sync();
+}
+
+// ── Mode (create / invite) ─────────────────────────────
+function switchMode(mode) {
+  currentMode = mode;
+  document.getElementById('modeCreate').classList.toggle('active', mode === 'create');
+  document.getElementById('modeInvite').classList.toggle('active', mode === 'invite');
+  document.getElementById('createForm').style.display = mode === 'create' ? 'block' : 'none';
+  document.getElementById('inviteForm').style.display = mode === 'invite' ? 'block' : 'none';
+}
+
+// ── Photo ──────────────────────────────────────────────
+document.getElementById('photoInput').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('photoPreview');
+    prev.innerHTML = `<img src="${e.target.result}"/>`;
+    document.getElementById('removePhotoBtn').style.display = 'inline-flex';
+    hasPhoto = true;
+    // Update preview avatar
+    const pa = document.getElementById('previewAvatar');
+    pa.innerHTML = `<img src="${e.target.result}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+    sync();
+    showToast('Photo uploaded');
+  };
+  reader.readAsDataURL(file);
+});
+function removePhoto() {
+  document.getElementById('photoPreview').innerHTML = '<i data-lucide="camera" style="width:22px;height:22px;stroke:var(--surface-300);stroke-width:1.5;fill:none"></i>';
+  document.getElementById('removePhotoBtn').style.display = 'none';
+  document.getElementById('photoInput').value = '';
+  hasPhoto = false;
+  updatePreviewAvatar();
+  lucide.createIcons();
+  sync();
+}
+
+// ── Password toggle ────────────────────────────────────
+function togglePwd(id, iconId) {
+  const input = document.getElementById(id);
+  input.type = input.type === 'password' ? 'text' : 'password';
+  lucide.createIcons();
+}
+
+// ── Live preview sync ──────────────────────────────────
+function sync() {
+  const fn = (document.getElementById('firstName')||{}).value?.trim() || '';
+  const ln = (document.getElementById('lastName')||{}).value?.trim() || '';
+  const email = (document.getElementById('email')||{}).value?.trim() || '';
+  const phone = (document.getElementById('phone')||{}).value?.trim() || '';
+  const pwd = (document.getElementById('pwd')||{}).value?.trim() || '';
+  const cfg = ROLES_CONFIG[selectedRole];
+
+  document.getElementById('previewName').textContent = fn||ln ? [fn,ln].filter(Boolean).join(' ') : 'Full name';
+  const initials = (fn[0]||'')+(ln[0]||'');
+  document.getElementById('previewEmail').textContent = email || '—';
+  document.getElementById('previewPhone').textContent = phone || '—';
+
+  // Role badge
+  const badge = document.getElementById('previewRoleBadge');
+  badge.textContent = cfg.label;
+  badge.style.background = `rgba(${hexToRgb(cfg.color)},.1)`;
+  badge.style.color = cfg.color;
+  badge.style.border = `1px solid rgba(${hexToRgb(cfg.color)},.2)`;
+
+  // Avatar (if no photo)
+  if (!hasPhoto) updatePreviewAvatar(initials, cfg);
+
+  // Dynamic extra fields
+  let extra1 = '', extra2 = '';
+  let ex1label = '', ex2label = '';
+  let hasExtra = false;
+
+  if (selectedRole === 'TEACHER') {
+    const subjs = [...selectedSubjects];
+    if (subjs.length) { extra1 = subjs.slice(0,2).join(', ')+(subjs.length>2?'...':''); ex1label = 'Subjects'; hasExtra = true; }
+    if (selectedClasses.size) { extra2 = [...selectedClasses].slice(0,2).join(', '); ex2label = 'Classes'; hasExtra = true; }
+    document.getElementById('chkExtraLabel').textContent = 'Subjects assigned';
+  } else if (selectedRole === 'STUDENT') {
+    const cls = (document.getElementById('studentClass')||{}).value;
+    if (cls) { extra1 = cls; ex1label = 'Class'; hasExtra = true; }
+    const fee = (document.getElementById('feeAmount')||{}).value;
+    if (fee) { extra2 = parseInt(fee).toLocaleString('fr')+' FCFA'; ex2label = 'Annual fee'; }
+    document.getElementById('chkExtraLabel').textContent = 'Class assigned';
+  } else {
+    document.getElementById('chkExtraLabel').textContent = 'Employment info';
+  }
+
+  const r1 = document.getElementById('previewExtra1Row');
+  const r2 = document.getElementById('previewExtra2Row');
+  if (extra1) { r1.style.display='flex'; document.getElementById('previewExtra1Label').textContent=ex1label; document.getElementById('previewExtra1Val').textContent=extra1; } else r1.style.display='none';
+  if (extra2) { r2.style.display='flex'; document.getElementById('previewExtra2Label').textContent=ex2label; document.getElementById('previewExtra2Val').textContent=extra2; } else r2.style.display='none';
+
+  // Checklist
+  setCheck('chk-role', true);
+  setCheck('chk-name', !!(fn && ln));
+  setCheck('chk-email', !!(email && email.includes('@')));
+  setCheck('chk-pwd', pwd.length >= 8);
+  setCheck('chk-extra', hasExtra);
+  setCheck('chk-photo', hasPhoto);
+
+  setTimeout(() => lucide.createIcons(), 10);
+}
+
+function updatePreviewAvatar(initials, cfg) {
+  if (hasPhoto) return;
+  const c = cfg || ROLES_CONFIG[selectedRole];
+  const pa = document.getElementById('previewAvatar');
+  pa.style.background = c.bg;
+  pa.innerHTML = `<span style="color:${c.color};font-size:20px;font-weight:800">${initials || '—'}</span>`;
+}
+
+function setCheck(id, done) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('done', done);
+}
+
+// ── Validation & submit ────────────────────────────────
+function validate() {
+  let ok = true;
+  const check = (fieldId, groupId, cond) => {
+    const g = document.getElementById(groupId);
+    const f = document.getElementById(fieldId);
+    if (!g || !f) return;
+    g.classList.toggle('has-error', !cond);
+    f.classList.toggle('error', !cond);
+    if (!cond) ok = false;
+  };
+  check('firstName', 'fg-firstName', !!(document.getElementById('firstName').value.trim()));
+  check('lastName', 'fg-lastName', !!(document.getElementById('lastName').value.trim()));
+  check('email', 'fg-email', !!(document.getElementById('email').value.trim().includes('@')));
+  check('pwd', 'fg-pwd', document.getElementById('pwd').value.trim().length >= 8);
+  return ok;
+}
+
+['firstName','lastName','email','pwd'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', () => {
+    el.classList.remove('error');
+    el.closest('.field-group')?.classList.remove('has-error');
+  });
+});
+
+async function submitForm() {
+  if (!validate()) { showToast('Please fill in all required fields'); return; }
+  const btn = document.getElementById('submitBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+  await new Promise(r => setTimeout(r, 1800));
+  btn.classList.remove('loading'); btn.disabled = false;
+  const fn = document.getElementById('firstName').value.trim();
+  const ln = document.getElementById('lastName').value.trim();
+  document.getElementById('successName').textContent = `${fn} ${ln}`;
+  document.getElementById('successRole').textContent = ROLES_CONFIG[selectedRole].label;
+  document.getElementById('successOverlay').classList.add('show');
+  setTimeout(() => lucide.createIcons(), 20);
+}
+
+function submitInvite() {
+  const email = document.getElementById('inviteEmail').value.trim();
+  if (!email) { showToast('Please enter an email address'); return; }
+  showToast(`Invitation sent to ${email}`);
+}
+
+function addAnother() {
+  document.getElementById('successOverlay').classList.remove('show');
+  ['firstName','lastName','email','pwd','pwd2','phone','notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  selectedSubjects.clear();
+  selectedClasses.clear();
+  hasPhoto = false;
+  removePhoto();
+  sync();
+}
+function goToUsers() { showToast('Navigating to Users...'); document.getElementById('successOverlay').classList.remove('show'); }
+
+// ── Helpers ────────────────────────────────────────────
+function hexToRgb(hex) {
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return r ? `${parseInt(r[1],16)},${parseInt(r[2],16)},${parseInt(r[3],16)}` : '8,80,65';
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  t.style.opacity = '1';
+  setTimeout(() => { t.style.transform = 'translateX(-50%) translateY(80px)'; t.style.opacity = '0'; }, 2600);
+}
+
+// ── Init ───────────────────────────────────────────────
+sync();
+</script>
+</body>
+</html>
