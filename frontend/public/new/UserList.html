@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Users — Akademee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal-900:#085041;--teal-700:#0F6E56;--teal-600:#1D9E75;--teal-400:#5DCAA5;--teal-100:#C8F0E4;--teal-50:#E1F5EE;
+  --surface-900:#1A1F1B;--surface-800:#2A3029;--surface-700:#434D45;--surface-600:#5C665E;
+  --surface-500:#6E7A70;--surface-400:#9BA59C;--surface-300:#BFC4BB;
+  --surface-200:#D8DBD5;--surface-100:#EEF0EC;--surface-50:#F7F8F6;--white:#fff;
+  --red:#EF4444;--amber:#F59E0B;--blue:#3B82F6;--purple:#8B5CF6;--pink:#EC4899;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:20px;--r-2xl:28px;
+  --sh-sm:0 2px 8px rgba(0,0,0,.05);--sh-md:0 4px 24px rgba(0,0,0,.08);--sh-lg:0 16px 48px rgba(0,0,0,.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--surface-50);color:var(--surface-900);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes popIn{0%{opacity:0;transform:scale(.7)}60%{transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+.page{padding:0 0 80px}
+.stagger>*{opacity:0;animation:fadeUp .45s cubic-bezier(.16,1,.3,1) both}
+.stagger>*:nth-child(1){animation-delay:.04s}
+.stagger>*:nth-child(2){animation-delay:.09s}
+.stagger>*:nth-child(3){animation-delay:.14s}
+.stagger>*:nth-child(4){animation-delay:.19s}
+.stagger>*:nth-child(5){animation-delay:.24s}
+
+/* ── Header ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px;animation:fadeUp .45s cubic-bezier(.16,1,.3,1) both}
+.page-title-wrap{display:flex;align-items:center;gap:10px}
+.page-title-bar{width:4px;height:26px;background:var(--teal-900);border-radius:2px}
+.page-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--surface-900)}
+.page-sub{font-size:13.5px;color:var(--surface-400);margin-top:3px;padding-left:14px}
+.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* ── KPI strip ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
+.kpi-chip{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--surface-100);padding:14px 16px;box-shadow:var(--sh-sm);cursor:pointer;transition:all .2s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden}
+.kpi-chip::before{content:'';position:absolute;top:0;left:-100%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);opacity:0}
+.kpi-chip:hover::before{opacity:1;animation:shimmer .5s ease-in-out}
+.kpi-chip:hover{transform:translateY(-3px);box-shadow:var(--sh-md)}
+.kpi-chip.active-filter{border-width:2px}
+.kpi-chip-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.kpi-chip-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+.kpi-chip-val{font-size:24px;font-weight:800;color:var(--surface-900);line-height:1;margin-bottom:2px}
+.kpi-chip-lbl{font-size:11px;color:var(--surface-400);font-weight:500}
+
+/* ── Toolbar ── */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.search-wrap{flex:1;min-width:200px;max-width:340px;display:flex;align-items:center;gap:9px;background:var(--white);border:1.5px solid var(--surface-100);border-radius:var(--r-lg);padding:0 14px;height:42px;box-shadow:var(--sh-sm);transition:border-color .2s}
+.search-wrap:focus-within{border-color:var(--teal-600)}
+.search-wrap input{flex:1;border:none;outline:none;font-size:14px;color:var(--surface-900);background:transparent;font-family:'DM Sans',sans-serif}
+.search-wrap input::placeholder{color:var(--surface-300)}
+.filter-tabs{display:flex;gap:4px;background:var(--white);border:1.5px solid var(--surface-100);border-radius:var(--r-lg);padding:4px;box-shadow:var(--sh-sm)}
+.filter-tab{padding:6px 14px;border-radius:var(--r-md);font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--surface-500);font-family:'DM Sans',sans-serif;transition:all .18s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.filter-tab:hover{background:var(--surface-50);color:var(--surface-900)}
+.filter-tab.active{background:var(--teal-900);color:white;box-shadow:0 3px 10px rgba(8,80,65,.25);transform:scale(1.02)}
+.filter-tab .tab-count{font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:50px;background:rgba(255,255,255,.2)}
+.filter-tab:not(.active) .tab-count{background:var(--surface-100);color:var(--surface-500)}
+.toolbar-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.view-toggle{display:flex;gap:2px;background:var(--white);border:1.5px solid var(--surface-100);border-radius:var(--r-md);padding:3px}
+.view-btn{width:32px;height:32px;border:none;background:transparent;cursor:pointer;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;transition:all .15s}
+.view-btn.active{background:var(--teal-900)}
+.view-btn.active svg{stroke:white}
+.view-btn svg{width:14px;height:14px;stroke:var(--surface-400);stroke-width:2;fill:none}
+
+/* ── Table view ── */
+.table-wrap{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--surface-100);box-shadow:var(--sh-sm);overflow:hidden;animation:fadeUp .4s .05s cubic-bezier(.16,1,.3,1) both}
+.data-table{width:100%;border-collapse:collapse}
+.data-table thead tr{background:var(--surface-50);border-bottom:1.5px solid var(--surface-100)}
+.data-table th{padding:11px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--surface-400);white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s}
+.data-table th:hover{color:var(--surface-700)}
+.th-sort{display:inline-flex;align-items:center;gap:4px}
+.th-sort svg{width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none;opacity:.5}
+.data-table td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--surface-50);transition:background .12s;vertical-align:middle}
+.data-table tbody tr{transition:background .12s}
+.data-table tbody tr:hover td{background:rgba(8,80,65,.025)}
+.data-table tbody tr:last-child td{border-bottom:none}
+.user-cell{display:flex;align-items:center;gap:12px}
+.user-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;position:relative}
+.avatar-status{position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;border:2px solid var(--white)}
+.user-name{font-size:13.5px;font-weight:700;color:var(--surface-900)}
+.user-email{font-size:11.5px;color:var(--surface-400)}
+.role-badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:50px}
+.status-dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.actions-cell{display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .15s}
+.data-table tbody tr:hover .actions-cell{opacity:1}
+.action-btn{width:30px;height:30px;border-radius:var(--r-sm);border:1.5px solid var(--surface-100);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.34,1.56,.64,1)}
+.action-btn:hover{transform:scale(1.12);border-color:var(--surface-200);box-shadow:var(--sh-sm)}
+.action-btn svg{width:13px;height:13px;stroke:var(--surface-500);stroke-width:2;fill:none;stroke-linecap:round}
+.action-btn.danger:hover{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.05)}
+.action-btn.danger:hover svg{stroke:var(--red)}
+.action-btn.primary:hover{border-color:var(--teal-200);background:var(--teal-50)}
+.action-btn.primary:hover svg{stroke:var(--teal-700)}
+.checkbox-cell{width:40px}
+.cb{width:16px;height:16px;border-radius:4px;border:2px solid var(--surface-200);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.34,1.56,.64,1);flex-shrink:0}
+.cb.checked{background:var(--teal-900);border-color:var(--teal-900);animation:popIn .25s cubic-bezier(.34,1.56,.64,1)}
+.cb.checked svg{stroke:white;width:9px;height:9px;stroke-width:2.5;fill:none;stroke-linecap:round}
+
+/* ── Card view ── */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;animation:fadeIn .3s both}
+.user-card{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--surface-100);padding:20px;box-shadow:var(--sh-sm);transition:all .25s cubic-bezier(.34,1.56,.64,1);cursor:pointer;position:relative;overflow:hidden}
+.user-card:hover{transform:translateY(-4px);box-shadow:var(--sh-md);border-color:var(--surface-200)}
+.user-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.user-card-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;position:relative}
+.user-card-status{position:absolute;bottom:1px;right:1px;width:12px;height:12px;border-radius:50%;border:2.5px solid var(--white)}
+.user-card-menu{width:28px;height:28px;border-radius:var(--r-sm);border:1.5px solid var(--surface-100);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:all .15s}
+.user-card:hover .user-card-menu{opacity:1}
+.user-card-name{font-size:15px;font-weight:700;color:var(--surface-900);margin-bottom:2px}
+.user-card-email{font-size:12px;color:var(--surface-400);margin-bottom:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--surface-50)}
+.user-card-meta{font-size:11.5px;color:var(--surface-400);display:flex;align-items:center;gap:4px}
+.user-card-meta svg{width:11px;height:11px;stroke:currentColor;stroke-width:1.8;fill:none}
+
+/* ── Empty state ── */
+.empty-state{text-align:center;padding:60px 20px;animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1) both}
+.empty-icon{width:72px;height:72px;border-radius:50%;background:var(--surface-100);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.empty-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--surface-800);margin-bottom:6px}
+.empty-sub{font-size:13.5px;color:var(--surface-400);margin-bottom:24px}
+
+/* ── Pagination ── */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1.5px solid var(--surface-100);flex-wrap:wrap;gap:12px}
+.pag-info{font-size:12.5px;color:var(--surface-400)}
+.pag-buttons{display:flex;gap:4px}
+.pag-btn{width:32px;height:32px;border-radius:var(--r-md);border:1.5px solid var(--surface-100);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--surface-600);transition:all .18s cubic-bezier(.34,1.56,.64,1);font-family:'DM Sans',sans-serif}
+.pag-btn:hover{border-color:var(--surface-200);background:var(--surface-50);transform:scale(1.08)}
+.pag-btn.active{background:var(--teal-900);border-color:var(--teal-900);color:white}
+.pag-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
+
+/* ── Bulk action bar ── */
+.bulk-bar{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface-900);color:white;padding:12px 20px;border-radius:var(--r-xl);display:flex;align-items:center;gap:14px;box-shadow:var(--sh-lg);z-index:100;opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap}
+.bulk-bar.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
+.bulk-count{font-size:13px;font-weight:700;color:var(--teal-400)}
+.bulk-divider{width:1px;height:18px;background:rgba(255,255,255,.15)}
+.bulk-action{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:rgba(255,255,255,.75);cursor:pointer;padding:5px 8px;border-radius:var(--r-md);transition:all .15s;border:none;background:transparent;font-family:'DM Sans',sans-serif}
+.bulk-action:hover{background:rgba(255,255,255,.1);color:white}
+.bulk-action.danger:hover{color:var(--red)}
+.bulk-action svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
+
+/* ── Skeleton ── */
+.skeleton{background:linear-gradient(90deg,var(--surface-100) 25%,var(--surface-50) 50%,var(--surface-100) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 18px;border-radius:var(--r-lg);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;border:none;transition:all .2s;text-decoration:none;white-space:nowrap}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--teal-900);color:white;box-shadow:0 4px 14px rgba(8,80,65,.22)}
+.btn-primary:hover{background:var(--teal-700);transform:translateY(-2px);box-shadow:0 8px 22px rgba(8,80,65,.3)}
+.btn-ghost{background:var(--white);color:var(--surface-700);border:1.5px solid var(--surface-200)}
+.btn-ghost:hover{background:var(--surface-50)}
+.btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface-900);color:white;padding:12px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:1000;opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;box-shadow:var(--sh-lg)}
+
+/* ── Role colors ── */
+.role-admin{background:rgba(8,80,65,.09);color:var(--teal-900);border:1px solid rgba(8,80,65,.18)}
+.role-teacher{background:rgba(59,130,246,.09);color:var(--blue);border:1px solid rgba(59,130,246,.2)}
+.role-student{background:rgba(139,92,246,.09);color:var(--purple);border:1px solid rgba(139,92,246,.2)}
+.role-accountant{background:rgba(245,158,11,.09);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.role-secretary{background:rgba(236,72,153,.09);color:var(--pink);border:1px solid rgba(236,72,153,.2)}
+
+/* ── Responsive ── */
+@media(max-width:960px){.kpi-strip{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:640px){.kpi-strip{grid-template-columns:repeat(2,1fr)}.filter-tabs{overflow-x:auto;scrollbar-width:none}.toolbar{flex-wrap:wrap}.search-wrap{max-width:100%;flex:1 1 100%}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Page header ── -->
+  <div class="page-header">
+    <div>
+      <div class="page-title-wrap">
+        <div class="page-title-bar"></div>
+        <h1 class="page-title">Users</h1>
+      </div>
+      <p class="page-sub" id="totalSubtitle">Loading users...</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" onclick="exportUsers()">
+        <i data-lucide="download" style="width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none"></i>
+        Export
+      </button>
+      <button class="btn btn-ghost" onclick="openInviteModal()">
+        <i data-lucide="mail" style="width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none"></i>
+        Invite by email
+      </button>
+      <button class="btn btn-primary" onclick="window.location.href='CreateUser.html'">
+        <i data-lucide="user-plus" style="width:15px;height:15px;stroke:white;stroke-width:2;fill:none"></i>
+        Add user
+      </button>
+    </div>
+  </div>
+
+  <!-- ── KPI chips ── -->
+  <div class="kpi-strip stagger">
+    <div class="kpi-chip" onclick="filterByRole('all')" id="kpi-all">
+      <div class="kpi-chip-top">
+        <div class="kpi-chip-icon" style="background:var(--surface-50)">
+          <i data-lucide="users" style="width:15px;height:15px;stroke:var(--surface-600);stroke-width:2;fill:none"></i>
+        </div>
+      </div>
+      <div class="kpi-chip-val" id="kv-all">—</div>
+      <div class="kpi-chip-lbl">All users</div>
+    </div>
+    <div class="kpi-chip" onclick="filterByRole('ADMIN')" id="kpi-admin">
+      <div class="kpi-chip-top">
+        <div class="kpi-chip-icon" style="background:var(--teal-50)">
+          <i data-lucide="shield-check" style="width:15px;height:15px;stroke:var(--teal-900);stroke-width:2;fill:none"></i>
+        </div>
+      </div>
+      <div class="kpi-chip-val" id="kv-admin" style="color:var(--teal-900)">—</div>
+      <div class="kpi-chip-lbl">Admins</div>
+    </div>
+    <div class="kpi-chip" onclick="filterByRole('TEACHER')" id="kpi-teacher">
+      <div class="kpi-chip-top">
+        <div class="kpi-chip-icon" style="background:rgba(59,130,246,.08)">
+          <i data-lucide="book-open" style="width:15px;height:15px;stroke:var(--blue);stroke-width:2;fill:none"></i>
+        </div>
+      </div>
+      <div class="kpi-chip-val" id="kv-teacher" style="color:var(--blue)">—</div>
+      <div class="kpi-chip-lbl">Teachers</div>
+    </div>
+    <div class="kpi-chip" onclick="filterByRole('STUDENT')" id="kpi-student">
+      <div class="kpi-chip-top">
+        <div class="kpi-chip-icon" style="background:rgba(139,92,246,.08)">
+          <i data-lucide="graduation-cap" style="width:15px;height:15px;stroke:var(--purple);stroke-width:2;fill:none"></i>
+        </div>
+      </div>
+      <div class="kpi-chip-val" id="kv-student" style="color:var(--purple)">—</div>
+      <div class="kpi-chip-lbl">Students</div>
+    </div>
+    <div class="kpi-chip" onclick="filterByRole('ACCOUNTANT')" id="kpi-accountant">
+      <div class="kpi-chip-top">
+        <div class="kpi-chip-icon" style="background:rgba(245,158,11,.08)">
+          <i data-lucide="landmark" style="width:15px;height:15px;stroke:var(--amber);stroke-width:2;fill:none"></i>
+        </div>
+      </div>
+      <div class="kpi-chip-val" id="kv-accountant" style="color:var(--amber)">—</div>
+      <div class="kpi-chip-lbl">Accountants</div>
+    </div>
+    <div class="kpi-chip" onclick="filterByRole('SECRETARY')" id="kpi-secretary">
+      <div class="kpi-chip-top">
+        <div class="kpi-chip-icon" style="background:rgba(236,72,153,.08)">
+          <i data-lucide="clipboard-pen" style="width:15px;height:15px;stroke:var(--pink);stroke-width:2;fill:none"></i>
+        </div>
+      </div>
+      <div class="kpi-chip-val" id="kv-secretary" style="color:var(--pink)">—</div>
+      <div class="kpi-chip-lbl">Secretaries</div>
+    </div>
+  </div>
+
+  <!-- ── Toolbar ── -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i data-lucide="search" style="width:15px;height:15px;stroke:var(--surface-400);stroke-width:2;fill:none;flex-shrink:0"></i>
+      <input id="searchInput" placeholder="Search by name, email or class..." oninput="onSearch()"/>
+      <button id="searchClear" onclick="clearSearch()" style="background:none;border:none;cursor:pointer;display:none;padding:0">
+        <i data-lucide="x" style="width:14px;height:14px;stroke:var(--surface-400);stroke-width:2;fill:none"></i>
+      </button>
+    </div>
+
+    <div class="filter-tabs" id="roleTabs">
+      <button class="filter-tab active" data-role="all" onclick="switchTab(this,'all')">
+        All <span class="tab-count" id="tab-count-all">0</span>
+      </button>
+      <button class="filter-tab" data-role="ADMIN" onclick="switchTab(this,'ADMIN')">
+        Admin <span class="tab-count" id="tab-count-ADMIN">0</span>
+      </button>
+      <button class="filter-tab" data-role="TEACHER" onclick="switchTab(this,'TEACHER')">
+        Teacher <span class="tab-count" id="tab-count-TEACHER">0</span>
+      </button>
+      <button class="filter-tab" data-role="STUDENT" onclick="switchTab(this,'STUDENT')">
+        Student <span class="tab-count" id="tab-count-STUDENT">0</span>
+      </button>
+      <button class="filter-tab" data-role="ACCOUNTANT" onclick="switchTab(this,'ACCOUNTANT')">
+        Accountant <span class="tab-count" id="tab-count-ACCOUNTANT">0</span>
+      </button>
+      <button class="filter-tab" data-role="SECRETARY" onclick="switchTab(this,'SECRETARY')">
+        Secretary <span class="tab-count" id="tab-count-SECRETARY">0</span>
+      </button>
+    </div>
+
+    <div class="toolbar-right">
+      <select id="statusFilter" onchange="renderTable()" style="height:40px;padding:0 12px;border-radius:var(--r-lg);border:1.5px solid var(--surface-100);background:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--surface-700);cursor:pointer;box-shadow:var(--sh-sm)">
+        <option value="all">All statuses</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+      <div class="view-toggle">
+        <button class="view-btn active" id="vbTable" onclick="switchView('table')">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </button>
+        <button class="view-btn" id="vbCards" onclick="switchView('cards')">
+          <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main content area ── -->
+  <div id="mainContent"></div>
+
+  <!-- ── Bulk action bar ── -->
+  <div class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><span id="bulkCount">0</span> selected</span>
+    <div class="bulk-divider"></div>
+    <button class="bulk-action" onclick="bulkAction('activate')">
+      <i data-lucide="check-circle" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none"></i>
+      Activate
+    </button>
+    <button class="bulk-action" onclick="bulkAction('deactivate')">
+      <i data-lucide="x-circle" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none"></i>
+      Deactivate
+    </button>
+    <button class="bulk-action" onclick="bulkAction('notify')">
+      <i data-lucide="bell" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none"></i>
+      Notify
+    </button>
+    <div class="bulk-divider"></div>
+    <button class="bulk-action danger" onclick="bulkAction('delete')">
+      <i data-lucide="trash-2" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none"></i>
+      Delete
+    </button>
+    <div class="bulk-divider"></div>
+    <button class="bulk-action" onclick="clearSelection()" style="color:rgba(255,255,255,.4)">
+      <i data-lucide="x" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none"></i>
+    </button>
+  </div>
+
+</div>
+<div id="toast"></div>
+<script>
+document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); init(); });
+
+// ── Mock data ──────────────────────────────────────────────
+const ROLES = ['ADMIN','TEACHER','STUDENT','ACCOUNTANT','SECRETARY'];
+const ROLE_COLORS = {
+  ADMIN:{ bg:'var(--teal-50)',text:'var(--teal-900)',avatarBg:'#E1F5EE',avatarText:'#085041' },
+  TEACHER:{ bg:'rgba(59,130,246,.09)',text:'var(--blue)',avatarBg:'#EFF6FF',avatarText:'#3B82F6' },
+  STUDENT:{ bg:'rgba(139,92,246,.09)',text:'var(--purple)',avatarBg:'#F5F3FF',avatarText:'#8B5CF6' },
+  ACCOUNTANT:{ bg:'rgba(245,158,11,.09)',text:'var(--amber)',avatarBg:'#FEF3C7',avatarText:'#F59E0B' },
+  SECRETARY:{ bg:'rgba(236,72,153,.09)',text:'var(--pink)',avatarBg:'#FDF2F8',avatarText:'#EC4899' },
+};
+const names = ['Emma Nkeng','Paul Effa','Marie Abena','Jean-Marc Essomba','Alice Mbarga','Boris Nguema','Sophie Talla','Chris Bilong','Grace Nkolo','Marc Biya','Claire Ateba','Louis Etame','Patricia Mbemba','Robert Onana','Celine Foko','Andre Ndoumbe','Fatou Diallo','Samuel Kang','Irene Mbu','Thierry Ndeh'];
+function makeUsers() {
+  return names.map((name, i) => {
+    const role = ROLES[i % ROLES.length];
+    const [fn, ln] = name.split(' ');
+    return {
+      id: i + 1,
+      firstName: fn,
+      lastName: ln,
+      name,
+      email: `${fn.toLowerCase()}.${ln.toLowerCase().replace(/[^a-z]/g,'')}@grace-bilingual.cm`,
+      role,
+      class: role === 'STUDENT' ? ['Form 4A','Form 3B','Form 5A','Lower 6th Sci.','Form 1A'][i % 5] : null,
+      subjects: role === 'TEACHER' ? ['Mathematics','English','Physics','Chemistry','Biology'][i % 5] : null,
+      status: i % 7 === 0 ? 'inactive' : 'active',
+      lastLogin: i % 3 === 0 ? 'Today' : i % 3 === 1 ? 'Yesterday' : `${i + 1} days ago`,
+      createdAt: `${['Sep','Oct','Nov','Dec'][i % 4]} ${2024}`,
+    };
+  });
+}
+let allUsers = makeUsers();
+let currentRole = 'all';
+let currentSearch = '';
+let currentView = 'table';
+let selectedIds = new Set();
+let currentPage = 1;
+const PER_PAGE = 8;
+
+// ── Init ────────────────────────────────────────────────
+function init() {
+  updateCounts();
+  renderTable();
+  setTimeout(() => lucide.createIcons(), 50);
+}
+
+// ── Counts ──────────────────────────────────────────────
+function updateCounts() {
+  const counts = { all: allUsers.length };
+  ROLES.forEach(r => { counts[r] = allUsers.filter(u => u.role === r).length; });
+  document.getElementById('kv-all').textContent = counts.all;
+  document.getElementById('kv-admin').textContent = counts['ADMIN'];
+  document.getElementById('kv-teacher').textContent = counts['TEACHER'];
+  document.getElementById('kv-student').textContent = counts['STUDENT'];
+  document.getElementById('kv-accountant').textContent = counts['ACCOUNTANT'];
+  document.getElementById('kv-secretary').textContent = counts['SECRETARY'];
+  document.getElementById('tab-count-all').textContent = counts.all;
+  ROLES.forEach(r => { document.getElementById('tab-count-' + r).textContent = counts[r]; });
+}
+
+// ── Filter ──────────────────────────────────────────────
+function getFiltered() {
+  const statusVal = document.getElementById('statusFilter').value;
+  return allUsers.filter(u => {
+    const roleOk = currentRole === 'all' || u.role === currentRole;
+    const searchOk = !currentSearch || u.name.toLowerCase().includes(currentSearch) || u.email.toLowerCase().includes(currentSearch) || (u.class||'').toLowerCase().includes(currentSearch);
+    const statusOk = statusVal === 'all' || u.status === statusVal;
+    return roleOk && searchOk && statusOk;
+  });
+}
+
+function switchTab(btn, role) {
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentRole = role;
+  currentPage = 1;
+  renderTable();
+}
+
+function filterByRole(role) {
+  currentRole = role;
+  currentPage = 1;
+  document.querySelectorAll('.filter-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.role === role);
+  });
+  renderTable();
+}
+
+function onSearch() {
+  currentSearch = document.getElementById('searchInput').value.toLowerCase();
+  document.getElementById('searchClear').style.display = currentSearch ? 'block' : 'none';
+  currentPage = 1;
+  renderTable();
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  currentSearch = '';
+  document.getElementById('searchClear').style.display = 'none';
+  renderTable();
+}
+
+function switchView(v) {
+  currentView = v;
+  document.getElementById('vbTable').classList.toggle('active', v === 'table');
+  document.getElementById('vbCards').classList.toggle('active', v === 'cards');
+  renderTable();
+}
+
+// ── Render ──────────────────────────────────────────────
+function renderTable() {
+  const filtered = getFiltered();
+  const total = filtered.length;
+  document.getElementById('totalSubtitle').textContent = `${total} user${total !== 1 ? 's' : ''} · Grace Bilingual Academy · 2024/2025`;
+  const start = (currentPage - 1) * PER_PAGE;
+  const page = filtered.slice(start, start + PER_PAGE);
+  const container = document.getElementById('mainContent');
+
+  if (!total) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i data-lucide="users" style="width:28px;height:28px;stroke:var(--surface-400);stroke-width:1.5;fill:none"></i>
+        </div>
+        <div class="empty-title">No users found</div>
+        <div class="empty-sub">${currentSearch ? 'Try a different search term.' : 'Add your first user to get started.'}</div>
+        ${!currentSearch ? `<button class="btn btn-primary" onclick="window.location.href='#create'"><i data-lucide="user-plus" style="width:15px;height:15px;stroke:white;stroke-width:2;fill:none"></i>Add user</button>` : ''}
+      </div>`;
+    setTimeout(() => lucide.createIcons(), 20);
+    return;
+  }
+
+  if (currentView === 'table') renderTableView(page, filtered, total);
+  else renderCardsView(page, filtered, total);
+  setTimeout(() => lucide.createIcons(), 20);
+}
+
+function roleClass(role) {
+  const map = { ADMIN:'role-admin', TEACHER:'role-teacher', STUDENT:'role-student', ACCOUNTANT:'role-accountant', SECRETARY:'role-secretary' };
+  return map[role] || '';
+}
+
+function renderTableView(page, filtered, total) {
+  const allChecked = page.length > 0 && page.every(u => selectedIds.has(u.id));
+  const tbody = page.map(u => {
+    const rc = ROLE_COLORS[u.role];
+    const initials = (u.firstName[0] + u.lastName[0]).toUpperCase();
+    const isChecked = selectedIds.has(u.id);
+    return `
+      <tr>
+        <td class="checkbox-cell">
+          <div class="cb ${isChecked ? 'checked' : ''}" onclick="toggleSelect(${u.id})">
+            ${isChecked ? '<svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg>' : ''}
+          </div>
+        </td>
+        <td>
+          <div class="user-cell">
+            <div class="user-avatar" style="background:${rc.avatarBg}">
+              <span style="color:${rc.avatarText}">${initials}</span>
+              <div class="avatar-status" style="background:${u.status === 'active' ? '#1D9E75' : '#9BA59C'}"></div>
+            </div>
+            <div>
+              <div class="user-name">${u.name}</div>
+              <div class="user-email">${u.email}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="role-badge ${roleClass(u.role)}">${u.role}</span></td>
+        <td style="font-size:13px;color:var(--surface-600)">${u.class || u.subjects || '—'}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="width:7px;height:7px;border-radius:50%;background:${u.status === 'active' ? 'var(--teal-600)' : 'var(--surface-300)'}${u.status === 'active' ? ';animation:pulse 2s ease-in-out infinite' : ''}"></div>
+            <span style="font-size:13px;color:${u.status === 'active' ? 'var(--surface-900)' : 'var(--surface-400)'}">
+              ${u.status === 'active' ? 'Active' : 'Inactive'}
+            </span>
+          </div>
+        </td>
+        <td style="font-size:12.5px;color:var(--surface-400)">${u.lastLogin}</td>
+        <td>
+          <div class="actions-cell">
+            <button class="action-btn primary" title="View profile" onclick="viewUser(${u.id})">
+              <i data-lucide="eye" style="width:13px;height:13px;stroke:var(--surface-500);stroke-width:2;fill:none"></i>
+            </button>
+            <button class="action-btn primary" title="Edit" onclick="editUser(${u.id})">
+              <i data-lucide="pencil" style="width:13px;height:13px;stroke:var(--surface-500);stroke-width:2;fill:none"></i>
+            </button>
+            <button class="action-btn" title="${u.status === 'active' ? 'Deactivate' : 'Activate'}" onclick="toggleStatus(${u.id})">
+              <i data-lucide="${u.status === 'active' ? 'x-circle' : 'check-circle'}" style="width:13px;height:13px;stroke:var(--surface-500);stroke-width:2;fill:none"></i>
+            </button>
+            <button class="action-btn danger" title="Delete" onclick="deleteUser(${u.id})">
+              <i data-lucide="trash-2" style="width:13px;height:13px;stroke:var(--surface-500);stroke-width:2;fill:none"></i>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  const totalPages = Math.ceil(total / PER_PAGE);
+  document.getElementById('mainContent').innerHTML = `
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="checkbox-cell">
+              <div class="cb ${allChecked ? 'checked' : ''}" onclick="toggleSelectAll()">
+                ${allChecked ? '<svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg>' : ''}
+              </div>
+            </th>
+            <th><div class="th-sort">User <i data-lucide="chevrons-up-down" style="width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none"></i></div></th>
+            <th>Role</th>
+            <th>Class / Subject</th>
+            <th>Status</th>
+            <th><div class="th-sort">Last login <i data-lucide="chevrons-up-down" style="width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none"></i></div></th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>${tbody}</tbody>
+      </table>
+      <div class="pagination">
+        <div class="pag-info">Showing ${(currentPage-1)*PER_PAGE+1}–${Math.min(currentPage*PER_PAGE,total)} of ${total} users</div>
+        <div class="pag-buttons">
+          <button class="pag-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled style="opacity:.4;cursor:default"':''}>
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          ${Array.from({length:totalPages},(_,i)=>`<button class="pag-btn ${i+1===currentPage?'active':''}" onclick="goPage(${i+1})">${i+1}</button>`).join('')}
+          <button class="pag-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled style="opacity:.4;cursor:default"':''}>
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderCardsView(page, filtered, total) {
+  const totalPages = Math.ceil(total / PER_PAGE);
+  const cards = page.map(u => {
+    const rc = ROLE_COLORS[u.role];
+    const initials = (u.firstName[0] + u.lastName[0]).toUpperCase();
+    return `
+      <div class="user-card" onclick="viewUser(${u.id})">
+        <div class="user-card-top">
+          <div class="user-card-avatar" style="background:${rc.avatarBg}">
+            <span style="color:${rc.avatarText};font-size:16px;font-weight:800">${initials}</span>
+            <div class="user-card-status" style="background:${u.status==='active'?'#1D9E75':'#9BA59C'}"></div>
+          </div>
+          <button class="user-card-menu" onclick="event.stopPropagation();showUserMenu(${u.id})">
+            <i data-lucide="more-vertical" style="width:14px;height:14px;stroke:var(--surface-500);stroke-width:2;fill:none"></i>
+          </button>
+        </div>
+        <div class="user-card-name">${u.name}</div>
+        <div class="user-card-email">${u.email}</div>
+        <span class="role-badge ${roleClass(u.role)}" style="margin-bottom:12px;display:inline-flex">${u.role}</span>
+        <div class="user-card-footer">
+          <div class="user-card-meta">
+            <i data-lucide="clock" style="width:11px;height:11px;stroke:currentColor;stroke-width:1.8;fill:none"></i>
+            ${u.lastLogin}
+          </div>
+          <div class="user-card-meta" style="color:${u.status==='active'?'var(--teal-600)':'var(--surface-400)'}">
+            <div style="width:6px;height:6px;border-radius:50%;background:currentColor"></div>
+            ${u.status}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="cards-grid">${cards}</div>
+    <div style="display:flex;justify-content:center;gap:4px;margin-top:16px">
+      <button class="pag-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled style="opacity:.4"':''}>
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px"><polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      </button>
+      ${Array.from({length:totalPages},(_,i)=>`<button class="pag-btn ${i+1===currentPage?'active':''}" onclick="goPage(${i+1})">${i+1}</button>`).join('')}
+      <button class="pag-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled style="opacity:.4"':''}>
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      </button>
+    </div>`;
+}
+
+function goPage(p) {
+  const filtered = getFiltered();
+  const max = Math.ceil(filtered.length / PER_PAGE);
+  if (p < 1 || p > max) return;
+  currentPage = p;
+  renderTable();
+  setTimeout(() => lucide.createIcons(), 20);
+}
+
+// ── Selection ────────────────────────────────────────────
+function toggleSelect(id) {
+  selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id);
+  updateBulkBar();
+  renderTable();
+}
+function toggleSelectAll() {
+  const page = getFiltered().slice((currentPage-1)*PER_PAGE, currentPage*PER_PAGE);
+  const allSelected = page.every(u => selectedIds.has(u.id));
+  if (allSelected) page.forEach(u => selectedIds.delete(u.id));
+  else page.forEach(u => selectedIds.add(u.id));
+  updateBulkBar();
+  renderTable();
+}
+function clearSelection() {
+  selectedIds.clear();
+  updateBulkBar();
+  renderTable();
+}
+function updateBulkBar() {
+  const bar = document.getElementById('bulkBar');
+  const count = selectedIds.size;
+  document.getElementById('bulkCount').textContent = count;
+  bar.classList.toggle('show', count > 0);
+  setTimeout(() => lucide.createIcons(), 10);
+}
+
+// ── Actions ──────────────────────────────────────────────
+function toggleStatus(id) {
+  const u = allUsers.find(x => x.id === id);
+  if (!u) return;
+  u.status = u.status === 'active' ? 'inactive' : 'active';
+  showToast(`${u.name} ${u.status === 'active' ? 'activated' : 'deactivated'}`);
+  renderTable();
+  setTimeout(() => lucide.createIcons(), 20);
+}
+function deleteUser(id) {
+  const u = allUsers.find(x => x.id === id);
+  if (!u) return;
+  if (!confirm(`Remove ${u.name} from the system?`)) return;
+  allUsers = allUsers.filter(x => x.id !== id);
+  showToast(`${u.name} removed`);
+  updateCounts();
+  renderTable();
+  setTimeout(() => lucide.createIcons(), 20);
+}
+function viewUser(id) { showToast(`Opening profile of user #${id}...`); }
+function editUser(id) { showToast(`Edit form for user #${id} — coming soon`); }
+function showUserMenu(id) { showToast(`User menu for #${id}`); }
+function bulkAction(action) {
+  showToast(`${action} applied to ${selectedIds.size} users`);
+  if (action === 'delete') { allUsers = allUsers.filter(u => !selectedIds.has(u.id)); updateCounts(); }
+  clearSelection();
+}
+function exportUsers() { showToast('Exporting users as CSV...'); }
+function openInviteModal() { showToast('Invite by email — coming soon'); }
+
+// ── Toast ────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  t.style.opacity = '1';
+  setTimeout(() => { t.style.transform = 'translateX(-50%) translateY(80px)'; t.style.opacity = '0'; }, 2600);
+}
+</script>
+</body>
+</html>

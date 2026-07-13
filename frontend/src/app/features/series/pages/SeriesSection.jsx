@@ -4,9 +4,9 @@ import {
   FiBook,
   FiTrendingUp,
   FiMonitor,
-  BookOpen,
-  FlaskConical,
-  Laptop,
+  FiBookOpen,
+  FiLayers,
+  FiCpu,
 } from "react-icons/fi";
 
 const SERIES_META = {
@@ -25,14 +25,14 @@ const SERIES_META = {
     descriptionFr: "Séries axées sur les sciences et la technologie",
   },
   literary: {
-    icon: BookOpen,
+    icon: FiBookOpen,
     titleKey: "series.literary",
     system: "Francophone General",
     description: "Séries A (Lettres), A1–A5 (Langues, Philosophie)",
     descriptionFr: "Séries A (Lettres), A1–A5 (Langues, Philosophie)",
   },
   scientific: {
-    icon: FlaskConical,
+    icon: FiLayers,
     titleKey: "series.scientific",
     system: "Francophone General",
     description: "Séries C (Math-Phys), D (Math-SVT), E (Math-Tech)",
@@ -46,7 +46,7 @@ const SERIES_META = {
     descriptionFr: "Série B (Sciences Économiques et Sociales)",
   },
   technical: {
-    icon: Laptop,
+    icon: FiCpu,
     titleKey: "series.tech",
     system: "Francophone General",
     description: "Série TI (Technologies de l'Information)",
