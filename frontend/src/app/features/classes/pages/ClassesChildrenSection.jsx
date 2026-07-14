@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useContext } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../core/hooks/useAuth";
+import { YearContext } from "../../../core/context/YearContext";
 import { useTheme } from "../../../core/hooks/useTheme";
 import { getClasses } from "../../../core/api/classService";
+import YearSelector from "../../../components/ui/YearSelector";
 import {
   FiBookOpen,
   FiPlus,
@@ -362,22 +364,25 @@ export default function ClassesChildrenSection() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [collapsedLevels, setCollapsedLevels] = useState({});
+  const { selectedYearId, setSelectedYearId } = useContext(YearContext);
 
-  useEffect(() => {
-    loadClasses();
-  }, []);
-
-  const loadClasses = async () => {
+  const loadClasses = useCallback(async (yearId) => {
     setLoading(true);
     try {
-      const result = await getClasses({ limit: 200 });
+      const params = { limit: 200 };
+      if (yearId) params.academicYearId = yearId;
+      const result = await getClasses(params);
       setClasses(result.classes || []);
     } catch (err) {
       console.error("Error loading classes:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadClasses(selectedYearId);
+  }, [selectedYearId, loadClasses]);
 
   // Group classes by level
   const groupedClasses = useMemo(() => {
@@ -504,14 +509,14 @@ export default function ClassesChildrenSection() {
         </div>
       )}
 
-      {/* ── Search Bar ── */}
+      {/* ── Filters ── */}
       {!loading && totalClasses > 0 && (
-        <div className="flex items-center gap-3 mb-7 animate-fadeIn" style={{ animationDelay: "0.1s" }}>
-          <div
-            className="flex-1 max-w-sm flex items-center gap-2.5 bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-lg px-3.5 h-11 shadow-sm focus-within:border-primary-600 transition-colors"
-            style={{ "--tw-ring-color": pc }}
-
-          >
+        <div className="flex items-center gap-3 mb-7 animate-fadeIn flex-wrap" style={{ animationDelay: "0.1s" }}>
+          <div className="w-56">
+            <YearSelector value={selectedYearId} onChange={setSelectedYearId} />
+          </div>
+          <div className="flex-1 min-w-[200px] max-w-sm flex items-center gap-2.5 bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-lg px-3.5 h-11 shadow-sm focus-within:border-primary-600 transition-colors"
+            style={{ "--tw-ring-color": pc }}>
             <FiSearch className="w-4 h-4 text-surface-400 flex-shrink-0" />
             <input
               type="text"

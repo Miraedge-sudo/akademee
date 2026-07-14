@@ -31,8 +31,8 @@ class ClassController {
   async getSchoolClasses(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user?.schoolId;
-      const { limit, offset } = req.query;
-      const result = await classService.listBySchool(schoolId, { limit, offset });
+      const { limit, offset, academicYearId } = req.query;
+      const result = await classService.listBySchool(schoolId, { limit, offset, academicYearId });
       response.success(res, 'Classes retrieved', result);
     } catch (error) {
       next(error);

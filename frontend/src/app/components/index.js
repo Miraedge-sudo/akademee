@@ -13,6 +13,7 @@ export { default as Spinner } from './ui/Spinner';
 export { default as StatCard } from './ui/StatCard';
 export { default as Table } from './ui/Table';
 export { default as Tabs } from './ui/Tabs';
+export { default as YearSelector } from './ui/YearSelector';
 
 // ── Layout Components ──
 export { default as Breadcrumb } from './layout/Breadcrumb';

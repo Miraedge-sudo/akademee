@@ -4,9 +4,9 @@ const paymentService = require('../services/payment.service');
 class PaymentController {
   async initiatePayment(req, res, next) {
     try {
-      const { studentId, amount, method, feeId, reference } = req.body;
+      const { studentId, amount, method, feeId, academicYearId, reference } = req.body;
       const { schoolId } = req;
-      const result = await paymentService.create(schoolId, { studentId, amount, method, feeId, reference });
+      const result = await paymentService.create(schoolId, { studentId, amount, method, feeId, academicYearId, reference });
       response.success(res, 'Payment initiated', result, 201);
     } catch (error) {
       next(error);
@@ -31,7 +31,8 @@ class PaymentController {
     try {
       const { studentId } = req.params;
       const schoolId = req.schoolId || req.user?.schoolId;
-      const result = await paymentService.listByStudent(schoolId, studentId);
+      const { academicYearId } = req.query;
+      const result = await paymentService.listByStudent(schoolId, studentId, { academicYearId });
       response.success(res, 'Payments retrieved', result);
     } catch (error) {
       next(error);
@@ -41,8 +42,8 @@ class PaymentController {
   async getSchoolPayments(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user?.schoolId;
-      const { limit = 10, offset = 0, status, startDate, endDate } = req.query;
-      const result = await paymentService.listBySchool(schoolId, { limit, offset, status, startDate, endDate });
+      const { limit = 10, offset = 0, status, startDate, endDate, academicYearId } = req.query;
+      const result = await paymentService.listBySchool(schoolId, { limit, offset, status, startDate, endDate, academicYearId });
       response.success(res, 'School payments retrieved', result);
     } catch (error) {
       next(error);
@@ -65,9 +66,9 @@ class PaymentController {
 
   async generatePaymentReport(req, res, next) {
     try {
-      const { startDate, endDate } = req.query;
+      const { startDate, endDate, academicYearId } = req.query;
       const schoolId = req.schoolId || req.user?.schoolId;
-      const result = await paymentService.generateReport(schoolId, { startDate, endDate });
+      const result = await paymentService.generateReport(schoolId, { startDate, endDate, academicYearId });
       response.success(res, 'Payment report generated', result);
     } catch (error) {
       next(error);

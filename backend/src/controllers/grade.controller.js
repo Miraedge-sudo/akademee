@@ -19,7 +19,8 @@ class GradeController {
     try {
       const { studentId } = req.params;
       const schoolId = req.schoolId || req.user?.schoolId;
-      const result = await gradeService.listByStudent(schoolId, studentId);
+      const { academicYearId } = req.query;
+      const result = await gradeService.listByStudent(schoolId, studentId, { academicYearId });
       response.success(res, 'Grades retrieved', result);
     } catch (error) {
       next(error);
@@ -30,7 +31,8 @@ class GradeController {
     try {
       const { classId } = req.params;
       const schoolId = req.schoolId || req.user?.schoolId;
-      const result = await gradeService.listByClass(schoolId, classId);
+      const { academicYearId } = req.query;
+      const result = await gradeService.listByClass(schoolId, classId, { academicYearId });
       response.success(res, 'Class grades retrieved', result);
     } catch (error) {
       next(error);
@@ -41,7 +43,8 @@ class GradeController {
     try {
       const { periodId, classId } = req.params;
       const schoolId = req.schoolId || req.user?.schoolId;
-      const result = await gradeService.listBySchool(schoolId, { periodId });
+      const { academicYearId } = req.query;
+      const result = await gradeService.listBySchool(schoolId, { periodId, academicYearId });
       response.success(res, 'Period grades retrieved', result);
     } catch (error) {
       next(error);
@@ -51,8 +54,8 @@ class GradeController {
   async getAllGrades(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user?.schoolId;
-      const { limit, offset, studentId, subjectId, periodId } = req.query;
-      const result = await gradeService.listBySchool(schoolId, { limit, offset, studentId, subjectId, periodId });
+      const { limit, offset, studentId, subjectId, periodId, academicYearId } = req.query;
+      const result = await gradeService.listBySchool(schoolId, { limit, offset, studentId, subjectId, periodId, academicYearId });
       response.success(res, 'Grades retrieved', result);
     } catch (error) {
       next(error);

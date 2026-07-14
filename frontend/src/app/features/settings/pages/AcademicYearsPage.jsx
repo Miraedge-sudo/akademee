@@ -19,6 +19,7 @@ import {
   Modal,
   Badge,
   EmptyState,
+  Select,
   Table,
   PageHeader,
   Skeleton,
@@ -37,7 +38,7 @@ export default function AcademicYearsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingYear, setEditingYear] = useState(null);
   const [formData, setFormData] = useState({
-    year: "",
+    name: "",
     startDate: "",
     endDate: "",
   });
@@ -59,6 +60,7 @@ export default function AcademicYearsPage() {
   const [termData, setTermData] = useState({
     name: "",
     academicYearId: "",
+    type: "term",
     startDate: "",
     endDate: "",
   });
@@ -69,7 +71,7 @@ export default function AcademicYearsPage() {
       setLoading(true);
       setError(null);
       const data = await getAcademicYears();
-      const list = Array.isArray(data) ? data : data?.years || data?.rows || [];
+      const list = data?.years || [];
       setYears(list);
     } catch (err) {
       console.error("Failed to load academic years:", err);
@@ -92,7 +94,7 @@ export default function AcademicYearsPage() {
     setTermsLoading(true);
     try {
       const data = await getTerms({ academicYearId: yearId });
-      const list = Array.isArray(data) ? data : data?.terms || data?.rows || [];
+      const list = data?.periods || [];
       setTerms(list);
       setExpandedYearId(yearId);
     } catch (err) {
@@ -106,7 +108,7 @@ export default function AcademicYearsPage() {
   // ── Drawer handlers ──
   const openCreateDrawer = () => {
     setEditingYear(null);
-    setFormData({ year: "", startDate: "", endDate: "" });
+    setFormData({ name: "", startDate: "", endDate: "" });
     setFormErrors({});
     setDrawerOpen(true);
   };
@@ -114,7 +116,7 @@ export default function AcademicYearsPage() {
   const openEditDrawer = (year) => {
     setEditingYear(year);
     setFormData({
-      year: year.year || year.name || "",
+      name: year.name || "",
       startDate: year.startDate ? year.startDate.split("T")[0] : "",
       endDate: year.endDate ? year.endDate.split("T")[0] : "",
     });
@@ -124,8 +126,8 @@ export default function AcademicYearsPage() {
 
   const validate = () => {
     const errs = {};
-    if (!formData.year.trim())
-      errs.year = lang === "fr" ? "Le nom est requis" : "Year name is required";
+    if (!formData.name.trim())
+      errs.name = lang === "fr" ? "Le nom est requis" : "Year name is required";
     if (!formData.startDate)
       errs.startDate = lang === "fr" ? "La date de début est requise" : "Start date is required";
     if (!formData.endDate)
@@ -141,8 +143,7 @@ export default function AcademicYearsPage() {
     setSaving(true);
     try {
       const payload = {
-        year: formData.year.trim(),
-        name: formData.year.trim(),
+        name: formData.name.trim(),
         startDate: formData.startDate,
         endDate: formData.endDate,
       };
@@ -208,6 +209,7 @@ export default function AcademicYearsPage() {
     setTermData({
       name: "",
       academicYearId: yearId,
+      type: "term",
       startDate: "",
       endDate: "",
     });
@@ -224,6 +226,7 @@ export default function AcademicYearsPage() {
       await createTerm({
         name: termData.name.trim(),
         academicYearId: termData.academicYearId,
+        type: termData.type,
         startDate: termData.startDate,
         endDate: termData.endDate,
       });
@@ -256,8 +259,7 @@ export default function AcademicYearsPage() {
       label: lang === "fr" ? "Année" : "Year",
       sortable: true,
       render: (_, row) => {
-        const name = row.year || row.name || "";
-        const isCurrent = row.isCurrent || row.is_active;
+        const name = row.name || "";
         return (
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 text-sm font-semibold flex-shrink-0">
@@ -302,7 +304,7 @@ export default function AcademicYearsPage() {
           >
             {lang === "fr" ? "Modifier" : "Edit"}
           </Button>
-          {!row.isCurrent && !row.is_active && (
+          {!row.isCurrent && (
             <Button
               variant="ghost"
               size="sm"
@@ -312,7 +314,7 @@ export default function AcademicYearsPage() {
               {lang === "fr" ? "Activer" : "Activate"}
             </Button>
           )}
-          {!row.isCurrent && !row.is_active && (
+          {!row.isCurrent && (
             <Button
               variant="ghost"
               size="sm"
@@ -488,6 +490,18 @@ export default function AcademicYearsPage() {
             onChange={(e) => setTermData({ ...termData, name: e.target.value })}
             autoFocus
           />
+          <Select
+            label={lang === "fr" ? "Type" : "Type"}
+            value={termData.type}
+            onChange={(e) => setTermData({ ...termData, type: e.target.value })}
+            options={[
+              { value: "term", label: lang === "fr" ? "Trimestre" : "Term" },
+              { value: "semester", label: lang === "fr" ? "Semestre" : "Semester" },
+              { value: "sequence", label: "Sequence" },
+              { value: "ca", label: "CA" },
+              { value: "exam", label: "Exam" },
+            ]}
+          />
           <Input
             label={lang === "fr" ? "Date de début" : "Start Date"}
             type="date"
@@ -518,8 +532,8 @@ export default function AcademicYearsPage() {
         title={
           editingYear
             ? lang === "fr"
-              ? `Modifier ${editingYear.year || editingYear.name}`
-              : `Edit ${editingYear.year || editingYear.name}`
+              ? `Modifier ${editingYear.name}`
+              : `Edit ${editingYear.name}`
             : lang === "fr"
               ? "Nouvelle année"
               : "New Academic Year"
@@ -528,11 +542,11 @@ export default function AcademicYearsPage() {
       >
         <div className="space-y-4">
           <Input
-            label={lang === "fr" ? "Année" : "Year"}
+            label={lang === "fr" ? "Nom" : "Name"}
             placeholder={lang === "fr" ? "Ex: 2024-2025" : "E.g.: 2024-2025"}
-            value={formData.year}
-            onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-            error={formErrors.year}
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            error={formErrors.name}
             autoFocus
           />
           <Input
@@ -581,8 +595,8 @@ export default function AcademicYearsPage() {
       >
         <p className="text-sm text-surface-600 dark:text-surface-300">
           {lang === "fr"
-            ? `Supprimer l'année ${deletingYear?.year || deletingYear?.name} ? Cette action est irréversible.`
-            : `Delete ${deletingYear?.year || deletingYear?.name}? This cannot be undone.`}
+            ? `Supprimer l'année ${deletingYear?.name} ? Cette action est irréversible.`
+            : `Delete ${deletingYear?.name}? This cannot be undone.`}
         </p>
       </Modal>
     </div>

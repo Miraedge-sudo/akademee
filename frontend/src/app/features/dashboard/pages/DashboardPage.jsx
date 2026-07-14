@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { YearContext } from '../../../core/context/YearContext';
 import {
   FiUsers,
   FiUser,
@@ -24,6 +25,7 @@ import StatCard from '../../../components/ui/StatCard';
 import PageHeader from '../../../components/ui/PageHeader';
 import Spinner from '../../../components/ui/Spinner';
 import Card from '../../../components/ui/Card';
+import YearSelector from '../../../components/ui/YearSelector';
 import { hexToRgba, formatCurrency } from '../../../components/utils/colors';
 
 // ── Month name short mapping ──
@@ -201,15 +203,17 @@ export default function DashboardPage() {
   const [activities, setActivities] = useState([]);
   const [revenue, setRevenue] = useState([]);
   const [chartLoading, setChartLoading] = useState(true);
+  const { selectedYearId, setSelectedYearId } = useContext(YearContext);
 
-  const loadDashboardData = useCallback(async () => {
+  const loadDashboardData = useCallback(async (yearId) => {
     setLoading(true);
     setError(null);
     try {
+      const params = yearId ? { academicYearId: yearId } : {};
       const [statsData, activitiesData, revenueData] = await Promise.all([
-        getDashboardStats(),
-        getRecentActivities(),
-        getRevenueData(),
+        getDashboardStats(params),
+        getRecentActivities(params),
+        getRevenueData(params),
       ]);
       setStats(statsData);
       setActivities(activitiesData || []);
@@ -224,8 +228,8 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
+    loadDashboardData(selectedYearId);
+  }, [loadDashboardData, selectedYearId]);
 
   // ── Loading state ──
   if (loading) {
@@ -263,7 +267,7 @@ export default function DashboardPage() {
         </h3>
         <p className="text-sm text-surface-400 max-w-md mb-5">{error}</p>
         <button
-          onClick={loadDashboardData}
+          onClick={() => loadDashboardData(selectedYearId)}
           className="h-10 px-5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition-colors"
         >
           {isFr ? 'Réessayer' : 'Retry'}
@@ -289,6 +293,14 @@ export default function DashboardPage() {
         }
         color={pc}
       />
+
+      {/* ── Year Filter ── */}
+      <div className="flex items-center justify-between">
+        <div />
+        <div className="w-64">
+          <YearSelector value={selectedYearId} onChange={setSelectedYearId} />
+        </div>
+      </div>
 
       {/* ── Stats Cards ── */}
       {stats && (
