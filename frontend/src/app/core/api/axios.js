@@ -33,7 +33,14 @@ api.interceptors.response.use(
     // Ne pas rediriger si on est déjà sur la page de login — le 401 y est attendu
     if (error.response?.status === 401) {
       const isLoginRequest = error.config?.url?.includes('/auth/login');
-      if (!isLoginRequest) {
+      const isPublicAuthPage = [
+        '/login',
+        '/register',
+        '/forgot-password',
+        '/reset-password',
+        '/verify-email',
+      ].includes(window.location.pathname);
+      if (!isLoginRequest && !isPublicAuthPage) {
         localStorage.removeItem('token');
         window.location.href = '/login';
       }

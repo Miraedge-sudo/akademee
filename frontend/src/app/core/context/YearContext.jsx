@@ -1,9 +1,11 @@
-import { createContext, useState, useEffect, useContext, useCallback } from "react";
+import { createContext, useState, useEffect, useCallback } from "react";
 import { getAcademicYears } from "../api/academicYearService";
+import { useAuth } from "../hooks/useAuth";
 
 export const YearContext = createContext();
 
 export function YearProvider({ children }) {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [selectedYearId, setSelectedYearId] = useState(null);
   const [years, setYears] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,8 +28,18 @@ export function YearProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    fetchYears();
-  }, [fetchYears]);
+    // Academic years are private data. Loading them from a public page such as
+    // /login returns 401, which previously caused the auth redirect loop.
+    if (authLoading) return;
+
+    if (isAuthenticated) {
+      fetchYears();
+    } else {
+      setYears([]);
+      setSelectedYearId(null);
+      setLoading(false);
+    }
+  }, [authLoading, isAuthenticated, fetchYears]);
 
   const refreshYears = useCallback(async () => {
     await fetchYears();

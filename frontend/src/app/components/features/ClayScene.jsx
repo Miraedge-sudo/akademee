@@ -2,39 +2,21 @@ import { useEffect, useRef } from "react";
 
 // ── Color Palettes ──
 const LIGHT = {
-  bg: "#f0f1ff", wall: "#f7f8ff", wallEnd: "#eef0ff",
-  desk: "#B45309", deskMid: "#92400E", deskDark: "#78350F", deskTop: "#D97706",
+  bg: "#d7f6ad", wall: "#d7f6ad", wallEnd: "#c0eba0",
+  desk: "#28715b", deskMid: "#1e5b49", deskDark: "#174638", deskTop: "#3c8d70",
   screen: "#1E293B", screenEnd: "#0F172A",
-  body: "#334155", tie: "#4F46E5",
+  body: "#4aa660", tie: "#315fce",
   skin: "#FDE68A", skinEnd: "#FCD34D",
-  hair: "#0F172A", hairHighlight: "#1E293B",
+  hair: "#3a241b", hairHighlight: "#5a3828",
   eye: "#0F172A", pupil: "rgba(255,255,255,0.85)", lip: "#92400E", frame: "#94A3B8",
   card: "#FFFFFF", cardShadow: "rgba(0,0,0,0.08)", cardText: "#1F2937", cardSub: "#6B7280",
-  cardGreen: "#10B981", cardAmber: "#F59E0B", cardIndigo: "#6366F1", cardViolet: "#8B5CF6",
+  cardGreen: "#24966d", cardAmber: "#d3a43a", cardIndigo: "#3d7cc9", cardViolet: "#5f8b77",
   lampBase: "#64748B", lampArm: "#94A3B8", lampBulb: "#FDE68A", lampCone: "rgba(253,230,138,0.12)",
-  bookColors: ["#818CF8", "#34D399", "#FBBF24", "#A78BFA"],
+  bookColors: ["#477bc9", "#4aa660", "#d3a43a", "#6a8d7b"],
   mug: "#FFFFFF", coffee: "#92400E",
-  plant: "#34D399", shelf: "#CBD5E1",
+  plant: "#32785a", shelf: "#b8d8aa",
   paper: "#FFFFFF", barBg: "#CBD5E1",
-  particle: "rgba(99,102,241,0.10)",
-};
-
-const DARK = {
-  bg: "#0F172A", wall: "#1E293B", wallEnd: "#0F172A",
-  desk: "#78350F", deskMid: "#92400E", deskDark: "#451A03", deskTop: "#92400E",
-  screen: "#000000", screenEnd: "#0F172A",
-  body: "#475569", tie: "#6366F1",
-  skin: "#FDE68A", skinEnd: "#FCD34D",
-  hair: "#000000", hairHighlight: "#1E293B",
-  eye: "#000000", pupil: "rgba(255,255,255,0.85)", lip: "#92400E", frame: "#64748B",
-  card: "#1E293B", cardShadow: "rgba(0,0,0,0.3)", cardText: "#F1F5F9", cardSub: "#94A3B8",
-  cardGreen: "#34D399", cardAmber: "#FBBF24", cardIndigo: "#818CF8", cardViolet: "#A78BFA",
-  lampBase: "#475569", lampArm: "#64748B", lampBulb: "#FDE68A", lampCone: "rgba(253,230,138,0.06)",
-  bookColors: ["#6366F1", "#10B981", "#D97706", "#7C3AED"],
-  mug: "#334155", coffee: "#78350F",
-  plant: "#10B981", shelf: "#475569",
-  paper: "#334155", barBg: "#475569",
-  particle: "rgba(129,140,248,0.08)",
+  particle: "rgba(41,119,78,0.10)",
 };
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -107,7 +89,9 @@ export default function ClayScene() {
 
     const draw = (t) => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const C = isDark.current ? DARK : LIGHT;
+      // The register illustration has its own fixed art direction so it stays
+      // bright and legible even when the application uses dark mode.
+      const C = LIGHT;
       const mx = (mouse.current.x - 0.5) * 2;
       const my = (mouse.current.y - 0.5) * 2;
       ctx.clearRect(0, 0, W, H);
