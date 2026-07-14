@@ -4,8 +4,9 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { YearContext } from "../../../core/context/YearContext";
 import { useTheme } from "../../../core/hooks/useTheme";
-import { getClasses } from "../../../core/api/classService";
 import YearSelector from "../../../components/ui/YearSelector";
+
+const MOCK_API = "http://localhost:3001";
 import {
   FiBookOpen,
   FiPlus,
@@ -205,7 +206,7 @@ function LevelGroup({ levelKey, meta, classes, collapsed, onToggle, pc, lang }) 
           {classes.map((cls) => {
             const lvlColor = getLevelColor(cls.name);
             const pct = cls.capacity > 0
-              ? Math.min(Math.round(((cls.studentCount || 0) / cls.capacity) * 100), 100)
+              ? Math.min(Math.round(((cls.studentsCount || 0) / cls.capacity) * 100), 100)
               : 0;
             const isFull = pct >= 90;
 
@@ -249,7 +250,7 @@ function LevelGroup({ levelKey, meta, classes, collapsed, onToggle, pc, lang }) 
                         : undefined
                     }
                   >
-                    {cls.studentCount || 0} / {cls.capacity || "—"}
+                    {cls.studentsCount || 0} / {cls.capacity || "—"}
                   </span>
                 </div>
 
@@ -366,23 +367,25 @@ export default function ClassesChildrenSection() {
   const [collapsedLevels, setCollapsedLevels] = useState({});
   const { selectedYearId, setSelectedYearId } = useContext(YearContext);
 
-  const loadClasses = useCallback(async (yearId) => {
+  const loadClasses = useCallback(async () => {
     setLoading(true);
     try {
-      const params = { limit: 200 };
-      if (yearId) params.academicYearId = yearId;
-      const result = await getClasses(params);
-      setClasses(result.classes || []);
+      const res = await fetch(`${MOCK_API}/classes`);
+      const data = await res.json();
+      setClasses(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error loading classes:", err);
+      setClasses([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadClasses(selectedYearId);
-  }, [selectedYearId, loadClasses]);
+    loadClasses();
+  }, [loadClasses]);
+
+  // Remove unused YearContext import / selector if desired
 
   // Group classes by level
   const groupedClasses = useMemo(() => {

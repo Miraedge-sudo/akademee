@@ -1,49 +1,69 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
-import LandingPage from "./app/features/landing/LandingPage";
-import LoginPage from "./app/features/auth/pages/LoginPage";
-import RegisterPage from "./app/features/auth/pages/RegisterPage";
-import EducationalSystemSelectionPage from "./app/features/auth/pages/EducationalSystemSelectionPage";
-import ForgotPasswordPage from "./app/features/auth/pages/ForgotPasswordPage";
-import ResetPasswordPage from "./app/features/auth/pages/ResetPasswordPage";
-import VerifyEmailPage from "./app/features/auth/pages/VerifyEmailPage";
-import OnboardingPage from "./app/features/onboarding/pages/OnboardingPage";
-import AcademicYearSetup from "./app/features/onboarding/components/AcademicYearSetup";
-import AdminLayout from "./app/layout/AdminLayout";
-import ProtectedRoute from "./app/core/guards/ProtectedRoute";
-import DashboardPage from "./app/features/dashboard/pages/DashboardPage";
-import StudentsListPage from "./app/features/students/pages/StudentsListPage";
-import StudentProfilePage from "./app/features/students/pages/StudentProfilePage";
-import TeachersListPage from "./app/features/teachers/pages/TeachersListPage";
-import SubjectsListPage from "./app/features/subjects/pages/SubjectsListPage";
-import ClassSubjectsPage from "./app/features/subjects/pages/ClassSubjectsPage";
-import GradesPage from "./app/features/grades/pages/GradesPage";
-import ReportCardsPage from "./app/features/grades/pages/ReportCardsPage";
-import AttendancePage from "./app/features/attendance/pages/AttendancePage";
-import FinancePage from "./app/features/finance/pages/FinancePage";
-import SettingsPage from "./app/features/settings/pages/SettingsPage";
-import WebsiteSettingsPage from "./app/features/settings/pages/WebsiteSettingsPage";
-import AcademicYearsPage from "./app/features/settings/pages/AcademicYearsPage";
-
-// Educational system pages
-import ExamsSection from "./app/features/exams/pages/ExamsSection";
-import SeriesSection from "./app/features/series/pages/SeriesSection";
-import ClassesChildrenSection from "./app/features/classes/pages/ClassesChildrenSection";
-import CreateClassPage from "./app/features/classes/pages/CreateClassPage";
-import ClassDetailPage from "./app/features/classes/pages/ClassDetailPage";
-import ProgramsSection from "./app/features/programs/pages/ProgramsSection";
-import AdmissionsSection from "./app/features/admissions/pages/AdmissionsSection";
-import FacultiesPage from "./app/features/faculties/pages/FacultiesPage";
-import DepartmentsPage from "./app/features/faculties/pages/DepartmentsPage";
-import ResearchPage from "./app/features/research/pages/ResearchPage";
-import PublicationsPage from "./app/features/research/pages/PublicationsPage";
-
-import PublicWebsitePage from "./app/features/website/pages/PublicWebsitePage";
+import { EducationalSystemProvider } from "./app/core/context/EducationalSystemContext";
 import { Toaster } from "react-hot-toast";
+import LoadingFallback from "./app/components/ui/LoadingFallback";
+import ProtectedRoute from "./app/core/guards/ProtectedRoute";
+import AcademicYearGuard from "./app/core/guards/AcademicYearGuard";
+import AdminLayout from "./app/layout/AdminLayout";
+
+// ── Lazy-loaded page components (code-split at route level) ──
+const LandingPage = lazy(() => import("./app/features/landing/LandingPage"));
+const LoginPage = lazy(() => import("./app/features/auth/pages/LoginPage"));
+const RegisterPage = lazy(() => import("./app/features/auth/pages/RegisterPage"));
+const EducationalSystemSelectionPage = lazy(() => import("./app/features/auth/pages/EducationalSystemSelectionPage"));
+const ForgotPasswordPage = lazy(() => import("./app/features/auth/pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./app/features/auth/pages/ResetPasswordPage"));
+const VerifyEmailPage = lazy(() => import("./app/features/auth/pages/VerifyEmailPage"));
+const OnboardingPage = lazy(() => import("./app/features/onboarding/pages/OnboardingPage"));
+const AcademicYearSetup = lazy(() => import("./app/features/onboarding/components/AcademicYearSetup"));
+const DashboardPage = lazy(() => import("./app/features/dashboard/pages/DashboardPage"));
+const LevelsListPage = lazy(() => import("./app/features/levels/pages/LevelsListPage"));
+const SeriesManagementPage = lazy(() => import("./app/features/series/pages/SeriesManagementPage"));
+const PeriodsPage = lazy(() => import("./app/features/academic/pages/PeriodsPage"));
+const SequencesPage = lazy(() => import("./app/features/academic/pages/SequencesPage"));
+const SubjectsListPage = lazy(() => import("./app/features/subjects/pages/SubjectsListPage"));
+const ClassSubjectsPage = lazy(() => import("./app/features/subjects/pages/ClassSubjectsPage"));
+const GradesPage = lazy(() => import("./app/features/grades/pages/GradesPage"));
+const ReportCardsPage = lazy(() => import("./app/features/grades/pages/ReportCardsPage"));
+const AttendancePage = lazy(() => import("./app/features/attendance/pages/AttendancePage"));
+const FinancePage = lazy(() => import("./app/features/finance/pages/FinancePage"));
+const SettingsPage = lazy(() => import("./app/features/settings/pages/SettingsPage"));
+const WebsiteSettingsPage = lazy(() => import("./app/features/settings/pages/WebsiteSettingsPage"));
+const AcademicYearsPage = lazy(() => import("./app/features/settings/pages/AcademicYearsPage"));
+const SystemConfigurationPage = lazy(() => import("./app/core/pages/SystemConfigurationPage"));
+const CreateUserPage = lazy(() => import("./app/features/users/pages/CreateUserPage"));
+const UsersListPage = lazy(() => import("./app/features/users/pages/UsersListPage"));
+const ExamsSection = lazy(() => import("./app/features/exams/pages/ExamsSection"));
+const SeriesSection = lazy(() => import("./app/features/series/pages/SeriesSection"));
+const ClassesChildrenSection = lazy(() => import("./app/features/classes/pages/ClassesChildrenSection"));
+const CreateClassPage = lazy(() => import("./app/features/classes/pages/CreateClassPage"));
+const ClassDetailPage = lazy(() => import("./app/features/classes/pages/ClassDetailPage"));
+const ProgramsSection = lazy(() => import("./app/features/programs/pages/ProgramsSection"));
+const AdmissionsSection = lazy(() => import("./app/features/admissions/pages/AdmissionsSection"));
+const FacultiesPage = lazy(() => import("./app/features/faculties/pages/FacultiesPage"));
+const DepartmentsPage = lazy(() => import("./app/features/faculties/pages/DepartmentsPage"));
+const ResearchPage = lazy(() => import("./app/features/research/pages/ResearchPage"));
+const PublicationsPage = lazy(() => import("./app/features/research/pages/PublicationsPage"));
+const PublicWebsitePage = lazy(() => import("./app/features/website/pages/PublicWebsitePage"));
+
+// ── Lazy helpers ──
+const page = (Component) => (
+  <Suspense fallback={<LoadingFallback />}>
+    <Component />
+  </Suspense>
+);
+
+const dashboardPage = (Component) => (
+  <Suspense fallback={<LoadingFallback message="Loading page..." />}>
+    <Component />
+  </Suspense>
+);
 
 function App() {
   return (
-    <>
+    <EducationalSystemProvider>
       <Toaster
         position="top-right"
         toastOptions={{
@@ -56,17 +76,17 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/" element={page(LandingPage)} />
+          <Route path="/login" element={page(LoginPage)} />
+          <Route path="/register" element={page(RegisterPage)} />
+          <Route path="/forgot-password" element={page(ForgotPasswordPage)} />
+          <Route path="/reset-password" element={page(ResetPasswordPage)} />
+          <Route path="/verify-email" element={page(VerifyEmailPage)} />
           <Route
             path="/onboarding"
             element={
               <ProtectedRoute>
-                <OnboardingPage />
+                {page(OnboardingPage)}
               </ProtectedRoute>
             }
           />
@@ -74,178 +94,148 @@ function App() {
             path="/onboarding/academic-year"
             element={
               <ProtectedRoute>
-                <AcademicYearSetup />
+                {page(AcademicYearSetup)}
               </ProtectedRoute>
             }
           />
-          {/* Educational system selection (first login after onboarding) */}
           <Route
             path="/educational-system-selection"
             element={
               <ProtectedRoute>
-                <EducationalSystemSelectionPage />
+                {page(EducationalSystemSelectionPage)}
               </ProtectedRoute>
             }
           />
 
           {/* Vitrin website accessible without login */}
-          <Route path="/site" element={<PublicWebsitePage />} />
+          <Route path="/site" element={page(PublicWebsitePage)} />
 
           {/* Protected dashboard routes — wrapped by AdminLayout */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <AdminLayout />
+                <AcademicYearGuard>
+                  <AdminLayout />
+                </AcademicYearGuard>
               </ProtectedRoute>
             }
           >
             {/* Dashboard home */}
-            <Route index element={<DashboardPage />} />
+            <Route index element={dashboardPage(DashboardPage)} />
 
-            {/* Students */}
-            <Route path="students" element={<StudentsListPage />} />
-            <Route path="students/:id" element={<StudentProfilePage />} />
+            {/* Users management (unified creation) */}
+            <Route path="users" element={dashboardPage(UsersListPage)} />
+            <Route path="users/new" element={dashboardPage(CreateUserPage)} />
+            <Route path="users/create" element={dashboardPage(CreateUserPage)} />
 
             {/* Academic base sections */}
-            <Route path="classes" element={<ClassesChildrenSection />} />
-            <Route path="subjects" element={<SubjectsListPage />} />
-            <Route path="subject-classes" element={<ClassSubjectsPage />} />
-            <Route path="teachers" element={<TeachersListPage />} />
+            <Route path="levels" element={dashboardPage(LevelsListPage)} />
+            <Route path="series" element={dashboardPage(SeriesManagementPage)} />
+            <Route path="periods" element={dashboardPage(PeriodsPage)} />
+            <Route path="sequences" element={dashboardPage(SequencesPage)} />
+            <Route path="classes" element={dashboardPage(ClassesChildrenSection)} />
+            <Route path="subjects" element={dashboardPage(SubjectsListPage)} />
+            <Route path="subject-classes" element={dashboardPage(ClassSubjectsPage)} />
 
             {/* Exam routes (system-specific) */}
-            <Route path="exams/gce-o-level" element={<ExamsSection />} />
-            <Route path="exams/gce-a-level" element={<ExamsSection />} />
-            <Route path="exams/gce-results" element={<ExamsSection />} />
-            <Route path="exams/bepc" element={<ExamsSection />} />
-            <Route path="exams/probatoire" element={<ExamsSection />} />
-            <Route path="exams/baccalaureat" element={<ExamsSection />} />
-            <Route
-              path="exams/francophone-results"
-              element={<ExamsSection />}
-            />
-            <Route path="exams/tvee-il" element={<ExamsSection />} />
-            <Route path="exams/tvee-al" element={<ExamsSection />} />
-            <Route path="exams/tvee-results" element={<ExamsSection />} />
-            <Route path="exams/cap" element={<ExamsSection />} />
-            <Route
-              path="exams/probatoire-technique"
-              element={<ExamsSection />}
-            />
-            <Route path="exams/bac-technique" element={<ExamsSection />} />
-            <Route path="exams/tech-results" element={<ExamsSection />} />
+            <Route path="exams/gce-o-level" element={dashboardPage(ExamsSection)} />
+            <Route path="exams/gce-a-level" element={dashboardPage(ExamsSection)} />
+            <Route path="exams/gce-results" element={dashboardPage(ExamsSection)} />
+            <Route path="exams/bepc" element={dashboardPage(ExamsSection)} />
+            <Route path="exams/probatoire" element={dashboardPage(ExamsSection)} />
+            <Route path="exams/baccalaureat" element={dashboardPage(ExamsSection)} />
+            <Route path="exams/francophone-results" element={dashboardPage(ExamsSection)} />
+            <Route path="exams/tvee-il" element={dashboardPage(ExamsSection)} />
+            <Route path="exams/tvee-al" element={dashboardPage(ExamsSection)} />
+            <Route path="exams/tvee-results" element={dashboardPage(ExamsSection)} />
+            <Route path="exams/cap" element={dashboardPage(ExamsSection)} />
+            <Route path="exams/probatoire-technique" element={dashboardPage(ExamsSection)} />
+            <Route path="exams/bac-technique" element={dashboardPage(ExamsSection)} />
+            <Route path="exams/tech-results" element={dashboardPage(ExamsSection)} />
 
             {/* Series routes (system-specific) */}
-            <Route path="series/arts" element={<SeriesSection />} />
-            <Route path="series/science" element={<SeriesSection />} />
-            <Route path="series/literary" element={<SeriesSection />} />
-            <Route path="series/scientific" element={<SeriesSection />} />
-            <Route path="series/economic" element={<SeriesSection />} />
-            <Route path="series/technical" element={<SeriesSection />} />
-            <Route path="series/industrial" element={<SeriesSection />} />
-            <Route path="series/commercial" element={<SeriesSection />} />
-            <Route path="series/industriel" element={<SeriesSection />} />
-            <Route path="series/tertiaire" element={<SeriesSection />} />
+            <Route path="series/arts" element={dashboardPage(SeriesSection)} />
+            <Route path="series/science" element={dashboardPage(SeriesSection)} />
+            <Route path="series/literary" element={dashboardPage(SeriesSection)} />
+            <Route path="series/scientific" element={dashboardPage(SeriesSection)} />
+            <Route path="series/economic" element={dashboardPage(SeriesSection)} />
+            <Route path="series/technical" element={dashboardPage(SeriesSection)} />
+            <Route path="series/industrial" element={dashboardPage(SeriesSection)} />
+            <Route path="series/commercial" element={dashboardPage(SeriesSection)} />
+            <Route path="series/industriel" element={dashboardPage(SeriesSection)} />
+            <Route path="series/tertiaire" element={dashboardPage(SeriesSection)} />
 
-            {/* Class level routes (system-specific) — MUST be before :id to avoid conflicts */}
-            <Route
-              path="classes/lower-secondary"
-              element={<ClassesChildrenSection />}
-            />
-            <Route
-              path="classes/upper-secondary"
-              element={<ClassesChildrenSection />}
-            />
-            <Route
-              path="classes/college"
-              element={<ClassesChildrenSection />}
-            />
-            <Route path="classes/lycee" element={<ClassesChildrenSection />} />
-            <Route
-              path="classes/tech-lower"
-              element={<ClassesChildrenSection />}
-            />
-            <Route
-              path="classes/tech-upper"
-              element={<ClassesChildrenSection />}
-            />
-            <Route
-              path="classes/tech-college"
-              element={<ClassesChildrenSection />}
-            />
-            <Route
-              path="classes/tech-lycee"
-              element={<ClassesChildrenSection />}
-            />
+            {/* Class level routes (system-specific) */}
+            <Route path="classes/lower-secondary" element={dashboardPage(ClassesChildrenSection)} />
+            <Route path="classes/upper-secondary" element={dashboardPage(ClassesChildrenSection)} />
+            <Route path="classes/college" element={dashboardPage(ClassesChildrenSection)} />
+            <Route path="classes/lycee" element={dashboardPage(ClassesChildrenSection)} />
+            <Route path="classes/tech-lower" element={dashboardPage(ClassesChildrenSection)} />
+            <Route path="classes/tech-upper" element={dashboardPage(ClassesChildrenSection)} />
+            <Route path="classes/tech-college" element={dashboardPage(ClassesChildrenSection)} />
+            <Route path="classes/tech-lycee" element={dashboardPage(ClassesChildrenSection)} />
             {/* Class CRUD routes */}
-            <Route path="classes/new" element={<CreateClassPage />} />
-            <Route path="classes/:id/edit" element={<CreateClassPage />} />
-            <Route path="classes/:id" element={<ClassDetailPage />} />
+            <Route path="classes/new" element={dashboardPage(CreateClassPage)} />
+            <Route path="classes/:id/edit" element={dashboardPage(CreateClassPage)} />
+            <Route path="classes/:id" element={dashboardPage(ClassDetailPage)} />
 
             {/* Grade routes */}
-            <Route path="grades" element={<GradesPage />} />
-            <Route path="grades/anglophone" element={<GradesPage />} />
-            <Route path="grades/francophone" element={<GradesPage />} />
-            <Route path="report-cards" element={<ReportCardsPage />} />
-            <Route path="attendance" element={<AttendancePage />} />
+            <Route path="grades" element={dashboardPage(GradesPage)} />
+            <Route path="grades/anglophone" element={dashboardPage(GradesPage)} />
+            <Route path="grades/francophone" element={dashboardPage(GradesPage)} />
+            <Route path="report-cards" element={dashboardPage(ReportCardsPage)} />
+            <Route path="attendance" element={dashboardPage(AttendancePage)} />
 
             {/* Finance */}
-            <Route path="finance" element={<FinancePage />} />
+            <Route path="finance" element={dashboardPage(FinancePage)} />
 
             {/* University-specific routes */}
-            <Route path="programs/licence" element={<ProgramsSection />} />
-            <Route path="programs/master" element={<ProgramsSection />} />
-            <Route path="programs/doctorate" element={<ProgramsSection />} />
-            <Route path="faculties" element={<FacultiesPage />} />
-            <Route path="departments" element={<DepartmentsPage />} />
-            <Route path="research" element={<ResearchPage />} />
-            <Route path="publications" element={<PublicationsPage />} />
+            <Route path="programs/licence" element={dashboardPage(ProgramsSection)} />
+            <Route path="programs/master" element={dashboardPage(ProgramsSection)} />
+            <Route path="programs/doctorate" element={dashboardPage(ProgramsSection)} />
+            <Route path="faculties" element={dashboardPage(FacultiesPage)} />
+            <Route path="departments" element={dashboardPage(DepartmentsPage)} />
+            <Route path="research" element={dashboardPage(ResearchPage)} />
+            <Route path="publications" element={dashboardPage(PublicationsPage)} />
 
             {/* Admissions */}
-            <Route
-              path="admissions/applications"
-              element={<AdmissionsSection />}
-            />
-            <Route
-              path="admissions/enrollment"
-              element={<AdmissionsSection />}
-            />
+            <Route path="admissions/applications" element={dashboardPage(AdmissionsSection)} />
+            <Route path="admissions/enrollment" element={dashboardPage(AdmissionsSection)} />
 
             {/* Settings */}
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="website" element={<WebsiteSettingsPage />} />
-            <Route path="academic-years" element={<AcademicYearsPage />} />
+            <Route path="settings" element={dashboardPage(SettingsPage)} />
+            <Route path="website" element={dashboardPage(WebsiteSettingsPage)} />
+            <Route path="academic-years" element={dashboardPage(AcademicYearsPage)} />
+            <Route path="system-configuration" element={dashboardPage(SystemConfigurationPage)} />
 
             {/* Teacher-specific routes */}
-            <Route
-              path="my-classes"
-              element={<div className="p-6">My Classes — coming soon</div>}
-            />
-            <Route
-              path="grade-entry"
-              element={<div className="p-6">Grade Entry — coming soon</div>}
-            />
+            <Route path="my-classes" element={<div className="p-6">My Classes — coming soon</div>} />
+            <Route path="grade-entry" element={<div className="p-6">Grade Entry — coming soon</div>} />
 
             {/* Student-specific routes */}
-            <Route
-              path="my-grades"
-              element={<div className="p-6">My Grades — coming soon</div>}
-            />
-            <Route
-              path="my-attendance"
-              element={<div className="p-6">My Attendance — coming soon</div>}
-            />
-            <Route
-              path="my-fees"
-              element={<div className="p-6">My Fees — coming soon</div>}
-            />
+            <Route path="my-grades" element={<div className="p-6">My Grades — coming soon</div>} />
+            <Route path="my-attendance" element={<div className="p-6">My Attendance — coming soon</div>} />
+            <Route path="my-fees" element={<div className="p-6">My Fees — coming soon</div>} />
           </Route>
+
+          {/* Academic year selection standalone */}
+          <Route
+            path="/academic-years"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<LoadingFallback fullScreen />}>
+                  <AcademicYearsPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Default redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
-    </>
+    </EducationalSystemProvider>
   );
 }
 

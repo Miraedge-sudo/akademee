@@ -1,8 +1,11 @@
 import { Navigate, useLocation } from "react-router-dom";
+import { useContext } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { YearContext } from "../context/YearContext";
 
 export default function ProtectedRoute({ children }) {
   const { isAuthenticated, loading, onboardingCompleted, user } = useAuth();
+  const { years, loading: yearLoading } = useContext(YearContext);
   const location = useLocation();
 
   if (loading) {
@@ -32,6 +35,17 @@ export default function ProtectedRoute({ children }) {
 
   if (needsSystemSelection) {
     return <Navigate to="/educational-system-selection" replace />;
+  }
+
+  // After onboarding and system selection, if no academic year exists, redirect to creation
+  const needsAcademicYear = onboardingCompleted &&
+    years &&
+    years.length === 0 &&
+    !yearLoading &&
+    location.pathname !== "/onboarding/academic-year";
+
+  if (needsAcademicYear) {
+    return <Navigate to="/onboarding/academic-year" replace />;
   }
 
   return children;

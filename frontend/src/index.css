@@ -280,4 +280,112 @@
       transform: rotate(0);
     }
   }
+
+  /* ── Register Panel 3D-like Animations ── */
+
+  /* Slow pulse for glow */
+  .animate-pulse-slow {
+    animation: pulseSlow 4s ease-in-out infinite;
+  }
+
+  @keyframes pulseSlow {
+    0%, 100% { opacity: 0.08; transform: scale(1); }
+    50% { opacity: 0.15; transform: scale(1.05); }
+  }
+
+  /* Floating particles */
+  .animate-float-particle {
+    animation: floatParticle 8s ease-in-out infinite;
+  }
+
+  @keyframes floatParticle {
+    0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+    20% { opacity: 0.3; }
+    50% { transform: translateY(-30px) translateX(10px); opacity: 0.5; }
+    80% { opacity: 0.2; }
+  }
+
+  /* Ring system rotations */
+  .animate-rotate-ring {
+    animation: rotateRing 20s linear infinite;
+  }
+
+  @keyframes rotateRing {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-orbit-slow {
+    animation: orbitSlow 12s linear infinite;
+  }
+
+  @keyframes orbitSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-orbit-reverse {
+    animation: orbitReverse 15s linear infinite;
+  }
+
+  @keyframes orbitReverse {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+  }
+
+  .animate-orbit-medium {
+    animation: orbitMedium 8s linear infinite;
+  }
+
+  @keyframes orbitMedium {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-orbit-medium-reverse {
+    animation: orbitMediumReverse 10s linear infinite;
+  }
+
+  @keyframes orbitMediumReverse {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+  }
+
+  .animate-orbit-fast {
+    animation: orbitFast 5s linear infinite;
+  }
+
+  @keyframes orbitFast {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Floating shapes */
+  .animate-float-slow {
+    animation: floatSlow 6s ease-in-out infinite;
+  }
+
+  @keyframes floatSlow {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-8px) scale(1.02); }
+  }
+
+  .animate-float-slower {
+    animation: floatSlower 8s ease-in-out infinite;
+  }
+
+  @keyframes floatSlower {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  /* ── Eye Blink Animation ── */
+  .animate-blink {
+    animation: blink 3s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 95%, 100% { transform: scaleY(1); }
+    97% { transform: scaleY(0.1); }
+  }
 }

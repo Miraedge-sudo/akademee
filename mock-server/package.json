@@ -1,0 +1,21 @@
+{
+  "name": "akademee-mock-server",
+  "version": "1.0.0",
+  "description": "Mock JSON Server for Akademee educational system management",
+  "main": "index.js",
+  "scripts": {
+    "start": "json-server --watch db.json --port 3001 --routes routes.json",
+    "dev": "json-server --watch db.json --port 3001 --routes routes.json --delay 500"
+  },
+  "keywords": [
+    "json-server",
+    "mock",
+    "api",
+    "rest"
+  ],
+  "author": "Akademee",
+  "license": "MIT",
+  "dependencies": {
+    "json-server": "^0.17.4"
+  }
+}

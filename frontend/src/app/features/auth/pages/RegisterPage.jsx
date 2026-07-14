@@ -1,5 +1,5 @@
 import { FiCheck, FiArrowLeft, FiArrowRight, FiHome, FiGlobe, FiMapPin, FiMail, FiPhone, FiUser, FiLock, FiEye, FiLoader } from "react-icons/fi";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
@@ -7,6 +7,7 @@ import api from "../../../core/api/axios";
 import { API_ENDPOINTS } from "../../../core/api/endpoints";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { getSubdomainFromHostname, saveSubdomain, clearSubdomain } from "../../../core/utils/subdomainHelper";
+import RegisterLeftPanel from "../../../components/features/RegisterLeftPanel";
 
 const STEPS = [
   { num: 1, key: "school" },
@@ -45,27 +46,6 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
-  const leftPanelRef = useRef(null);
-
-  // Scroll reveal for left panel
-  useEffect(() => {
-    const panel = leftPanelRef.current;
-    if (!panel) return;
-    const reveals = panel.querySelectorAll(".reveal");
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("active");
-          }
-        });
-      },
-      { threshold: 0.15 }
-    );
-    reveals.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
-
   // If user arrived on a school subdomain (e.g. teste.lvh.me:3000/register),
   // redirect to the main domain — registration must be domain-neutral.
   useEffect(() => {
@@ -160,139 +140,7 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen bg-surface-50 dark:bg-surface-900">
 
-      {/* ══ LEFT PANEL — Value story ══ */}
-      <div
-        ref={leftPanelRef}
-        className="hidden lg:flex lg:w-[52%] flex-shrink-0 bg-teal-900 dark:bg-surface-950 relative overflow-hidden sticky top-0 h-screen"
-      >
-        {/* Animated gradient mesh */}
-        <div
-          className="absolute inset-0 opacity-[0.04] pointer-events-none animate-gradient"
-          style={{
-            backgroundImage:
-              "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
-        {/* Glow blobs */}
-        <div className="absolute w-[500px] h-[500px] -bottom-36 -right-36 rounded-full bg-teal-600/25 blur-3xl pointer-events-none animate-float" />
-        <div
-          className="absolute w-[300px] h-[300px] -top-20 -left-20 rounded-full bg-teal-500/15 blur-3xl pointer-events-none animate-float"
-          style={{ animationDelay: "1.5s" }}
-        />
-
-        <div className="relative z-10 flex flex-col h-full px-12 py-11 w-full">
-
-          {/* Logo with fade-in */}
-          <div className="flex items-center gap-3 mb-12 animate-fadeIn">
-            <div className="w-9 h-9 rounded-md bg-white/15 flex items-center justify-center">
-              <FiHome className="w-[18px] h-[18px] text-white" />
-            </div>
-            <span className="font-display text-xl text-teal-100">Akademee</span>
-          </div>
-
-          {/* Problem statement — staggered reveal */}
-          <div className="mb-9 reveal" style={{ transitionDelay: "0.1s" }}>
-            <div className="inline-flex items-center gap-2 text-[10.5px] font-semibold tracking-wider uppercase text-teal-400 mb-4">
-              <span className="w-5 h-px bg-teal-400" />
-              {t("register.story.whyLabel", "Why we built this")}
-              <span className="w-5 h-px bg-teal-400" />
-            </div>
-            <h2 className="font-display text-[clamp(28px,3.2vw,40px)] font-bold text-white leading-[1.18] mb-4">
-              {t("register.story.headlinePart1", "School management")}
-              <br />
-              {t("register.story.headlinePart2", "shouldn't feel like")}
-              <br />
-              <em className="italic font-normal text-teal-400">
-                {t("register.story.headlinePart3", "a second job.")}
-              </em>
-            </h2>
-            <p className="text-[15px] text-white/55 leading-[1.75] max-w-[400px]">
-              {t(
-                "register.story.bodyText",
-                "Too many Cameroonian school directors spend their evenings buried in paper registers, manual grade sheets, and handwritten receipts. Akademee was built to change that."
-              )}
-            </p>
-          </div>
-
-          {/* Benefits — staggered */}
-          <div className="flex flex-col gap-4 mb-9">
-            {[
-              {
-                icon: (
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                ),
-                title: t("register.story.benefit1Title", "Bulletins in seconds, not days"),
-                desc: t("register.story.benefit1Desc", "Grades and GCE sequences calculated automatically."),
-              },
-              {
-                icon: (
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                ),
-                title: t("register.story.benefit2Title", "Every role, one platform"),
-                desc: t("register.story.benefit2Desc", "Admins, teachers, students and parents — each with their own portal."),
-              },
-              {
-                icon: (
-                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                ),
-                title: t("register.story.benefit3Title", "Fee tracking without the chase"),
-                desc: t("register.story.benefit3Desc", "Know who has paid and send reminders from your dashboard."),
-              },
-            ].map((b, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3.5 p-4 bg-white/5 border border-white/[0.07] rounded-md hover:bg-white/[0.12] hover:border-white/20 transition-all duration-300 group reveal"
-                style={{ transitionDelay: `${0.2 + i * 0.12}s` }}
-              >
-                <div className="w-9 h-9 rounded-sm bg-teal-600/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:bg-teal-600/30 transition-all duration-300">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px] text-teal-400">
-                    {b.icon}
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-white mb-0.5 group-hover:text-teal-200 transition-colors">{b.title}</div>
-                  <div className="text-[12.5px] text-white/45 leading-snug">{b.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Testimonial — reveal */}
-          <div className="mt-auto p-5 bg-white/[0.06] border border-white/[0.08] rounded-lg relative reveal group hover:bg-white/[0.09] transition-all duration-300" style={{ transitionDelay: "0.5s" }}>
-            <span className="font-display text-6xl leading-[0.6] text-teal-600 italic absolute top-4 left-4 group-hover:text-teal-500 transition-colors">"</span>
-            <p className="font-display text-[15.5px] italic text-white/85 leading-relaxed mb-4 pt-5">
-              {t(
-                "register.story.testimonialQuote",
-                "Before Akademee, I spent every Sunday preparing attendance sheets and grade reports by hand. Now it takes me 10 minutes."
-              )}
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-teal-700 border-2 border-white/10 flex items-center justify-center text-sm font-bold text-teal-200 flex-shrink-0 group-hover:border-teal-500/30 transition-colors">
-                EK
-              </div>
-              <div>
-                <div className="text-[13.5px] font-semibold text-white">Emmanuel Kouam</div>
-                <div className="text-[11.5px] text-white/40">{t("register.story.testimonialRole", "Principal · Collège Lumière, Bafoussam")}</div>
-              </div>
-            </div>
-
-            <div className="flex mt-7 pt-6 border-t border-white/[0.08]">
-              {[
-                { num: "127", lbl: t("register.story.statSchools", "Schools") },
-                { num: "31K", lbl: t("register.story.statStudents", "Students managed") },
-                { num: "94%", lbl: t("register.story.statTime", "Admin time saved") },
-              ].map((s, i) => (
-                <div key={i} className="flex-1 px-3 first:pl-0 first:text-left last:pr-0 last:text-right text-center border-r last:border-r-0 border-white/[0.08]">
-                  <div className="font-display text-2xl font-bold text-white leading-none">{s.num}</div>
-                  <div className="text-[10.5px] text-white/35 mt-1 font-medium">{s.lbl}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-      </div>
+      <RegisterLeftPanel />
 
       {/* ══ RIGHT PANEL — Form ══ */}
       <div className="flex-1 flex flex-col min-w-0 relative">

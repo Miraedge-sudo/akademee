@@ -10,7 +10,7 @@ import {
 } from "../../../core/api/websiteService";
 import akademeeLogo from "../../../../assets/Logo.png";
 import { ThemeContext } from "../../../core/context/ThemeContext";
-import { buildSubdomainUrl } from "../../../core/utils/subdomainHelper";
+import { useEducationalSystems } from "../../../core/context/EducationalSystemContext";
 import toast from "react-hot-toast";
 
 const TEMPLATE_VISIBLE_STEPS = {
@@ -480,6 +480,39 @@ const REQUIRED_PUBLISH_FIELDS = [
   { key: "educationalSystems", label: "Educational systems", step: 5 },
 ];
 
+const SYSTEM_STYLES = {
+  Anglophone: {
+    dot: "bg-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-900/20",
+    border: "border-blue-500",
+    text: "text-blue-700 dark:text-blue-300",
+  },
+  Francophone: {
+    dot: "bg-amber-400",
+    bg: "bg-amber-50 dark:bg-amber-900/20",
+    border: "border-amber-500",
+    text: "text-amber-700 dark:text-amber-300",
+  },
+  "Anglophone Technical": {
+    dot: "bg-cyan-400",
+    bg: "bg-cyan-50 dark:bg-cyan-900/20",
+    border: "border-cyan-500",
+    text: "text-cyan-700 dark:text-cyan-300",
+  },
+  "Francophone Technical": {
+    dot: "bg-purple-400",
+    bg: "bg-purple-50 dark:bg-purple-900/20",
+    border: "border-purple-500",
+    text: "text-purple-700 dark:text-purple-300",
+  },
+  University: {
+    dot: "bg-emerald-400",
+    bg: "bg-emerald-50 dark:bg-emerald-900/20",
+    border: "border-emerald-500",
+    text: "text-emerald-700 dark:text-emerald-300",
+  },
+};
+
 const RequiredFieldLabel = ({ label }) => (
   <div className="flex items-center gap-1.5">
     <span className="block text-xs font-medium text-surface-600 dark:text-surface-300">
@@ -560,6 +593,7 @@ export default function OnboardingPage() {
   const { t } = useTranslation("onboarding");
   const { user } = useAuth();
   const { updatePrimaryColor } = useContext(ThemeContext);
+  const { updateSelectedSystems } = useEducationalSystems();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -896,6 +930,9 @@ export default function OnboardingPage() {
     const codeMap = {
       Anglophone: "anglophone_general",
       Francophone: "francophone_general",
+      "Anglophone Technical": "anglophone_technical",
+      "Francophone Technical": "francophone_technical",
+      University: "university",
       Bilingual: "university",
       International: "university",
       anglophone: "anglophone_general",
@@ -995,6 +1032,11 @@ export default function OnboardingPage() {
       if (response.success) {
         applyPrimaryColor(payload.primaryColor);
         setOriginalData(response.data || payload);
+        // Sync educational systems with the context so Sidebar updates immediately
+        const normalizedSystemCodes = normalizeEducationalSystemsForPayload(
+          data.educationalSystems,
+        );
+        updateSelectedSystems(normalizedSystemCodes);
         if (isSettingsMode) {
           setSuccess(t("review.saved", "Configuration saved successfully"));
           toast.success(t("review.saved", "Configuration saved successfully"));
@@ -1041,22 +1083,15 @@ export default function OnboardingPage() {
       const response = await saveOnboardingData(payload);
       if (response.success) {
         applyPrimaryColor(payload.primaryColor);
+        // Sync educational systems with context
+        const normalizedSystemCodes = normalizeEducationalSystemsForPayload(
+          data.educationalSystems,
+        );
+        updateSelectedSystems(normalizedSystemCodes);
         toast.success("Website published! 🎉");
-        const schoolSubdomain =
-          user?.subdomain || localStorage.getItem("akademee-subdomain");
-        const token = localStorage.getItem("token");
-        if (schoolSubdomain) {
-          const liveUrl = buildSubdomainUrl(
-            schoolSubdomain,
-            `/site${token ? `?token=${encodeURIComponent(token)}` : ""}`,
-          );
-          // Small delay so the user can see the toast
-          setTimeout(() => {
-            window.location.href = liveUrl;
-          }, 800);
-        } else {
-          window.location.href = "/dashboard";
-        }
+        setTimeout(() => {
+          window.location.href = "/onboarding/academic-year";
+        }, 800);
       } else {
         const msg = response.message || "Error saving configuration";
         setError(msg);
@@ -2062,30 +2097,72 @@ export default function OnboardingPage() {
               <label className="block mb-2">
                 <RequiredFieldLabel label="Educational systems" />
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
-                  "Anglophone",
-                  "Francophone",
-                  "Bilingual",
-                  "International",
+                  {
+                    id: "Anglophone",
+                    label: "Anglophone General",
+                    desc: "GCE O-Level & A-Level",
+                  },
+                  {
+                    id: "Francophone",
+                    label: "Francophone General",
+                    desc: "BEPC, Probatoire & Baccalauréat",
+                  },
+                  {
+                    id: "Anglophone Technical",
+                    label: "Anglophone Technical",
+                    desc: "TVEE IL & AL",
+                  },
+                  {
+                    id: "Francophone Technical",
+                    label: "Francophone Technical",
+                    desc: "CAP, Brevet & Bac Technique",
+                  },
+                  {
+                    id: "University",
+                    label: "University LMD",
+                    desc: "Licence, Master, Doctorate",
+                  },
                 ].map((sys) => {
-                  const selected = data.educationalSystems.includes(sys);
+                  const selected = data.educationalSystems.includes(sys.id);
+                  const colors = SYSTEM_STYLES[sys.id];
                   return (
                     <button
-                      key={sys}
+                      key={sys.id}
                       type="button"
-                      onClick={() => handleEducationalSystemToggle(sys)}
-                      className={`px-3.5 py-1.5 rounded-full text-[12px] font-medium border transition-all ${
+                      onClick={() => handleEducationalSystemToggle(sys.id)}
+                      className={`relative p-3 rounded-lg border-2 text-left transition-all duration-200 ${
                         selected
-                          ? "text-white border-transparent"
-                          : "text-surface-600 dark:text-surface-300 border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 hover:border-primary-400"
+                          ? `${colors.border} ${colors.bg}`
+                          : "border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 hover:border-surface-300 dark:hover:border-surface-600"
                       }`}
-                      style={
-                        selected ? { backgroundColor: pc, borderColor: pc } : {}
-                      }
                     >
-                      {sys}
-                      {selected && <span className="ml-1.5">✓</span>}
+                      <div className="flex items-center gap-2.5">
+                        {/* Colored dot */}
+                        <span
+                          className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all ${
+                            selected ? colors.dot : "bg-surface-300 dark:bg-surface-600"
+                          }`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className={`text-sm font-medium ${
+                            selected ? colors.text : "text-surface-700 dark:text-surface-200"
+                          }`}>
+                            {sys.label}
+                          </div>
+                          <div className="text-xs text-surface-400 mt-0.5">
+                            {sys.desc}
+                          </div>
+                        </div>
+                        {selected && (
+                          <div className={`w-5 h-5 rounded-full ${colors.dot} flex items-center justify-center flex-shrink-0`}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
                     </button>
                   );
                 })}

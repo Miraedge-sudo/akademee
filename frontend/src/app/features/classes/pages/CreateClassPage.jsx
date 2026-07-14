@@ -1,633 +1,347 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../../../core/hooks/useAuth";
 import { useTheme } from "../../../core/hooks/useTheme";
-import { createClass, getAcademicYears } from "../../../core/api/classService";
 import {
   FiCheck,
   FiChevronLeft,
-  FiChevronRight,
   FiPlus,
   FiMinus,
   FiLoader,
-  FiUser,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 
-// ── Level configuration (from design HTML) ──
-const LEVELS = [
-  "Form 1",
-  "Form 2",
-  "Form 3",
-  "Form 4",
-  "Form 5",
-  "Lower 6th",
-  "Upper 6th",
-];
-
-const STREAMS = ["Science", "Arts", "Commercial"];
-const SIXTH_FORM_LEVELS = ["Lower 6th", "Upper 6th"];
-
-const LEVEL_COLORS = {
-  "Form 1": "#6366F1",
-  "Form 2": "#0EA5E9",
-  "Form 3": "#14B8A6",
-  "Form 4": "#F59E0B",
-  "Form 5": "#EF4444",
-  "Lower 6th": "#A855F7",
-  "Upper 6th": "#085041",
-};
-
-function hexToRgba(hex, alpha = 1) {
-  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (r) {
-    return `rgba(${parseInt(r[1], 16)}, ${parseInt(r[2], 16)}, ${parseInt(r[3], 16)}, ${alpha})`;
-  }
-  return `rgba(8, 80, 65, ${alpha})`;
-}
-
-// ── Checklist item ──
-function ChecklistItem({ label, done, optional }) {
-  return (
-    <div className="flex items-center gap-2 py-1">
-      <div
-        className={`w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
-          done
-            ? "scale-110"
-            : ""
-        }`}
-        style={
-          done
-            ? { backgroundColor: "var(--primary-color, #085041)", borderColor: "var(--primary-color, #085041)" }
-            : { backgroundColor: "#EEF0EC", border: "1.5px solid #D8DBD5" }
-        }
-      >
-        {done && <FiCheck className="w-2.5 h-2.5 text-white" />}
-      </div>
-      <span
-        className={`text-xs transition-colors ${
-          done ? "text-surface-700 dark:text-surface-200 font-medium" : "text-surface-400"
-        }`}
-      >
-        {label}
-        {optional && (
-          <span className="text-[10px] text-surface-300 ml-1">({optional})</span>
-        )}
-      </span>
-    </div>
-  );
-}
+const MOCK_API = "http://localhost:3001";
 
 export default function CreateClassPage() {
+  const { id } = useParams();
   const { t, i18n } = useTranslation("common");
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { primaryColor } = useTheme();
-  const lang = i18n.language === "fr" ? "fr" : "en";
-  const isFr = lang === "fr";
+  const isFr = i18n.language === "fr";
   const pc = primaryColor || "#085041";
+  const isEditing = !!id;
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [academicYears, setAcademicYears] = useState([]);
-  const [teachers, setTeachers] = useState([]);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [levels, setLevels] = useState([]);
+  const [series, setSeries] = useState([]);
 
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     name: "",
-    level: "",
-    stream: "",
-    section: "",
+    levelId: "",
+    seriesId: "",
     capacity: 40,
     classTeacherId: "",
-    academicYearId: "",
   });
 
-  const [errors, setErrors] = useState({});
-
+  // Fetch levels, series, and class data (if editing)
   useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [levelsRes, seriesRes] = await Promise.all([
+          fetch(`${MOCK_API}/systemLevels`).then((r) => r.json()),
+          fetch(`${MOCK_API}/systemSeries`).then((r) => r.json()),
+        ]);
+        setLevels(levelsRes || []);
+        setSeries(seriesRes || []);
+
+        if (isEditing) {
+          const classRes = await fetch(`${MOCK_API}/classes/${id}`);
+          if (classRes.ok) {
+            const cls = await classRes.json();
+            setForm({
+              name: cls.name || "",
+              levelId: cls.levelId?.toString() || "",
+              seriesId: cls.seriesId?.toString() || "",
+              capacity: cls.capacity || 40,
+              classTeacherId: cls.classTeacherId?.toString() || "",
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Error loading data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
     loadData();
-  }, []);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [yearsResult] = await Promise.all([
-        getAcademicYears().catch(() => ({ years: [] })),
-      ]);
-      setAcademicYears(yearsResult.years || yearsResult || []);
-      // Mock teachers for now — backend integration later
-      setTeachers([]);
-    } catch (err) {
-      console.error("Error loading data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const needsStream = SIXTH_FORM_LEVELS.includes(formData.level);
-
-  // Auto-generate class name
-  const autoGeneratedName = useMemo(() => {
-    if (!formData.level) return "";
-    const section = formData.section || "A";
-    const stream = needsStream && formData.stream ? ` ${formData.stream}` : "";
-    return `${formData.level}${stream} ${section}`.trim();
-  }, [formData.level, formData.stream, formData.section, needsStream]);
-
-  // Sync auto-generated name
-  useEffect(() => {
-    if (autoGeneratedName) {
-      setFormData((prev) => ({ ...prev, name: autoGeneratedName }));
-    }
-  }, [autoGeneratedName]);
+  }, [id, isEditing]);
 
   const updateField = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const selectedLevel = levels.find((l) => l.id === Number(form.levelId));
+  const selectedSeries = series.find((s) => s.id === Number(form.seriesId));
+
+  // Auto-generate name from level + series
+  const autoName = useMemo(() => {
+    const lvl = selectedLevel?.name || "";
+    const ser = selectedSeries?.name || "";
+    if (!lvl && !ser) return "";
+    const parts = [lvl, ser].filter(Boolean);
+    return parts.join(" ");
+  }, [selectedLevel, selectedSeries]);
+
+  useEffect(() => {
+    if (autoName && !isEditing) {
+      setForm((prev) => ({ ...prev, name: autoName }));
     }
-  };
-
-  const selectLevel = (level) => {
-    if (SIXTH_FORM_LEVELS.includes(level)) {
-      updateField("level", level);
-    } else {
-      setFormData((prev) => ({ ...prev, level, stream: "" }));
-    }
-    if (errors.level) setErrors((prev) => ({ ...prev, level: undefined }));
-  };
-
-  const selectStream = (stream) => {
-    updateField("stream", stream);
-  };
-
-  const adjustCapacity = (amount) => {
-    setFormData((prev) => ({
-      ...prev,
-      capacity: Math.max(1, Math.min(100, prev.capacity + amount)),
-    }));
-  };
-
-  const validate = () => {
-    const errs = {};
-    if (!formData.level) errs.level = true;
-    if (needsStream && !formData.stream) errs.stream = true;
-    if (!formData.academicYearId) errs.academicYearId = true;
-    if (formData.capacity < 1 || formData.capacity > 100) errs.capacity = true;
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
+  }, [autoName, isEditing]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
-
+    if (!form.name.trim()) {
+      toast.error(isFr ? "Le nom de la classe est requis" : "Class name is required");
+      return;
+    }
     setSubmitting(true);
     try {
-      await createClass({
-        name: formData.name,
-        classTeacherId: formData.classTeacherId || null,
-        academicYearId: formData.academicYearId || null,
-        capacity: formData.capacity,
-      });
-      setShowSuccess(true);
-      toast.success(isFr ? "Classe créée avec succès !" : "Class created successfully!");
-      setTimeout(() => {
-        navigate("/dashboard/classes");
-      }, 1500);
+      const payload = {
+        name: form.name.trim(),
+        levelId: form.levelId ? Number(form.levelId) : null,
+        seriesId: form.seriesId ? Number(form.seriesId) : null,
+        capacity: form.capacity,
+        classTeacherId: form.classTeacherId ? Number(form.classTeacherId) : null,
+      };
+
+      if (isEditing) {
+        await fetch(`${MOCK_API}/classes/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        toast.success(isFr ? "Classe modifiée !" : "Class updated!");
+      } else {
+        await fetch(`${MOCK_API}/classes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...payload, studentsCount: 0 }),
+        });
+        toast.success(isFr ? "Classe créée !" : "Class created!");
+      }
+      navigate("/dashboard/classes");
     } catch (err) {
-      const msg = err.response?.data?.message || (isFr ? "Erreur lors de la création" : "Error creating class");
-      toast.error(msg);
+      toast.error(isFr ? "Erreur lors de la sauvegarde" : "Error saving class");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Checklist computed
-  const checklist = [
-    { label: isFr ? "Année académique sélectionnée" : "Academic year selected", done: !!formData.academicYearId },
-    { label: isFr ? "Niveau choisi" : "Level chosen", done: !!formData.level },
-    { label: isFr ? "Filière sélectionnée (6e)" : "Stream selected (6th form)", done: !needsStream || !!formData.stream },
-    { label: isFr ? "Nom de la classe défini" : "Class name set", done: !!formData.name },
-    { label: isFr ? "Professeur assigné" : "Teacher assigned", done: !!formData.classTeacherId, optional: isFr ? "optionnel" : "optional" },
-  ];
-
-  const formIsValid = formData.level && formData.academicYearId && (!needsStream || formData.stream);
-  const pColor = LEVEL_COLORS[formData.level] || pc;
-  const capacityPct = Math.min((formData.capacity / 100) * 100, 100);
-
+  const capacityPct = Math.min((form.capacity / 100) * 100, 100);
   const inputClass =
     "w-full h-11 px-3.5 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 placeholder:text-surface-400 text-sm outline-none focus:border-primary-600 focus:bg-white dark:focus:bg-surface-800 transition-all";
   const labelClass = "block text-xs font-semibold text-surface-600 dark:text-surface-300 mb-1.5";
   const hintClass = "text-[11px] text-surface-400 mt-1.5";
-  const errorClass = "text-[11px] text-red-500 mt-1.5";
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 rounded-full border-4 border-surface-200 dark:border-surface-600 border-t-primary-600 animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      {/* ── Success Overlay ── */}
-      {showSuccess && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center animate-fadeIn">
-          <div className="bg-white dark:bg-surface-800 rounded-2xl p-10 text-center shadow-2xl animate-scaleIn">
-            <FiCheck className="w-12 h-12 mx-auto mb-3 text-green-500" />
-            <h3
-              className="font-display text-xl font-bold text-surface-800 dark:text-surface-100 mb-2"
-            >
-              {isFr ? "Classe créée !" : "Class created!"}
-            </h3>
-            <p className="text-sm text-surface-400">
-              {isFr ? "Redirection vers la liste..." : "Redirecting to classes list..."}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* ── Breadcrumb ── */}
-      <nav className="flex items-center gap-2 text-sm text-surface-400 mb-6 animate-fadeIn">
+    <div className="max-w-[700px] mx-auto">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-surface-400 mb-6">
         <Link to="/dashboard/classes" className="hover:text-primary-600 transition-colors">
           {isFr ? "Classes" : "Classes"}
         </Link>
         <span>/</span>
         <span className="text-surface-800 dark:text-surface-100 font-medium">
-          {isFr ? "Nouvelle classe" : "New class"}
+          {isEditing
+            ? (isFr ? "Modifier la classe" : "Edit class")
+            : (isFr ? "Nouvelle classe" : "New class")}
         </span>
       </nav>
 
-      {/* ── Page Header ── */}
-      <header className="mb-8 animate-fadeIn" style={{ animationDelay: "0.05s" }}>
+      {/* Header */}
+      <header className="mb-8">
         <div className="flex items-center gap-2.5 mb-1">
           <div className="w-1 h-6 rounded-full" style={{ backgroundColor: pc }} />
           <h1 className="font-display text-2xl font-bold text-surface-800 dark:text-surface-100">
-            {isFr ? "Créer une nouvelle classe" : "Create a new class"}
+            {isEditing
+              ? (isFr ? "Modifier la classe" : "Edit class")
+              : (isFr ? "Créer une nouvelle classe" : "Create a new class")}
           </h1>
         </div>
         <p className="text-sm text-surface-400 ml-3.5">
           {isFr
-            ? "Définissez le niveau, assignez un professeur et la capacité."
-            : "Define the class level, assign a teacher and set the capacity."}
+            ? "Donnez un nom à la classe et associez-lui optionnellement un niveau et une série."
+            : "Name the class and optionally assign a level and series."}
         </p>
       </header>
 
-      {/* ── Two-column Layout ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
-        {/* ── Left: Form ── */}
-        <div className="bg-white dark:bg-surface-800 rounded-xl p-6 sm:p-7 border border-surface-200 dark:border-surface-700 shadow-md animate-fadeIn" style={{ animationDelay: "0.1s" }}>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Academic year */}
-            <div>
-              <label className={labelClass}>
-                {isFr ? "Année académique" : "Academic year"} <span className="text-primary-600">*</span>
-              </label>
-              <select
-                value={formData.academicYearId}
-                onChange={(e) => updateField("academicYearId", e.target.value)}
-                className={inputClass}
-              >
-                <option value="">
-                  {isFr ? "Sélectionner une année" : "Select academic year"}
-                </option>
-                {academicYears.map((y) => (
-                  <option key={y.id || y.academic_year_id} value={y.id || y.academic_year_id}>
-                    {y.name} {y.isCurrent ? `(${isFr ? "En cours" : "Current"})` : ""}
-                  </option>
-                ))}
-              </select>
-              {errors.academicYearId && (
-                <p className={errorClass}>
-                  {isFr ? "Veuillez sélectionner une année" : "Please select an academic year"}
-                </p>
-              )}
-            </div>
+      {/* Form */}
+      <div className="bg-white dark:bg-surface-800 rounded-xl p-6 sm:p-7 border border-surface-200 dark:border-surface-700 shadow-md">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Class name */}
+          <div>
+            <label className={labelClass}>
+              {isFr ? "Nom de la classe" : "Class name"} <span className="text-primary-600">*</span>
+            </label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => updateField("name", e.target.value)}
+              placeholder={isFr ? "Ex: Form 1A, 6ème B, Science" : "e.g. Form 1A, 6ème B, Science"}
+              className={inputClass}
+            />
+            <p className={hintClass}>
+              {isFr
+                ? "Généré automatiquement si un niveau et une série sont sélectionnés"
+                : "Auto-generated if a level and series are selected"}
+            </p>
+          </div>
 
+          {/* Level + Series row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Level */}
             <div>
               <label className={labelClass}>
-                {isFr ? "Niveau" : "Class level"} <span className="text-primary-600">*</span>
-              </label>
-              <div className="grid grid-cols-4 gap-2">
-                {LEVELS.map((lvl) => {
-                  const selected = formData.level === lvl;
-                  const lvlColor = LEVEL_COLORS[lvl] || pc;
-                  return (
-                    <button
-                      key={lvl}
-                      type="button"
-                      onClick={() => selectLevel(lvl)}
-                      className="py-2 px-1 rounded-lg border text-xs font-medium transition-all"
-                      style={{
-                        borderColor: selected ? lvlColor : "#EEF0EC",
-                        backgroundColor: selected ? hexToRgba(lvlColor, 0.08) : "white",
-                        color: selected ? lvlColor : "#6E7A70",
-                        fontWeight: selected ? 700 : 500,
-                        transform: selected ? "scale(1.04)" : "scale(1)",
-                      }}
-                    >
-                      {lvl}
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.level && (
-                <p className={errorClass}>
-                  {isFr ? "Veuillez sélectionner un niveau" : "Please select a level"}
-                </p>
-              )}
-            </div>
-
-            {/* Stream (only for 6th form) */}
-            <div style={{ display: needsStream ? "block" : "none" }}>
-              <label className={labelClass}>
-                {isFr ? "Filière" : "Stream"} <span className="text-primary-600">*</span>
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {STREAMS.map((strm) => {
-                  const selected = formData.stream === strm;
-                  return (
-                    <button
-                      key={strm}
-                      type="button"
-                      onClick={() => selectStream(strm)}
-                      className="py-2 px-1 rounded-lg border text-xs font-medium transition-all"
-                      style={{
-                        borderColor: selected ? pColor : "#EEF0EC",
-                        backgroundColor: selected ? hexToRgba(pColor, 0.08) : "white",
-                        color: selected ? pColor : "#6E7A70",
-                        fontWeight: selected ? 700 : 500,
-                      }}
-                    >
-                      {strm}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className={hintClass}>
-                {isFr ? "Requis pour Lower 6th et Upper 6th" : "Required for Lower 6th and Upper 6th"}
-              </p>
-              {errors.stream && (
-                <p className={errorClass}>
-                  {isFr ? "La filière est requise pour les 6e" : "Stream is required for 6th form"}
-                </p>
-              )}
-            </div>
-
-            {/* Section */}
-            <div>
-              <label className={labelClass}>{isFr ? "Section" : "Section"}</label>
-              <input
-                type="text"
-                value={formData.section}
-                onChange={(e) => updateField("section", e.target.value.toUpperCase())}
-                placeholder="A"
-                maxLength={3}
-                className={inputClass}
-              />
-              <p className={hintClass}>
-                {isFr
-                  ? "Ex: A, B, C — laisser vide si une seule section par niveau"
-                  : "e.g. A, B, C — leave empty if only one section per level"}
-              </p>
-            </div>
-
-            {/* Class name */}
-            <div>
-              <label className={labelClass}>
-                {isFr ? "Nom de la classe" : "Class name"} <span className="text-primary-600">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => updateField("name", e.target.value)}
-                placeholder={isFr ? "Ex: Form 3A" : "e.g. Form 3A"}
-                className={inputClass}
-              />
-              <p className={hintClass}>
-                {isFr
-                  ? "Généré automatiquement à partir du niveau + filière + section. Vous pouvez le modifier."
-                  : "Auto-generated from level + stream + section. You can edit it."}
-              </p>
-            </div>
-
-            {/* Capacity */}
-            <div>
-              <label className={labelClass}>
-                {isFr ? "Capacité maximale" : "Maximum capacity"} <span className="text-primary-600">*</span>
-              </label>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => adjustCapacity(-1)}
-                  className="w-9 h-9 rounded-lg border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center text-surface-500 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex-shrink-0"
-                >
-                  <FiMinus className="w-4 h-4" />
-                </button>
-                <input
-                  type="number"
-                  value={formData.capacity}
-                  onChange={(e) => {
-                    const v = Math.max(1, Math.min(100, parseInt(e.target.value) || 1));
-                    updateField("capacity", v);
-                  }}
-                  min={1}
-                  max={100}
-                  className={`${inputClass} w-24 text-center`}
-                />
-                <button
-                  type="button"
-                  onClick={() => adjustCapacity(1)}
-                  className="w-9 h-9 rounded-lg border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center text-surface-500 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex-shrink-0"
-                >
-                  <FiPlus className="w-4 h-4" />
-                </button>
-
-                {/* Visual bar */}
-                <div className="flex-1 h-2 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-300"
-                    style={{
-                      width: `${capacityPct}%`,
-                      backgroundColor: pColor,
-                    }}
-                  />
-                </div>
-              </div>
-              {errors.capacity && (
-                <p className={errorClass}>
-                  {isFr ? "Doit être entre 1 et 100" : "Between 1 and 100 students"}
-                </p>
-              )}
-            </div>
-
-            {/* Teacher */}
-            <div>
-              <label className={labelClass}>
-                {isFr ? "Professeur principal" : "Class teacher"}
+                {isFr ? "Niveau" : "Level"}
+                <span className="text-surface-300 font-normal ml-1">({isFr ? "optionnel" : "optional"})</span>
               </label>
               <select
-                value={formData.classTeacherId}
-                onChange={(e) => updateField("classTeacherId", e.target.value)}
+                value={form.levelId}
+                onChange={(e) => updateField("levelId", e.target.value)}
                 className={inputClass}
               >
                 <option value="">
-                  {isFr ? "Assigner plus tard" : "Assign later"}
+                  {isFr ? "Aucun niveau" : "No level"}
                 </option>
-                {teachers.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.firstName} {t.lastName}
+                {levels.map((lvl) => (
+                  <option key={lvl.id} value={lvl.id}>
+                    {lvl.name}
                   </option>
                 ))}
               </select>
-              <p className={hintClass}>
-                {isFr
-                  ? "Le professeur responsable de cette classe"
-                  : "The principal teacher responsible for this class"}
-              </p>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3 pt-3">
-              <Link
-                to="/dashboard/classes"
-                className="h-11 px-5 rounded-lg border border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
+            {/* Series */}
+            <div>
+              <label className={labelClass}>
+                {isFr ? "Série / Filière" : "Series / Stream"}
+                <span className="text-surface-300 font-normal ml-1">({isFr ? "optionnel" : "optional"})</span>
+              </label>
+              <select
+                value={form.seriesId}
+                onChange={(e) => updateField("seriesId", e.target.value)}
+                className={inputClass}
               >
-                <FiChevronLeft className="w-4 h-4" />
-                {isFr ? "Annuler" : "Cancel"}
-              </Link>
-              <button
-                type="submit"
-                disabled={!formIsValid || submitting}
-                className="flex-1 h-11 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                style={{
-                  backgroundColor: formIsValid ? pc : "#9BA59C",
-                  boxShadow: formIsValid ? `0 4px 16px ${hexToRgba(pc, 0.25)}` : "none",
-                }}
-              >
-                {submitting ? (
-                  <FiLoader className="w-4 h-4 animate-spin" />
-                ) : (
-                  <FiCheck className="w-4 h-4" />
-                )}
-                {submitting
-                  ? isFr ? "Création..." : "Creating..."
-                  : isFr ? "Créer la classe" : "Create class"}
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* ── Right: Live Preview ── */}
-        <div className="animate-fadeIn" style={{ animationDelay: "0.15s" }}>
-          <div className="lg:sticky lg:top-24 space-y-4">
-            {/* Live Preview label */}
-            <p className="text-[10px] font-bold tracking-[1.5px] uppercase text-surface-400">
-              {isFr ? "Aperçu en direct" : "Live preview"}
-            </p>
-
-            {/* Preview Card */}
-            <div
-              className="bg-white dark:bg-surface-800 rounded-xl p-5 border border-surface-200 dark:border-surface-700 shadow-md transition-all duration-300"
-              style={{
-                borderColor: formData.level ? `${pColor}55` : undefined,
-                boxShadow: formData.level
-                  ? `0 8px 32px ${hexToRgba(pColor, 0.1)}`
-                  : undefined,
-              }}
-            >
-              {/* Card header */}
-              <div className="flex items-start justify-between mb-4">                  <div
-                    className="w-13 h-13 rounded-xl flex items-center justify-center text-lg font-bold transition-all duration-300"
-                  style={{
-                    background: formData.level ? hexToRgba(pColor, 0.1) : "#F0F0F0",
-                    border: `1.5px solid ${formData.level ? hexToRgba(pColor, 0.2) : "#E8E8E8"}`,
-                    color: formData.level ? pColor : "#D0D0D0",
-                  }}
-                >
-                  {formData.section || "A"}
-                </div>
-                <div
-                  className="h-6 px-3 rounded-full text-[10px] font-semibold flex items-center transition-all duration-300"
-                  style={{
-                    background: formData.level ? hexToRgba(pColor, 0.08) : "rgba(8,80,65,0.08)",
-                    color: formData.level ? pColor : "#9BA59C",
-                    border: `1px solid ${formData.level ? hexToRgba(pColor, 0.2) : "rgba(8,80,65,0.1)"}`,
-                  }}
-                >
-                  0 / {formData.capacity}
-                </div>
-              </div>
-
-              {/* Class name */}
-              <div
-                className="font-bold text-base mb-1 transition-colors"
-                style={{ color: formData.name ? "#1A1F1B" : "#D0D0D0" }}
-              >
-                {formData.name || (isFr ? "Nom de la classe" : "Class name")}
-              </div>
-              <p className="text-xs text-surface-400 mb-4">
-                {formData.stream ? `${formData.stream} Stream · ` : ""}
-                {formData.level || (isFr ? "Aucun niveau sélectionné" : "No level selected")}
-              </p>
-
-              {/* Capacity bar */}
-              <div className="mb-4">
-                <div className="flex justify-between text-[10px] text-surface-400 mb-1">
-                  <span>{isFr ? "Capacité" : "Capacity"}</span>
-                  <span className="font-semibold" style={{ color: pColor }}>
-                    {capacityPct}%
-                  </span>
-                </div>
-                <div className="h-1.5 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${capacityPct}%`,
-                      background: `linear-gradient(90deg, ${pColor}, ${hexToRgba(pColor, 0.6)})`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Teacher */}
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
-                  style={{
-                    background: formData.classTeacherId ? hexToRgba(pColor, 0.1) : "#F0F0F0",
-                    border: `1.5px solid ${formData.classTeacherId ? hexToRgba(pColor, 0.2) : "#E8E8E8"}`,
-                    color: formData.classTeacherId ? pColor : "#9BA59C",
-                  }}
-                >                    {formData.classTeacherId ? <FiUser className="w-3.5 h-3.5" /> : "—"}
-                </div>
-                <span className="text-xs text-surface-500">
-                  {formData.classTeacherId
-                    ? (teachers.find((t) => t.id === formData.classTeacherId)
-                        ?.firstName || "") +
-                      " " +
-                      (teachers.find((t) => t.id === formData.classTeacherId)
-                        ?.lastName || "")
-                    : isFr
-                      ? "Aucun professeur assigné"
-                      : "No teacher assigned"}
-                </span>
-              </div>
-            </div>
-
-            {/* Checklist */}
-            <div className="bg-surface-50 dark:bg-surface-900 rounded-xl p-4 border border-surface-100 dark:border-surface-700">
-              <p className="text-[10px] font-bold tracking-[1.5px] uppercase text-surface-400 mb-3">
-                {isFr ? "Liste de vérification" : "Checklist"}
-              </p>
-              {checklist.map((item, i) => (
-                <ChecklistItem key={i} {...item} />
-              ))}
+                <option value="">
+                  {isFr ? "Aucune série" : "No series"}
+                </option>
+                {series.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
-        </div>
+
+          {/* Capacity */}
+          <div>
+            <label className={labelClass}>
+              {isFr ? "Capacité maximale" : "Maximum capacity"}
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => updateField("capacity", Math.max(1, form.capacity - 1))}
+                className="w-9 h-9 rounded-lg border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center text-surface-500 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex-shrink-0"
+              >
+                <FiMinus className="w-4 h-4" />
+              </button>
+              <input
+                type="number"
+                value={form.capacity}
+                onChange={(e) => {
+                  const v = Math.max(1, Math.min(100, parseInt(e.target.value) || 1));
+                  updateField("capacity", v);
+                }}
+                min={1}
+                max={100}
+                className={`${inputClass} w-24 text-center`}
+              />
+              <button
+                type="button"
+                onClick={() => updateField("capacity", Math.min(100, form.capacity + 1))}
+                className="w-9 h-9 rounded-lg border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center text-surface-500 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex-shrink-0"
+              >
+                <FiPlus className="w-4 h-4" />
+              </button>
+              <div className="flex-1 h-2 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{ width: `${capacityPct}%`, backgroundColor: pc }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Preview */}
+          {form.name && (
+            <div
+              className="p-4 rounded-xl border border-surface-100 dark:border-surface-700 bg-surface-50 dark:bg-surface-900"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold text-white"
+                  style={{ backgroundColor: pc }}
+                >
+                  {(form.name.match(/[A-Z]/g) || ["C"]).slice(-1)}
+                </div>
+                <div>
+                  <div className="font-bold text-surface-800 dark:text-surface-100">
+                    {form.name}
+                  </div>
+                  <div className="text-xs text-surface-400">
+                    {selectedLevel?.name && selectedSeries?.name
+                      ? `${selectedLevel.name} · ${selectedSeries.name}`
+                      : selectedLevel?.name || selectedSeries?.name || (isFr ? "Aucun niveau/série" : "No level/series")}
+                    {form.capacity > 0 && ` · ${form.capacity} ${isFr ? "places" : "seats"}`}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-3">
+            <Link
+              to="/dashboard/classes"
+              className="h-11 px-5 rounded-lg border border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
+            >
+              <FiChevronLeft className="w-4 h-4" />
+              {isFr ? "Annuler" : "Cancel"}
+            </Link>
+            <button
+              type="submit"
+              disabled={!form.name.trim() || submitting}
+              className="flex-1 h-11 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: form.name.trim() ? pc : "#9BA59C",
+              }}
+            >
+              {submitting ? (
+                <FiLoader className="w-4 h-4 animate-spin" />
+              ) : (
+                <FiCheck className="w-4 h-4" />
+              )}
+              {submitting
+                ? (isFr ? "Enregistrement..." : "Saving...")
+                : isEditing
+                  ? (isFr ? "Enregistrer" : "Save")
+                  : (isFr ? "Créer la classe" : "Create class")}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
