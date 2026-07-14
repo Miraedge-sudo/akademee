@@ -5,9 +5,9 @@ const attendanceStatsService = require('../services/attendanceStats.service');
 class AttendanceController {
   async recordAttendance(req, res, next) {
     try {
-      const { studentId, classId, date, status, markedBy, remarks } = req.body;
+      const { studentId, classId, academicYearId, date, status, markedBy, remarks } = req.body;
       const { schoolId } = req;
-      const result = await attendanceService.create(schoolId, { studentId, classId, date, status, markedBy, remarks });
+      const result = await attendanceService.create(schoolId, { studentId, classId, academicYearId, date, status, markedBy, remarks });
       response.success(res, 'Attendance recorded', result, 201);
     } catch (error) {
       next(error);
@@ -17,9 +17,9 @@ class AttendanceController {
   async getStudentAttendance(req, res, next) {
     try {
       const { studentId } = req.params;
-      const { limit = 10, offset = 0 } = req.query;
+      const { limit = 10, offset = 0, academicYearId } = req.query;
       const schoolId = req.schoolId || req.user?.schoolId;
-      const result = await attendanceService.listByStudent(schoolId, studentId, { limit, offset });
+      const result = await attendanceService.listByStudent(schoolId, studentId, { limit, offset, academicYearId });
       response.success(res, 'Attendance retrieved', result);
     } catch (error) {
       next(error);
@@ -30,7 +30,8 @@ class AttendanceController {
     try {
       const { classId, date } = req.params;
       const schoolId = req.schoolId || req.user?.schoolId;
-      const result = await attendanceService.listBySchool(schoolId, { startDate: date, endDate: date });
+      const { academicYearId } = req.query;
+      const result = await attendanceService.listBySchool(schoolId, { startDate: date, endDate: date, academicYearId });
       response.success(res, 'Class attendance retrieved', result);
     } catch (error) {
       next(error);
@@ -40,9 +41,9 @@ class AttendanceController {
   async getClassAttendanceNoDate(req, res, next) {
     try {
       const { classId } = req.params;
-      const { startDate, endDate, limit, offset } = req.query;
+      const { startDate, endDate, limit, offset, academicYearId } = req.query;
       const schoolId = req.schoolId || req.user?.schoolId;
-      const result = await attendanceService.listByClass(schoolId, classId, { limit, offset, startDate, endDate });
+      const result = await attendanceService.listByClass(schoolId, classId, { limit, offset, startDate, endDate, academicYearId });
       response.success(res, 'Class attendance retrieved', result);
     } catch (error) {
       next(error);
@@ -70,8 +71,8 @@ class AttendanceController {
   async getAllAttendance(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user?.schoolId;
-      const { limit, offset, startDate, endDate, status } = req.query;
-      const result = await attendanceService.listBySchool(schoolId, { limit, offset, startDate, endDate, status });
+      const { limit, offset, startDate, endDate, status, academicYearId } = req.query;
+      const result = await attendanceService.listBySchool(schoolId, { limit, offset, startDate, endDate, status, academicYearId });
       response.success(res, 'Attendance records retrieved', result);
     } catch (error) {
       next(error);

@@ -18,16 +18,16 @@ class AttendanceService {
   }
 
   async create(schoolId, data) {
-    const { studentId, classId, date, status, markedBy, remarks } = data;
+    const { studentId, classId, academicYearId, date, status, markedBy, remarks } = data;
     const rows = await sql`
-      INSERT INTO attendance (school_id, student_id, date, status, class_id, marked_by, remarks)
-      VALUES (${schoolId}, ${studentId}, ${date}, ${status}, ${classId || null}, ${markedBy || null}, ${remarks || null})
+      INSERT INTO attendance (school_id, student_id, academic_year_id, date, status, class_id, marked_by, remarks)
+      VALUES (${schoolId}, ${studentId}, ${academicYearId || null}, ${date}, ${status}, ${classId || null}, ${markedBy || null}, ${remarks || null})
       RETURNING *
     `;
     return this.formatAttendance(rows[0]);
   }
 
-  async listByClass(schoolId, classId, { limit = 50, offset = 0, startDate, endDate } = {}) {
+  async listByClass(schoolId, classId, { limit = 50, offset = 0, startDate, endDate, academicYearId } = {}) {
     limit = Math.min(Math.max(1, limit), 500);
     offset = Math.max(0, offset);
 
@@ -40,6 +40,7 @@ class AttendanceService {
       WHERE a.school_id = ${schoolId} AND a.class_id = ${classId}
         ${startDate ? sql`AND a.date >= ${startDate}` : sql``}
         ${endDate ? sql`AND a.date <= ${endDate}` : sql``}
+        ${academicYearId ? sql`AND a.academic_year_id = ${academicYearId}` : sql``}
       ORDER BY a.date DESC, a.student_id ASC
       LIMIT ${limit} OFFSET ${offset}
     `;
@@ -59,7 +60,7 @@ class AttendanceService {
     return this.formatAttendance(rows[0]);
   }
 
-  async listBySchool(schoolId, { limit = 50, offset = 0, startDate, endDate, status } = {}) {
+  async listBySchool(schoolId, { limit = 50, offset = 0, startDate, endDate, status, academicYearId } = {}) {
     limit = Math.min(Math.max(1, limit), 500);
     offset = Math.max(0, offset);
 
@@ -74,6 +75,7 @@ class AttendanceService {
         ${startDate ? sql`AND a.date >= ${startDate}` : sql``}
         ${endDate ? sql`AND a.date <= ${endDate}` : sql``}
         ${status ? sql`AND a.status = ${status}` : sql``}
+        ${academicYearId ? sql`AND a.academic_year_id = ${academicYearId}` : sql``}
       ORDER BY a.date DESC, a.created_at DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
@@ -85,6 +87,7 @@ class AttendanceService {
         ${startDate ? sql`AND a.date >= ${startDate}` : sql``}
         ${endDate ? sql`AND a.date <= ${endDate}` : sql``}
         ${status ? sql`AND a.status = ${status}` : sql``}
+        ${academicYearId ? sql`AND a.academic_year_id = ${academicYearId}` : sql``}
     `;
 
     return {
@@ -95,7 +98,7 @@ class AttendanceService {
     };
   }
 
-  async listByStudent(schoolId, studentId, { limit = 50, offset = 0 } = {}) {
+  async listByStudent(schoolId, studentId, { limit = 50, offset = 0, academicYearId } = {}) {
     limit = Math.min(Math.max(1, limit), 500);
     offset = Math.max(0, offset);
 
@@ -103,6 +106,7 @@ class AttendanceService {
       SELECT a.*
       FROM attendance a
       WHERE a.school_id = ${schoolId} AND a.student_id = ${studentId}
+        ${academicYearId ? sql`AND a.academic_year_id = ${academicYearId}` : sql``}
       ORDER BY a.date DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
@@ -135,11 +139,12 @@ class AttendanceService {
       class_id: r.classId || null,
       marked_by: r.markedBy || null,
       remarks: r.remarks || null,
+      academic_year_id: r.academicYearId || null,
     }));
     const rows = await sql`
-      INSERT INTO attendance (school_id, student_id, date, status, class_id, marked_by, remarks)
+      INSERT INTO attendance (school_id, student_id, academic_year_id, date, status, class_id, marked_by, remarks)
       SELECT * FROM jsonb_to_recordset(${sql.json(values)})
-        AS x(school_id uuid, student_id uuid, date date, status text, class_id uuid, marked_by uuid, remarks text)
+        AS x(school_id uuid, student_id uuid, academic_year_id uuid, date date, status text, class_id uuid, marked_by uuid, remarks text)
       RETURNING *
     `;
     return rows.map(r => this.formatAttendance(r));

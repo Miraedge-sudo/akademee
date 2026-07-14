@@ -14,7 +14,7 @@ class AcademicYearService {
   }
 
   async create(schoolId, data) {
-    const { year, startDate, endDate, name } = data;
+    const { year, startDate, endDate, name, academicSystem } = data;
     const yearName = name || year || `${new Date(startDate).getFullYear()}-${new Date(endDate).getFullYear()}`;
 
     const rows = await sql`
@@ -22,6 +22,14 @@ class AcademicYearService {
       VALUES (${schoolId}, ${yearName}, ${startDate || null}, ${endDate || null})
       RETURNING *
     `;
+
+    if (academicSystem) {
+      const systemValue = academicSystem === 'anglophone' ? 'TERM_SEQUENCE' : 'SEMESTER_CA_EXAM';
+      await sql`
+        UPDATE schools SET academic_system = ${systemValue} WHERE school_id = ${schoolId}
+      `;
+    }
+
     return this.formatYear(rows[0]);
   }
 

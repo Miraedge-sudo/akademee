@@ -5,23 +5,23 @@ import { API_ENDPOINTS } from "./endpoints";
 /**
  * Récupère les statistiques du dashboard
  */
-export async function getDashboardStats() {
-  const response = await api.get(API_ENDPOINTS.DASHBOARD.STATS);
+export async function getDashboardStats(params = {}) {
+  const response = await api.get(API_ENDPOINTS.DASHBOARD.STATS, { params });
   return response.data.data;
 }
 
 /**
  * Récupère les activités récentes
  */
-export async function getRecentActivities() {
-  const response = await api.get(API_ENDPOINTS.DASHBOARD.RECENT_ACTIVITIES);
+export async function getRecentActivities(params = {}) {
+  const response = await api.get(API_ENDPOINTS.DASHBOARD.RECENT_ACTIVITIES, { params });
   return response.data.data;
 }
 
 /**
  * Récupère les données de revenus pour le graphique
  */
-export async function getRevenueData() {
-  const response = await api.get(API_ENDPOINTS.DASHBOARD.REVENUE);
+export async function getRevenueData(params = {}) {
+  const response = await api.get(API_ENDPOINTS.DASHBOARD.REVENUE, { params });
   return response.data.data;
 }

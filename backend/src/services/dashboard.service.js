@@ -1,21 +1,37 @@
 const sql = require('../config/database');
 
 class DashboardService {
-  async getStats(schoolId) {
-    const [studentCount] = await sql`
-      SELECT COUNT(*)::int AS total FROM students WHERE school_id = ${schoolId} AND status = 'active'
-    `;
+  async getStats(schoolId, { academicYearId } = {}) {
+    const [studentCount] = academicYearId
+      ? await sql`
+          SELECT COUNT(DISTINCT e.student_id)::int AS total
+          FROM enrollments e
+          JOIN classes c ON e.class_id = c.class_id
+          WHERE c.school_id = ${schoolId} AND c.academic_year_id = ${academicYearId}
+            AND e.status = 'active'
+        `
+      : await sql`
+          SELECT COUNT(*)::int AS total FROM students WHERE school_id = ${schoolId} AND status = 'active'
+        `;
 
-    const [teacherCount] = await sql`
-      SELECT COUNT(*)::int AS total
-      FROM user_roles ur
-      JOIN users u ON ur.user_id = u.user_id
-      JOIN roles r ON ur.role_id = r.role_id
-      WHERE u.school_id = ${schoolId} AND r.role_code = 'teacher' AND u.is_active = true
-    `;
+    const [teacherCount] = academicYearId
+      ? await sql`
+          SELECT COUNT(DISTINCT c.class_teacher_id)::int AS total
+          FROM classes c
+          WHERE c.school_id = ${schoolId} AND c.academic_year_id = ${academicYearId}
+            AND c.class_teacher_id IS NOT NULL
+        `
+      : await sql`
+          SELECT COUNT(*)::int AS total
+          FROM user_roles ur
+          JOIN users u ON ur.user_id = u.user_id
+          JOIN roles r ON ur.role_id = r.role_id
+          WHERE u.school_id = ${schoolId} AND r.role_code = 'teacher' AND u.is_active = true
+        `;
 
     const [classCount] = await sql`
       SELECT COUNT(*)::int AS total FROM classes WHERE school_id = ${schoolId}
+        ${academicYearId ? sql`AND academic_year_id = ${academicYearId}` : sql``}
     `;
 
     const [revenueData] = await sql`
@@ -37,14 +53,17 @@ class DashboardService {
     };
   }
 
-  async getRecentActivities(schoolId, { limit = 10 } = {}) {
+  async getRecentActivities(schoolId, { limit = 10, academicYearId } = {}) {
     limit = Math.min(Math.max(1, limit), 50);
 
     const students = await sql`
       SELECT CONCAT(u.first_name, ' ', u.last_name) AS name, 'student_created' AS action, st.created_at AS date
       FROM students st
       JOIN users u ON st.user_id = u.user_id
+      LEFT JOIN enrollments e ON st.student_id = e.student_id AND e.status = 'active'
+      LEFT JOIN classes c ON e.class_id = c.class_id
       WHERE st.school_id = ${schoolId}
+        ${academicYearId ? sql`AND c.academic_year_id = ${academicYearId}` : sql``}
       ORDER BY st.created_at DESC
       LIMIT ${limit}
     `;
@@ -55,6 +74,7 @@ class DashboardService {
       LEFT JOIN students st ON p.student_id = st.student_id
       LEFT JOIN users u ON st.user_id = u.user_id
       WHERE p.school_id = ${schoolId}
+        ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
       ORDER BY p.created_at DESC
       LIMIT ${limit}
     `;
@@ -64,6 +84,7 @@ class DashboardService {
       FROM grades g
       LEFT JOIN students st ON g.student_id = st.student_id
       LEFT JOIN users u ON st.user_id = u.user_id
+      ${academicYearId ? sql`JOIN periods p ON g.period_id = p.period_id AND p.academic_year_id = ${academicYearId}` : sql``}
       WHERE g.school_id = ${schoolId}
       ORDER BY g.created_at DESC
       LIMIT ${limit}
@@ -84,14 +105,14 @@ class DashboardService {
     }));
   }
 
-  async getRevenueData(schoolId, { months = 6 } = {}) {
+  async getRevenueData(schoolId, { months = 6, academicYearId } = {}) {
     const rows = await sql`
       SELECT
         DATE_TRUNC('month', created_at) AS month,
         COALESCE(SUM(amount), 0)::numeric AS total
       FROM payments
       WHERE school_id = ${schoolId} AND status = 'completed'
-        AND created_at >= NOW() - INTERVAL '1 month' * ${months}
+        ${academicYearId ? sql`AND academic_year_id = ${academicYearId}` : sql`AND created_at >= NOW() - INTERVAL '1 month' * ${months}`}
       GROUP BY DATE_TRUNC('month', created_at)
       ORDER BY month ASC
     `;

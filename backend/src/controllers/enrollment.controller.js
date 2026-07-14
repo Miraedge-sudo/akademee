@@ -26,8 +26,8 @@ class EnrollmentController {
 
   async list(req, res, next) {
     try {
-      const { classId, status, limit, offset } = req.query;
-      const result = await enrollmentService.listBySchool(req.schoolId || req.user.schoolId, { classId, status, limit, offset });
+      const { classId, status, academicYearId, limit, offset } = req.query;
+      const result = await enrollmentService.listBySchool(req.schoolId || req.user.schoolId, { classId, status, academicYearId, limit, offset });
       response.success(res, 'Enrollments retrieved', result);
     } catch (error) { next(error); }
   }

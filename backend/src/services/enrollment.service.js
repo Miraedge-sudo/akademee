@@ -75,7 +75,7 @@ class EnrollmentService {
     return this.formatEnrollment(rows[0]);
   }
 
-  async listBySchool(schoolId, { classId, status, limit = 50, offset = 0 } = {}) {
+  async listBySchool(schoolId, { classId, status, academicYearId, limit = 50, offset = 0 } = {}) {
     limit = Math.min(Math.max(1, limit), 500);
     offset = Math.max(0, offset);
 
@@ -88,6 +88,7 @@ class EnrollmentService {
       WHERE e.school_id = ${schoolId}
         ${classId ? sql`AND e.class_id = ${classId}` : sql``}
         ${status ? sql`AND e.status = ${status}` : sql``}
+        ${academicYearId ? sql`AND e.academic_year_id = ${academicYearId}` : sql``}
       ORDER BY e.created_at DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
@@ -97,6 +98,7 @@ class EnrollmentService {
       WHERE e.school_id = ${schoolId}
         ${classId ? sql`AND e.class_id = ${classId}` : sql``}
         ${status ? sql`AND e.status = ${status}` : sql``}
+        ${academicYearId ? sql`AND e.academic_year_id = ${academicYearId}` : sql``}
     `;
 
     return {

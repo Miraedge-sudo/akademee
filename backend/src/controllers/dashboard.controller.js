@@ -5,7 +5,8 @@ class DashboardController {
   async getStats(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user?.schoolId;
-      const stats = await dashboardService.getStats(schoolId);
+      const { academicYearId } = req.query;
+      const stats = await dashboardService.getStats(schoolId, { academicYearId });
       response.success(res, 'Dashboard stats retrieved', stats);
     } catch (error) {
       next(error);
@@ -15,8 +16,8 @@ class DashboardController {
   async getRecentActivities(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user?.schoolId;
-      const { limit } = req.query;
-      const activities = await dashboardService.getRecentActivities(schoolId, { limit });
+      const { limit, academicYearId } = req.query;
+      const activities = await dashboardService.getRecentActivities(schoolId, { limit, academicYearId });
       response.success(res, 'Recent activities retrieved', activities);
     } catch (error) {
       next(error);
@@ -26,8 +27,8 @@ class DashboardController {
   async getRevenueData(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user?.schoolId;
-      const { months } = req.query;
-      const revenue = await dashboardService.getRevenueData(schoolId, { months });
+      const { months, academicYearId } = req.query;
+      const revenue = await dashboardService.getRevenueData(schoolId, { months, academicYearId });
       response.success(res, 'Revenue data retrieved', revenue);
     } catch (error) {
       next(error);

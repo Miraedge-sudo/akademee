@@ -18,12 +18,12 @@ class PaymentService {
   }
 
   async create(schoolId, data) {
-    const { studentId, amount, method, feeId, reference } = data;
+    const { studentId, amount, method, feeId, academicYearId, reference } = data;
     const receiptNumber = reference || `RCP-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
     const rows = await sql`
-      INSERT INTO payments (school_id, student_id, amount, method, status, receipt_number)
-      VALUES (${schoolId}, ${studentId}, ${amount}, ${method || 'cash'}, 'completed', ${receiptNumber})
+      INSERT INTO payments (school_id, student_id, academic_year_id, amount, method, status, receipt_number)
+      VALUES (${schoolId}, ${studentId}, ${academicYearId || null}, ${amount}, ${method || 'cash'}, 'completed', ${receiptNumber})
       RETURNING *
     `;
     return this.formatPayment(rows[0]);
@@ -41,7 +41,7 @@ class PaymentService {
     return this.formatPayment(rows[0]);
   }
 
-  async listBySchool(schoolId, { limit = 50, offset = 0, status, startDate, endDate } = {}) {
+  async listBySchool(schoolId, { limit = 50, offset = 0, status, startDate, endDate, academicYearId } = {}) {
     limit = Math.min(Math.max(1, limit), 500);
     offset = Math.max(0, offset);
 
@@ -54,6 +54,7 @@ class PaymentService {
         ${status ? sql`AND p.status = ${status}` : sql``}
         ${startDate ? sql`AND p.created_at >= ${startDate}` : sql``}
         ${endDate ? sql`AND p.created_at <= ${endDate}` : sql``}
+        ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
       ORDER BY p.created_at DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
@@ -65,6 +66,7 @@ class PaymentService {
         ${status ? sql`AND p.status = ${status}` : sql``}
         ${startDate ? sql`AND p.created_at >= ${startDate}` : sql``}
         ${endDate ? sql`AND p.created_at <= ${endDate}` : sql``}
+        ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
     `;
 
     return {
@@ -75,11 +77,12 @@ class PaymentService {
     };
   }
 
-  async listByStudent(schoolId, studentId) {
+  async listByStudent(schoolId, studentId, { academicYearId } = {}) {
     const rows = await sql`
       SELECT p.*
       FROM payments p
       WHERE p.school_id = ${schoolId} AND p.student_id = ${studentId}
+        ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
       ORDER BY p.created_at DESC
     `;
     return rows.map(r => this.formatPayment(r));
@@ -95,7 +98,7 @@ class PaymentService {
     return this.formatPayment(rows[0]);
   }
 
-  async generateReport(schoolId, { startDate, endDate } = {}) {
+  async generateReport(schoolId, { startDate, endDate, academicYearId } = {}) {
     const rows = await sql`
       SELECT p.*, CONCAT(u.first_name, ' ', u.last_name) AS student_name
       FROM payments p
@@ -105,6 +108,7 @@ class PaymentService {
         AND p.status = 'completed'
         ${startDate ? sql`AND p.created_at >= ${startDate}` : sql``}
         ${endDate ? sql`AND p.created_at <= ${endDate}` : sql``}
+        ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
       ORDER BY p.created_at ASC
     `;
 

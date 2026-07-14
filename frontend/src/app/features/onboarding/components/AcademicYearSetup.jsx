@@ -10,7 +10,7 @@ import {
   FiArrowRight,
   FiCheck,
 } from "react-icons/fi";
-import { createAcademicYear } from "../../../core/api/academicYearService";
+import { createAcademicYear, createTerm } from "../../../core/api/academicYearService";
 import toast from "react-hot-toast";
 
 const TERM_PRESETS = {
@@ -176,13 +176,40 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
     try {
       const payload = {
         name: formData.name.trim(),
-        year: formData.name.trim(),
         startDate: formData.startDate,
         endDate: formData.endDate,
-        system: currentSystem,
+        academicSystem: currentSystem,
       };
 
-      await createAcademicYear(payload);
+      const year = await createAcademicYear(payload);
+
+      for (const term of terms) {
+        if (term.startDate && term.endDate) {
+          try {
+            await createTerm({
+              name: term.name,
+              academicYearId: year.id,
+              type: currentSystem === "anglophone" ? "term" : "semester",
+              startDate: term.startDate,
+              endDate: term.endDate,
+            });
+          } catch { /* continue */ }
+        }
+        for (const seq of term.sequences) {
+          if (seq.startDate && seq.endDate) {
+            try {
+              await createTerm({
+                name: seq.name,
+                academicYearId: year.id,
+                type: "sequence",
+                startDate: seq.startDate,
+                endDate: seq.endDate,
+              });
+            } catch { /* continue */ }
+          }
+        }
+      }
+
       setShowSuccess(true);
 
       setTimeout(() => {
@@ -206,7 +233,7 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
     const end = new Date(formData.endDate);
     const months = Math.max(
       0,
-      Math.round((end - start) / (1000 * 60 * 60 * 24 * 30)),
+      (end.getFullYear() - start.getFullYear()) * 12 + end.getMonth() - start.getMonth(),
     );
     return `${months} months`;
   };
@@ -331,7 +358,7 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
 
               {/* Warning Banner */}
               <div className="flex items-start gap-3 p-3.5 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl mb-6">
-                <FiAlertTriangle className="w-4.5 h-4.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                <FiAlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-surface-700 dark:text-surface-300 leading-relaxed">
                   <strong className="text-amber-600 dark:text-amber-400 font-semibold">
                     Required to access the platform.
@@ -343,7 +370,7 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
               </div>
 
               {/* Year Name */}
-              <div className="mb-5.5">
+              <div className="mb-6">
                 <label className="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-1.5">
                   Academic year name{" "}
                   <span className="text-teal-600 ml-0.5">*</span>
@@ -372,11 +399,11 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
                 <div className="grid grid-cols-2 gap-3">
                   {/* Anglophone Card */}
                   <div
-                    className={`border-2 rounded-xl p-4.5 cursor-pointer transition-all bg-white dark:bg-surface-800 text-left ${currentSystem === "anglophone" ? "border-teal-600 bg-teal-50 dark:bg-teal-900/20 shadow-lg shadow-teal-900/12 -translate-y-0.5" : "border-surface-100 dark:border-surface-700 hover:border-surface-200 dark:hover:border-surface-600 hover:-translate-y-0.5 hover:shadow-md"}`}
+                    className={`border-2 rounded-xl p-5 cursor-pointer transition-all bg-white dark:bg-surface-800 text-left ${currentSystem === "anglophone" ? "border-teal-600 bg-teal-50 dark:bg-teal-900/20 shadow-lg shadow-teal-900/12 -translate-y-0.5" : "border-surface-100 dark:border-surface-700 hover:border-surface-200 dark:hover:border-surface-600 hover:-translate-y-0.5 hover:shadow-md"}`}
                     onClick={() => handleSystemChange("anglophone")}
                   >
                     <div
-                      className="w-5.5 h-5.5 rounded-full border-2 flex items-center justify-center mb-3 transition-all"
+                      className="w-6 h-6 rounded-full border-2 flex items-center justify-center mb-3 transition-all"
                       style={{
                         borderColor:
                           currentSystem === "anglophone"
@@ -389,7 +416,7 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
                       }}
                     >
                       {currentSystem === "anglophone" && (
-                        <FiCheck className="w-2.75 h-2.75 text-white stroke-[2.5]" />
+                        <FiCheck className="w-3 h-3 text-white stroke-[2.5]" />
                       )}
                     </div>
                     <div
@@ -401,8 +428,8 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
                             : "rgba(59,130,246,0.08)",
                       }}
                     >
-                      <FiBookOpen
-                        className="w-4.5 h-4.5"
+<FiBookOpen
+            className="w-5 h-5"
                         style={{
                           color:
                             currentSystem === "anglophone"
@@ -437,11 +464,11 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
 
                   {/* Francophone Card */}
                   <div
-                    className={`border-2 rounded-xl p-4.5 cursor-pointer transition-all bg-white dark:bg-surface-800 text-left ${currentSystem === "francophone" ? "border-teal-600 bg-teal-50 dark:bg-teal-900/20 shadow-lg shadow-teal-900/12 -translate-y-0.5" : "border-surface-100 dark:border-surface-700 hover:border-surface-200 dark:hover:border-surface-600 hover:-translate-y-0.5 hover:shadow-md"}`}
+                    className={`border-2 rounded-xl p-5 cursor-pointer transition-all bg-white dark:bg-surface-800 text-left ${currentSystem === "francophone" ? "border-teal-600 bg-teal-50 dark:bg-teal-900/20 shadow-lg shadow-teal-900/12 -translate-y-0.5" : "border-surface-100 dark:border-surface-700 hover:border-surface-200 dark:hover:border-surface-600 hover:-translate-y-0.5 hover:shadow-md"}`}
                     onClick={() => handleSystemChange("francophone")}
                   >
                     <div
-                      className="w-5.5 h-5.5 rounded-full border-2 flex items-center justify-center mb-3 transition-all"
+                      className="w-6 h-6 rounded-full border-2 flex items-center justify-center mb-3 transition-all"
                       style={{
                         borderColor:
                           currentSystem === "francophone"
@@ -454,14 +481,14 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
                       }}
                     >
                       {currentSystem === "francophone" && (
-                        <FiCheck className="w-2.75 h-2.75 text-white stroke-[2.5]" />
+                        <FiCheck className="w-3 h-3 text-white stroke-[2.5]" />
                       )}
                     </div>
                     <div
                       className="w-10 h-10 rounded-lg flex items-center justify-center mb-2.5"
                       style={{ backgroundColor: "rgba(59,130,246,0.08)" }}
                     >
-                      <FiAward className="w-4.5 h-4.5 text-blue-500" />
+                      <FiAward className="w-5 h-5 text-blue-500" />
                     </div>
                     <div className="text-sm font-bold text-surface-900 dark:text-surface-100 mb-1">
                       Francophone
@@ -592,7 +619,7 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
                     (optional — you can set these later)
                   </span>
                 </div>
-                <div className="text-xs text-surface-400 mb-4.5 leading-relaxed">
+                <div className="text-xs text-surface-400 mb-5 leading-relaxed">
                   Configure the start and end date of each term and its
                   sequences. This is used for attendance reports and the
                   academic calendar.
@@ -601,7 +628,7 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
                 {terms.map((term) => (
                   <div
                     key={term.num}
-                    className={`border-1.5 rounded-2xl overflow-hidden mb-3 transition-all ${expandedTerms[term.num] ? "border-surface-200 dark:border-surface-600 shadow-sm" : "border-surface-100 dark:border-surface-700"}`}
+                    className={`border rounded-2xl overflow-hidden mb-3 transition-all ${expandedTerms[term.num] ? "border-surface-200 dark:border-surface-600 shadow-sm" : "border-surface-100 dark:border-surface-700"}`}
                   >
                     <div
                       className="flex items-center justify-between p-4 cursor-pointer bg-surface-50 dark:bg-surface-900 transition-colors"
@@ -636,15 +663,15 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
                     </div>
 
                     {expandedTerms[term.num] && (
-                      <div className="p-4.5 border-t border-surface-100 dark:border-surface-700 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="grid grid-cols-2 gap-3 mb-4.5">
+                      <div className="p-5 border-t border-surface-100 dark:border-surface-700 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="grid grid-cols-2 gap-3 mb-5">
                           <div>
                             <label className="text-xs font-bold text-surface-500 block mb-1.5">
                               Start date
                             </label>
                             <input
                               type="date"
-                              className="w-full h-10.5 px-4 border rounded-lg font-sans text-sm bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 outline-none border-surface-100 dark:border-surface-700 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 transition-all"
+                              className="w-full h-11 px-4 border rounded-lg font-sans text-sm bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 outline-none border-surface-100 dark:border-surface-700 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 transition-all"
                               value={term.startDate}
                               onChange={(e) =>
                                 handleTermDateChange(
@@ -661,7 +688,7 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
                             </label>
                             <input
                               type="date"
-                              className="w-full h-10.5 px-4 border rounded-lg font-sans text-sm bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 outline-none border-surface-100 dark:border-surface-700 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 transition-all"
+                              className="w-full h-11 px-4 border rounded-lg font-sans text-sm bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 outline-none border-surface-100 dark:border-surface-700 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 transition-all"
                               value={term.endDate}
                               onChange={(e) =>
                                 handleTermDateChange(
@@ -692,7 +719,7 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
                               </label>
                               <input
                                 type="date"
-                                className="w-full h-9.5 px-4 border rounded-lg font-sans text-xs bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 outline-none border-surface-100 dark:border-surface-700 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 transition-all"
+                                className="w-full h-10 px-4 border rounded-lg font-sans text-xs bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 outline-none border-surface-100 dark:border-surface-700 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 transition-all"
                                 value={seq.startDate}
                                 onChange={(e) =>
                                   handleSequenceDateChange(
@@ -713,7 +740,7 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
                               </label>
                               <input
                                 type="date"
-                                className="w-full h-9.5 px-4 border rounded-lg font-sans text-xs bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 outline-none border-surface-100 dark:border-surface-700 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 transition-all"
+                                className="w-full h-10 px-4 border rounded-lg font-sans text-xs bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 outline-none border-surface-100 dark:border-surface-700 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 transition-all"
                                 value={seq.endDate}
                                 onChange={(e) =>
                                   handleSequenceDateChange(
@@ -777,7 +804,7 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
             <p className="text-sm text-surface-400 leading-relaxed mb-1">
               Academic year created successfully.
             </p>
-            <div className="inline-flex items-center gap-2 bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-900/30 rounded-full px-4.5 py-2 my-4 text-sm font-bold text-teal-900 dark:text-teal-400">
+            <div className="inline-flex items-center gap-2 bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-900/30 rounded-full px-5 py-2 my-4 text-sm font-bold text-teal-900 dark:text-teal-400">
               <FiCalendar className="w-3.5 h-3.5" />
               {formData.name}
             </div>
@@ -785,7 +812,10 @@ export default function AcademicYearSetup({ onComplete, onBack, schoolData }) {
               You can now enroll students, assign teachers, and start managing
               your school.
             </p>
-            <button className="flex items-center justify-center gap-2 w-full h-12 rounded-xl font-sans text-sm font-bold cursor-pointer border-none transition-all bg-teal-900 text-white shadow-lg shadow-teal-900/22 hover:bg-teal-700 hover:-translate-y-0.5">
+            <button
+              className="flex items-center justify-center gap-2 w-full h-12 rounded-xl font-sans text-sm font-bold cursor-pointer border-none transition-all bg-teal-900 text-white shadow-lg shadow-teal-900/22 hover:bg-teal-700 hover:-translate-y-0.5"
+              onClick={onComplete}
+            >
               <FiGrid className="w-3.5 h-3.5" />
               Go to dashboard
             </button>

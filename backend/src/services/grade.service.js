@@ -37,7 +37,7 @@ class GradeService {
     return this.formatGrade(rows[0]);
   }
 
-  async listBySchool(schoolId, { limit = 50, offset = 0, studentId, subjectId, periodId } = {}) {
+  async listBySchool(schoolId, { limit = 50, offset = 0, studentId, subjectId, periodId, academicYearId } = {}) {
     limit = Math.min(Math.max(1, limit), 500);
     offset = Math.max(0, offset);
 
@@ -45,6 +45,7 @@ class GradeService {
       SELECT g.*, s.name AS subject_name
       FROM grades g
       LEFT JOIN subjects s ON g.subject_id = s.subject_id
+      ${academicYearId ? sql`JOIN periods p ON g.period_id = p.period_id AND p.academic_year_id = ${academicYearId}` : sql``}
       WHERE g.school_id = ${schoolId}
         ${studentId ? sql`AND g.student_id = ${studentId}` : sql``}
         ${subjectId ? sql`AND g.subject_id = ${subjectId}` : sql``}
@@ -56,6 +57,7 @@ class GradeService {
     const countRows = await sql`
       SELECT COUNT(*)::int AS total
       FROM grades g
+      ${academicYearId ? sql`JOIN periods p ON g.period_id = p.period_id AND p.academic_year_id = ${academicYearId}` : sql``}
       WHERE g.school_id = ${schoolId}
         ${studentId ? sql`AND g.student_id = ${studentId}` : sql``}
         ${subjectId ? sql`AND g.subject_id = ${subjectId}` : sql``}
@@ -70,7 +72,7 @@ class GradeService {
     };
   }
 
-  async listByClass(schoolId, classId) {
+  async listByClass(schoolId, classId, { academicYearId } = {}) {
     const rows = await sql`
       SELECT g.*, s.name AS subject_name,
         CONCAT(u.first_name, ' ', u.last_name) AS student_name
@@ -79,17 +81,19 @@ class GradeService {
       JOIN enrollments e ON g.student_id = e.student_id AND e.class_id = ${classId} AND e.status = 'active'
       LEFT JOIN students st ON g.student_id = st.student_id
       LEFT JOIN users u ON st.user_id = u.user_id
+      ${academicYearId ? sql`JOIN periods p ON g.period_id = p.period_id AND p.academic_year_id = ${academicYearId}` : sql``}
       WHERE g.school_id = ${schoolId}
       ORDER BY g.created_at DESC
     `;
     return rows.map(r => this.formatGrade(r));
   }
 
-  async listByStudent(schoolId, studentId) {
+  async listByStudent(schoolId, studentId, { academicYearId } = {}) {
     const rows = await sql`
       SELECT g.*, s.name AS subject_name
       FROM grades g
       LEFT JOIN subjects s ON g.subject_id = s.subject_id
+      ${academicYearId ? sql`JOIN periods p ON g.period_id = p.period_id AND p.academic_year_id = ${academicYearId}` : sql``}
       WHERE g.school_id = ${schoolId} AND g.student_id = ${studentId}
       ORDER BY g.created_at DESC
     `;

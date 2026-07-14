@@ -47,7 +47,7 @@ class ClassService {
     return this.formatClass(rows[0]);
   }
 
-  async listBySchool(schoolId, { limit = 50, offset = 0 } = {}) {
+  async listBySchool(schoolId, { limit = 50, offset = 0, academicYearId } = {}) {
     limit = Math.min(Math.max(1, limit), 500);
     offset = Math.max(0, offset);
 
@@ -61,12 +61,14 @@ class ClassService {
       LEFT JOIN users u ON c.class_teacher_id = u.user_id
       LEFT JOIN academic_years ay ON c.academic_year_id = ay.academic_year_id
       WHERE c.school_id = ${schoolId}
+        ${academicYearId ? sql`AND c.academic_year_id = ${academicYearId}` : sql``}
       ORDER BY c.name ASC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
     const countRows = await sql`
       SELECT COUNT(*)::int AS total FROM classes WHERE school_id = ${schoolId}
+        ${academicYearId ? sql`AND academic_year_id = ${academicYearId}` : sql``}
     `;
 
     return {

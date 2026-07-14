@@ -36,26 +36,26 @@ export async function deleteAcademicYear(id) {
 // ── Terms / Periods ──
 
 export async function getTerms(params = {}) {
-  const response = await api.get(API_ENDPOINTS.ACADEMIC.TERMS, { params });
+  const response = await api.get(API_ENDPOINTS.ACADEMIC.PERIODS, { params });
   return response.data.data;
 }
 
 export async function getTermById(id) {
-  const response = await api.get(API_ENDPOINTS.ACADEMIC.TERM(id));
+  const response = await api.get(API_ENDPOINTS.ACADEMIC.PERIOD(id));
   return response.data.data;
 }
 
 export async function createTerm(data) {
-  const response = await api.post(API_ENDPOINTS.ACADEMIC.TERMS, data);
+  const response = await api.post(API_ENDPOINTS.ACADEMIC.PERIODS, data);
   return response.data.data;
 }
 
 export async function updateTerm(id, data) {
-  const response = await api.put(API_ENDPOINTS.ACADEMIC.TERM(id), data);
+  const response = await api.put(API_ENDPOINTS.ACADEMIC.PERIOD(id), data);
   return response.data.data;
 }
 
 export async function deleteTerm(id) {
-  const response = await api.delete(API_ENDPOINTS.ACADEMIC.TERM(id));
+  const response = await api.delete(API_ENDPOINTS.ACADEMIC.PERIOD(id));
   return response.data.data;
 }
