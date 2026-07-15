@@ -11,10 +11,8 @@ const SlugGenerator = require('../utils/slugGenerator');
 const { buildSchoolUrls } = require('../utils/domainHelper');
 
 class AuthService {
-  async createAuthSession(user, school, roles = []) {
-    const roleCodes = roles.map((role) => role.role_code || role);
-
-    const token = jwt.sign(
+  generateAccessToken(user, school, roleCodes) {
+    return jwt.sign(
       {
         userId: user.user_id,
         schoolId: user.school_id,
@@ -24,10 +22,31 @@ class AuthService {
         lastName: user.last_name,
         roles: roleCodes,
         role: roleCodes[0] || null,
+        type: 'access',
       },
       jwtConfig.secret,
       { expiresIn: jwtConfig.expiresIn }
     );
+  }
+
+  generateRefreshToken(user, school, roleCodes) {
+    return jwt.sign(
+      {
+        userId: user.user_id,
+        schoolId: user.school_id,
+        subdomain: school.subdomain,
+        type: 'refresh',
+      },
+      jwtConfig.secret,
+      { expiresIn: jwtConfig.refreshExpiresIn }
+    );
+  }
+
+  async createAuthSession(user, school, roles = []) {
+    const roleCodes = roles.map((role) => role.role_code || role);
+
+    const accessToken = this.generateAccessToken(user, school, roleCodes);
+    const refreshToken = this.generateRefreshToken(user, school, roleCodes);
 
     const templateCode = school.template_code || 'bold';
     const urls = buildSchoolUrls(school.subdomain, templateCode);
@@ -43,8 +62,57 @@ class AuthService {
         schoolName: school.name,
         roles: roleCodes,
       },
-      token,
+      token: accessToken,
+      refreshToken,
       urls,
+    };
+  }
+
+  async refreshTokens(refreshToken) {
+    const decoded = jwt.verify(refreshToken, jwtConfig.secret);
+    if (decoded.type !== 'refresh') throw new Error('Invalid refresh token');
+
+    const users = await sql`
+      SELECT user_id, school_id, email, first_name, last_name, is_active
+      FROM users WHERE user_id = ${decoded.userId} AND school_id = ${decoded.schoolId}
+    `;
+    if (users.length === 0 || !users[0].is_active) throw new Error('User not found');
+
+    const user = users[0];
+
+    const schools = await sql`
+      SELECT s.school_id, s.name, s.subdomain, s.is_active, wt.template_code
+      FROM schools s
+      LEFT JOIN website_templates wt ON s.website_template_id = wt.template_id
+      WHERE s.school_id = ${user.school_id}
+    `;
+    if (schools.length === 0) throw new Error('School not found');
+
+    const school = schools[0];
+
+    const roleRows = await sql`
+      SELECT r.role_code FROM user_roles ur
+      JOIN roles r ON ur.role_id = r.role_id
+      WHERE ur.user_id = ${user.user_id}
+    `;
+    const roleCodes = roleRows.map(r => r.role_code);
+
+    const newAccessToken = this.generateAccessToken(user, school, roleCodes);
+    const newRefreshToken = this.generateRefreshToken(user, school, roleCodes);
+
+    return {
+      token: newAccessToken,
+      refreshToken: newRefreshToken,
+      user: {
+        id: user.user_id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        schoolId: user.school_id,
+        subdomain: school.subdomain,
+        schoolName: school.name,
+        roles: roleCodes,
+      },
     };
   }
   /**

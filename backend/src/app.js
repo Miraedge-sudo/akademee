@@ -5,6 +5,7 @@
 const express = require('express');
 const helmet = require('helmet');
 const compression = require('compression');
+const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const corsOptions = require('./config/cors');
 const { initSentry } = require('./config/sentry');
@@ -60,6 +61,7 @@ app.use(compression());
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Request ID
 app.use(requestIdMiddleware);

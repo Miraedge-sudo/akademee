@@ -89,11 +89,8 @@ export default function RegisterPage() {
       const response = await api.post(API_ENDPOINTS.SCHOOLS.REGISTER, formData);
       if (response.data.success) {
         const { data } = response.data;
-        
-        // Store token
-        if (data?.token) {
-          localStorage.setItem("token", data.token);
-        }
+
+        // Cookies are set by the backend — no manual token storage needed
 
         // Save subdomain for subdomain routing
         const schoolSubdomain = data?.school?.subdomain || formData.subdomain;
