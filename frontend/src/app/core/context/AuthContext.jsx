@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext } from "react";
-import api from "../api/axios";
+import api, { setAccessToken } from "../api/axios";
 import { API_ENDPOINTS } from "../api/endpoints";
 import { ThemeContext } from "./ThemeContext";
 import { getTokenFromUrl, getSubdomain, saveSubdomain, clearSubdomain } from "../utils/subdomainHelper";
@@ -10,68 +10,52 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(null);
   const { updatePrimaryColor } = useContext(ThemeContext);
   const onboardingCompleted = user?.onboardingCompleted ?? false;
 
-  const checkAuth = async () => {
-    // Check URL for token parameter (passed after subdomain redirect)
+  useEffect(() => {
     const urlToken = getTokenFromUrl();
-    if (urlToken) {
-      localStorage.setItem("token", urlToken);
-      // Clean URL — remove ?token=... without triggering a reload
-      const cleanUrl = window.location.pathname + window.location.hash;
-      window.history.replaceState({}, document.title, cleanUrl);
-    }
+    const exchangePromise = urlToken
+      ? api.post(API_ENDPOINTS.AUTH.EXCHANGE, { token: urlToken }).then(res => {
+          const exchangeToken = res.data?.data?.token;
+          if (exchangeToken) {
+            setAccessToken(exchangeToken);
+            setToken(exchangeToken);
+          }
+        }).catch(() => {})
+      : Promise.resolve();
 
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const response = await api.get(API_ENDPOINTS.AUTH.ME);
+    exchangePromise
+      .then(() => window.history.replaceState({}, document.title, window.location.pathname + window.location.hash))
+      .then(() => api.get(API_ENDPOINTS.AUTH.ME))
+      .then(response => {
         const userData = response.data.data;
         setUser(userData);
         setIsAuthenticated(true);
-
-        // Only persist subdomain after successful authentication —
-        // prevents public pages (login/register) from contaminating localStorage
-        // with a subdomain the user doesn't own.
         const detectedSubdomain = getSubdomain();
-        if (detectedSubdomain) {
-          saveSubdomain(detectedSubdomain);
-        }
-
-        // Load school primary color if available
-        if (userData.school?.primaryColor) {
-          updatePrimaryColor(userData.school.primaryColor);
-        }
-      } catch {
-        localStorage.removeItem("token");
+        if (detectedSubdomain) saveSubdomain(detectedSubdomain);
+        if (userData.school?.primaryColor) updatePrimaryColor(userData.school.primaryColor);
+      })
+      .catch(() => {
         setUser(null);
         setIsAuthenticated(false);
-      }
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    checkAuth();
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (credentials) => {
     try {
       const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
       const data = response.data.data;
-      const token = data.token;
 
-      localStorage.setItem("token", token);
+      const userData = data.user;
 
-      // Fetch full user profile with onboarding status
-      const meResponse = await api.get(API_ENDPOINTS.AUTH.ME);
-      const userData = meResponse.data.data;
-
+      setAccessToken(data.token);
+      setToken(data.token);
       setUser(userData);
       setIsAuthenticated(true);
 
-      // Load school primary color if available
       if (userData.school?.primaryColor) {
         updatePrimaryColor(userData.school.primaryColor);
       }
@@ -80,7 +64,7 @@ export function AuthProvider({ children }) {
         success: true,
         onboardingCompleted: userData.onboardingCompleted,
         subdomain: userData.subdomain,
-        token: token,
+        token: data.token,
       };
     } catch (error) {
       console.error("Login error:", error);
@@ -91,12 +75,15 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
+  const logout = async () => {
+    try {
+      await api.post(API_ENDPOINTS.AUTH.LOGOUT);
+    } catch { /* continue */ }
+    setAccessToken(null);
+    setToken(null);
     clearSubdomain();
     setUser(null);
     setIsAuthenticated(false);
-    // Reset to default color
     updatePrimaryColor("#085041");
   };
 
@@ -114,6 +101,7 @@ export function AuthProvider({ children }) {
         isAuthenticated,
         loading,
         onboardingCompleted,
+        token,
         login,
         logout,
         verifySchool,

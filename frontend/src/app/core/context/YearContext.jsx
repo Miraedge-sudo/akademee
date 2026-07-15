@@ -1,13 +1,16 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import { getAcademicYears } from "../api/academicYearService";
+import { AuthContext } from "./AuthContext";
 
 export const YearContext = createContext();
 
 export function YearProvider({ children }) {
+  const { isAuthenticated } = useContext(AuthContext);
   const [selectedYearId, setSelectedYearId] = useState(null);
   const [years, setYears] = useState([]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     getAcademicYears()
       .then((data) => {
         const list = data?.years || [];
@@ -18,7 +21,7 @@ export function YearProvider({ children }) {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [isAuthenticated]);
 
   return (
     <YearContext.Provider value={{ selectedYearId, setSelectedYearId, years }}>

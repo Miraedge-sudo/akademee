@@ -66,6 +66,14 @@ class SchoolController {
     try {
       const result = await schoolService.registerSchool(req.body);
 
+      if (result.token) {
+        const { token, refreshToken } = result;
+        const ACCESS_COOKIE_OPTIONS = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 15 * 60 * 1000 };
+        const REFRESH_COOKIE_OPTIONS = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 30 * 24 * 60 * 60 * 1000 };
+        res.cookie('access_token', token, ACCESS_COOKIE_OPTIONS);
+        if (refreshToken) res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
+      }
+
       response.success(res, 'School registered successfully', result, 201);
     } catch (error) {
       if (error.message.includes('already exists') || error.message.includes('already registered') || error.message.includes('already in use')) {

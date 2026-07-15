@@ -1044,7 +1044,7 @@ export default function OnboardingPage() {
         toast.success("Website published! 🎉");
         const schoolSubdomain =
           user?.subdomain || localStorage.getItem("akademee-subdomain");
-        const token = localStorage.getItem("token");
+        const token = user?.token;
         if (schoolSubdomain) {
           const liveUrl = buildSubdomainUrl(
             schoolSubdomain,

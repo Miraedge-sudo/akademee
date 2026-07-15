@@ -143,6 +143,7 @@ class SchoolService {
       planId,
       emailVerified: false,
       token: session.token,
+      refreshToken: session.refreshToken,
       user: session.user,
       urls,
     };
