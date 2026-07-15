@@ -51,6 +51,8 @@ router.post('/reset-password', resetPasswordLimiter, resetPasswordValidator, val
 
 router.post('/logout', authMiddleware, authController.logout);
 router.get('/me', authMiddleware, authController.getCurrentUser);
+router.post('/exchange', authController.exchangeToken);
+router.post('/refresh', authController.refresh);
 
 /**
  * @openapi

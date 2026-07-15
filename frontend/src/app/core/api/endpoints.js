@@ -7,6 +7,8 @@ export const API_ENDPOINTS = {
     RESET_PASSWORD: "/api/auth/reset-password",
     LOGOUT: "/api/auth/logout",
     ME: "/api/auth/me",
+    EXCHANGE: "/api/auth/exchange",
+    REFRESH: "/api/auth/refresh",
   },
 
   // Schools

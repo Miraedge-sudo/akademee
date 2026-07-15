@@ -2,8 +2,29 @@
  * Authentication Controller
  */
 
+const sql = require('../config/database');
 const authService = require('../services/auth.service');
 const response = require('../utils/response');
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  path: '/',
+};
+
+const ACCESS_COOKIE_OPTIONS = { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 };
+const REFRESH_COOKIE_OPTIONS = { ...COOKIE_OPTIONS, maxAge: 30 * 24 * 60 * 60 * 1000 };
+
+function setAuthCookies(res, token, refreshToken) {
+  res.cookie('access_token', token, ACCESS_COOKIE_OPTIONS);
+  res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
+}
+
+function clearAuthCookies(res) {
+  res.clearCookie('access_token', { path: '/' });
+  res.clearCookie('refresh_token', { path: '/' });
+}
 
 class AuthController {
   async login(req, res, next) {
@@ -12,7 +33,13 @@ class AuthController {
 
       const result = await authService.login(subdomain, email, password);
 
-      response.success(res, 'Login successful', result);
+      setAuthCookies(res, result.token, result.refreshToken);
+
+      response.success(res, 'Login successful', {
+        user: result.user,
+        token: result.token,
+        urls: result.urls,
+      });
     } catch (error) {
       if (
         error.message === 'Invalid email or password' ||
@@ -24,11 +51,71 @@ class AuthController {
     }
   }
 
+  async exchangeToken(req, res, next) {
+    try {
+      const { token } = req.body;
+      if (!token) return response.error(res, 'Token is required', null, 400);
+
+      const jwt = require('jsonwebtoken');
+      const jwtConfig = require('../config/jwt');
+      const decoded = jwt.verify(token, jwtConfig.secret);
+
+      const user = await authService.getCurrentUser(decoded.userId, decoded.schoolId);
+
+      const roles = decoded.roles || [];
+      const schools = await sql`
+        SELECT s.school_id, s.name, s.subdomain, s.is_active, wt.template_code
+        FROM schools s
+        LEFT JOIN website_templates wt ON s.website_template_id = wt.template_id
+        WHERE s.school_id = ${decoded.schoolId}
+      `;
+      if (schools.length === 0) return response.error(res, 'School not found', null, 404);
+
+      const result = await authService.createAuthSession(
+        { user_id: decoded.userId, school_id: decoded.schoolId, email: decoded.email, first_name: decoded.firstName, last_name: decoded.lastName },
+        schools[0],
+        roles
+      );
+
+      setAuthCookies(res, result.token, result.refreshToken);
+      response.success(res, 'Session established', { user, token: result.token });
+    } catch (error) {
+      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+        return response.error(res, 'Invalid or expired token', null, 401);
+      }
+      next(error);
+    }
+  }
+
+  async refresh(req, res, next) {
+    try {
+      const refreshToken = req.cookies?.refresh_token;
+      if (!refreshToken) return response.error(res, 'No refresh token', null, 401);
+
+      const result = await authService.refreshTokens(refreshToken);
+
+      setAuthCookies(res, result.token, result.refreshToken);
+      response.success(res, 'Tokens refreshed', { user: result.user });
+    } catch (error) {
+      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+        clearAuthCookies(res);
+        return response.error(res, 'Session expired. Please login again.', null, 401);
+      }
+      if (error.message === 'Invalid refresh token' || error.message === 'User not found' || error.message === 'School not found') {
+        clearAuthCookies(res);
+        return response.error(res, 'Session expired. Please login again.', null, 401);
+      }
+      next(error);
+    }
+  }
+
   async logout(req, res, next) {
     try {
-      if (req.token) {
-        await authService.blacklistToken(req.token);
+      const token = req.token || req.cookies?.access_token;
+      if (token) {
+        await authService.blacklistToken(token);
       }
+      clearAuthCookies(res);
       response.success(res, 'Logout successful');
     } catch (error) {
       next(error);
