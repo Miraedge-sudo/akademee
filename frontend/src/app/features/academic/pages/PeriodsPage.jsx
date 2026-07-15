@@ -4,8 +4,8 @@ import {
   FiPlus, FiEdit2, FiTrash2, FiCheck, FiX, FiCalendar,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
-
-const MOCK_API = "http://localhost:3001";
+import { getTerms, createTerm, updateTerm, deleteTerm } from "../../../core/api/academicYearService";
+import { getAcademicYears } from "../../../core/api/academicYearService";
 
 export default function PeriodsPage() {
   const { i18n } = useTranslation("common");
@@ -29,8 +29,8 @@ export default function PeriodsPage() {
   const fetchData = () => {
     setLoading(true);
     Promise.all([
-      fetch(`${MOCK_API}/periods`).then((r) => r.json()),
-      fetch(`${MOCK_API}/academicYears`).then((r) => r.json()),
+      getTerms().then((d) => d?.periods || d || []),
+      getAcademicYears().then((d) => d?.years || d || []),
     ]).then(([p, y]) => {
       setPeriods(p || []);
       setYears(y || []);
@@ -60,17 +60,13 @@ export default function PeriodsPage() {
       .filter((p) => p.academicYearId === yearFilter)
       .reduce((m, p) => Math.max(m, p.order || 0), 0);
     try {
-      await fetch(`${MOCK_API}/periods`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          academicYearId: yearFilter,
-          name: newName.trim(),
-          nameFr: newNameFr.trim() || newName.trim(),
-          order: maxOrder + 1,
-          startDate: newStart,
-          endDate: newEnd,
-        }),
+      await createTerm({
+        academicYearId: yearFilter,
+        name: newName.trim(),
+        type: 'term',
+        startDate: newStart,
+        endDate: newEnd,
+        sortOrder: maxOrder + 1,
       });
       fetchData();
       setNewName(""); setNewNameFr(""); setNewStart(""); setNewEnd("");
@@ -98,28 +94,20 @@ export default function PeriodsPage() {
       return;
     }
     try {
-      const res = await fetch(`${MOCK_API}/periods/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: editName.trim(),
-          nameFr: editNameFr.trim() || editName.trim(),
-          startDate: editStart,
-          endDate: editEnd,
-        }),
+      await updateTerm(id, {
+        name: editName.trim(),
+        startDate: editStart,
+        endDate: editEnd,
       });
-      if (res.ok) {
-        const updated = await res.json();
-        setPeriods((prev) => prev.map((p) => (p.id === id ? { ...p, ...updated } : p)));
-        cancelEdit();
-        toast.success(isFr ? "Période modifiée" : "Period updated");
-      }
+      fetchData();
+      cancelEdit();
+      toast.success(isFr ? "Période modifiée" : "Period updated");
     } catch { toast.error(isFr ? "Erreur" : "Error"); }
   };
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`${MOCK_API}/periods/${id}`, { method: "DELETE" });
+      await deleteTerm(id);
       setPeriods((prev) => prev.filter((p) => p.id !== id));
       toast.success(isFr ? "Période supprimée" : "Period deleted");
     } catch { toast.error(isFr ? "Erreur" : "Error"); }

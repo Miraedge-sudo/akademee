@@ -103,7 +103,17 @@ export default function AddStudentDrawer({ isOpen, onClose, onSuccess, student }
 
   const handleChange = (field) => (e) => {
     const value = e.target ? e.target.value : e;
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+      // When classId changes, auto-fill className from the class list
+      if (field === "classId" && value) {
+        const selected = classes.find((c) => c.id === value);
+        if (selected) {
+          updated.className = selected.name;
+        }
+      }
+      return updated;
+    });
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 

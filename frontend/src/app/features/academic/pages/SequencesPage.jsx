@@ -1,128 +1,147 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FiPlus, FiEdit2, FiTrash2, FiCheck, FiX, FiClock,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
+import api from "../../../core/api/axios";
+import { API_ENDPOINTS } from "../../../core/api/endpoints";
+import { sequencesService } from "../../../core/api/sequencesService";
 
-const MOCK_API = "http://localhost:3001";
+// ── Récupération des périodes depuis l'API v1 ──
+async function fetchPeriodes() {
+  const response = await api.get(API_ENDPOINTS.V1.PERIODES);
+  const data = response.data;
+  if (Array.isArray(data)) return data;
+  if (data?.content && Array.isArray(data.content)) return data.content;
+  if (data?.data && Array.isArray(data.data)) return data.data;
+  return [];
+}
 
 export default function SequencesPage() {
   const { i18n } = useTranslation("common");
   const isFr = i18n.language === "fr";
 
   const [sequences, setSequences] = useState([]);
-  const [periods, setPeriods] = useState([]);
+  const [periodes, setPeriodes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [periodFilter, setPeriodFilter] = useState("all");
+  const [selectedPeriodeId, setSelectedPeriodeId] = useState("all");
   const [showAdd, setShowAdd] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newNameFr, setNewNameFr] = useState("");
+  const [newLibelle, setNewLibelle] = useState("");
   const [newStart, setNewStart] = useState("");
   const [newEnd, setNewEnd] = useState("");
   const [editingId, setEditingId] = useState(null);
-  const [editName, setEditName] = useState("");
-  const [editNameFr, setEditNameFr] = useState("");
+  const [editLibelle, setEditLibelle] = useState("");
   const [editStart, setEditStart] = useState("");
   const [editEnd, setEditEnd] = useState("");
 
-  const fetchData = () => {
-    setLoading(true);
-    Promise.all([
-      fetch(`${MOCK_API}/sequences`).then((r) => r.json()),
-      fetch(`${MOCK_API}/periods`).then((r) => r.json()),
-    ]).then(([s, p]) => {
-      setSequences(s || []);
-      setPeriods(p || []);
+  // Chargement initial des périodes + auto-sélection de la 1ère
+  useEffect(() => {
+    fetchPeriodes()
+      .then((data) => {
+        setPeriodes(data);
+        if (data.length > 0 && selectedPeriodeId === "all") {
+          setSelectedPeriodeId(data[0].id);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Chargement des séquences quand la période sélectionnée change
+  const loadSequences = useCallback(async (periodeId) => {
+    if (!periodeId || periodeId === "all") {
+      setSequences([]);
       setLoading(false);
-    }).catch(() => setLoading(false));
-  };
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await sequencesService.getByPeriodeId(periodeId);
+      setSequences(data);
+    } catch {
+      setSequences([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    loadSequences(selectedPeriodeId);
+  }, [selectedPeriodeId, loadSequences]);
 
-  const filtered = useMemo(() => {
-    if (periodFilter === "all") return sequences;
-    return sequences.filter((s) => s.periodId === periodFilter);
-  }, [sequences, periodFilter]);
-
+  // Tri par ordre
   const sorted = useMemo(() =>
-    [...filtered].sort((a, b) => (a.number || 0) - (b.number || 0)),
-  [filtered]);
-
-  const getPeriod = (id) => periods.find((p) => p.id === id);
+    [...sequences].sort((a, b) => a.ordre - b.ordre),
+  [sequences]);
 
   const handleAdd = async () => {
-    if (!newName.trim() || !newStart || !newEnd || periodFilter === "all") {
+    if (!newLibelle.trim() || !newStart || !newEnd || selectedPeriodeId === "all") {
       toast.error(isFr ? "Remplissez tous les champs" : "Fill all fields");
       return;
     }
-    const maxNum = sequences
-      .filter((s) => s.periodId === periodFilter)
-      .reduce((m, s) => Math.max(m, s.number || 0), 0);
     try {
-      await fetch(`${MOCK_API}/sequences`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          periodId: periodFilter,
-          name: newName.trim(),
-          nameFr: newNameFr.trim() || newName.trim(),
-          number: maxNum + 1,
-          startDate: newStart,
-          endDate: newEnd,
-        }),
+      await sequencesService.create({
+        libelle: newLibelle.trim(),
+        periodeId: Number(selectedPeriodeId),
+        dateDebutSaisie: newStart,
+        dateFinSaisie: newEnd,
       });
-      fetchData();
-      setNewName(""); setNewNameFr(""); setNewStart(""); setNewEnd("");
+      await loadSequences(selectedPeriodeId);
+      setNewLibelle(""); setNewStart(""); setNewEnd("");
       setShowAdd(false);
       toast.success(isFr ? "Séquence ajoutée" : "Sequence added");
-    } catch { toast.error(isFr ? "Erreur" : "Error"); }
+    } catch {
+      toast.error(isFr ? "Erreur lors de la création" : "Error creating sequence");
+    }
   };
 
   const startEdit = (s) => {
     setEditingId(s.id);
-    setEditName(s.name || "");
-    setEditNameFr(s.nameFr || "");
-    setEditStart(s.startDate || "");
-    setEditEnd(s.endDate || "");
+    setEditLibelle(s.libelle || "");
+    setEditStart(s.dateDebutSaisie || "");
+    setEditEnd(s.dateFinSaisie || "");
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setEditName(""); setEditNameFr(""); setEditStart(""); setEditEnd("");
+    setEditLibelle(""); setEditStart(""); setEditEnd("");
   };
 
   const handleEdit = async (id) => {
-    if (!editName.trim() || !editStart || !editEnd) {
+    if (!editLibelle.trim() || !editStart || !editEnd) {
       toast.error(isFr ? "Remplissez tous les champs" : "Fill all fields");
       return;
     }
     try {
-      const res = await fetch(`${MOCK_API}/sequences/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: editName.trim(),
-          nameFr: editNameFr.trim() || editName.trim(),
-          startDate: editStart,
-          endDate: editEnd,
-        }),
+      await sequencesService.update(id, {
+        libelle: editLibelle.trim(),
+        dateDebutSaisie: editStart,
+        dateFinSaisie: editEnd,
       });
-      if (res.ok) {
-        const updated = await res.json();
-        setSequences((prev) => prev.map((s) => (s.id === id ? { ...s, ...updated } : s)));
-        cancelEdit();
-        toast.success(isFr ? "Séquence modifiée" : "Sequence updated");
-      }
-    } catch { toast.error(isFr ? "Erreur" : "Error"); }
+      await loadSequences(selectedPeriodeId);
+      cancelEdit();
+      toast.success(isFr ? "Séquence modifiée" : "Sequence updated");
+    } catch {
+      toast.error(isFr ? "Erreur lors de la modification" : "Error updating sequence");
+    }
   };
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`${MOCK_API}/sequences/${id}`, { method: "DELETE" });
+      await sequencesService.delete(id);
       setSequences((prev) => prev.filter((s) => s.id !== id));
       toast.success(isFr ? "Séquence supprimée" : "Sequence deleted");
-    } catch { toast.error(isFr ? "Erreur" : "Error"); }
+    } catch {
+      toast.error(isFr ? "Erreur lors de la suppression" : "Error deleting sequence");
+    }
+  };
+
+  // Couleurs & libellés pour le statut
+  const statutConfig = {
+    EN_ATTENTE: { label: isFr ? "En attente" : "Pending", color: "text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400" },
+    OUVERTE: { label: isFr ? "Ouverte" : "Open", color: "text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400" },
+    FERMEE: { label: isFr ? "Fermée" : "Closed", color: "text-red-600 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400" },
+    VERROUILLEE: { label: isFr ? "Verrouillée" : "Locked", color: "text-purple-600 bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-400" },
   };
 
   return (
@@ -137,41 +156,41 @@ export default function SequencesPage() {
           </div>
           <p className="text-[13.5px] text-surface-400 ml-3.5">
             {isFr
-              ? "Gérez les séquences d'évaluation pour chaque période"
-              : "Manage evaluation sequences for each period"}
+              ? "Gérez les séquences d'évaluation pour chaque période pédagogique"
+              : "Manage evaluation sequences for each academic period"}
           </p>
         </div>
       </div>
 
-      {/* Period filter */}
+      {/* Filtre par période */}
       <div className="flex gap-1.5 mb-5 flex-wrap">
         <button
-          onClick={() => { setPeriodFilter("all"); setShowAdd(false); }}
+          onClick={() => { setSelectedPeriodeId("all"); setShowAdd(false); }}
           className={`px-3 py-1.5 rounded-lg text-[12.5px] font-semibold border transition-all ${
-            periodFilter === "all"
+            selectedPeriodeId === "all"
               ? "bg-primary-600 text-white border-primary-600 shadow-sm"
               : "bg-white dark:bg-surface-800 text-surface-500 border-surface-200 dark:border-surface-600 hover:border-primary-400"
           }`}
         >
           {isFr ? "Toutes" : "All"}
         </button>
-        {periods.map((p) => (
+        {periodes.map((p) => (
           <button
             key={p.id}
-            onClick={() => { setPeriodFilter(p.id); setShowAdd(false); }}
+            onClick={() => { setSelectedPeriodeId(p.id); setShowAdd(false); }}
             className={`px-3 py-1.5 rounded-lg text-[12.5px] font-semibold border transition-all ${
-              periodFilter === p.id
+              selectedPeriodeId === p.id
                 ? "bg-primary-600 text-white border-primary-600 shadow-sm"
                 : "bg-white dark:bg-surface-800 text-surface-500 border-surface-200 dark:border-surface-600 hover:border-primary-400"
             }`}
           >
-            {p.name}
+            {p.label}
           </button>
         ))}
       </div>
 
-      {/* Add */}
-      {periodFilter !== "all" && !showAdd && (
+      {/* Bouton Ajouter */}
+      {selectedPeriodeId !== "all" && !showAdd && (
         <button onClick={() => setShowAdd(true)}
           className="inline-flex items-center gap-2 h-10 px-4 mb-5 rounded-lg bg-primary-900 text-white text-sm font-bold hover:bg-primary-700 transition-all">
           <FiPlus className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -179,17 +198,14 @@ export default function SequencesPage() {
         </button>
       )}
 
+      {/* Formulaire d'ajout */}
       {showAdd && (
         <div className="flex flex-wrap items-end gap-3 mb-5 p-4 bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700">
           <div>
-            <label className="block text-[10px] font-semibold text-surface-500 mb-1">{isFr ? "Nom EN" : "Name EN"}</label>
-            <input value={newName} onChange={(e) => setNewName(e.target.value)}
-              placeholder="Sequence 1" className="h-10 px-3 rounded-lg border border-surface-200 dark:border-surface-600 text-sm bg-transparent outline-none focus:border-primary-600" />
-          </div>
-          <div>
-            <label className="block text-[10px] font-semibold text-surface-500 mb-1">{isFr ? "Nom FR" : "Name FR"}</label>
-            <input value={newNameFr} onChange={(e) => setNewNameFr(e.target.value)}
-              placeholder="Séquence 1" className="h-10 px-3 rounded-lg border border-surface-200 dark:border-surface-600 text-sm bg-transparent outline-none focus:border-primary-600" />
+            <label className="block text-[10px] font-semibold text-surface-500 mb-1">{isFr ? "Libellé" : "Label"}</label>
+            <input value={newLibelle} onChange={(e) => setNewLibelle(e.target.value)}
+              placeholder={isFr ? "Séquence 1" : "Sequence 1"}
+              className="h-10 px-3 rounded-lg border border-surface-200 dark:border-surface-600 text-sm bg-transparent outline-none focus:border-primary-600" />
           </div>
           <div>
             <label className="block text-[10px] font-semibold text-surface-500 mb-1">{isFr ? "Début" : "Start"}</label>
@@ -212,7 +228,7 @@ export default function SequencesPage() {
         </div>
       )}
 
-      {/* Table */}
+      {/* Tableau */}
       <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex justify-center py-14"><div className="w-8 h-8 rounded-full border-4 border-surface-200 border-t-primary-600 animate-spin" /></div>
@@ -220,7 +236,7 @@ export default function SequencesPage() {
           <div className="text-center py-14">
             <FiClock className="w-8 h-8 text-surface-300 mx-auto mb-3" />
             <p className="text-sm font-semibold text-surface-500">{isFr ? "Aucune séquence" : "No sequences"}</p>
-            {periodFilter !== "all" && (
+            {selectedPeriodeId !== "all" && (
               <button onClick={() => setShowAdd(true)} className="mt-3 text-xs font-semibold text-primary-600 hover:underline">{isFr ? "Ajouter" : "Add"} →</button>
             )}
           </div>
@@ -230,37 +246,33 @@ export default function SequencesPage() {
               <thead>
                 <tr className="bg-surface-50 dark:bg-surface-800/50 border-b border-surface-100 dark:border-surface-700">
                   <th className="px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-surface-400">#</th>
-                  <th className="px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-surface-400">{isFr ? "Nom" : "Name"}</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-surface-400">{isFr ? "Libellé" : "Label"}</th>
                   <th className="px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-surface-400">{isFr ? "Période" : "Period"}</th>
                   <th className="px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-surface-400">{isFr ? "Dates" : "Dates"}</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-surface-400">{isFr ? "Statut" : "Status"}</th>
                   <th className="px-4 py-3 text-right text-[11px] font-bold tracking-wider uppercase text-surface-400">{isFr ? "Actions" : "Actions"}</th>
                 </tr>
               </thead>
               <tbody>
                 {sorted.map((s, i) => {
-                  const period = getPeriod(s.periodId);
+                  const periode = periodes.find((p) => Number(p.id) === Number(s.periodeId));
                   const isEditing = editingId === s.id;
+                  const st = statutConfig[s.statut] || statutConfig.EN_ATTENTE;
                   return (
                     <tr key={s.id} className="group border-t border-surface-50 dark:border-surface-700/50 hover:bg-surface-50/50 dark:hover:bg-surface-700/20 transition-colors">
-                      <td className="px-4 py-3 text-[13px] font-bold text-surface-400">{s.number || i + 1}</td>
+                      <td className="px-4 py-3 text-[13px] font-bold text-surface-400">{s.ordre || i + 1}</td>
                       <td className="px-4 py-3">
                         {isEditing ? (
                           <div className="flex flex-col gap-1.5">
-                            <input value={editName} onChange={(e) => setEditName(e.target.value)}
-                              className="h-8 px-2 rounded-md border border-surface-200 dark:border-surface-600 text-sm bg-transparent outline-none focus:border-primary-600 w-full max-w-[140px]"
-                              placeholder="Sequence 1" />
-                            <input value={editNameFr} onChange={(e) => setEditNameFr(e.target.value)}
-                              className="h-8 px-2 rounded-md border border-surface-200 dark:border-surface-600 text-sm bg-transparent outline-none focus:border-primary-600 w-full max-w-[140px]"
-                              placeholder="Séquence 1" />
+                            <input value={editLibelle} onChange={(e) => setEditLibelle(e.target.value)}
+                              className="h-8 px-2 rounded-md border border-surface-200 dark:border-surface-600 text-sm bg-transparent outline-none focus:border-primary-600 w-full max-w-[180px]"
+                              placeholder={isFr ? "Séquence 1" : "Sequence 1"} />
                           </div>
                         ) : (
-                          <>
-                            <span className="text-[14px] font-semibold text-surface-800 dark:text-surface-100">{s.name}</span>
-                            {s.nameFr && <span className="text-[11px] text-surface-400 ml-2">({s.nameFr})</span>}
-                          </>
+                          <span className="text-[14px] font-semibold text-surface-800 dark:text-surface-100">{s.libelle}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-[13px] text-surface-500">{period?.name || `Period #${s.periodId}`}</td>
+                      <td className="px-4 py-3 text-[13px] text-surface-500">{periode?.label || `Période #${s.periodeId}`}</td>
                       <td className="px-4 py-3">
                         {isEditing ? (
                           <div className="flex items-center gap-1.5">
@@ -272,9 +284,24 @@ export default function SequencesPage() {
                           </div>
                         ) : (
                           <span className="text-[13px] text-surface-500">
-                            {new Date(s.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })} – {new Date(s.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                            {s.dateDebutSaisie
+                              ? new Date(s.dateDebutSaisie).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                              : "—"} – {s.dateFinSaisie
+                                ? new Date(s.dateFinSaisie).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                                : "—"}
                           </span>
                         )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${st.color}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            s.statut === "OUVERTE" ? "bg-emerald-500" :
+                            s.statut === "FERMEE" ? "bg-red-500" :
+                            s.statut === "VERROUILLEE" ? "bg-purple-500" :
+                            "bg-amber-500"
+                          }`} />
+                          {st.label}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-right">
                         {isEditing ? (

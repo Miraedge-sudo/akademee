@@ -28,6 +28,7 @@ class StudentService {
       email: row.email,
       phone: row.phone,
       className: row.class_label,
+      classId: row.class_id, // from enrollments via LEFT JOIN
       dateOfBirth: row.date_of_birth,
       gender: row.gender,
       status: row.status,
@@ -44,7 +45,8 @@ class StudentService {
         st.student_id, st.user_id, st.student_number, st.registration_number,
         st.date_of_birth, st.gender, st.status, st.photo_url, st.class_label,
         st.fee_status, st.created_at,
-        u.first_name, u.last_name, u.email, u.phone
+        u.first_name, u.last_name, u.email, u.phone,
+        (SELECT e.class_id FROM enrollments e WHERE e.student_id = st.student_id AND e.status = 'active' LIMIT 1) AS class_id
       FROM students st
       INNER JOIN users u ON st.user_id = u.user_id
       WHERE st.school_id = ${schoolId}
@@ -131,7 +133,8 @@ class StudentService {
         st.student_id, st.user_id, st.student_number, st.registration_number,
         st.date_of_birth, st.gender, st.status, st.photo_url, st.class_label,
         st.fee_status, st.created_at,
-        u.first_name, u.last_name, u.email, u.phone
+        u.first_name, u.last_name, u.email, u.phone,
+        (SELECT e.class_id FROM enrollments e WHERE e.student_id = st.student_id AND e.status = 'active' LIMIT 1) AS class_id
       FROM students st
       INNER JOIN users u ON st.user_id = u.user_id
       WHERE st.school_id = ${schoolId}

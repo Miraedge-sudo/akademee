@@ -10,8 +10,29 @@ import {
   FiLoader,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
+import { getClassById, createClass, updateClass } from "../../../core/api/classService";
+import { getUsers } from "../../../core/api/userManagementService";
 
-const MOCK_API = "http://localhost:3001";
+// ── Static levels & series (will move to backend later) ──
+const EDUCATION_LEVELS = [
+  { id: 1, name: "Form 1" }, { id: 2, name: "Form 2" },
+  { id: 3, name: "Form 3" }, { id: 4, name: "Form 4" },
+  { id: 5, name: "Form 5" }, { id: 6, name: "Lower 6th" },
+  { id: 7, name: "Upper 6th" },
+  { id: 8, name: "6ème" }, { id: 9, name: "5ème" },
+  { id: 10, name: "4ème" }, { id: 11, name: "3ème" },
+  { id: 12, name: "Seconde" }, { id: 13, name: "Première" },
+  { id: 14, name: "Terminale" },
+];
+
+const EDUCATION_SERIES = [
+  { id: 1, name: "General" }, { id: 2, name: "Science" },
+  { id: 3, name: "Arts" }, { id: 4, name: "Commercial" },
+  { id: 5, name: "A4" }, { id: 6, name: "B" },
+  { id: 7, name: "C" }, { id: 8, name: "D" },
+  { id: 9, name: "E" }, { id: 10, name: "F1" },
+  { id: 11, name: "F2" }, { id: 12, name: "G" },
+];
 
 export default function CreateClassPage() {
   const { id } = useParams();
@@ -26,6 +47,7 @@ export default function CreateClassPage() {
   const [submitting, setSubmitting] = useState(false);
   const [levels, setLevels] = useState([]);
   const [series, setSeries] = useState([]);
+  const [teachers, setTeachers] = useState([]);
 
   const [form, setForm] = useState({
     name: "",
@@ -35,30 +57,33 @@ export default function CreateClassPage() {
     classTeacherId: "",
   });
 
-  // Fetch levels, series, and class data (if editing)
+  // Load levels, series, and class data (if editing)
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [levelsRes, seriesRes] = await Promise.all([
-          fetch(`${MOCK_API}/systemLevels`).then((r) => r.json()),
-          fetch(`${MOCK_API}/systemSeries`).then((r) => r.json()),
-        ]);
-        setLevels(levelsRes || []);
-        setSeries(seriesRes || []);
+        // Static reference data (will move to backend later)
+        setLevels(EDUCATION_LEVELS);
+        setSeries(EDUCATION_SERIES);
+
+        // Fetch teachers for the class teacher dropdown
+        try {
+          const teachersData = await getUsers({ role: "TEACHER" });
+          setTeachers(Array.isArray(teachersData) ? teachersData : (teachersData?.users || []));
+        } catch (err) {
+          console.warn("Could not load teachers:", err);
+          setTeachers([]);
+        }
 
         if (isEditing) {
-          const classRes = await fetch(`${MOCK_API}/classes/${id}`);
-          if (classRes.ok) {
-            const cls = await classRes.json();
-            setForm({
-              name: cls.name || "",
-              levelId: cls.levelId?.toString() || "",
-              seriesId: cls.seriesId?.toString() || "",
-              capacity: cls.capacity || 40,
-              classTeacherId: cls.classTeacherId?.toString() || "",
-            });
-          }
+          const cls = await getClassById(id);
+          setForm({
+            name: cls.name || "",
+            levelId: cls.levelId?.toString() || "",
+            seriesId: cls.seriesId?.toString() || "",
+            capacity: cls.capacity || 40,
+            classTeacherId: cls.classTeacherId?.toString() || "",
+          });
         }
       } catch (err) {
         console.error("Error loading data:", err);
@@ -104,22 +129,14 @@ export default function CreateClassPage() {
         levelId: form.levelId ? Number(form.levelId) : null,
         seriesId: form.seriesId ? Number(form.seriesId) : null,
         capacity: form.capacity,
-        classTeacherId: form.classTeacherId ? Number(form.classTeacherId) : null,
+        classTeacherId: form.classTeacherId || null,
       };
 
       if (isEditing) {
-        await fetch(`${MOCK_API}/classes/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        await updateClass(id, payload);
         toast.success(isFr ? "Classe modifiée !" : "Class updated!");
       } else {
-        await fetch(`${MOCK_API}/classes`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...payload, studentsCount: 0 }),
-        });
+        await createClass({ ...payload, studentsCount: 0 });
         toast.success(isFr ? "Classe créée !" : "Class created!");
       }
       navigate("/dashboard/classes");
@@ -245,6 +262,34 @@ export default function CreateClassPage() {
             </div>
           </div>
 
+          {/* Class Teacher */}
+          <div>
+            <label className={labelClass}>
+              {isFr ? "Professeur titulaire" : "Class teacher"}
+              <span className="text-surface-300 font-normal ml-1">({isFr ? "optionnel" : "optional"})</span>
+            </label>
+            <select
+              value={form.classTeacherId}
+              onChange={(e) => updateField("classTeacherId", e.target.value)}
+              className={inputClass}
+            >
+              <option value="">
+                {isFr ? "Aucun professeur titulaire" : "No class teacher"}
+              </option>
+              {teachers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.firstName} {t.lastName}
+                  {t.email ? ` — ${t.email}` : ""}
+                </option>
+              ))}
+            </select>
+            <p className={hintClass}>
+              {isFr
+                ? "Le professeur titulaire sera responsable de cette classe"
+                : "The class teacher will be responsible for this class"}
+            </p>
+          </div>
+
           {/* Capacity */}
           <div>
             <label className={labelClass}>
@@ -306,6 +351,9 @@ export default function CreateClassPage() {
                       ? `${selectedLevel.name} · ${selectedSeries.name}`
                       : selectedLevel?.name || selectedSeries?.name || (isFr ? "Aucun niveau/série" : "No level/series")}
                     {form.capacity > 0 && ` · ${form.capacity} ${isFr ? "places" : "seats"}`}
+                    {form.classTeacherId && teachers.find((t) => t.id == form.classTeacherId) && (
+                      <span> · {isFr ? "Titulaire" : "Teacher"}: {teachers.find((t) => t.id == form.classTeacherId).firstName}</span>
+                    )}
                   </div>
                 </div>
               </div>

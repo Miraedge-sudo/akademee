@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../core/hooks/useTheme";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useEducationalSystems } from "../../../core/context/EducationalSystemContext";
+import { YearContext } from "../../../core/context/YearContext";
+import { getAcademicYears, createAcademicYear, deleteAcademicYear } from "../../../core/api/academicYearService";
 import {
   FiCalendar,
   FiBookOpen,
@@ -19,17 +21,31 @@ import {
   FiEdit3,
   FiX,
   FiCheck,
+  FiTrash2,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 
-// ── Mock server URL ──
-const MOCK_API = "http://localhost:3001";
-
 // ── Transform raw year data from API to display format ──
 function transformYear(raw) {
-  const status = raw.status || "future";
+  if (!raw) return null;
+  const now = new Date();
+  const end = raw.endDate ? new Date(raw.endDate) : null;
+  
+  // Derive status: isCurrent=true → active, end date in past → archive, else → future
+  let status = raw.status;
+  if (!status) {
+    if (raw.isCurrent) status = "active";
+    else if (end && end < now) status = "archive";
+    else status = "future";
+  }
+  // Normalize: backend might send "current" instead of "active"
+  if (status === "current") status = "active";
+  
   const isActive = status === "active";
   const isArchive = status === "archive";
+
+  // Ensure status is one of the three expected values
+  if (!["active", "archive", "future"].includes(status)) status = "future";
 
   const config = {
     active: {
@@ -56,6 +72,14 @@ function transformYear(raw) {
   return {
     ...raw,
     ...c,
+    status, // ensure status is explicitly set
+    // Default values for fields that existed in mock but not in real API
+    sequences: raw.sequences || 3,
+    system: raw.system || "",
+    students: raw.students || 0,
+    teachers: raw.teachers || 0,
+    classes: raw.classes || 0,
+    passRate: raw.passRate || null,
     footerPct: isArchive ? (raw.passRate || 0) : (isActive ? 35 : 0),
     currentSequence: isActive ? 2 : null,
   };
@@ -122,55 +146,19 @@ function CreateYearModal({ open, onClose, onCreated }) {
     }
 
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 800));
 
-    const isActive = status === "current";
-    const yearConfig = {
-      id: `y${Date.now()}`,
-      name: form.name,
-      startDate: form.startDate,
-      endDate: form.endDate,
-      sequences: form.sequences,
-      isCurrent: isActive,
-      students: 0, teachers: 0, classes: 0, passRate: null,
-      status: isActive ? "active" : "future",
-      accentFrom: isActive ? "#085041" : "#3B82F6",
-      accentTo: isActive ? "#5DCAA5" : "#93C5FD",
-      icon: isActive ? FiCalendar : FiEdit3,
-      iconBg: isActive ? "#E1F5EE" : "rgba(59,130,246,0.08)",
-      iconColor: isActive ? "#085041" : "#3B82F6",
-      badgeLabel: isActive ? (isFr ? "Active" : "Active") : (isFr ? "Planifiée" : "Planned"),
-      footerLabel: isActive ? (isFr ? "Progression" : "Year progress") : (isFr ? "Mode configuration" : "Setup mode"),
-      footerPct: isActive ? 0 : 0,
-      footerAction: isActive ? (isFr ? "Accès complet" : "Full access") : (isFr ? "Configurer" : "Configure"),
-      footerActionIcon: isActive ? FiArrowRight : FiSettings,
-      footerActionColor: isActive ? "#085041" : "#3B82F6",
-    };
-
-    // Save to mock server
+    // Save to real backend API
     try {
-      const payload = {
+      const saved = await createAcademicYear({
         name: form.name,
         startDate: form.startDate,
         endDate: form.endDate,
-        sequences: form.sequences,
-        isCurrent: isActive,
-        students: 0, teachers: 0, classes: 0, passRate: null,
-        status: isActive ? "active" : "future",
-      };
-      const res = await fetch(`${MOCK_API}/academicYears`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
       });
-      if (res.ok) {
-        const saved = await res.json();
-        onCreated(transformYear(saved));
-      } else {
-        onCreated(transformYear({ ...payload, id: `y${Date.now()}` }));
-      }
+      onCreated(transformYear(saved));
     } catch {
-      onCreated(transformYear({ ...yearConfig, id: `y${Date.now()}` }));
+      toast.error(isFr ? "Erreur lors de la création" : "Error creating academic year");
+      setSubmitting(false);
+      return;
     }
 
     setSubmitting(false);
@@ -391,7 +379,7 @@ function CreateYearModal({ open, onClose, onCreated }) {
 
 // ── Sub-components ──
 
-function YearCard({ year, selected, onSelect }) {
+function YearCard({ year, selected, onSelect, onDelete, isFr: isFrProp }) {
   const Icon = year.icon;
   const labelColor = year.status === "future" ? year.iconColor : undefined;
   const selBorderColor = year.status === "active" ? "#085041" : year.status === "archive" ? "#F59E0B" : "#3B82F6";
@@ -483,10 +471,20 @@ function YearCard({ year, selected, onSelect }) {
                     <div className="text-lg font-extrabold text-surface-300 leading-none mb-0.5">—</div>
                     <div className="text-[10px] text-surface-400 font-medium">Teachers</div>
                   </div>
-                  <div className="text-center px-3 sm:px-4 py-2.5 bg-surface-50 dark:bg-surface-800/50 rounded-lg border border-surface-100 dark:border-surface-700 min-w-[56px]">
-                    <div className="text-lg font-extrabold text-surface-300 leading-none mb-0.5">—</div>
-                    <div className="text-[10px] text-surface-400 font-medium">Classes</div>
-                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onDelete) onDelete(year.id, year.name);
+                    }}
+                    title={isFrProp ? "Supprimer" : "Delete"}
+                    className="group flex flex-col items-center justify-center px-3 sm:px-4 py-2.5 rounded-lg border border-red-200 dark:border-red-900/30 
+                      hover:bg-red-50 dark:hover:bg-red-900/20 transition-all min-w-[56px]"
+                  >
+                    <FiTrash2 className="w-[18px] h-[18px] text-red-400 group-hover:text-red-600 transition-colors" />
+                    <span className="text-[10px] text-red-400 group-hover:text-red-600 font-medium mt-0.5 transition-colors">
+                      {isFrProp ? "Suppr." : "Delete"}
+                    </span>
+                  </button>
                 </>
               ) : (
                 <>
@@ -578,62 +576,29 @@ export default function AcademicYearsPage() {
   const isFr = lang === "fr";
   const pc = primaryColor || "#085041";
 
+  const { setSelectedYearId, refreshYears } = useContext(YearContext);
+
   const [years, setYears] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [entering, setEntering] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // ── localStorage key for persisting user-created years ──
-  const LS_KEY = "akademee_academic_years";
-
-  // Remove React components before serializing (icon, footerActionIcon are functions)
-  const toSerializable = (yearsArray) =>
-    yearsArray.map(({ icon, footerActionIcon, ...rest }) => rest);
-
-  // ── Load years from mock server + localStorage fallback ──
+  // ── Load years from real backend API ──
   useEffect(() => {
-    fetch(`${MOCK_API}/academicYears`)
-      .then((res) => res.json())
+    getAcademicYears()
       .then((data) => {
-        const serverYears = (data || []).map(transformYear);
-        // Restore user-created years from localStorage
-        let localYears = [];
-        try {
-          const raw = localStorage.getItem(LS_KEY);
-          if (raw) localYears = JSON.parse(raw).map(transformYear);
-        } catch { /* ignore */ }
-
-        // Merge: local-only (user-created) years at top, then server years without duplicates
-        const serverIds = new Set(serverYears.map((y) => y.id));
-        const onlyLocal = localYears.filter((ly) => !serverIds.has(ly.id));
-        const merged = [...onlyLocal, ...serverYears];
-        setYears(merged);
+        const serverYears = (data?.years || []).map(transformYear);
+        setYears(serverYears);
         setLoading(false);
       })
       .catch(() => {
-        // Server unreachable — load from localStorage only
-        let localYears = [];
-        try {
-          const raw = localStorage.getItem(LS_KEY);
-          if (raw) localYears = JSON.parse(raw).map(transformYear);
-        } catch { /* ignore */ }
-        setYears(localYears);
+        setYears([]);
         setLoading(false);
       });
   }, []);
 
   const selectedYear = years.find((y) => y.id === selectedId);
-
-  // Persist only serializable data (strip React components) whenever years change
-  useEffect(() => {
-    if (years.length > 0) {
-      try {
-        const serializable = toSerializable(years);
-        localStorage.setItem(LS_KEY, JSON.stringify(serializable));
-      } catch { /* quota / serialization error — silent */ }
-    }
-  }, [years]);
 
   // Group years by status
   const { activeYears, archiveYears, futureYears } = useMemo(() => {
@@ -654,20 +619,17 @@ export default function AcademicYearsPage() {
       return;
     }
 
+    // Just set the selected year in context — don't change isCurrent on the backend
+    // This preserves the active year's status and allows viewing/planning other years
+    setSelectedYearId(selectedYear.id);
+
     setEntering(true);
     const status = selectedYear.status;
-    const messages = {
-      active: [isFr ? "Entrée dans l'année..." : "Entering academic year...", isFr ? "Chargement du tableau de bord" : "Loading your dashboard"],
-      archive: [isFr ? "Chargement des archives..." : "Loading archive...", isFr ? "Mode lecture seule" : "Read-only mode"],
-      future: [isFr ? "Ouverture du mode planification..." : "Opening planning mode...", isFr ? "Chargement de la configuration" : "Loading setup"],
-    };
-    const [msg, sub] = messages[status] || messages.active;
 
     setTimeout(() => {
       setEntering(false);
-      toast.success(isFr ? "Redirection vers le tableau de bord" : "Redirecting to dashboard");
       navigate("/dashboard");
-    }, 1800);
+    }, 1200);
   };
 
   const handleCreateNew = () => {
@@ -676,6 +638,23 @@ export default function AcademicYearsPage() {
 
   const handleYearCreated = (newYear) => {
     setYears((prev) => [newYear, ...prev]);
+  };
+
+  const handleDeleteYear = async (yearId, yearName) => {
+    if (!window.confirm(
+      isFr
+        ? `Supprimer l'année ${yearName} ? Cette action est irréversible.`
+        : `Delete ${yearName} ? This action cannot be undone.`
+    )) return;
+
+    try {
+      await deleteAcademicYear(yearId);
+      setYears((prev) => prev.filter((y) => y.id !== yearId));
+      if (selectedId === yearId) setSelectedId(null);
+      toast.success(isFr ? "Année supprimée" : "Year deleted");
+    } catch {
+      toast.error(isFr ? "Erreur lors de la suppression" : "Error deleting year");
+    }
   };
 
   const schoolInitials = (user?.schoolName || "SC")
@@ -868,7 +847,7 @@ export default function AcademicYearsPage() {
               </span>
             </div>
             {futureYears.map((year) => (
-              <YearCard key={year.id} year={year} selected={selectedId === year.id} onSelect={handleSelect} />
+              <YearCard key={year.id} year={year} selected={selectedId === year.id} onSelect={handleSelect} onDelete={handleDeleteYear} isFr={isFr} />
             ))}
           </>
         )}
