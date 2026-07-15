@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Subjects — Akademee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal-900:#085041;--teal-700:#0F6E56;--teal-600:#1D9E75;--teal-400:#5DCAA5;--teal-100:#C8F0E4;--teal-50:#E1F5EE;
+  --surface-900:#1A1F1B;--surface-800:#2A3029;--surface-700:#434D45;--surface-600:#5C665E;
+  --surface-500:#6E7A70;--surface-400:#9BA59C;--surface-300:#BFC4BB;
+  --surface-200:#D8DBD5;--surface-100:#EEF0EC;--surface-50:#F7F8F6;--white:#fff;
+  --red:#EF4444;--amber:#F59E0B;--blue:#3B82F6;--purple:#8B5CF6;--pink:#EC4899;--indigo:#6366F1;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:20px;--r-2xl:28px;
+  --sh-sm:0 2px 8px rgba(0,0,0,.05);--sh-md:0 4px 24px rgba(0,0,0,.08);--sh-lg:0 16px 48px rgba(0,0,0,.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--surface-50);color:var(--surface-900);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes popIn{0%{opacity:0;transform:scale(.6)}60%{transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes successPop{0%{opacity:0;transform:scale(.7) translateY(16px)}60%{transform:scale(1.05)}100%{opacity:1;transform:scale(1)}}
+
+.page{padding:0 0 80px}
+
+/* ── Header ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px;animation:fadeUp .45s cubic-bezier(.16,1,.3,1) both}
+.page-title-wrap{display:flex;align-items:center;gap:10px}
+.page-title-bar{width:4px;height:26px;background:var(--teal-900);border-radius:2px}
+.page-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:700}
+.page-sub{font-size:13.5px;color:var(--surface-400);margin-top:3px;padding-left:14px}
+
+/* ── System banner ── */
+.system-banner{border-radius:var(--r-xl);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border:1.5px solid;animation:fadeUp .4s .04s cubic-bezier(.16,1,.3,1) both}
+.system-banner-left{display:flex;align-items:center;gap:12px}
+.system-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.system-name{font-size:14px;font-weight:700}
+.system-sub{font-size:12px;margin-top:1px}
+.system-tags{display:flex;flex-wrap:wrap;gap:6px}
+.sys-tag{font-size:11px;font-weight:600;padding:3px 10px;border-radius:50px}
+.change-system-btn{font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:var(--r-md);border:1.5px solid;cursor:pointer;background:transparent;font-family:'DM Sans',sans-serif;transition:all .15s;display:flex;align-items:center;gap:6px}
+
+/* ── Layout ── */
+.layout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:flex-start}
+
+/* ── Subject list card ── */
+.list-card{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--surface-100);box-shadow:var(--sh-sm);overflow:hidden;animation:fadeUp .45s .05s cubic-bezier(.16,1,.3,1) both}
+.list-toolbar{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1.5px solid var(--surface-100);flex-wrap:wrap}
+.search-wrap{flex:1;min-width:180px;display:flex;align-items:center;gap:9px;background:var(--surface-50);border:1.5px solid var(--surface-100);border-radius:var(--r-md);padding:0 12px;height:40px;transition:border-color .2s}
+.search-wrap:focus-within{border-color:var(--teal-600)}
+.search-wrap input{flex:1;border:none;outline:none;font-size:13.5px;background:transparent;font-family:'DM Sans',sans-serif;color:var(--surface-900)}
+.search-wrap input::placeholder{color:var(--surface-300)}
+.filter-pill{height:36px;padding:0 14px;border-radius:50px;border:1.5px solid var(--surface-100);background:var(--white);font-size:12.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--surface-600);transition:all .18s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.filter-pill:hover{border-color:var(--surface-200);background:var(--surface-50);transform:scale(1.03)}
+.filter-pill.active{background:var(--teal-900);color:white;border-color:var(--teal-900)}
+
+/* ── Subject table ── */
+.subj-table{width:100%;border-collapse:collapse}
+.subj-table th{padding:10px 18px;text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--surface-400);background:var(--surface-50);border-bottom:1.5px solid var(--surface-100);white-space:nowrap}
+.subj-table td{padding:13px 18px;font-size:13px;border-bottom:1px solid var(--surface-50);vertical-align:middle;transition:background .1s}
+.subj-table tbody tr{transition:background .12s;cursor:pointer}
+.subj-table tbody tr:hover td{background:rgba(8,80,65,.025)}
+.subj-table tbody tr:last-child td{border-bottom:none}
+.subj-name{font-size:13.5px;font-weight:700;color:var(--surface-900);margin-bottom:2px}
+.subj-code{font-size:11px;color:var(--surface-400);font-family:monospace}
+.coeff-badge{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;font-size:13px;font-weight:800}
+.type-badge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:50px}
+.group-badge{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:50px;background:var(--surface-50);color:var(--surface-500);border:1px solid var(--surface-100)}
+.row-actions{display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .15s}
+.subj-table tbody tr:hover .row-actions{opacity:1}
+.ra-btn{width:28px;height:28px;border-radius:var(--r-sm);border:1.5px solid var(--surface-100);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.34,1.56,.64,1)}
+.ra-btn:hover{transform:scale(1.12);box-shadow:var(--sh-sm)}
+.ra-btn.danger:hover{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.05)}
+.ra-btn svg{width:12px;height:12px;stroke:var(--surface-500);stroke-width:2;fill:none;stroke-linecap:round}
+
+/* ── Group header rows ── */
+.group-header-row td{background:var(--surface-50);padding:8px 18px;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--surface-400);border-bottom:1px solid var(--surface-100)}
+.group-header-row:hover td{background:var(--surface-50) !important}
+
+/* ── Empty ── */
+.empty-state{text-align:center;padding:50px 20px}
+.empty-icon{width:64px;height:64px;border-radius:50%;background:var(--surface-100);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.empty-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--surface-800);margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--surface-400);margin-bottom:20px}
+
+/* ── Form card ── */
+.form-card{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--surface-100);padding:24px;box-shadow:var(--sh-sm);position:sticky;top:24px;animation:fadeUp .45s .08s cubic-bezier(.16,1,.3,1) both}
+.form-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--surface-900);margin-bottom:4px}
+.form-sub{font-size:12.5px;color:var(--surface-400);margin-bottom:20px}
+.section-label{font-size:10.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--surface-400);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--surface-100)}
+.section-divider{height:1px;background:var(--surface-50);margin:18px 0}
+
+/* ── Fields ── */
+.field-group{margin-bottom:16px}
+.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--surface-700);margin-bottom:6px}
+.field-label .req{color:var(--teal-600);margin-left:2px}
+.field-input{width:100%;height:44px;padding:0 13px;border:1.5px solid var(--surface-100);border-radius:var(--r-lg);font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--surface-900);background:var(--white);outline:none;transition:all .2s;appearance:none}
+.field-input:focus{border-color:var(--teal-600);box-shadow:0 0 0 3.5px rgba(8,80,65,.08)}
+.field-input.error{border-color:var(--red)}
+.field-hint{font-size:11.5px;color:var(--surface-400);margin-top:5px}
+.field-error-msg{font-size:11.5px;color:var(--red);margin-top:5px;display:none}
+.has-error .field-error-msg{display:block}
+.has-error .field-hint{display:none}
+select.field-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239BA59C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;cursor:pointer;padding-right:34px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── Coefficient stepper ── */
+.coeff-stepper{display:flex;align-items:center;gap:8px}
+.coeff-btn{width:36px;height:36px;border-radius:var(--r-md);border:1.5px solid var(--surface-100);background:var(--white);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--surface-600);transition:all .18s cubic-bezier(.34,1.56,.64,1);flex-shrink:0}
+.coeff-btn:hover{border-color:var(--teal-400);background:var(--teal-50);color:var(--teal-900);transform:scale(1.08)}
+.coeff-display{flex:1;text-align:center;font-size:22px;font-weight:800;color:var(--teal-900);padding:8px;border:1.5px solid var(--surface-100);border-radius:var(--r-md);background:var(--teal-50);transition:all .2s}
+.coeff-sub{font-size:10.5px;color:var(--surface-400);text-align:center;margin-top:4px}
+
+/* ── Color picker ── */
+.color-dots{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.color-dot{width:26px;height:26px;border-radius:50%;cursor:pointer;transition:transform .18s cubic-bezier(.34,1.56,.64,1);position:relative;flex-shrink:0}
+.color-dot:hover{transform:scale(1.2)}
+.color-dot.selected::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:2px solid currentColor}
+
+/* ── Practical toggle ── */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0}
+.toggle-label{font-size:13px;font-weight:600;color:var(--surface-900)}
+.toggle-sub{font-size:11.5px;color:var(--surface-400)}
+.toggle-switch{width:44px;height:24px;border-radius:50px;background:var(--surface-200);cursor:pointer;position:relative;transition:background .25s;flex-shrink:0}
+.toggle-switch.on{background:var(--teal-600)}
+.toggle-knob{position:absolute;width:18px;height:18px;border-radius:50%;background:white;top:3px;left:3px;transition:transform .25s cubic-bezier(.34,1.56,.64,1);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.toggle-switch.on .toggle-knob{transform:translateX(20px)}
+
+/* ── Dynamic coeff section ── */
+.dynamic-coeff{background:var(--surface-50);border-radius:var(--r-lg);padding:14px;border:1.5px solid var(--surface-100);margin-top:12px;animation:slideDown .3s cubic-bezier(.16,1,.3,1)}
+.coeff-split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.coeff-mini-label{font-size:11.5px;font-weight:700;color:var(--surface-600);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+
+/* ── Credits field (University) ── */
+.credits-field{background:rgba(99,102,241,.06);border:1.5px solid rgba(99,102,241,.2);border-radius:var(--r-lg);padding:14px;animation:slideDown .3s cubic-bezier(.16,1,.3,1)}
+.credits-header{font-size:12px;font-weight:700;color:var(--indigo);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+/* ── Preview box ── */
+.preview-box{background:var(--surface-900);border-radius:var(--r-lg);padding:14px 16px;margin-top:14px;margin-bottom:18px}
+.preview-subj-name{font-family:'Playfair Display',serif;font-size:18px;color:white;margin-bottom:4px}
+.preview-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.preview-tag{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:50px}
+
+/* ── Bulk import ── */
+.import-zone{border:2px dashed var(--surface-200);border-radius:var(--r-xl);padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--white)}
+.import-zone:hover{border-color:var(--teal-400);background:var(--teal-50)}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:0;border-bottom:1.5px solid var(--surface-100);margin-bottom:20px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:12px 16px;font-size:13.5px;font-weight:600;color:var(--surface-400);border:none;background:transparent;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;font-family:'DM Sans',sans-serif;transition:all .18s;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.tab:hover{color:var(--surface-700)}
+.tab.active{color:var(--teal-900);border-bottom-color:var(--teal-900)}
+.tab-count{font-size:11px;font-weight:700;padding:1px 7px;border-radius:50px;background:var(--surface-100);color:var(--surface-500)}
+.tab.active .tab-count{background:var(--teal-50);color:var(--teal-900)}
+
+/* ── Btn ── */
+.btn{display:inline-flex;align-items:center;gap:7px;height:42px;padding:0 18px;border-radius:var(--r-lg);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;border:none;transition:all .2s;text-decoration:none;white-space:nowrap}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--teal-900);color:white;box-shadow:0 4px 14px rgba(8,80,65,.22);width:100%;justify-content:center;height:46px}
+.btn-primary:hover{background:var(--teal-700);transform:translateY(-2px);box-shadow:0 8px 22px rgba(8,80,65,.3)}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.btn-ghost{background:var(--white);color:var(--surface-700);border:1.5px solid var(--surface-200);width:100%;justify-content:center;height:46px}
+.btn-ghost:hover{background:var(--surface-50)}
+.btn-sm{height:34px;padding:0 14px;font-size:12.5px;width:auto}
+.btn .spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.btn.loading .spinner{display:block}
+.btn.loading .btn-label{display:none}
+.btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
+
+/* ── Success overlay ── */
+.success-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(7px);z-index:999;display:none;align-items:center;justify-content:center}
+.success-overlay.show{display:flex;animation:fadeIn .3s}
+.success-box{background:var(--white);border-radius:var(--r-2xl);padding:40px 48px;text-align:center;max-width:440px;width:90%;animation:successPop .4s cubic-bezier(.34,1.56,.64,1)}
+.success-icon{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+
+/* ── System selector modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);z-index:900;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex;animation:fadeIn .25s}
+.modal-box{background:var(--white);border-radius:var(--r-2xl);padding:32px;max-width:640px;width:92%;animation:scaleIn .35s cubic-bezier(.34,1.56,.64,1)}
+.modal-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--surface-900);margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--surface-400);margin-bottom:22px}
+.sys-cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sys-sel-card{border:2px solid var(--surface-100);border-radius:var(--r-xl);padding:16px;cursor:pointer;transition:all .2s cubic-bezier(.34,1.56,.64,1);background:var(--white)}
+.sys-sel-card:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.sys-sel-card.selected{transform:translateY(-3px);box-shadow:var(--sh-lg)}
+.sys-sel-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:9px}
+.sys-sel-name{font-size:14px;font-weight:700;color:var(--surface-900);margin-bottom:3px}
+.sys-sel-desc{font-size:11.5px;color:var(--surface-400);line-height:1.5}
+.sys-sel-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.sys-sel-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:50px}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface-900);color:white;padding:12px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:1000;opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;box-shadow:var(--sh-lg)}
+
+/* ── Responsive ── */
+@media(max-width:900px){.layout{grid-template-columns:1fr}.form-card{position:static}}
+@media(max-width:560px){.sys-cards-grid{grid-template-columns:1fr}.field-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Page header ── -->
+  <div class="page-header">
+    <div>
+      <div class="page-title-wrap">
+        <div class="page-title-bar"></div>
+        <h1 class="page-title">Subjects</h1>
+      </div>
+      <p class="page-sub" id="pageSubtitle">Manage subjects, coefficients and assignments</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="openImportModal()">
+        <i data-lucide="upload" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none"></i>
+        Import CSV
+      </button>
+      <button class="btn btn-sm" style="background:var(--teal-900);color:white;box-shadow:0 4px 14px rgba(8,80,65,.22)" onclick="openForm()">
+        <i data-lucide="plus" style="width:14px;height:14px;stroke:white;stroke-width:2.5;fill:none"></i>
+        Add subject
+      </button>
+    </div>
+  </div>
+
+  <!-- ── System banner ── -->
+  <div class="system-banner" id="systemBanner"></div>
+
+  <!-- ── Tabs ── -->
+  <div class="tabs" id="classTabs"></div>
+
+  <!-- ── Main layout ── -->
+  <div class="layout">
+
+    <!-- ── Subject list ── -->
+    <div>
+      <div class="list-card">
+        <div class="list-toolbar">
+          <div class="search-wrap">
+            <i data-lucide="search" style="width:14px;height:14px;stroke:var(--surface-400);stroke-width:2;fill:none;flex-shrink:0"></i>
+            <input id="searchInput" placeholder="Search subjects..." oninput="renderList()"/>
+          </div>
+          <button class="filter-pill" id="filterAll" onclick="setFilter('all')">All</button>
+          <div id="typeFilters"></div>
+        </div>
+        <table class="subj-table">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div id="emptyState" style="display:none">
+          <div class="empty-state">
+            <div class="empty-icon">
+              <i data-lucide="book-open" style="width:26px;height:26px;stroke:var(--surface-400);stroke-width:1.5;fill:none"></i>
+            </div>
+            <div class="empty-title">No subjects yet</div>
+            <div class="empty-sub">Add your first subject for this class.</div>
+            <button class="btn btn-primary btn-sm" style="width:auto" onclick="openForm()">
+              <i data-lucide="plus" style="width:14px;height:14px;stroke:white;stroke-width:2.5;fill:none"></i>
+              Add subject
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Form ── -->
+    <div>
+      <div class="form-card" id="formCard">
+        <div class="form-title" id="formTitle">Add a subject</div>
+        <p class="form-sub" id="formSub">Fill in the fields below to add a new subject.</p>
+
+        <!-- Preview -->
+        <div class="preview-box" id="previewBox">
+          <div class="preview-subj-name" id="prevName">Subject name</div>
+          <div class="preview-meta" id="prevMeta"></div>
+        </div>
+
+        <!-- System-specific type selector -->
+        <div id="typeSection"></div>
+
+        <!-- Name + Code -->
+        <div class="section-label">Basic information</div>
+        <div class="field-group" id="fg-name">
+          <label class="field-label">Subject name <span class="req">*</span></label>
+          <input class="field-input" id="fName" placeholder="e.g. Mathematics" oninput="syncPreview()"/>
+          <div class="field-error-msg">Subject name is required</div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Code / Abbreviation</label>
+            <input class="field-input" id="fCode" placeholder="e.g. MATH" maxlength="8" oninput="syncPreview()"/>
+            <div class="field-hint">Short code for reports</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Color tag</label>
+            <div class="color-dots" id="colorPicker"></div>
+          </div>
+        </div>
+
+        <!-- Coefficient / Credits -->
+        <div class="section-divider"></div>
+        <div class="section-label" id="coeffLabel">Coefficient</div>
+        <div id="coeffSection"></div>
+
+        <!-- Series / Group (Franco only) -->
+        <div id="seriesSection" style="display:none">
+          <div class="section-divider"></div>
+          <div class="section-label">Series / Groups</div>
+          <div class="field-group">
+            <label class="field-label">Applicable to series</label>
+            <div id="seriesChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+            <div class="field-hint">Select all series where this subject applies</div>
+          </div>
+        </div>
+
+        <!-- Practical assessment toggle (Technical systems) -->
+        <div id="practicalSection" style="display:none">
+          <div class="section-divider"></div>
+          <div class="section-label">Assessment type</div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Practical / Workshop component</div>
+              <div class="toggle-sub">Subject includes a separately graded practical evaluation</div>
+            </div>
+            <div class="toggle-switch" id="practicalToggle" onclick="togglePractical()">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+          <div id="practicalCoeffWrap" style="display:none">
+            <div class="dynamic-coeff">
+              <div class="coeff-split">
+                <div>
+                  <div class="coeff-mini-label">
+                    <i data-lucide="file-text" style="width:12px;height:12px;stroke:currentColor;stroke-width:2;fill:none"></i>
+                    Theory coeff.
+                  </div>
+                  <input class="field-input" id="theoryCoeff" type="number" min="1" max="9" value="3" style="height:40px;text-align:center;font-weight:800;font-size:16px" oninput="syncPreview()"/>
+                </div>
+                <div>
+                  <div class="coeff-mini-label">
+                    <i data-lucide="wrench" style="width:12px;height:12px;stroke:currentColor;stroke-width:2;fill:none"></i>
+                    Practical coeff.
+                  </div>
+                  <input class="field-input" id="practicalCoeff" type="number" min="1" max="9" value="2" style="height:40px;text-align:center;font-weight:800;font-size:16px" oninput="syncPreview()"/>
+                </div>
+              </div>
+              <div class="field-hint" style="margin-top:8px">Grades will be entered separately for theory and practical sessions.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- University: credits + UE type -->
+        <div id="universitySection" style="display:none">
+          <div class="section-divider"></div>
+          <div class="section-label">University settings (LMD)</div>
+          <div class="credits-field">
+            <div class="credits-header">
+              <i data-lucide="layers" style="width:14px;height:14px;stroke:var(--indigo);stroke-width:2;fill:none"></i>
+              ECTS Credits & UE Classification
+            </div>
+            <div class="field-row">
+              <div class="field-group" style="margin-bottom:0">
+                <label class="field-label" style="color:var(--surface-600)">ECTS Credits</label>
+                <input class="field-input" id="ects" type="number" min="1" max="6" value="3" style="height:40px" oninput="syncPreview()"/>
+                <div class="field-hint">1 to 6 credits per UE</div>
+              </div>
+              <div class="field-group" style="margin-bottom:0">
+                <label class="field-label" style="color:var(--surface-600)">UE Type</label>
+                <select class="field-input" id="ueType" style="height:40px" onchange="syncPreview()">
+                  <option value="fondamentale">Fondamentale (UEF)</option>
+                  <option value="optionnelle">Optionnelle (UEO)</option>
+                  <option value="transversale">Transversale (UET)</option>
+                  <option value="libre">Libre (UEL)</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row" style="margin-top:12px">
+              <div class="field-group" style="margin-bottom:0">
+                <label class="field-label" style="color:var(--surface-600)">Volume horaire (h/sem.)</label>
+                <input class="field-input" id="volHoraire" type="number" placeholder="e.g. 30" style="height:40px"/>
+              </div>
+              <div class="field-group" style="margin-bottom:0">
+                <label class="field-label" style="color:var(--surface-600)">TP/TD (h/sem.)</label>
+                <input class="field-input" id="tpHours" type="number" placeholder="e.g. 15" style="height:40px"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Class assignment -->
+        <div class="section-divider"></div>
+        <div class="section-label">Class assignment</div>
+        <div class="field-group">
+          <label class="field-label">Assign to classes <span class="req">*</span></label>
+          <select class="field-input" id="classAssign" onchange="addClassAssignment(this.value)" style="height:44px">
+            <option value="">+ Add a class</option>
+          </select>
+          <div id="classAssignTags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:10px"></div>
+          <div class="field-hint">You can assign this subject to multiple classes at once</div>
+        </div>
+
+        <!-- Teacher -->
+        <div class="field-group">
+          <label class="field-label">Responsible teacher</label>
+          <select class="field-input" id="teacherAssign" style="height:44px">
+            <option value="">Assign later</option>
+            <option>Mr. Tangue Pierre</option>
+            <option>Mme. Abena Claire</option>
+            <option>Mr. Effa Paul</option>
+            <option>Mme. Nkeng Sophie</option>
+          </select>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+          <button class="btn btn-primary" id="submitBtn" onclick="submitForm()">
+            <div class="spinner"></div>
+            <span class="btn-label" style="display:flex;align-items:center;gap:7px">
+              <i data-lucide="check" style="width:15px;height:15px;stroke:white;stroke-width:2.5;fill:none;stroke-linecap:round"></i>
+              Save subject
+            </span>
+          </button>
+          <button class="btn btn-ghost" onclick="resetForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── System selector modal ── -->
+<div class="modal-overlay" id="sysModal">
+  <div class="modal-box">
+    <h2 class="modal-title">Change school system</h2>
+    <p class="modal-sub">Select the educational system used by your institution. This affects coefficient ranges, subject types and evaluation methods.</p>
+    <div class="sys-cards-grid" id="sysCardGrid"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+      <button class="btn btn-ghost btn-sm" onclick="closeSysModal()">Cancel</button>
+      <button class="btn btn-sm" style="background:var(--teal-900);color:white" onclick="applySysChange()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Success overlay ── -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-box">
+    <div class="success-icon" style="background:var(--teal-50);border:2px solid var(--teal-100)">
+      <i data-lucide="check-circle-2" style="width:36px;height:36px;stroke:var(--teal-900);stroke-width:1.5;fill:none"></i>
+    </div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--surface-900);margin-bottom:6px">Subject saved!</h2>
+    <p style="font-size:13.5px;color:var(--surface-400);margin-bottom:24px">
+      <strong id="successSubjName">—</strong> has been added successfully.
+    </p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-ghost btn-sm" onclick="addAnother()">Add another</button>
+      <button class="btn btn-sm" style="background:var(--teal-900);color:white" onclick="closeSuccess()">Done</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); init(); });
+
+// ── Systems config ─────────────────────────────────────
+const SYSTEMS = {
+  franco_general: {
+    id:'franco_general',
+    name:'Francophone Général',
+    short:'Franco. Gén.',
+    icon:'book-open',
+    color:'#3B82F6', bg:'rgba(59,130,246,.08)', border:'rgba(59,130,246,.2)',
+    coeffMin:1, coeffMax:9,
+    evalSystem:'2 Semestres × (Compo + 2 CA)',
+    diploma:'BEPC · Probatoire · Baccalauréat',
+    subjectTypes:['Théorique','Sportive','Artistique'],
+    hasPractical:false,
+    hasCredits:false,
+    series:['A4','B','C','D','E','F1','F2','G'],
+    classLabels:['6ème','5ème','4ème','3ème','2nde','1ère','Tle'],
+    groupBy:'serie',
+    tags:['BEPC','Bac'],
+  },
+  franco_tech: {
+    id:'franco_tech',
+    name:'Francophone Technique',
+    short:'Franco. Tech.',
+    icon:'wrench',
+    color:'#EC4899', bg:'rgba(236,72,153,.08)', border:'rgba(236,72,153,.2)',
+    coeffMin:1, coeffMax:9,
+    evalSystem:'2 Semestres + Épreuves pratiques',
+    diploma:'CAP · BEP · Bac Technique',
+    subjectTypes:['Théorique','Pratique','TP/Atelier','Dessin Technique'],
+    hasPractical:true,
+    hasCredits:false,
+    series:['AEBA','TIG','TBB','TI','ELE','MEC'],
+    classLabels:['CAP 1','CAP 2','BEP 1','BEP 2','1ère Tech.','Tle Tech.'],
+    groupBy:'filiere',
+    tags:['CAP','BEP','Bac Tech'],
+  },
+  anglo_general: {
+    id:'anglo_general',
+    name:'Anglophone General',
+    short:'Anglo. Gen.',
+    icon:'graduation-cap',
+    color:'#085041', bg:'rgba(8,80,65,.08)', border:'rgba(8,80,65,.2)',
+    coeffMin:1, coeffMax:4,
+    evalSystem:'3 Terms × 2 Sequences = 6 evaluations',
+    diploma:'GCE O Level · GCE A Level',
+    subjectTypes:['Core','Elective','Language'],
+    hasPractical:false,
+    hasCredits:false,
+    series:[],
+    classLabels:['Form 1','Form 2','Form 3','Form 4','Form 5','Lower 6th','Upper 6th'],
+    streams:['General','Science','Arts','Commercial'],
+    groupBy:'level',
+    tags:['GCE O Level','GCE A Level'],
+  },
+  anglo_tech: {
+    id:'anglo_tech',
+    name:'Anglophone Technical',
+    short:'Anglo. Tech.',
+    icon:'settings-2',
+    color:'#F59E0B', bg:'rgba(245,158,11,.08)', border:'rgba(245,158,11,.2)',
+    coeffMin:1, coeffMax:4,
+    evalSystem:'3 Terms × 2 Sequences + Practical',
+    diploma:'GCE Technical · GTTC',
+    subjectTypes:['Theory','Practical','Workshop','Technical Drawing'],
+    hasPractical:true,
+    hasCredits:false,
+    series:[],
+    classLabels:['Form 1','Form 2','Form 3','Form 4','Form 5','Lower 6th Tech','Upper 6th Tech'],
+    groupBy:'level',
+    tags:['GCE Tech','GTTC'],
+  },
+  university: {
+    id:'university',
+    name:'University (LMD)',
+    short:'Université',
+    icon:'landmark',
+    color:'#8B5CF6', bg:'rgba(139,92,246,.08)', border:'rgba(139,92,246,.2)',
+    coeffMin:1, coeffMax:6,
+    evalSystem:'2 Semestres : CC + Examen Final',
+    diploma:'Licence · Master · Doctorat',
+    subjectTypes:['UE Fondamentale','UE Optionnelle','UE Transversale','UE Libre'],
+    hasPractical:false,
+    hasCredits:true,
+    series:[],
+    classLabels:['L1','L2','L3','M1','M2','Doctorat'],
+    groupBy:'filiere',
+    tags:['Licence','Master','Doctorat','LMD'],
+  },
+};
+
+const COLORS = ['#085041','#3B82F6','#8B5CF6','#EC4899','#F59E0B','#EF4444','#6366F1','#14B8A6','#1D9E75','#0EA5E9'];
+
+// ── State ──────────────────────────────────────────────
+let currentSystem = 'anglo_general';
+let pendingSystem = 'anglo_general';
+let currentClass = 0;
+let filterType = 'all';
+let hasPracticalOn = false;
+let selectedColor = COLORS[0];
+let selectedSeries = new Set();
+let assignedClasses = new Set();
+let editingId = null;
+
+let subjects = [
+  { id:1, name:'Mathematics', code:'MATH', color:COLORS[0], type:'Core', coeff:4, practicalCoeff:0, classes:['Form 4A'], teacher:'Mr. Tangue Pierre', ects:null, ueType:null },
+  { id:2, name:'English Language', code:'ENG', color:COLORS[1], type:'Core', coeff:3, practicalCoeff:0, classes:['Form 4A','Form 3B'], teacher:'Mme. Abena Claire', ects:null, ueType:null },
+  { id:3, name:'Physics', code:'PHY', color:COLORS[2], type:'Core', coeff:3, practicalCoeff:0, classes:['Form 4A'], teacher:'', ects:null, ueType:null },
+  { id:4, name:'Chemistry', code:'CHE', color:COLORS[3], type:'Core', coeff:3, practicalCoeff:0, classes:['Form 4A'], teacher:'', ects:null, ueType:null },
+  { id:5, name:'Biology', code:'BIO', color:COLORS[8], type:'Elective', coeff:2, practicalCoeff:0, classes:['Form 4A','Form 5A'], teacher:'Mr. Effa Paul', ects:null, ueType:null },
+  { id:6, name:'French Language', code:'FRE', color:COLORS[5], type:'Core', coeff:2, practicalCoeff:0, classes:['Form 3B'], teacher:'', ects:null, ueType:null },
+  { id:7, name:'History & Geography', code:'HGC', color:COLORS[6], type:'Elective', coeff:2, practicalCoeff:0, classes:['Form 3B'], teacher:'', ects:null, ueType:null },
+];
+
+// ── Init ────────────────────────────────────────────────
+function init() {
+  buildSystemBanner();
+  buildClassTabs();
+  buildFormFields();
+  buildColorPicker();
+  buildClassAssignSelect();
+  renderList();
+  sync();
+  setTimeout(() => lucide.createIcons(), 50);
+}
+
+// ── System banner ────────────────────────────────────────
+function buildSystemBanner() {
+  const sys = SYSTEMS[currentSystem];
+  const banner = document.getElementById('systemBanner');
+  banner.style.borderColor = sys.border;
+  banner.style.background = sys.bg;
+  banner.innerHTML = `
+    <div class="system-banner-left">
+      <div class="system-icon" style="background:${sys.bg};border:1.5px solid ${sys.border}">
+        <i data-lucide="${sys.icon}" style="width:18px;height:18px;stroke:${sys.color};stroke-width:2;fill:none"></i>
+      </div>
+      <div>
+        <div class="system-name" style="color:${sys.color}">${sys.name}</div>
+        <div class="system-sub" style="color:${sys.color};opacity:.65">${sys.evalSystem}</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="system-tags">
+        ${sys.tags.map(t => `<span class="sys-tag" style="background:${sys.bg};color:${sys.color};border:1px solid ${sys.border}">${t}</span>`).join('')}
+      </div>
+      <button class="change-system-btn" style="color:${sys.color};border-color:${sys.border}" onclick="openSysModal()">
+        <i data-lucide="settings" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none"></i>
+        Change system
+      </button>
+    </div>`;
+  setTimeout(() => lucide.createIcons(), 20);
+}
+
+// ── Class tabs ─────────────────────────────────────────
+function buildClassTabs() {
+  const sys = SYSTEMS[currentSystem];
+  const container = document.getElementById('classTabs');
+  container.innerHTML = '';
+  sys.classLabels.forEach((lbl, i) => {
+    const count = subjects.filter(s => s.classes.some(c => c.includes(lbl))).length;
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i === currentClass ? ' active' : '');
+    btn.innerHTML = `${lbl} <span class="tab-count">${count}</span>`;
+    btn.onclick = () => { currentClass = i; buildClassTabs(); renderList(); };
+    container.appendChild(btn);
+  });
+  buildClassAssignSelect();
+}
+
+function buildClassAssignSelect() {
+  const sys = SYSTEMS[currentSystem];
+  const sel = document.getElementById('classAssign');
+  sel.innerHTML = '<option value="">+ Add a class</option>';
+  sys.classLabels.forEach(lbl => {
+    const opt = document.createElement('option');
+    opt.value = lbl + 'A';
+    opt.textContent = lbl + ' A';
+    sel.appendChild(opt);
+    if (['Form 3','Form 4','Form 5'].some(l => lbl.includes(l)) || lbl.includes('6th')) {
+      const opt2 = document.createElement('option');
+      opt2.value = lbl + 'B';
+      opt2.textContent = lbl + ' B';
+      sel.appendChild(opt2);
+    }
+  });
+}
+
+// ── Form fields (system-aware) ──────────────────────────
+function buildFormFields() {
+  const sys = SYSTEMS[currentSystem];
+
+  // Type section
+  const typeSection = document.getElementById('typeSection');
+  typeSection.innerHTML = `
+    <div class="section-label">Subject type</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px" id="typeChips">
+      ${sys.subjectTypes.map((t,i) => `
+        <div class="filter-pill${i===0?' active':''}" onclick="selectType(this,'${t}')" style="height:32px;font-size:12px">${t}</div>
+      `).join('')}
+    </div>`;
+
+  // Coefficient section
+  const coeffLabel = document.getElementById('coeffLabel');
+  const coeffSection = document.getElementById('coeffSection');
+
+  if (sys.hasCredits) {
+    coeffLabel.textContent = 'Credits (ECTS)';
+    coeffSection.innerHTML = `
+      <div class="coeff-stepper">
+        <button class="coeff-btn" onclick="adjustCoeff(-1)">−</button>
+        <div>
+          <div class="coeff-display" id="coeffDisplay">3</div>
+          <div class="coeff-sub">ECTS credits</div>
+        </div>
+        <button class="coeff-btn" onclick="adjustCoeff(1)">+</button>
+      </div>`;
+  } else {
+    coeffLabel.textContent = 'Coefficient';
+    const max = sys.coeffMax;
+    coeffSection.innerHTML = `
+      <div class="coeff-stepper">
+        <button class="coeff-btn" onclick="adjustCoeff(-1)">−</button>
+        <div>
+          <div class="coeff-display" id="coeffDisplay">${sys.coeffMax > 4 ? 3 : 2}</div>
+          <div class="coeff-sub">Max ${max} · graded /20</div>
+        </div>
+        <button class="coeff-btn" onclick="adjustCoeff(1)">+</button>
+      </div>
+      <div style="display:flex;gap:3px;margin-top:10px;flex-wrap:wrap">
+        ${Array.from({length:max},(_,i)=>i+1).map(n=>
+          `<button onclick="setCoeff(${n})" style="flex:1;min-width:24px;height:28px;border-radius:var(--r-sm);border:1.5px solid var(--surface-100);background:var(--white);font-size:12px;font-weight:700;cursor:pointer;color:var(--surface-600);transition:all .15s;font-family:'DM Sans',sans-serif" class="coeff-quick">${n}</button>`
+        ).join('')}
+      </div>`;
+  }
+
+  // Series section (franco only)
+  const seriesSection = document.getElementById('seriesSection');
+  if (sys.series.length) {
+    seriesSection.style.display = 'block';
+    const container = document.getElementById('seriesChips');
+    container.innerHTML = sys.series.map(s => `
+      <div class="filter-pill" onclick="toggleSerie(this,'${s}')" style="height:30px;font-size:12px">${s}</div>
+    `).join('');
+  } else {
+    seriesSection.style.display = 'none';
+  }
+
+  // Practical section (technical only)
+  document.getElementById('practicalSection').style.display = sys.hasPractical ? 'block' : 'none';
+  hasPracticalOn = false;
+  document.getElementById('practicalToggle').classList.remove('on');
+  document.getElementById('practicalCoeffWrap').style.display = 'none';
+
+  // University section
+  document.getElementById('universitySection').style.display = sys.hasCredits ? 'block' : 'none';
+
+  setTimeout(() => lucide.createIcons(), 20);
+}
+
+// ── Color picker ────────────────────────────────────────
+function buildColorPicker() {
+  const container = document.getElementById('colorPicker');
+  container.innerHTML = '';
+  COLORS.forEach((c, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'color-dot' + (i === 0 ? ' selected' : '');
+    dot.style.cssText = `background:${c};color:${c}`;
+    dot.onclick = () => {
+      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+      dot.classList.add('selected');
+      selectedColor = c;
+      syncPreview();
+    };
+    container.appendChild(dot);
+  });
+}
+
+// ── Filter type chips ───────────────────────────────────
+function selectType(el, type) {
+  document.querySelectorAll('#typeChips .filter-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  syncPreview();
+}
+
+function toggleSerie(el, serie) {
+  el.classList.toggle('active');
+  selectedSeries.has(serie) ? selectedSeries.delete(serie) : selectedSeries.add(serie);
+}
+
+// ── Practical toggle ─────────────────────────────────────
+function togglePractical() {
+  hasPracticalOn = !hasPracticalOn;
+  document.getElementById('practicalToggle').classList.toggle('on', hasPracticalOn);
+  document.getElementById('practicalCoeffWrap').style.display = hasPracticalOn ? 'block' : 'none';
+  syncPreview();
+  setTimeout(() => lucide.createIcons(), 10);
+}
+
+// ── Coefficient ─────────────────────────────────────────
+function adjustCoeff(delta) {
+  const sys = SYSTEMS[currentSystem];
+  const display = document.getElementById('coeffDisplay');
+  const current = parseInt(display.textContent) || 1;
+  const min = 1, max = sys.coeffMax;
+  const next = Math.max(min, Math.min(max, current + delta));
+  display.textContent = next;
+  highlightQuick(next);
+  syncPreview();
+}
+
+function setCoeff(n) {
+  document.getElementById('coeffDisplay').textContent = n;
+  highlightQuick(n);
+  syncPreview();
+}
+
+function highlightQuick(n) {
+  document.querySelectorAll('.coeff-quick').forEach(b => {
+    const isActive = parseInt(b.textContent) === n;
+    b.style.background = isActive ? 'var(--teal-900)' : 'var(--white)';
+    b.style.color = isActive ? 'white' : 'var(--surface-600)';
+    b.style.borderColor = isActive ? 'var(--teal-900)' : 'var(--surface-100)';
+  });
+}
+
+// ── Class assignment ─────────────────────────────────────
+function addClassAssignment(val) {
+  if (!val || assignedClasses.has(val)) return;
+  assignedClasses.add(val);
+  const tags = document.getElementById('classAssignTags');
+  const tag = document.createElement('div');
+  tag.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 12px;border-radius:50px;background:var(--teal-50);border:1.5px solid var(--teal-100);color:var(--teal-900);font-size:12px;font-weight:600;animation:popIn .25s cubic-bezier(.34,1.56,.64,1)';
+  tag.id = 'classtag-' + val;
+  tag.innerHTML = `${val} <button style="background:rgba(8,80,65,.15);border:none;border-radius:50%;width:16px;height:16px;cursor:pointer;color:var(--teal-900);font-size:10px;display:flex;align-items:center;justify-content:center;line-height:1" onclick="removeClassTag('${val}')">×</button>`;
+  tags.appendChild(tag);
+  document.getElementById('classAssign').value = '';
+}
+function removeClassTag(val) {
+  assignedClasses.delete(val);
+  document.getElementById('classtag-' + val)?.remove();
+}
+
+// ── Preview sync ─────────────────────────────────────────
+function syncPreview() {
+  const sys = SYSTEMS[currentSystem];
+  const name = document.getElementById('fName').value.trim() || 'Subject name';
+  const code = document.getElementById('fCode').value.trim();
+  const coeff = document.getElementById('coeffDisplay')?.textContent || '—';
+  const activeType = document.querySelector('#typeChips .filter-pill.active')?.textContent || '—';
+
+  // Preview name
+  document.getElementById('prevName').textContent = name;
+  document.getElementById('prevName').style.color = selectedColor;
+
+  // Preview meta
+  const tags = [];
+  if (code) tags.push(`<span class="preview-tag" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)">${code}</span>`);
+
+  if (sys.hasCredits) {
+    const ects = document.getElementById('ects')?.value || coeff;
+    const ueT = document.getElementById('ueType')?.value || 'fondamentale';
+    tags.push(`<span class="preview-tag" style="background:rgba(139,92,246,.3);color:white">${ects} crédits ECTS</span>`);
+    tags.push(`<span class="preview-tag" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)">UE ${ueT.charAt(0).toUpperCase()}</span>`);
+  } else {
+    tags.push(`<span class="preview-tag" style="background:rgba(255,255,255,.15);color:white">Coeff ×${coeff}</span>`);
+    tags.push(`<span class="preview-tag" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)">${activeType}</span>`);
+    if (hasPracticalOn) {
+      const tc = document.getElementById('theoryCoeff')?.value || '—';
+      const pc = document.getElementById('practicalCoeff')?.value || '—';
+      tags.push(`<span class="preview-tag" style="background:rgba(245,158,11,.3);color:white">Th. ×${tc} + Pr. ×${pc}</span>`);
+    }
+  }
+  document.getElementById('prevMeta').innerHTML = tags.join('');
+}
+
+// ── Render list ──────────────────────────────────────────
+function renderList() {
+  const sys = SYSTEMS[currentSystem];
+  const classLabel = sys.classLabels[currentClass];
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = subjects.filter(s => s.classes.some(c => c.includes(classLabel)));
+  if (search) filtered = filtered.filter(s => s.name.toLowerCase().includes(search) || s.code.toLowerCase().includes(search));
+  if (filterType !== 'all') filtered = filtered.filter(s => s.type === filterType);
+
+  document.getElementById('pageSubtitle').textContent = `${subjects.length} subjects · ${sys.classLabels.length} class levels · ${sys.name}`;
+
+  const thead = document.getElementById('tableHead');
+  const tbody = document.getElementById('tableBody');
+  const emptyState = document.getElementById('emptyState');
+
+  // Build type filters
+  buildTypeFilters();
+
+  if (!filtered.length) {
+    tbody.innerHTML = '';
+    thead.innerHTML = '';
+    emptyState.style.display = 'block';
+    setTimeout(() => lucide.createIcons(), 10);
+    return;
+  }
+  emptyState.style.display = 'none';
+
+  // Table head
+  thead.innerHTML = `
+    <tr>
+      <th>Subject</th>
+      <th>Type</th>
+      <th>${sys.hasCredits ? 'Credits' : 'Coeff.'}</th>
+      ${sys.hasPractical ? '<th>Theory / Practical</th>' : ''}
+      <th>Classes</th>
+      <th>Teacher</th>
+      <th></th>
+    </tr>`;
+
+  // Table body
+  tbody.innerHTML = filtered.map(s => `
+    <tr onclick="openEdit(${s.id})">
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:4px;height:36px;border-radius:2px;background:${s.color};flex-shrink:0"></div>
+          <div>
+            <div class="subj-name">${s.name}</div>
+            ${s.code ? `<div class="subj-code">${s.code}</div>` : ''}
+          </div>
+        </div>
+      </td>
+      <td><span class="type-badge" style="background:${hexToRgba(s.color,.1)};color:${s.color};border:1px solid ${hexToRgba(s.color,.2)}">${s.type}</span></td>
+      <td><div class="coeff-badge" style="background:${hexToRgba(s.color,.1)};color:${s.color}">×${s.coeff}</div></td>
+      ${sys.hasPractical ? `<td><span style="font-size:12.5px;color:var(--surface-600)">${s.practicalCoeff > 0 ? `Th.×${s.coeff} / Pr.×${s.practicalCoeff}` : 'Theory only'}</span></td>` : ''}
+      <td>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${s.classes.map(c => `<span class="group-badge">${c}</span>`).join('')}
+        </div>
+      </td>
+      <td style="font-size:12.5px;color:var(--surface-500)">${s.teacher || '—'}</td>
+      <td>
+        <div class="row-actions">
+          <button class="ra-btn" title="Edit" onclick="event.stopPropagation();openEdit(${s.id})">
+            <i data-lucide="pencil" style="width:12px;height:12px;stroke:var(--surface-500);stroke-width:2;fill:none"></i>
+          </button>
+          <button class="ra-btn danger" title="Delete" onclick="event.stopPropagation();deleteSubject(${s.id})">
+            <i data-lucide="trash-2" style="width:12px;height:12px;stroke:var(--surface-500);stroke-width:2;fill:none"></i>
+          </button>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  setTimeout(() => lucide.createIcons(), 20);
+}
+
+function buildTypeFilters() {
+  const sys = SYSTEMS[currentSystem];
+  const container = document.getElementById('typeFilters');
+  const allBtn = document.getElementById('filterAll');
+  allBtn.className = 'filter-pill' + (filterType === 'all' ? ' active' : '');
+  container.innerHTML = sys.subjectTypes.map(t => `
+    <button class="filter-pill${filterType === t ? ' active' : ''}" onclick="setFilter('${t}')">${t}</button>
+  `).join('');
+}
+
+function setFilter(type) {
+  filterType = type;
+  renderList();
+}
+
+// ── CRUD ────────────────────────────────────────────────
+function openForm() {
+  resetForm();
+  document.getElementById('formTitle').textContent = 'Add a subject';
+  document.getElementById('formCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function openEdit(id) {
+  const s = subjects.find(x => x.id === id);
+  if (!s) return;
+  editingId = id;
+  document.getElementById('formTitle').textContent = 'Edit subject';
+  document.getElementById('fName').value = s.name;
+  document.getElementById('fCode').value = s.code;
+  if (document.getElementById('coeffDisplay')) document.getElementById('coeffDisplay').textContent = s.coeff;
+  // Set color
+  selectedColor = s.color;
+  document.querySelectorAll('.color-dot').forEach(d => { d.classList.toggle('selected', d.style.background === s.color); });
+  // Classes
+  assignedClasses = new Set(s.classes);
+  document.getElementById('classAssignTags').innerHTML = '';
+  s.classes.forEach(c => addClassAssignment(c));
+  syncPreview();
+  document.getElementById('formCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function deleteSubject(id) {
+  const s = subjects.find(x => x.id === id);
+  if (!confirm(`Remove "${s.name}"?`)) return;
+  subjects = subjects.filter(x => x.id !== id);
+  buildClassTabs();
+  renderList();
+  showToast(`"${s.name}" removed`);
+}
+
+async function submitForm() {
+  const name = document.getElementById('fName').value.trim();
+  if (!name) {
+    document.getElementById('fg-name').classList.add('has-error');
+    document.getElementById('fName').classList.add('error');
+    showToast('Subject name is required');
+    return;
+  }
+  const btn = document.getElementById('submitBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+  await new Promise(r => setTimeout(r, 1400));
+  btn.classList.remove('loading'); btn.disabled = false;
+
+  const sys = SYSTEMS[currentSystem];
+  const coeff = parseInt(document.getElementById('coeffDisplay')?.textContent) || 2;
+  const type = document.querySelector('#typeChips .filter-pill.active')?.textContent || sys.subjectTypes[0];
+  const practCoeff = hasPracticalOn ? parseInt(document.getElementById('practicalCoeff')?.value) || 0 : 0;
+
+  if (editingId) {
+    const s = subjects.find(x => x.id === editingId);
+    if (s) { s.name = name; s.code = document.getElementById('fCode').value.trim(); s.coeff = coeff; s.type = type; s.color = selectedColor; s.classes = [...assignedClasses]; s.practicalCoeff = practCoeff; }
+  } else {
+    subjects.push({ id: Date.now(), name, code: document.getElementById('fCode').value.trim(), color: selectedColor, type, coeff, practicalCoeff: practCoeff, classes: [...assignedClasses], teacher: document.getElementById('teacherAssign').value });
+  }
+
+  document.getElementById('successSubjName').textContent = name;
+  document.getElementById('successOverlay').classList.add('show');
+  buildClassTabs(); renderList();
+  setTimeout(() => lucide.createIcons(), 20);
+}
+
+function resetForm() {
+  editingId = null;
+  document.getElementById('fName').value = '';
+  document.getElementById('fCode').value = '';
+  document.getElementById('fg-name').classList.remove('has-error');
+  document.getElementById('fName').classList.remove('error');
+  if (document.getElementById('coeffDisplay')) document.getElementById('coeffDisplay').textContent = SYSTEMS[currentSystem].coeffMax > 4 ? 3 : 2;
+  assignedClasses.clear();
+  document.getElementById('classAssignTags').innerHTML = '';
+  selectedColor = COLORS[0];
+  document.querySelectorAll('.color-dot').forEach((d,i) => d.classList.toggle('selected', i === 0));
+  document.querySelectorAll('#typeChips .filter-pill').forEach((p,i) => p.classList.toggle('active', i === 0));
+  syncPreview();
+}
+
+// ── System modal ─────────────────────────────────────────
+function openSysModal() {
+  pendingSystem = currentSystem;
+  const grid = document.getElementById('sysCardGrid');
+  grid.innerHTML = Object.values(SYSTEMS).map(sys => `
+    <div class="sys-sel-card${sys.id === pendingSystem ? ' selected' : ''}" id="syscard-${sys.id}"
+      style="${sys.id === pendingSystem ? `border-color:${sys.color}` : ''}"
+      onclick="selectSysCard('${sys.id}')">
+      <div class="sys-sel-icon" style="background:${sys.bg}">
+        <i data-lucide="${sys.icon}" style="width:17px;height:17px;stroke:${sys.color};stroke-width:2;fill:none"></i>
+      </div>
+      <div class="sys-sel-name">${sys.name}</div>
+      <div class="sys-sel-desc">${sys.evalSystem}</div>
+      <div class="sys-sel-tags">
+        ${sys.tags.map(t => `<span class="sys-sel-tag" style="background:${sys.bg};color:${sys.color}">${t}</span>`).join('')}
+      </div>
+    </div>`).join('');
+  document.getElementById('sysModal').classList.add('show');
+  setTimeout(() => lucide.createIcons(), 20);
+}
+
+function selectSysCard(id) {
+  pendingSystem = id;
+  Object.values(SYSTEMS).forEach(sys => {
+    const card = document.getElementById('syscard-' + sys.id);
+    if (!card) return;
+    card.classList.toggle('selected', sys.id === id);
+    card.style.borderColor = sys.id === id ? sys.color : 'var(--surface-100)';
+  });
+}
+
+function closeSysModal() { document.getElementById('sysModal').classList.remove('show'); }
+
+function applySysChange() {
+  currentSystem = pendingSystem;
+  currentClass = 0;
+  closeSysModal();
+  buildSystemBanner();
+  buildClassTabs();
+  buildFormFields();
+  buildColorPicker();
+  renderList();
+  syncPreview();
+  showToast(`System changed to ${SYSTEMS[currentSystem].name}`);
+  setTimeout(() => lucide.createIcons(), 50);
+}
+
+function openImportModal() { showToast('CSV import — coming soon'); }
+function addAnother() { document.getElementById('successOverlay').classList.remove('show'); resetForm(); openForm(); }
+function closeSuccess() { document.getElementById('successOverlay').classList.remove('show'); }
+
+// ── Helpers ──────────────────────────────────────────────
+function hexToRgba(hex, alpha) {
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return r ? `rgba(${parseInt(r[1],16)},${parseInt(r[2],16)},${parseInt(r[3],16)},${alpha})` : 'rgba(8,80,65,0.1)';
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  t.style.opacity = '1';
+  setTimeout(() => { t.style.transform = 'translateX(-50%) translateY(80px)'; t.style.opacity = '0'; }, 2600);
+}
+</script>
+</body>
+</html>

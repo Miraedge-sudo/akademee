@@ -5,6 +5,7 @@ import { useScrollProgress, ScrollProgressBar, BackToTopButton } from "../hooks/
 import { useActiveSection } from "../hooks/useActiveSection.jsx";
 import { useCursorGlow } from "../hooks/useCursorGlow.jsx";
 import { useWebsiteLanguage, LanguageToggle } from "../hooks/useWebsiteLanguage.jsx";
+import { useWebsiteTheme } from "../hooks/useWebsiteTheme.jsx";
 import { TRANSLATIONS } from "../hooks/websiteTranslations.js";
 
 function hexToRgba(hex, alpha) {
@@ -125,6 +126,7 @@ export default function PremiumTemplate({ school }) {
   const PREMIUM_SECTIONS = [...SECTIONS, "heritage", "testimonials"];
   const activeSection = useActiveSection(PREMIUM_SECTIONS, 100);
   const { lang, isBilingual, toggleLang, t } = useWebsiteLanguage(s.educationalSystems);
+  const { isDark, ThemeToggle } = useWebsiteTheme("light");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -180,7 +182,7 @@ export default function PremiumTemplate({ school }) {
   ];
 
   return (
-    <div className="antialiased bg-[#fcfaf7] text-[#2d2a24] overflow-x-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif", "--p": pc, "--pl": pcl, "--pm": pcm }}>
+    <div className={`antialiased overflow-x-hidden ${isDark ? "website-dark" : ""}`} style={{ fontFamily: "'Inter', system-ui, sans-serif", "--p": pc, "--pl": pcl, "--pm": pcm, background: isDark ? "#1a1a1a" : "#fcfaf7", color: isDark ? "#d4d0c8" : "#2d2a24" }}>
       <CursorGlow />
       <ScrollProgressBar progress={progress} color={pc} />
       <style>{`
@@ -212,6 +214,18 @@ export default function PremiumTemplate({ school }) {
         /* ─── Milestone ─── */
         .milestone-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--p); border: 3px solid #fcfaf7; box-shadow: 0 0 0 1px rgba(45,42,36,0.1); transition: all .3s ease; }
         .milestone-dot:hover { transform: scale(1.3); background: #2d2a24; }
+
+        /* ─── Dark mode overrides ─── */
+        .website-dark { --bg-card: #252525; --bg-section: #1e1e1e; --text-primary: #d4d0c8; --text-secondary: #9a948a; --border-color: #333333; }
+        .website-dark .bg-\[\#fcfaf7\] { background-color: #252525 !important; }
+        .website-dark .bg-\[\#f5f2ed\] { background-color: #1e1e1e !important; }
+        .website-dark .text-\[\#2d2a24\] { color: #d4d0c8 !important; }
+        .website-dark .text-\[\#7a746a\] { color: #9a948a !important; }
+        .website-dark .text-\[\#5a544a\] { color: #a09888 !important; }
+        .website-dark .border-\[\#e8e4de\] { border-color: #333333 !important; }
+        .website-dark .border-\[\#ddd8d0\] { border-color: #444444 !important; }
+        .website-dark .bg-\[\#fcfaf7\]\/90 { background-color: rgba(37,37,37,0.9) !important; }
+        .website-dark .milestone-dot { border-color: #252525; }
       `}</style>
 
       {/* ════════════════ NAVIGATION ════════════════ */}
@@ -256,7 +270,8 @@ export default function PremiumTemplate({ school }) {
               })}
             </ul>
 
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2.5">
+              <ThemeToggle variant="light" />
               <LanguageToggle lang={lang} isBilingual={isBilingual} onToggle={toggleLang} variant="light" />
               <a href="/login" className="text-[12.5px] font-medium text-[#9a948a] no-underline hover:text-[#2d2a24] transition-colors premium-hover-link">{t(TRANSLATIONS.nav.signIn)}</a>
               <a

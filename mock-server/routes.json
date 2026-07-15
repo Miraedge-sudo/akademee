@@ -1,0 +1,9 @@
+{
+  "/school": "/school",
+  "/educationalSystems": "/educationalSystems",
+  "/educationalSystems/:id": "/educationalSystems/:id",
+  "/classes": "/classes",
+  "/subjects": "/subjects",
+  "/series": "/series",
+  "/academicYears": "/academicYears"
+}

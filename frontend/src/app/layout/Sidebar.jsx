@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../core/hooks/useAuth";
@@ -13,19 +14,51 @@ const EDUCATIONAL_SYSTEMS = {
 };
 
 const SYSTEM_LABELS = {
-  [EDUCATIONAL_SYSTEMS.ANGLOPHONE_GENERAL]: { en: "Anglophone General", fr: "Général Anglophone" },
-  [EDUCATIONAL_SYSTEMS.FRANCOPHONE_GENERAL]: { en: "Francophone General", fr: "Général Francophone" },
-  [EDUCATIONAL_SYSTEMS.ANGLOPHONE_TECHNICAL]: { en: "Anglophone Technical", fr: "Technique Anglophone" },
-  [EDUCATIONAL_SYSTEMS.FRANCOPHONE_TECHNICAL]: { en: "Francophone Technical", fr: "Technique Francophone" },
+  [EDUCATIONAL_SYSTEMS.ANGLOPHONE_GENERAL]: {
+    en: "Anglophone General",
+    fr: "Général Anglophone",
+  },
+  [EDUCATIONAL_SYSTEMS.FRANCOPHONE_GENERAL]: {
+    en: "Francophone General",
+    fr: "Général Francophone",
+  },
+  [EDUCATIONAL_SYSTEMS.ANGLOPHONE_TECHNICAL]: {
+    en: "Anglophone Technical",
+    fr: "Technique Anglophone",
+  },
+  [EDUCATIONAL_SYSTEMS.FRANCOPHONE_TECHNICAL]: {
+    en: "Francophone Technical",
+    fr: "Technique Francophone",
+  },
   [EDUCATIONAL_SYSTEMS.UNIVERSITY]: { en: "University", fr: "Université" },
 };
 
 const SYSTEM_COLORS = {
-  [EDUCATIONAL_SYSTEMS.ANGLOPHONE_GENERAL]: { bg: "bg-blue-500/20", text: "text-blue-300", dot: "bg-blue-400" },
-  [EDUCATIONAL_SYSTEMS.FRANCOPHONE_GENERAL]: { bg: "bg-amber-500/20", text: "text-amber-300", dot: "bg-amber-400" },
-  [EDUCATIONAL_SYSTEMS.ANGLOPHONE_TECHNICAL]: { bg: "bg-cyan-500/20", text: "text-cyan-300", dot: "bg-cyan-400" },
-  [EDUCATIONAL_SYSTEMS.FRANCOPHONE_TECHNICAL]: { bg: "bg-purple-500/20", text: "text-purple-300", dot: "bg-purple-400" },
-  [EDUCATIONAL_SYSTEMS.UNIVERSITY]: { bg: "bg-emerald-500/20", text: "text-emerald-300", dot: "bg-emerald-400" },
+  [EDUCATIONAL_SYSTEMS.ANGLOPHONE_GENERAL]: {
+    bg: "bg-blue-500/20",
+    text: "text-blue-300",
+    dot: "bg-blue-400",
+  },
+  [EDUCATIONAL_SYSTEMS.FRANCOPHONE_GENERAL]: {
+    bg: "bg-amber-500/20",
+    text: "text-amber-300",
+    dot: "bg-amber-400",
+  },
+  [EDUCATIONAL_SYSTEMS.ANGLOPHONE_TECHNICAL]: {
+    bg: "bg-cyan-500/20",
+    text: "text-cyan-300",
+    dot: "bg-cyan-400",
+  },
+  [EDUCATIONAL_SYSTEMS.FRANCOPHONE_TECHNICAL]: {
+    bg: "bg-purple-500/20",
+    text: "text-purple-300",
+    dot: "bg-purple-400",
+  },
+  [EDUCATIONAL_SYSTEMS.UNIVERSITY]: {
+    bg: "bg-emerald-500/20",
+    text: "text-emerald-300",
+    dot: "bg-emerald-400",
+  },
 };
 
 // ── System-specific navigation items ──
@@ -487,16 +520,29 @@ const BASE_NAV_CONFIG = {
     {
       group: "academic",
       items: [
-        {
-          key: "students",
-          path: "/dashboard/students",
-          icon: "users",
-          badge: 248,
-        },
+        { key: "users", path: "/dashboard/users", icon: "users" },
         { key: "classes", path: "/dashboard/classes", icon: "classes" },
         { key: "subjects", path: "/dashboard/subjects", icon: "subjects" },
-        { key: "subjectAssignment", path: "/dashboard/subject-classes", icon: "subjects" },
-        { key: "teachers", path: "/dashboard/teachers", icon: "teacher" },
+        {
+          key: "subjectAssignment",
+          path: "/dashboard/subject-classes",
+          icon: "subjects",
+        },
+      ],
+    },
+    {
+      group: "structure",
+      items: [
+        { key: "levels", path: "/dashboard/levels", icon: "classes" },
+        { key: "series", path: "/dashboard/series", icon: "layers" },
+      ],
+    },
+    {
+      group: "academic_management",
+      items: [
+        { key: "academicYears", path: "/dashboard/academic-years", icon: "calendar" },
+        { key: "periods", path: "/dashboard/periods", icon: "layers" },
+        { key: "sequences", path: "/dashboard/sequences", icon: "clock" },
       ],
     },
     {
@@ -522,6 +568,11 @@ const BASE_NAV_CONFIG = {
       group: "system",
       items: [
         { key: "settings", path: "/dashboard/settings", icon: "settings" },
+        {
+          key: "systemConfig",
+          path: "/dashboard/system-configuration",
+          icon: "settings",
+        },
       ],
     },
   ],
@@ -567,20 +618,31 @@ function getNavConfig(role, educationalSystems = []) {
     return baseConfig;
   }
 
-  // Add system-specific items for each selected system with separators
-  const systemSpecificGroups = [];
-  educationalSystems.forEach((system, idx) => {
+  // Build system-specific sections
+  const systemSections = [];
+  educationalSystems.forEach((system) => {
     const systemItems = SYSTEM_SPECIFIC_ITEMS[system];
-    if (systemItems) {
-      // Add a divider label before each system's groups (except the first)
-      if (idx > 0) {
-        systemSpecificGroups.push({ group: `_divider_${system}`, divider: true });
-      }
-      systemSpecificGroups.push(...systemItems);
+    if (systemItems && systemItems.length > 0) {
+      const prefixedItems = systemItems.map((g) => ({
+        ...g,
+        _groupKey: `${system}_${g.group}`,
+        items: g.items.map((item) => ({
+          ...item,
+          _itemKey: `${system}_${item.key}`,
+        })),
+      }));
+      systemSections.push({
+        _type: "system_section",
+        _systemId: system,
+        groups: prefixedItems,
+      });
     }
   });
 
-  // Insert system-specific items after "academic" group, before "grades"
+  if (systemSections.length === 0) {
+    return baseConfig;
+  }
+
   const academicGroupIndex = baseConfig.findIndex(
     (g) => g.group === "academic",
   );
@@ -588,13 +650,21 @@ function getNavConfig(role, educationalSystems = []) {
 
   if (academicGroupIndex !== -1 && gradesGroupIndex !== -1) {
     const newConfig = [...baseConfig];
-    newConfig.splice(academicGroupIndex + 1, 0, ...systemSpecificGroups);
+    newConfig.splice(academicGroupIndex + 1, 0, ...systemSections);
     return newConfig;
   }
 
-  // If groups not found, just append at the end
-  return [...baseConfig, ...systemSpecificGroups];
+  return [...baseConfig, ...systemSections];
 }
+
+// ── System section header colors ──
+const SYSTEM_SECTION_COLORS = {
+  [EDUCATIONAL_SYSTEMS.ANGLOPHONE_GENERAL]: { bar: "bg-blue-500", headerBg: "bg-blue-500/10", text: "text-blue-400", dot: "bg-blue-400" },
+  [EDUCATIONAL_SYSTEMS.FRANCOPHONE_GENERAL]: { bar: "bg-amber-500", headerBg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-400" },
+  [EDUCATIONAL_SYSTEMS.ANGLOPHONE_TECHNICAL]: { bar: "bg-cyan-500", headerBg: "bg-cyan-500/10", text: "text-cyan-400", dot: "bg-cyan-400" },
+  [EDUCATIONAL_SYSTEMS.FRANCOPHONE_TECHNICAL]: { bar: "bg-purple-500", headerBg: "bg-purple-500/10", text: "text-purple-400", dot: "bg-purple-400" },
+  [EDUCATIONAL_SYSTEMS.UNIVERSITY]: { bar: "bg-emerald-500", headerBg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-400" },
+};
 
 // ── Icon set ──
 const ICONS = {
@@ -624,12 +694,6 @@ const ICONS = {
     <>
       <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-    </>
-  ),
-  teacher: (
-    <>
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
     </>
   ),
   barchart: (
@@ -755,6 +819,12 @@ const ICONS = {
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </>
   ),
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </>
+  ),
 };
 
 function NavIcon({ name, className }) {
@@ -770,6 +840,114 @@ function NavIcon({ name, className }) {
     >
       {ICONS[name]}
     </svg>
+  );
+}
+
+// ── System Section Renderer ──
+function SystemSectionRenderer({ systemId, groups, collapsed: sidebarCollapsed, location, t, i18n, onCloseMobile }) {
+  const [isOpen, setIsOpen] = useState(true);
+  const labels = SYSTEM_LABELS[systemId];
+  const colors = SYSTEM_SECTION_COLORS[systemId];
+  const isFr = i18n.language === "fr";
+  const sysLabel = labels ? (isFr ? labels.fr : labels.en) : systemId;
+
+  if (sidebarCollapsed) {
+    // When sidebar is collapsed, just render groups as regular items
+    return groups.map((g) => (
+      <div key={g._groupKey || g.group}>
+        {g.items.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <NavLink
+              key={item._itemKey || item.key}
+              to={item.path}
+              onClick={onCloseMobile}
+              className="group relative flex items-center gap-2.5 min-h-[36px] mx-2 px-3 rounded-md text-[13px] whitespace-nowrap overflow-hidden transition-colors lg:justify-center lg:px-0 text-primary-200 hover:bg-white/[0.08] hover:text-white"
+            >
+              <NavIcon name={item.icon} className="w-[16px] h-[16px] flex-shrink-0 opacity-80" />
+              <span className="flex flex-col transition-opacity min-w-0 lg:hidden">
+                <span className="text-[13px] leading-tight truncate">{t(`nav.${item.key}`, item.key)}</span>
+              </span>
+              <span className="hidden lg:group-hover:block absolute left-[60px] top-1/2 -translate-y-1/2 bg-surface-900 text-white text-xs px-2.5 py-1.5 rounded-md whitespace-nowrap z-[200] shadow-lg">
+                {t(`nav.${item.key}`, item.key)}
+              </span>
+            </NavLink>
+          );
+        })}
+      </div>
+    ));
+  }
+
+  return (
+    <div className="relative mb-1">
+      {/* Colored left bar */}
+      <div className={`absolute left-[11px] top-0 bottom-0 w-[3px] rounded-full ${colors?.bar || "bg-primary-400"} opacity-25`} />
+
+      {/* System header button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`relative flex items-center gap-2 w-[calc(100%-16px)] mx-2 px-3 py-1.5 rounded-md text-[10px] font-semibold tracking-wider uppercase transition-all
+          ${colors?.text || "text-primary-300"} ${colors?.headerBg || "bg-white/[0.05]"}
+          hover:brightness-125`}
+      >
+        <span className={`w-1.5 h-1.5 rounded-full ${colors?.dot || "bg-primary-400"}`} />
+        <span className="flex-1 text-left truncate">{sysLabel}</span>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`w-3 h-3 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {/* Groups */}
+      <div
+        className={`overflow-hidden transition-all duration-200 ${
+          isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        {groups.map((g) => (
+          <div key={g._groupKey || g.group}>
+            <div className="flex items-center gap-2 text-[10px] font-semibold tracking-wider uppercase text-primary-400/60 px-5 pt-2.5 pb-1 whitespace-nowrap">
+              {t(`nav.group.${g.group}`, g.group)}
+            </div>
+            {g.items.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <NavLink
+                  key={item._itemKey || item.key}
+                  to={item.path}
+                  onClick={onCloseMobile}
+                  className={`
+                    group relative flex items-center gap-2.5 min-h-[34px] mx-2 px-3 rounded-md
+                    text-[13px] whitespace-nowrap overflow-hidden transition-colors
+                    ${isActive
+                      ? "bg-primary-600 text-white font-medium"
+                      : "text-primary-200 hover:bg-white/[0.08] hover:text-white"
+                    }
+                  `}
+                >
+                  <NavIcon name={item.icon} className="w-4 h-4 flex-shrink-0 opacity-70" />
+                  <span className="flex flex-col min-w-0">
+                    <span className="text-[13px] leading-tight truncate">{t(`nav.${item.key}`, item.key)}</span>
+                    {item.description && (
+                      <span className="text-[10px] text-primary-400/60 leading-tight truncate">
+                        {i18n.language === "fr" && item.descriptionFr ? item.descriptionFr : item.description}
+                      </span>
+                    )}
+                  </span>
+                </NavLink>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -792,6 +970,25 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
 
   const userInitials =
     `${user?.firstName?.[0] || ""}${user?.lastName?.[0] || ""}`.toUpperCase();
+
+  // ── Collapsible group state ──
+  const [collapsedGroups, setCollapsedGroups] = useState(() => {
+    // Start with all multi-item groups collapsed except overview
+    const initial = {};
+    navGroups.forEach((g) => {
+      if (!g.divider && g._type !== "system_section" && g.group !== "overview" && g.items?.length > 0) {
+        initial[g.group] = true;
+      }
+    });
+    return initial;
+  });
+
+  const toggleGroup = (groupKey) => {
+    setCollapsedGroups((prev) => ({
+      ...prev,
+      [groupKey]: !prev[groupKey],
+    }));
+  };
 
   return (
     <>
@@ -873,11 +1070,25 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden py-2 scrollbar-none">
           {navGroups.map((group) => {
-            // Skip dividers when collapsed
-            if (group.divider && collapsed) return null;
+            // System section — wrapped in colored collapsible header
+            if (group._type === "system_section") {
+              return (
+                <SystemSectionRenderer
+                  key={`sys_${group._systemId}`}
+                  systemId={group._systemId}
+                  groups={group.groups}
+                  collapsed={collapsed}
+                  location={location}
+                  t={t}
+                  i18n={i18n}
+                  onCloseMobile={onCloseMobile}
+                />
+              );
+            }
 
-            // Render a divider/spacer between system sections
+            // Divider
             if (group.divider) {
+              if (collapsed) return null;
               return (
                 <div key={group.group} className="px-5 pt-4 pb-1">
                   <div className="h-px bg-white/[0.06]" />
@@ -885,65 +1096,92 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
               );
             }
 
+            // Regular group — collapsible
+            const groupKey = group._groupKey || group.group;
+            const isCollapsed = collapsedGroups[groupKey] === true;
             return (
-              <div key={group.group}>
-                <div
-                  className={`flex items-center gap-2 text-[10px] font-semibold tracking-wider uppercase text-primary-400/60 px-5 pt-3 pb-1 whitespace-nowrap transition-opacity ${collapsed ? "lg:opacity-0 lg:hidden" : "opacity-100"}`}
+              <div key={groupKey}>
+                {/* Group header — clickable toggle */}
+                <button
+                  onClick={() => toggleGroup(groupKey)}
+                  className={`w-full flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase text-primary-400/60 px-5 pt-3 pb-1 whitespace-nowrap transition-opacity hover:text-primary-300 ${collapsed ? "lg:opacity-0 lg:hidden lg:pointer-events-none" : "opacity-100"}`}
                 >
-                  {t(`nav.group.${group.group}`, group.group)}
-                </div>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={`w-2.5 h-2.5 transition-transform duration-200 flex-shrink-0 ${isCollapsed ? "-rotate-90" : ""}`}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                  <span className="flex-1 text-left">{t(`nav.group.${group.group}`, group.group)}</span>
+                  {group.items.length > 0 && (
+                    <span className="text-[9px] font-bold opacity-50">{group.items.length}</span>
+                  )}
+                </button>
 
-                {group.items.map((item) => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <NavLink
-                      key={item.key}
-                      to={item.path}
-                      onClick={onCloseMobile}
-                      className={`
-                        group relative flex items-center gap-2.5 min-h-[36px] mx-2 px-3 rounded-md
-                        text-[13px] whitespace-nowrap overflow-hidden transition-colors
-                        ${
-                          isActive
-                            ? "bg-primary-600 text-white font-medium"
-                            : "text-primary-200 hover:bg-white/[0.08] hover:text-white"
-                        }
-                        ${collapsed ? "lg:justify-center lg:px-0" : ""}
-                      `}
-                    >
-                      <NavIcon
-                        name={item.icon}
-                        className="w-[16px] h-[16px] flex-shrink-0 opacity-80"
-                      />
-                      <span
-                        className={`flex flex-col transition-opacity min-w-0 ${collapsed ? "lg:opacity-0 lg:hidden" : "opacity-100"}`}
+                {/* Items — collapsible */}
+                <div
+                  className={`overflow-hidden transition-all duration-200 ${
+                    isCollapsed ? "max-h-0 opacity-0" : "max-h-[1000px] opacity-100"
+                  }`}
+                >
+                  {group.items.map((item) => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <NavLink
+                        key={item._itemKey || item.key}
+                        to={item.path}
+                        onClick={onCloseMobile}
+                        className={`
+                          group relative flex items-center gap-2.5 min-h-[36px] mx-2 px-3 rounded-md
+                          text-[13px] whitespace-nowrap overflow-hidden transition-colors
+                          ${
+                            isActive
+                              ? "bg-primary-600 text-white font-medium"
+                              : "text-primary-200 hover:bg-white/[0.08] hover:text-white"
+                          }
+                          ${collapsed ? "lg:justify-center lg:px-0" : ""}
+                        `}
                       >
-                        <span className="text-[13px] leading-tight truncate">
-                          {t(`nav.${item.key}`, item.key)}
+                        <NavIcon
+                          name={item.icon}
+                          className="w-[16px] h-[16px] flex-shrink-0 opacity-80"
+                        />
+                        <span
+                          className={`flex flex-col transition-opacity min-w-0 ${collapsed ? "lg:opacity-0 lg:hidden" : "opacity-100"}`}
+                        >
+                          <span className="text-[13px] leading-tight truncate">
+                            {t(`nav.${item.key}`, item.key)}
+                          </span>
+                          {item.description && (
+                            <span className="text-[10px] text-primary-400/60 leading-tight truncate">
+                              {i18n.language === "fr" && item.descriptionFr
+                                ? item.descriptionFr
+                                : item.description}
+                            </span>
+                          )}
                         </span>
-                        {item.description && (
-                          <span className="text-[10px] text-primary-400/60 leading-tight truncate">
-                            {i18n.language === "fr" && item.descriptionFr ? item.descriptionFr : item.description}
+                        {item.badge != null && (
+                          <span
+                            className={`ml-auto bg-primary-400 text-primary-950 text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 transition-opacity ${collapsed ? "lg:opacity-0 lg:hidden" : "opacity-100"}`}
+                          >
+                            {item.badge}
                           </span>
                         )}
-                      </span>
-                      {item.badge != null && (
-                        <span
-                          className={`ml-auto bg-primary-400 text-primary-950 text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 transition-opacity ${collapsed ? "lg:opacity-0 lg:hidden" : "opacity-100"}`}
-                        >
-                          {item.badge}
-                        </span>
-                      )}
 
-                      {/* Tooltip when collapsed (desktop only) */}
-                      {collapsed && (
-                        <span className="hidden lg:group-hover:block absolute left-[60px] top-1/2 -translate-y-1/2 bg-surface-900 text-white text-xs px-2.5 py-1.5 rounded-md whitespace-nowrap z-[200] shadow-lg">
-                          {t(`nav.${item.key}`, item.key)}
-                        </span>
-                      )}
-                    </NavLink>
-                  );
-                })}
+                        {collapsed && (
+                          <span className="hidden lg:group-hover:block absolute left-[60px] top-1/2 -translate-y-1/2 bg-surface-900 text-white text-xs px-2.5 py-1.5 rounded-md whitespace-nowrap z-[200] shadow-lg">
+                            {t(`nav.${item.key}`, item.key)}
+                          </span>
+                        )}
+                      </NavLink>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}

@@ -1,30 +1,24 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../../../core/hooks/useAuth";
 import { useTheme } from "../../../core/hooks/useTheme";
-import {
-  getClassById,
-  getClassSubjects,
-  deleteClass,
-} from "../../../core/api/classService";
 import {
   FiEdit2,
   FiPlus,
   FiChevronLeft,
-  FiChevronRight,
+  FiSave,
+  FiX,
   FiSearch,
   FiTrash2,
-  FiLoader,
   FiUsers,
-  FiUserCheck,
   FiBook,
   FiUser,
   FiHome,
-  FiXCircle,
-  FiHelpCircle,
+  FiLoader,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
+
+const MOCK_API = "http://localhost:3001";
 
 function hexToRgba(hex, alpha = 1) {
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -36,13 +30,12 @@ function hexToRgba(hex, alpha = 1) {
 
 function getLevelColor(name) {
   const colorMap = {
-    "Form 1": "#6366F1",
-    "Form 2": "#0EA5E9",
-    "Form 3": "#14B8A6",
-    "Form 4": "#F59E0B",
-    "Form 5": "#EF4444",
-    "Lower 6th": "#A855F7",
-    "Upper 6th": "#085041",
+    "Form 1": "#6366F1", "Form 2": "#0EA5E9", "Form 3": "#14B8A6",
+    "Form 4": "#F59E0B", "Form 5": "#EF4444",
+    "Lower 6th": "#A855F7", "Upper 6th": "#085041",
+    "6ème": "#6366F1", "5ème": "#0EA5E9", "4ème": "#14B8A6",
+    "3ème": "#F59E0B", "Seconde": "#A855F7", "Première": "#EF4444",
+    "Terminale": "#085041",
   };
   for (const [key, color] of Object.entries(colorMap)) {
     if (name?.toLowerCase().includes(key.toLowerCase())) return color;
@@ -51,29 +44,22 @@ function getLevelColor(name) {
 }
 
 // ── Stat chip ──
-function StatChip({ icon, value, label, animationDelay = "0s" }) {
+function StatChip({ icon, value, label }) {
   return (
-    <div
-      className="bg-surface-50 dark:bg-surface-900 border border-surface-100 dark:border-surface-700 rounded-lg p-3 hover:-translate-y-0.5 hover:shadow-sm transition-all"
-      style={{ animationDelay }}
-    >
+    <div className="bg-surface-50 dark:bg-surface-900 border border-surface-100 dark:border-surface-700 rounded-xl p-3.5">
       <div className="text-lg mb-1">{icon}</div>
-      <div className="text-xl font-extrabold text-surface-900 dark:text-surface-100 leading-tight mb-0.5">
-        {value}
-      </div>
+      <div className="text-xl font-extrabold text-surface-900 dark:text-surface-100 leading-tight mb-0.5">{value}</div>
       <div className="text-[11px] text-surface-400 font-medium">{label}</div>
     </div>
   );
 }
 
-// ── Empty State ──
+// ── Empty tab state ──
 function EmptyTab({ icon, title, subtitle, action }) {
   return (
     <div className="text-center py-14">
       <div className="text-4xl mb-3">{icon}</div>
-      <h3 className="font-display text-lg font-bold text-surface-800 dark:text-surface-100 mb-1.5">
-        {title}
-      </h3>
+      <h3 className="font-display text-lg font-bold text-surface-800 dark:text-surface-100 mb-1.5">{title}</h3>
       <p className="text-sm text-surface-400 max-w-sm mx-auto mb-5">{subtitle}</p>
       {action}
     </div>
@@ -84,89 +70,170 @@ export default function ClassDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("common");
-  const { user } = useAuth();
   const { primaryColor } = useTheme();
-  const lang = i18n.language === "fr" ? "fr" : "en";
-  const isFr = lang === "fr";
+  const isFr = i18n.language === "fr";
   const pc = primaryColor || "#085041";
 
   const [cls, setCls] = useState(null);
-  const [subjects, setSubjects] = useState([]);
+  const [levels, setLevels] = useState([]);
+  const [series, setSeries] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("students");
+  const [activeTab, setActiveTab] = useState("general");
   const [studentSearch, setStudentSearch] = useState("");
 
+  // ── Edit form state ──
+  const [editForm, setEditForm] = useState({ name: "", levelId: "", seriesId: "", capacity: 40, classTeacherId: "" });
+  const [isEditing, setIsEditing] = useState(false);
+
+  // ── Load data from mock server ──
   useEffect(() => {
-    loadClass();
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [classRes, levelsRes, seriesRes, teachersRes, studentsRes, assignRes] = await Promise.all([
+          fetch(`${MOCK_API}/classes/${id}`),
+          fetch(`${MOCK_API}/systemLevels`),
+          fetch(`${MOCK_API}/systemSeries`),
+          fetch(`${MOCK_API}/teachers`),
+          fetch(`${MOCK_API}/students`),
+          fetch(`${MOCK_API}/teacherAssignments`),
+        ]);
+
+        if (!classRes.ok) { setError("NOT_FOUND"); setLoading(false); return; }
+
+        const classData = await classRes.json();
+        const levelsData = await levelsRes.json();
+        const seriesData = await seriesRes.json();
+        const teachersData = await teachersRes.json();
+        const studentsData = await studentsRes.json();
+        const assignmentsData = await assignRes.json();
+
+        setCls(classData);
+        setLevels(Array.isArray(levelsData) ? levelsData : []);
+        setSeries(Array.isArray(seriesData) ? seriesData : []);
+        setTeachers(Array.isArray(teachersData) ? teachersData : []);
+
+        // Filter students by classId
+        const classStudents = Array.isArray(studentsData)
+          ? studentsData.filter((s) => s.classId === classData.id)
+          : [];
+        setStudents(classStudents);
+
+        // Find teachers assigned to this class
+        const classAssignments = Array.isArray(assignmentsData)
+          ? assignmentsData.filter((a) => a.classId === classData.id)
+          : [];
+        const assignedTeacherIds = classAssignments.map((a) => a.teacherId);
+        const classTeachers = Array.isArray(teachersData)
+          ? teachersData.filter((t) => assignedTeacherIds.includes(t.id))
+          : [];
+
+        // Set classTeacherId from first assignment or from class data
+        const classTeacher = classTeachers[0] || null;
+        setCls((prev) => ({
+          ...prev,
+          classTeacherId: prev.classTeacherId || classTeacher?.id || null,
+          assignedTeachers: classTeachers,
+          students: classStudents,
+        }));
+
+        setEditForm({
+          name: classData.name || "",
+          levelId: classData.levelId?.toString() || "",
+          seriesId: classData.seriesId?.toString() || "",
+          capacity: classData.capacity || 40,
+          classTeacherId: classData.classTeacherId?.toString() || classTeacher?.id?.toString() || "",
+        });
+      } catch (err) {
+        console.error("Error:", err);
+        setError("ERROR");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, [id]);
 
-  const loadClass = async () => {
-    setLoading(true);
-    setError(null);
+  // ── Save edit ──
+  const handleSave = async () => {
+    if (!editForm.name.trim()) {
+      toast.error(isFr ? "Le nom est requis" : "Name is required");
+      return;
+    }
+    setSubmitting(true);
     try {
-      const [classData, subjectsData] = await Promise.all([
-        getClassById(id),
-        getClassSubjects(id).catch(() => []),
-      ]);
-      setCls(classData);
-      setSubjects(Array.isArray(subjectsData) ? subjectsData : subjectsData?.subjects || []);
+      const payload = {
+        name: editForm.name.trim(),
+        levelId: editForm.levelId ? Number(editForm.levelId) : null,
+        seriesId: editForm.seriesId ? Number(editForm.seriesId) : null,
+        capacity: editForm.capacity,
+        classTeacherId: editForm.classTeacherId ? Number(editForm.classTeacherId) : null,
+      };
+      const res = await fetch(`${MOCK_API}/classes/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const updated = await res.json();
+      setCls((prev) => ({ ...prev, ...updated }));
+      setIsEditing(false);
+      toast.success(isFr ? "Modifications enregistrées" : "Changes saved");
     } catch (err) {
-      setError(err.response?.status === 404 ? "NOT_FOUND" : "ERROR");
+      toast.error(isFr ? "Erreur" : "Error saving");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
+  // ── Delete class ──
   const handleDelete = async () => {
-    if (!window.confirm(isFr ? "Supprimer cette classe ?" : "Delete this class?")) return;
+    if (!window.confirm(isFr ? "Supprimer cette classe ? Cette action est irréversible." : "Delete this class? This action cannot be undone.")) return;
     try {
-      await deleteClass(id);
+      await fetch(`${MOCK_API}/classes/${id}`, { method: "DELETE" });
       toast.success(isFr ? "Classe supprimée" : "Class deleted");
       navigate("/dashboard/classes");
-    } catch (err) {
-      toast.error(err.response?.data?.message || (isFr ? "Erreur" : "Error"));
+    } catch {
+      toast.error(isFr ? "Erreur" : "Error");
     }
   };
 
+  // ── Loading ──
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <FiLoader className="w-8 h-8 animate-spin" style={{ color: pc }} />
+        <div className="w-9 h-9 rounded-full border-[3px] border-surface-200 dark:border-surface-600 border-t-primary-600 animate-spin" />
       </div>
     );
   }
 
-  if (error === "NOT_FOUND") {
+  // ── Not found / Error ──
+  if (error === "NOT_FOUND" || !cls) {
     return (
       <div className="text-center py-20">
-        <FiHelpCircle className="w-12 h-12 mx-auto mb-3 text-surface-300" />
+        <div className="text-4xl mb-3">😕</div>
         <h3 className="font-display text-xl font-bold text-surface-800 dark:text-surface-100 mb-2">
           {isFr ? "Classe introuvable" : "Class not found"}
         </h3>
-        <Link
-          to="/dashboard/classes"
-          className="text-sm font-semibold hover:underline"
-          style={{ color: pc }}
-        >
+        <Link to="/dashboard/classes" className="text-sm font-semibold hover:underline" style={{ color: pc }}>
           ← {isFr ? "Retour aux classes" : "Back to classes"}
         </Link>
       </div>
     );
   }
 
-  if (error || !cls) {
+  if (error) {
     return (
       <div className="text-center py-20">
-        <FiXCircle className="w-12 h-12 mx-auto mb-3 text-red-400" />
+        <div className="text-4xl mb-3">⚠️</div>
         <h3 className="font-display text-xl font-bold text-surface-800 dark:text-surface-100 mb-2">
           {isFr ? "Erreur de chargement" : "Error loading class"}
         </h3>
-        <button
-          onClick={loadClass}
-          className="text-sm font-semibold hover:underline"
-          style={{ color: pc }}
-        >
+        <button onClick={() => window.location.reload()} className="text-sm font-semibold hover:underline" style={{ color: pc }}>
           {isFr ? "Réessayer" : "Retry"}
         </button>
       </div>
@@ -174,25 +241,36 @@ export default function ClassDetailPage() {
   }
 
   const lvlColor = getLevelColor(cls.name);
-  const enrolled = cls.studentCount || 0;
+  const enrolled = students.length;
   const capacity = cls.capacity || 40;
   const pct = capacity > 0 ? Math.min(Math.round((enrolled / capacity) * 100), 100) : 0;
   const isFull = pct >= 90;
-  const sectionInitial = (cls.name?.match(/[A-Z]/g) || ["A"]).slice(-1)[0];
+  const sectionInitial = (cls.name?.match(/[A-Z]/g) || [cls.name?.[0] || "A"]).slice(-1)[0];
+
+  const selectedLevel = levels.find((l) => l.id === Number(editForm.levelId));
+  const selectedSeries = series.find((s) => s.id === Number(editForm.seriesId));
+  const assignedTeachers = cls.assignedTeachers || [];
 
   const tabs = [
-    { key: "students", icon: <FiUserCheck className="w-4 h-4" />, label: isFr ? "Élèves" : "Students", count: enrolled },
-    { key: "subjects", icon: <FiBook className="w-4 h-4" />, label: isFr ? "Matières" : "Subjects", count: subjects.length },
-    { key: "teachers", icon: <FiUser className="w-4 h-4" />, label: isFr ? "Enseignants" : "Teachers" },
+    { key: "general", icon: <FiEdit2 className="w-4 h-4" />, label: isFr ? "Général" : "General" },
+    { key: "teachers", icon: <FiUsers className="w-4 h-4" />, label: isFr ? "Enseignants" : "Teachers", count: assignedTeachers.length },
+    { key: "students", icon: <FiUser className="w-4 h-4" />, label: isFr ? "Élèves" : "Students", count: enrolled },
   ];
 
-  // Note: enrolled students list must be fetched separately via the enrollment endpoint
-  const filteredStudents = cls.students || [];
+  const filteredStudents = studentSearch.trim()
+    ? students.filter((s) =>
+        `${s.firstName} ${s.lastName}`.toLowerCase().includes(studentSearch.toLowerCase()) ||
+        (s.studentNumber || "").toLowerCase().includes(studentSearch.toLowerCase())
+      )
+    : students;
+
+  const inputClass = "w-full h-11 px-3.5 rounded-lg border-[1.5px] border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900 text-surface-800 dark:text-surface-100 placeholder:text-surface-400 text-sm outline-none focus:border-primary-600 focus:bg-white dark:focus:bg-surface-800 transition-all";
+  const labelClass = "block text-xs font-semibold text-surface-600 dark:text-surface-300 mb-1.5";
 
   return (
     <div className="max-w-[960px] mx-auto pb-12">
-      {/* ── Breadcrumb ── */}
-      <nav className="flex items-center gap-2 text-sm text-surface-400 mb-5 animate-fadeIn">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-surface-400 mb-5">
         <Link to="/dashboard/classes" className="hover:text-primary-600 transition-colors">
           {isFr ? "Classes" : "Classes"}
         </Link>
@@ -201,10 +279,7 @@ export default function ClassDetailPage() {
       </nav>
 
       {/* ── Hero Card ── */}
-      <div
-        className="bg-white dark:bg-surface-800 rounded-xl p-6 border border-surface-200 dark:border-surface-700 shadow-md mb-6 animate-fadeIn"
-        style={{ animationDelay: "0.05s" }}
-      >
+      <div className="bg-white dark:bg-surface-800 rounded-xl p-6 sm:p-7 border border-surface-200 dark:border-surface-700 shadow-md mb-6">
         {/* Hero top */}
         <div className="flex items-start justify-between flex-wrap gap-4 mb-5">
           <div className="flex items-center gap-4">
@@ -219,38 +294,41 @@ export default function ClassDetailPage() {
               {sectionInitial}
             </div>
             <div>
-              <h1
-                className="font-display text-xl font-bold text-surface-800 dark:text-surface-100 mb-1"
-              >
+              <h1 className="font-display text-xl font-bold text-surface-800 dark:text-surface-100 mb-1">
                 {cls.name}
               </h1>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-surface-400">
-                  {cls.level || isFr ? "Niveau standard" : "Standard level"}
+                  {selectedLevel?.name || (isFr ? "Niveau standard" : "Standard level")}
                 </span>
-                <span className="text-surface-200">·</span>
+                {selectedSeries && (
+                  <>
+                    <span className="text-surface-300 dark:text-surface-600">·</span>
+                    <span className="text-xs text-surface-400">{selectedSeries.name}</span>
+                  </>
+                )}
+                <span className="text-surface-300 dark:text-surface-600">·</span>
                 <span
                   className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                  style={{
-                    background: hexToRgba(pc, 0.06),
-                    color: pc,
-                  }}
+                  style={{ background: hexToRgba(pc, 0.06), color: pc }}
                 >
-                  {cls.academicYearName || t("class.academicYearNotSet", "N/A")}
+                  {cls.capacity || "—"} {isFr ? "places" : "seats"}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Action buttons */}
+          {/* Actions */}
           <div className="flex gap-2">
-            <button
-              onClick={() => navigate(`/dashboard/classes/${id}/edit`)}
-              className="h-9 px-3.5 rounded-lg border border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-xs font-semibold hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
-            >
-              <FiEdit2 className="w-3.5 h-3.5" />
-              {isFr ? "Modifier" : "Edit"}
-            </button>
+            {!isEditing ? (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="h-9 px-3.5 rounded-lg border border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-xs font-semibold hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5"
+              >
+                <FiEdit2 className="w-3.5 h-3.5" />
+                {isFr ? "Modifier" : "Edit"}
+              </button>
+            ) : null}
             <button
               onClick={handleDelete}
               className="h-9 px-3.5 rounded-lg border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 transition-colors flex items-center gap-1.5"
@@ -265,12 +343,8 @@ export default function ClassDetailPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
           <StatChip icon={<FiUsers className="w-5 h-5" />} value={enrolled} label={isFr ? "Élèves" : "Students"} />
           <StatChip icon={<FiHome className="w-5 h-5" />} value={capacity} label={isFr ? "Capacité" : "Capacity"} />
-          <StatChip icon={<FiBook className="w-5 h-5" />} value={subjects.length} label={isFr ? "Matières" : "Subjects"} />
-          <StatChip
-            icon={<FiUser className="w-5 h-5" />}
-            value={cls.classTeacherId ? 1 : 0}
-            label={isFr ? "Enseignants" : "Teachers"}
-          />
+          <StatChip icon={<FiBook className="w-5 h-5" />} value={assignedTeachers.length} label={isFr ? "Enseignants" : "Teachers"} />
+          <StatChip icon={<FiUser className="w-5 h-5" />} value={cls.classTeacherId ? 1 : 0} label={isFr ? "Titulaire" : "Class teacher"} />
         </div>
 
         {/* Capacity bar */}
@@ -278,7 +352,7 @@ export default function ClassDetailPage() {
           <div className="flex justify-between text-xs text-surface-400 mb-1.5">
             <span>{isFr ? "Progression des inscriptions" : "Enrollment progress"}</span>
             <span className="font-semibold" style={{ color: isFull ? "#EF4444" : pc }}>
-              {pct}%
+              {pct}% {isFr ? "plein" : "full"}
             </span>
           </div>
           <div className="h-2 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
@@ -296,7 +370,7 @@ export default function ClassDetailPage() {
       </div>
 
       {/* ── Tabs Container ── */}
-      <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 shadow-md overflow-hidden animate-fadeIn">
+      <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 shadow-md overflow-hidden">
         {/* Tab navigation */}
         <div className="flex border-b border-surface-200 dark:border-surface-700 overflow-x-auto scrollbar-none">
           {tabs.map((tab) => (
@@ -306,11 +380,11 @@ export default function ClassDetailPage() {
               className={`flex items-center gap-2 px-4 sm:px-5 py-3.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
                 activeTab === tab.key
                   ? "border-primary-600 text-primary-700 dark:text-primary-400 font-bold"
-                  : "border-transparent text-surface-400 hover:text-surface-600"
+                  : "border-transparent text-surface-400 hover:text-surface-600 dark:hover:text-surface-300"
               }`}
               style={activeTab === tab.key ? { borderColor: pc, color: pc } : undefined}
             >
-              <span>{tab.icon}</span>
+              {tab.icon}
               {tab.label}
               {tab.count !== undefined && (
                 <span
@@ -329,10 +403,137 @@ export default function ClassDetailPage() {
 
         {/* Tab content */}
         <div className="p-5">
-          {/* ── Students Tab ── */}
+          {/* ═══════ GENERAL TAB ═══════ */}
+          {activeTab === "general" && (
+            <div>
+              {!isEditing ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className={labelClass}>{isFr ? "Nom de la classe" : "Class name"}</label>
+                    <p className="text-sm font-semibold text-surface-800 dark:text-surface-100">{cls.name}</p>
+                  </div>
+                  <div>
+                    <label className={labelClass}>{isFr ? "Niveau" : "Level"}</label>
+                    <p className="text-sm font-semibold text-surface-800 dark:text-surface-100">
+                      {selectedLevel?.name || (isFr ? "Aucun" : "None")}
+                    </p>
+                  </div>
+                  <div>
+                    <label className={labelClass}>{isFr ? "Série / Filière" : "Series / Stream"}</label>
+                    <p className="text-sm font-semibold text-surface-800 dark:text-surface-100">
+                      {selectedSeries?.name || (isFr ? "Aucune" : "None")}
+                    </p>
+                  </div>
+                  <div>
+                    <label className={labelClass}>{isFr ? "Capacité" : "Capacity"}</label>
+                    <p className="text-sm font-semibold text-surface-800 dark:text-surface-100">{cls.capacity || 40} {isFr ? "places" : "seats"}</p>
+                  </div>
+                  <div>
+                    <label className={labelClass}>{isFr ? "Professeur titulaire" : "Class teacher"}</label>
+                    <p className="text-sm font-semibold text-surface-800 dark:text-surface-100">
+                      {assignedTeachers.find((t) => t.id === cls.classTeacherId)
+                        ? `${assignedTeachers.find((t) => t.id === cls.classTeacherId).firstName} ${assignedTeachers.find((t) => t.id === cls.classTeacherId).lastName}`
+                        : assignedTeachers[0]
+                          ? `${assignedTeachers[0].firstName} ${assignedTeachers[0].lastName}`
+                          : isFr ? "Non assigné" : "Not assigned"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className={labelClass}>{isFr ? "Élèves inscrits" : "Enrolled students"}</label>
+                    <p className="text-sm font-semibold text-surface-800 dark:text-surface-100">{enrolled} / {capacity}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className={labelClass}>{isFr ? "Nom" : "Name"} <span className="text-primary-600">*</span></label>
+                      <input type="text" value={editForm.name} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} className={inputClass} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>{isFr ? "Capacité" : "Capacity"}</label>
+                      <input type="number" value={editForm.capacity} onChange={(e) => setEditForm((f) => ({ ...f, capacity: Math.max(1, Math.min(100, parseInt(e.target.value) || 1)) }))} min={1} max={100} className={inputClass} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className={labelClass}>{isFr ? "Niveau" : "Level"}</label>
+                      <select value={editForm.levelId} onChange={(e) => setEditForm((f) => ({ ...f, levelId: e.target.value }))} className={inputClass}>
+                        <option value="">{isFr ? "Aucun" : "None"}</option>
+                        {levels.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelClass}>{isFr ? "Série" : "Series"}</label>
+                      <select value={editForm.seriesId} onChange={(e) => setEditForm((f) => ({ ...f, seriesId: e.target.value }))} className={inputClass}>
+                        <option value="">{isFr ? "Aucune" : "None"}</option>
+                        {series.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button onClick={() => { setIsEditing(false); setEditForm({ name: cls.name, levelId: cls.levelId?.toString() || "", seriesId: cls.seriesId?.toString() || "", capacity: cls.capacity || 40, classTeacherId: cls.classTeacherId?.toString() || "" }); }}
+                      className="h-10 px-4 rounded-lg border border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5">
+                      <FiX className="w-3.5 h-3.5" /> {isFr ? "Annuler" : "Cancel"}
+                    </button>
+                    <button onClick={handleSave} disabled={submitting}
+                      className="h-10 px-5 text-white text-sm font-semibold rounded-lg flex items-center gap-2 transition-all disabled:opacity-60"
+                      style={{ backgroundColor: pc }}>
+                      {submitting ? <FiLoader className="w-4 h-4 animate-spin" /> : <FiSave className="w-3.5 h-3.5" />}
+                      {isFr ? "Enregistrer" : "Save"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ═══════ TEACHERS TAB ═══════ */}
+          {activeTab === "teachers" && (
+            <div>
+              {assignedTeachers.length === 0 ? (
+                <EmptyTab
+                  icon={<FiUsers className="w-8 h-8" />}
+                  title={isFr ? "Aucun enseignant assigné" : "No teachers assigned"}
+                  subtitle={isFr ? "Assignez des enseignants à cette classe." : "Assign teachers to this class."}
+                />
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {assignedTeachers.map((t, idx) => {
+                    const initials = ((t.firstName?.[0] || "") + (t.lastName?.[0] || "")).toUpperCase();
+                    const isMain = t.id === cls.classTeacherId || idx === 0;
+                    return (
+                      <div key={t.id}
+                        className="flex items-center gap-3.5 p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 hover:shadow-sm transition-shadow"
+                      >
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                          style={{ background: hexToRgba(pc, 0.08), border: `1.5px solid ${hexToRgba(pc, 0.2)}`, color: pc }}>
+                          {initials}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold text-surface-800 dark:text-surface-100">
+                            {t.firstName} {t.lastName}
+                          </div>
+                          <div className="text-xs text-surface-400">{t.email} · {t.specialty || ""}</div>
+                        </div>
+                        {isMain && (
+                          <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
+                            style={{ background: hexToRgba(pc, 0.08), color: pc, border: `1px solid ${hexToRgba(pc, 0.2)}` }}>
+                            {isFr ? "Titulaire" : "Class teacher"}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ═══════ STUDENTS TAB ═══════ */}
           {activeTab === "students" && (
             <div>
-              {filteredStudents.length > 0 && (
+              {students.length > 0 && (
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex-1 max-w-xs flex items-center gap-2.5 bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-600 rounded-lg px-3 h-10">
                     <FiSearch className="w-3.5 h-3.5 text-surface-400 flex-shrink-0" />
@@ -347,25 +548,24 @@ export default function ClassDetailPage() {
                 </div>
               )}
 
-              {filteredStudents.length === 0 ? (
+              {students.length === 0 ? (
                 <EmptyTab
-                  icon={<FiUsers className="w-8 h-8" />}
+                  icon={<FiUser className="w-8 h-8" />}
                   title={isFr ? "Aucun élève inscrit" : "No students enrolled"}
-                  subtitle={
-                    isFr
-                      ? "Ajoutez des élèves à cette classe pour commencer."
-                      : "Add students to this class to get started."
-                  }
+                  subtitle={isFr ? "Ajoutez des élèves à cette classe." : "Add students to this class."}
                   action={
-                    <button
-                      className="h-10 px-5 text-white text-xs font-semibold rounded-lg transition-all hover:shadow-md"
-                      style={{ backgroundColor: pc }}
-                    >
+                    <button className="h-10 px-5 text-white text-xs font-semibold rounded-lg transition-all hover:shadow-md" style={{ backgroundColor: pc }}>
                       <FiPlus className="w-3.5 h-3.5 inline mr-1.5" />
                       {isFr ? "Ajouter un élève" : "Add student"}
                     </button>
                   }
                 />
+              ) : filteredStudents.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-surface-400">
+                    {isFr ? `Aucun résultat pour "${studentSearch}"` : `No results for "${studentSearch}"`}
+                  </p>
+                </div>
               ) : (
                 <div className="border border-surface-200 dark:border-surface-700 rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
@@ -393,188 +593,48 @@ export default function ClassDetailPage() {
                           <tr key={s.id} className="border-b border-surface-50 dark:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-900/50 transition-colors">
                             <td className="py-2.5 px-4">
                               <div className="flex items-center gap-2.5">
-                                <div
-                                  className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                                  style={{
-                                    background: hexToRgba(pc, 0.08),
-                                    border: `1.5px solid ${hexToRgba(pc, 0.15)}`,
-                                    color: pc,
-                                  }}
-                                >
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                                  style={{ background: hexToRgba(pc, 0.08), border: `1.5px solid ${hexToRgba(pc, 0.15)}`, color: pc }}>
                                   {initials}
                                 </div>
                                 <div>
-                                  <div className="text-xs font-semibold text-surface-800 dark:text-surface-100">
-                                    {s.firstName} {s.lastName}
-                                  </div>
-                                  <div className="text-[10px] text-surface-400">{s.gender || ""}</div>
+                                  <div className="text-xs font-semibold text-surface-800 dark:text-surface-100">{s.firstName} {s.lastName}</div>
+                                  <div className="text-[10px] text-surface-400">{s.gender === "M" ? (isFr ? "Masculin" : "Male") : s.gender === "F" ? (isFr ? "Féminin" : "Female") : ""}</div>
                                 </div>
                               </div>
                             </td>
-                            <td className="py-2.5 px-4 text-xs text-surface-500 font-mono">
-                              {s.studentNumber || "—"}
-                            </td>
+                            <td className="py-2.5 px-4 text-xs text-surface-500 font-mono">{s.studentNumber || "—"}</td>
                             <td className="py-2.5 px-4">
-                              <span
-                                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                                  s.status === "active"
-                                    ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800"
-                                    : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800"
-                                }`}
-                              >
-                                {s.status || "active"}
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                s.status === "active"
+                                  ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800"
+                                  : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800"
+                              }`}>
+                                {s.status === "active" ? (isFr ? "Actif" : "Active") : (isFr ? "Inactif" : "Inactive")}
                               </span>
                             </td>
                             <td className="py-2.5 px-4">
-                              <span
-                                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                                  s.feeStatus === "paid"
-                                    ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
-                                    : s.feeStatus === "partial"
-                                      ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
-                                      : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
-                                }`}
-                              >
-                                {s.feeStatus || "unpaid"}
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                s.feeStatus === "paid"
+                                  ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
+                                  : s.feeStatus === "partial"
+                                    ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
+                                    : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
+                              }`}>
+                                {s.feeStatus === "paid" ? (isFr ? "Payé" : "Paid") : s.feeStatus === "partial" ? (isFr ? "Partiel" : "Partial") : (isFr ? "Impayé" : "Unpaid")}
                               </span>
                             </td>
                             <td className="py-2.5 px-4 text-right">
-                              <Link
-                                to={`/dashboard/students/${s.id}`}
-                                className="text-xs font-semibold hover:underline"
-                                style={{ color: pc }}
-                              >
+                              <span className="text-xs font-semibold hover:underline cursor-pointer" style={{ color: pc }}
+                                onClick={() => navigate(`/dashboard/users?student=${s.id}`)}>
                                 {isFr ? "Voir" : "View"} →
-                              </Link>
+                              </span>
                             </td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Subjects Tab ── */}
-          {activeTab === "subjects" && (
-            <div>
-              {subjects.length === 0 ? (
-                <EmptyTab
-                  icon={<FiBook className="w-8 h-8" />}
-                  title={isFr ? "Aucune matière" : "No subjects yet"}
-                  subtitle={
-                    isFr
-                      ? "Ajoutez des matières avec coefficients pour définir le programme."
-                      : "Add subjects with coefficients to define the curriculum."
-                  }
-                />
-              ) : (
-                <div className="border border-surface-200 dark:border-surface-700 rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-surface-50 dark:bg-surface-900">
-                        <th className="text-left py-2.5 px-4 text-[10px] font-bold uppercase tracking-wider text-surface-400 border-b border-surface-100 dark:border-surface-700">
-                          {isFr ? "Matière" : "Subject"}
-                        </th>
-                        <th className="text-left py-2.5 px-4 text-[10px] font-bold uppercase tracking-wider text-surface-400 border-b border-surface-100 dark:border-surface-700">
-                          {isFr ? "Code" : "Code"}
-                        </th>
-                        <th className="text-left py-2.5 px-4 text-[10px] font-bold uppercase tracking-wider text-surface-400 border-b border-surface-100 dark:border-surface-700">
-                          Coefficient
-                        </th>
-                        <th className="text-left py-2.5 px-4 text-[10px] font-bold uppercase tracking-wider text-surface-400 border-b border-surface-100 dark:border-surface-700">
-                          {isFr ? "Enseignant" : "Teacher"}
-                        </th>
-                        <th className="text-right py-2.5 px-4 border-b border-surface-100 dark:border-surface-700"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {subjects.map((s) => (
-                        <tr key={s.id || s.subject_id} className="border-b border-surface-50 dark:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-900/50 transition-colors">
-                          <td className="py-2.5 px-4 text-xs font-semibold text-surface-800 dark:text-surface-100">
-                            {s.name || s.subject_name}
-                          </td>
-                          <td className="py-2.5 px-4 text-xs text-surface-400 font-mono">
-                            {s.code || "—"}
-                          </td>
-                          <td className="py-2.5 px-4">
-                            <span className="text-xs font-bold" style={{ color: pc }}>
-                              ×{s.coefficient || 1}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-4 text-xs text-surface-500">
-                            {s.teacherName || s.teacher_name || (s.teacher
-                              ? `${s.teacher.firstName} ${s.teacher.lastName}`
-                              : "—")}
-                          </td>
-                          <td className="py-2.5 px-4 text-right">
-                            <button
-                              className="text-[10px] font-semibold hover:underline"
-                              style={{ color: pc }}
-                            >
-                              {isFr ? "Modifier" : "Edit"}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Teachers Tab ── */}
-          {activeTab === "teachers" && (
-            <div>
-              {!cls.classTeacherId ? (
-                <EmptyTab
-                  icon={<FiUser className="w-8 h-8" />}
-                  title={isFr ? "Aucun enseignant assigné" : "No teacher assigned"}
-                  subtitle={
-                    isFr
-                      ? "Assignez un professeur principal pour gérer cette classe."
-                      : "Assign a class teacher to manage this class."
-                  }
-                />
-              ) : (
-                <div className="flex flex-col gap-3">
-                  <div
-                    className="flex items-center gap-3.5 p-4 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 hover:shadow-sm transition-shadow"
-                  >
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                      style={{
-                        background: hexToRgba(pc, 0.08),
-                        border: `1.5px solid ${hexToRgba(pc, 0.2)}`,
-                        color: pc,
-                      }}
-                    >
-                      {cls.teacherName
-                        ? cls.teacherName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
-                        : "—"}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold text-surface-800 dark:text-surface-100">
-                        {cls.teacherName || (isFr ? "Professeur principal" : "Class teacher")}
-                      </div>
-                      <div className="text-xs text-surface-400">
-                        {cls.teacherEmail || ""}
-                      </div>
-                    </div>
-                    <span
-                      className="text-[10px] font-semibold px-2 py-1 rounded-full"
-                      style={{
-                        background: hexToRgba(pc, 0.08),
-                        color: pc,
-                        border: `1px solid ${hexToRgba(pc, 0.2)}`,
-                      }}
-                    >
-                      {isFr ? "Professeur principal" : "Class teacher"}
-                    </span>
-                  </div>
                 </div>
               )}
             </div>

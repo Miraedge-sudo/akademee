@@ -1,10 +1,11 @@
-import { FiHome, FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiLoader } from "react-icons/fi";
+import { FiHome, FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
 import { getSubdomain, buildSubdomainUrl } from "../../../core/utils/subdomainHelper";
+import LoginLeftPanel from "../../../components/features/LoginLeftPanel";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export default function LoginPage() {
       } else {
         setError(result.message);
       }
-    } catch (err) {
+    } catch {
       setError(t("login.genericError", "Something went wrong. Please try again."));
     } finally {
       setLoading(false);
@@ -55,15 +56,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface-50 dark:bg-surface-900">
+    <div className="min-h-screen lg:flex bg-white">
+      <LoginLeftPanel />
 
-      {/* Top nav */}
-        <div className="flex items-center justify-between px-6 lg:px-11 py-5 bg-white dark:bg-surface-800 border-b border-surface-100 dark:border-surface-700">
-          <div className="flex items-center gap-2.5 lg:hidden">
-            <div className="w-7 h-7 rounded-md bg-teal-900 flex items-center justify-center">
-              <FiHome className="w-3.5 h-3.5 text-white" />
+      <div className="flex-1 flex flex-col min-h-screen lg:min-h-0 bg-white">
+        <div className="flex items-center justify-between px-6 lg:px-10 py-5 border-b border-surface-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-teal-900 flex items-center justify-center">
+              <FiHome className="w-4 h-4 text-white" />
             </div>
-            <span className="font-display text-base text-surface-800 dark:text-surface-100">Akademee</span>
+            <span className="font-display text-lg text-surface-800">Akademee</span>
           </div>
           <div className="flex items-center gap-2.5">
             <ThemeLangToggles />
@@ -76,9 +78,8 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Form area */}
-        <div className="flex-1 flex items-center justify-center px-6 py-10">
-          <div className="w-full max-w-[420px] bg-white dark:bg-surface-800 border border-surface-100 dark:border-surface-700 rounded-xl shadow-sm p-8 lg:p-9">
+        <div className="flex-1 flex items-center justify-center px-6 py-10 lg:px-10">
+          <div className="w-full max-w-[420px] bg-white rounded-2xl lg:border lg:border-surface-100 lg:shadow-[0_18px_45px_rgba(19,61,53,.08)] p-8 lg:p-10">
 
             <p className="text-[11px] font-semibold tracking-wide uppercase text-teal-600 mb-1.5">
               {t("login.eyebrow", "School Portal")}
@@ -212,5 +213,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+    </div>
   );
 }

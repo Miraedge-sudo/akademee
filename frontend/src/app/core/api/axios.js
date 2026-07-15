@@ -46,32 +46,19 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      const isLoginRequest = originalRequest.url?.includes('/auth/login');
-      const isRefreshRequest = originalRequest.url?.includes('/auth/refresh');
-      const isExchangeRequest = originalRequest.url?.includes('/auth/exchange');
-      if (isLoginRequest || isRefreshRequest || isExchangeRequest) {
-        return Promise.reject(error);
-      }
-
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then(() => api(originalRequest));
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        await api.post('/api/auth/refresh');
-        processQueue(null);
-        return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError);
+  (error) => {
+    // Ne pas rediriger si on est déjà sur la page de login — le 401 y est attendu
+    if (error.response?.status === 401) {
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      const isPublicAuthPage = [
+        '/login',
+        '/register',
+        '/forgot-password',
+        '/reset-password',
+        '/verify-email',
+      ].includes(window.location.pathname);
+      if (!isLoginRequest && !isPublicAuthPage) {
+        localStorage.removeItem('token');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       } finally {

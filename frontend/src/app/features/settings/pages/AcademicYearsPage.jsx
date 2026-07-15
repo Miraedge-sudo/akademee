@@ -1,604 +1,923 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../../core/hooks/useTheme";
+import { useAuth } from "../../../core/hooks/useAuth";
+import { useEducationalSystems } from "../../../core/context/EducationalSystemContext";
+import {
+  FiCalendar,
+  FiBookOpen,
+  FiLayers,
+  FiClock,
+  FiArrowRight,
+  FiEye,
+  FiSettings,
+  FiPlus,
+  FiArchive,
+  FiHome,
+  FiLogOut,
+  FiEdit3,
+  FiX,
+  FiCheck,
+} from "react-icons/fi";
 import toast from "react-hot-toast";
-import {
-  getAcademicYears,
-  createAcademicYear,
-  updateAcademicYear,
-  activateAcademicYear,
-  deleteAcademicYear,
-  getTerms,
-  createTerm,
-  deleteTerm,
-} from "../../../core/api/academicYearService";
-import {
-  Button,
-  Card,
-  Drawer,
-  Input,
-  Modal,
-  Badge,
-  EmptyState,
-  Select,
-  Table,
-  PageHeader,
-  Skeleton,
-} from "../../../components";
-import { FiCalendar, FiPlus, FiTrash2 } from "react-icons/fi";
 
-export default function AcademicYearsPage() {
-  const { i18n } = useTranslation("common");
-  const lang = i18n.language === "fr" ? "fr" : "en";
+// ── Mock server URL ──
+const MOCK_API = "http://localhost:3001";
 
-  const [years, setYears] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+// ── Transform raw year data from API to display format ──
+function transformYear(raw) {
+  const status = raw.status || "future";
+  const isActive = status === "active";
+  const isArchive = status === "archive";
 
-  // Drawer state
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editingYear, setEditingYear] = useState(null);
-  const [formData, setFormData] = useState({
+  const config = {
+    active: {
+      accentFrom: "#085041", accentTo: "#5DCAA5",
+      icon: FiCalendar, iconBg: "#E1F5EE", iconColor: "#085041",
+      badgeLabel: "Active", footerLabel: "Year progress",
+      footerAction: "Full access", footerActionIcon: FiArrowRight, footerActionColor: "#085041",
+    },
+    archive: {
+      accentFrom: "#F59E0B", accentTo: "#FCD34D",
+      icon: FiArchive, iconBg: "rgba(245,158,11,0.09)", iconColor: "#F59E0B",
+      badgeLabel: "Completed", footerLabel: "Pass rate",
+      footerAction: "View only", footerActionIcon: FiEye, footerActionColor: "#F59E0B",
+    },
+    future: {
+      accentFrom: "#3B82F6", accentTo: "#93C5FD",
+      icon: FiEdit3, iconBg: "rgba(59,130,246,0.08)", iconColor: "#3B82F6",
+      badgeLabel: "Planned", footerLabel: "Setup mode",
+      footerAction: "Configure", footerActionIcon: FiSettings, footerActionColor: "#3B82F6",
+    },
+  };
+
+  const c = config[status] || config.future;
+  return {
+    ...raw,
+    ...c,
+    footerPct: isArchive ? (raw.passRate || 0) : (isActive ? 35 : 0),
+    currentSequence: isActive ? 2 : null,
+  };
+}
+
+
+
+// ── Create Year Modal ──
+function CreateYearModal({ open, onClose, onCreated }) {
+  const { t, i18n } = useTranslation("common");
+  const isFr = i18n.language === "fr";
+  const { selectedSystems } = useEducationalSystems();
+  const [form, setForm] = useState({
     name: "",
     startDate: "",
     endDate: "",
+    sequences: 3,
   });
-  const [saving, setSaving] = useState(false);
-  const [formErrors, setFormErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
-  // Delete modal
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deletingYear, setDeletingYear] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+  // Determine status based on dates
+  const status = useMemo(() => {
+    if (!form.startDate || !form.endDate) return null;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const start = new Date(form.startDate);
+    const end = new Date(form.endDate);
+    if (start >= now) return "future";
+    if (end >= now && start < now) return "current";
+    return "past"; // past — should be blocked
+  }, [form.startDate, form.endDate]);
 
-  // Terms state — expanded view for each year
-  const [expandedYearId, setExpandedYearId] = useState(null);
-  const [terms, setTerms] = useState([]);
-  const [termsLoading, setTermsLoading] = useState(false);
+  // Min date = today (no past years)
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    return d.toISOString().split("T")[0];
+  }, []);
 
-  // Terms creation
-  const [termFormOpen, setTermFormOpen] = useState(false);
-  const [termData, setTermData] = useState({
-    name: "",
-    academicYearId: "",
-    type: "term",
-    startDate: "",
-    endDate: "",
-  });
-  const [termSaving, setTermSaving] = useState(false);
+  const update = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
 
-  const loadYears = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getAcademicYears();
-      const list = data?.years || [];
-      setYears(list);
-    } catch (err) {
-      console.error("Failed to load academic years:", err);
-      setError(
-        lang === "fr"
-          ? "Erreur lors du chargement des années"
-          : "Failed to load academic years"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [lang]);
-
+  // Auto-generate year name from dates
   useEffect(() => {
-    loadYears();
-  }, [loadYears]);
-
-  // ── Load terms for a year ──
-  const loadTerms = async (yearId) => {
-    setTermsLoading(true);
-    try {
-      const data = await getTerms({ academicYearId: yearId });
-      const list = data?.periods || [];
-      setTerms(list);
-      setExpandedYearId(yearId);
-    } catch (err) {
-      console.error("Failed to load terms:", err);
-      toast.error(lang === "fr" ? "Erreur de chargement des trimestres" : "Failed to load terms");
-    } finally {
-      setTermsLoading(false);
-    }
-  };
-
-  // ── Drawer handlers ──
-  const openCreateDrawer = () => {
-    setEditingYear(null);
-    setFormData({ name: "", startDate: "", endDate: "" });
-    setFormErrors({});
-    setDrawerOpen(true);
-  };
-
-  const openEditDrawer = (year) => {
-    setEditingYear(year);
-    setFormData({
-      name: year.name || "",
-      startDate: year.startDate ? year.startDate.split("T")[0] : "",
-      endDate: year.endDate ? year.endDate.split("T")[0] : "",
-    });
-    setFormErrors({});
-    setDrawerOpen(true);
-  };
-
-  const validate = () => {
-    const errs = {};
-    if (!formData.name.trim())
-      errs.name = lang === "fr" ? "Le nom est requis" : "Year name is required";
-    if (!formData.startDate)
-      errs.startDate = lang === "fr" ? "La date de début est requise" : "Start date is required";
-    if (!formData.endDate)
-      errs.endDate = lang === "fr" ? "La date de fin est requise" : "End date is required";
-    if (formData.startDate && formData.endDate && formData.startDate >= formData.endDate)
-      errs.endDate = lang === "fr" ? "La date de fin doit être après la date de début" : "End date must be after start date";
-    setFormErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleSave = async () => {
-    if (!validate()) return;
-    setSaving(true);
-    try {
-      const payload = {
-        name: formData.name.trim(),
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-      };
-
-      if (editingYear) {
-        await updateAcademicYear(editingYear.id, payload);
-        toast.success(lang === "fr" ? "Année mise à jour" : "Year updated");
-      } else {
-        await createAcademicYear(payload);
-        toast.success(lang === "fr" ? "Année créée" : "Year created");
+    if (form.startDate && form.endDate) {
+      const s = new Date(form.startDate).getFullYear();
+      const e = new Date(form.endDate).getFullYear();
+      if (s && e && s !== e) {
+        update("name", `${s} – ${e}`);
       }
-
-      setDrawerOpen(false);
-      loadYears();
-    } catch (err) {
-      const msg = err?.response?.data?.message ||
-        (lang === "fr" ? "Erreur lors de l'enregistrement" : "Failed to save year");
-      toast.error(msg);
-    } finally {
-      setSaving(false);
     }
-  };
+  }, [form.startDate, form.endDate]);
 
-  // ── Activate year ──
-  const handleActivate = async (year) => {
-    try {
-      await activateAcademicYear(year.id);
-      toast.success(lang === "fr" ? "Année activée" : "Year activated");
-      loadYears();
-    } catch (err) {
-      const msg = err?.response?.data?.message ||
-        (lang === "fr" ? "Erreur lors de l'activation" : "Failed to activate year");
-      toast.error(msg);
-    }
-  };
+  if (!open) return null;
 
-  // ── Delete year ──
-  const openDeleteModal = (year) => {
-    setDeletingYear(year);
-    setDeleteModalOpen(true);
-  };
-
-  const handleDelete = async () => {
-    if (!deletingYear) return;
-    setDeleting(true);
-    try {
-      await deleteAcademicYear(deletingYear.id);
-      toast.success(lang === "fr" ? "Année supprimée" : "Year deleted");
-      setDeleteModalOpen(false);
-      setDeletingYear(null);
-      loadYears();
-    } catch (err) {
-      const msg = err?.response?.data?.message ||
-        (lang === "fr" ? "Erreur lors de la suppression" : "Failed to delete year");
-      toast.error(msg);
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  // ── Term handlers ──
-  const openTermForm = (yearId) => {
-    setTermData({
-      name: "",
-      academicYearId: yearId,
-      type: "term",
-      startDate: "",
-      endDate: "",
-    });
-    setTermFormOpen(true);
-  };
-
-  const handleCreateTerm = async () => {
-    if (!termData.name.trim() || !termData.startDate || !termData.endDate) {
-      toast.error(lang === "fr" ? "Tous les champs sont requis" : "All fields are required");
+  const handleSubmit = async () => {
+    if (!form.name || !form.startDate || !form.endDate) {
+      toast.error(isFr ? "Veuillez remplir tous les champs" : "Please fill all fields");
       return;
     }
-    setTermSaving(true);
+
+    // Block past years
+    if (status === "past") {
+      toast.error(isFr ? "Vous ne pouvez pas créer une année scolaire dans le passé" : "You cannot create an academic year in the past");
+      return;
+    }
+
+    setSubmitting(true);
+    await new Promise((r) => setTimeout(r, 800));
+
+    const isActive = status === "current";
+    const yearConfig = {
+      id: `y${Date.now()}`,
+      name: form.name,
+      startDate: form.startDate,
+      endDate: form.endDate,
+      sequences: form.sequences,
+      isCurrent: isActive,
+      students: 0, teachers: 0, classes: 0, passRate: null,
+      status: isActive ? "active" : "future",
+      accentFrom: isActive ? "#085041" : "#3B82F6",
+      accentTo: isActive ? "#5DCAA5" : "#93C5FD",
+      icon: isActive ? FiCalendar : FiEdit3,
+      iconBg: isActive ? "#E1F5EE" : "rgba(59,130,246,0.08)",
+      iconColor: isActive ? "#085041" : "#3B82F6",
+      badgeLabel: isActive ? (isFr ? "Active" : "Active") : (isFr ? "Planifiée" : "Planned"),
+      footerLabel: isActive ? (isFr ? "Progression" : "Year progress") : (isFr ? "Mode configuration" : "Setup mode"),
+      footerPct: isActive ? 0 : 0,
+      footerAction: isActive ? (isFr ? "Accès complet" : "Full access") : (isFr ? "Configurer" : "Configure"),
+      footerActionIcon: isActive ? FiArrowRight : FiSettings,
+      footerActionColor: isActive ? "#085041" : "#3B82F6",
+    };
+
+    // Save to mock server
     try {
-      await createTerm({
-        name: termData.name.trim(),
-        academicYearId: termData.academicYearId,
-        type: termData.type,
-        startDate: termData.startDate,
-        endDate: termData.endDate,
+      const payload = {
+        name: form.name,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        sequences: form.sequences,
+        isCurrent: isActive,
+        students: 0, teachers: 0, classes: 0, passRate: null,
+        status: isActive ? "active" : "future",
+      };
+      const res = await fetch(`${MOCK_API}/academicYears`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      toast.success(lang === "fr" ? "Trimestre créé" : "Term created");
-      setTermFormOpen(false);
-      loadTerms(termData.academicYearId);
-    } catch (err) {
-      const msg = err?.response?.data?.message ||
-        (lang === "fr" ? "Erreur" : "Failed to create term");
-      toast.error(msg);
-    } finally {
-      setTermSaving(false);
+      if (res.ok) {
+        const saved = await res.json();
+        onCreated(transformYear(saved));
+      } else {
+        onCreated(transformYear({ ...payload, id: `y${Date.now()}` }));
+      }
+    } catch {
+      onCreated(transformYear({ ...yearConfig, id: `y${Date.now()}` }));
     }
+
+    setSubmitting(false);
+    onClose();
+    toast.success(isFr ? "Année scolaire créée !" : "Academic year created!");
+    setForm({ name: "", startDate: "", endDate: "", sequences: 3 });
   };
 
-  const handleDeleteTerm = async (termId) => {
-    try {
-      await deleteTerm(termId);
-      toast.success(lang === "fr" ? "Trimestre supprimé" : "Term deleted");
-      setTerms((prev) => prev.filter((t) => t.id !== termId));
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Error");
-    }
+  const inputClass = "w-full h-[46px] px-3.5 border-[1.5px] border-surface-200 dark:border-surface-600 rounded-[10px] font-sans text-sm text-surface-800 dark:text-surface-100 bg-white dark:bg-surface-800 outline-none transition-all duration-200 focus:border-primary-600";
+
+  // Map system codes to display labels
+  const systemLabels = {
+    anglophone_general: "Anglophone General",
+    francophone_general: "Francophone General",
+    anglophone_technical: "Anglophone Technical",
+    francophone_technical: "Francophone Technical",
+    university: "University LMD",
   };
 
-  // ── Table columns ──
-  const columns = [
-    {
-      key: "name",
-      label: lang === "fr" ? "Année" : "Year",
-      sortable: true,
-      render: (_, row) => {
-        const name = row.name || "";
-        return (
+  const systemColors = {
+    anglophone_general: "bg-teal-50 text-teal-900 border-teal-100",
+    francophone_general: "bg-amber-50 text-amber-800 border-amber-200",
+    anglophone_technical: "bg-cyan-50 text-cyan-800 border-cyan-200",
+    francophone_technical: "bg-purple-50 text-purple-800 border-purple-200",
+    university: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  };
+
+  const systemDots = {
+    anglophone_general: "bg-teal-600",
+    francophone_general: "bg-amber-500",
+    anglophone_technical: "bg-cyan-500",
+    francophone_technical: "bg-purple-500",
+    university: "bg-emerald-500",
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      {/* Modal */}
+      <div className="relative w-full max-w-[480px] bg-white dark:bg-surface-800 rounded-2xl shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-surface-100 dark:border-surface-700">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 text-sm font-semibold flex-shrink-0">
-              {name.slice(0, 2)}
+            <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
+              <FiCalendar className="w-5 h-5 text-primary-900 dark:text-primary-100" />
             </div>
             <div>
-              <div className="font-medium text-surface-800 dark:text-surface-100">
-                {name}
+              <h2 className="font-display text-lg font-bold text-surface-800 dark:text-surface-100">
+                {isFr ? "Nouvelle année scolaire" : "New Academic Year"}
+              </h2>
+              <p className="text-xs text-surface-400">
+                {isFr
+                  ? "Créez une année scolaire pour l'année à venir"
+                  : "Create an academic year for the upcoming period"}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors">
+            <FiX className="w-4 h-4 text-surface-400" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 space-y-5">
+          {/* Year name */}
+          <div>
+            <label className="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">
+              {isFr ? "Nom de l'année" : "Year name"}
+              <span className="text-xs text-surface-400 font-normal ml-1">({isFr ? "auto-généré" : "auto-generated"})</span>
+            </label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => update("name", e.target.value)}
+              placeholder="2025 – 2026"
+              className={inputClass}
+            />
+          </div>
+
+          {/* Dates row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">
+                {isFr ? "Date de début" : "Start date"}
+              </label>
+              <input
+                type="date"
+                value={form.startDate}
+                onChange={(e) => update("startDate", e.target.value)}
+                min={todayStr}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">
+                {isFr ? "Date de fin" : "End date"}
+              </label>
+              <input
+                type="date"
+                value={form.endDate}
+                onChange={(e) => update("endDate", e.target.value)}
+                min={form.startDate || todayStr}
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          {/* Status indicator */}
+          {status && (
+            <div
+              className={`flex items-center gap-2.5 px-4 py-3 rounded-lg border text-sm ${
+                status === "past"
+                  ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400"
+                  : status === "current"
+                    ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
+                    : "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
+              }`}
+            >
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  status === "past" ? "bg-red-500" : status === "current" ? "bg-emerald-500" : "bg-blue-500"
+                }`}
+              />
+              {status === "past"
+                ? (isFr ? "⚠️ Impossible — année dans le passé" : "⚠️ Cannot create — year is in the past")
+                : status === "current"
+                  ? (isFr ? "✓ Année en cours — sera active immédiatement" : "✓ Current year — will be active immediately")
+                  : (isFr ? "→ Année future — sera en mode planification" : "→ Future year — will be in setup mode")}
+            </div>
+          )}
+
+          {/* Sequences */}
+          <div>
+            <label className="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">
+              {isFr ? "Nombre de séquences/trimestres" : "Number of sequences/terms"}
+            </label>
+            <div className="flex gap-2">
+              {[2, 3, 6].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => update("sequences", n)}
+                  className={`flex-1 h-[46px] rounded-[10px] text-sm font-semibold border-[1.5px] transition-all ${
+                    form.sequences === n
+                      ? "bg-primary-600 text-white border-primary-600 shadow-sm"
+                      : "border-surface-200 dark:border-surface-600 text-surface-500 hover:border-primary-400 bg-white dark:bg-surface-800"
+                  }`}
+                >
+                  {n}
+                  <span className="block text-[9px] font-normal opacity-70">
+                    {n === 2 ? (isFr ? "sem." : "sem.") : n === 3 ? (isFr ? "trim." : "terms") : (isFr ? "séqu." : "seq.")}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Systems info badge */}
+          {selectedSystems && selectedSystems.length > 0 && (
+            <div className="flex items-start gap-2.5 px-4 py-3 rounded-lg bg-surface-50 dark:bg-surface-800/50 border border-surface-100 dark:border-surface-700">
+              <FiBookOpen className="w-4 h-4 text-surface-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs text-surface-500 mb-1.5">
+                  {isFr ? "Systèmes éducatifs de l'école" : "School educational systems"}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedSystems.map((sys) => {
+                    const label = systemLabels[sys] || sys;
+                    const colorClass = systemColors[sys] || "bg-surface-100 text-surface-600 border-surface-200";
+                    const dotClass = systemDots[sys] || "bg-surface-400";
+                    return (
+                      <span
+                        key={sys}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${colorClass}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="text-xs text-surface-400">
-                {row.startDate ? new Date(row.startDate).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US") : ""}
-                {" — "}
-                {row.endDate ? new Date(row.endDate).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US") : ""}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-surface-100 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50">
+          <button
+            onClick={onClose}
+            className="h-[44px] px-5 rounded-xl border-2 border-surface-200 dark:border-surface-600 text-sm font-semibold text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-all"
+          >
+            {isFr ? "Annuler" : "Cancel"}
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || status === "past"}
+            className="inline-flex items-center gap-2 h-[44px] px-6 rounded-xl bg-primary-900 text-white text-sm font-bold hover:bg-primary-700 transition-all disabled:opacity-50"
+          >
+            {submitting ? (
+              <>
+                <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                {isFr ? "Création..." : "Creating..."}
+              </>
+            ) : (
+              <>
+                <FiCheck className="w-4 h-4" strokeWidth={2.5} />
+                {isFr ? "Créer l'année" : "Create year"}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Sub-components ──
+
+function YearCard({ year, selected, onSelect }) {
+  const Icon = year.icon;
+  const labelColor = year.status === "future" ? year.iconColor : undefined;
+  const selBorderColor = year.status === "active" ? "#085041" : year.status === "archive" ? "#F59E0B" : "#3B82F6";
+
+  return (
+    <div
+      onClick={() => onSelect(year)}
+      className={`relative overflow-hidden rounded-xl border-2 cursor-pointer transition-all duration-250 
+        bg-white dark:bg-surface-800
+        ${selected ? "shadow-lg -translate-y-1" : "shadow-sm hover:shadow-md hover:-translate-y-0.5"}`}
+      style={{
+        borderColor: selected ? selBorderColor : "#EEF0EC",
+        boxShadow: selected
+          ? `0 12px 40px rgba(${year.status === "active" ? "8,80,65" : year.status === "archive" ? "245,158,11" : "59,130,246"},0.15)`
+          : undefined,
+      }}
+    >
+      {/* Shimmer effect on hover */}
+      <div className="absolute top-0 left-[-100%] w-[40%] h-full bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
+
+      {/* Accent bar */}
+      <div
+        className="h-[5px] w-full"
+        style={{ background: `linear-gradient(90deg, ${year.accentFrom}, ${year.accentTo})` }}
+      />
+
+      {/* Body */}
+      <div className="p-5 sm:p-[22px]">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          {/* Left: Icon + Info */}
+          <div className="flex items-center gap-4">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-250"
+              style={{ background: year.iconBg }}
+            >
+              <Icon className="w-[22px] h-[22px]" style={{ color: year.iconColor, strokeWidth: 1.8 }} />
+            </div>
+            <div>
+              <div
+                className="font-display text-[22px] font-bold leading-tight mb-1"
+                style={{ color: labelColor || "#1A1F1B" }}
+              >
+                {year.name}
+              </div>
+              <div className="flex items-center flex-wrap gap-2">
+                <span className="flex items-center gap-1.5 text-xs text-surface-400">
+                  <FiBookOpen className="w-3 h-3" />
+                  {year.system}
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-surface-400">
+                  <FiLayers className="w-3 h-3" />
+                  {year.sequences} sequences
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-surface-400">
+                  <FiClock className="w-3 h-3" />
+                  {new Date(year.startDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })} –{" "}
+                  {new Date(year.endDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                </span>
+                <span
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full border"
+                  style={{
+                    background: year.status === "active" ? "rgba(8,80,65,0.08)" : year.status === "archive" ? "rgba(245,158,11,0.09)" : "rgba(59,130,246,0.08)",
+                    color: year.iconColor,
+                    borderColor: year.status === "active" ? "rgba(8,80,65,0.2)" : year.status === "archive" ? "rgba(245,158,11,0.2)" : "rgba(59,130,246,0.18)",
+                  }}
+                >
+                  <span
+                    className="w-[7px] h-[7px] rounded-full"
+                    style={{
+                      backgroundColor: year.status === "active" ? "#1D9E75" : year.status === "archive" ? "#F59E0B" : "#3B82F6",
+                    }}
+                  />
+                  {year.badgeLabel}
+                </span>
               </div>
             </div>
           </div>
-        );
-      },
-    },
-    {
-      key: "isCurrent",
-      label: lang === "fr" ? "Statut" : "Status",
-      width: 120,
-      render: (val) => (
-        <Badge status={val ? "active" : "inactive"}>
-          {val
-            ? lang === "fr" ? "En cours" : "Current"
-            : lang === "fr" ? "Passée" : "Past"}
-        </Badge>
-      ),
-    },
-    {
-      key: "actions",
-      label: "",
-      width: 180,
-      render: (_, row) => (
-        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => openEditDrawer(row)}
-          >
-            {lang === "fr" ? "Modifier" : "Edit"}
-          </Button>
-          {!row.isCurrent && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-green-600"
-              onClick={() => handleActivate(row)}
-            >
-              {lang === "fr" ? "Activer" : "Activate"}
-            </Button>
-          )}
-          {!row.isCurrent && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-red-500"
-              onClick={() => openDeleteModal(row)}
-            >
-              {lang === "fr" ? "Suppr." : "Del"}
-            </Button>
-          )}
-        </div>
-      ),
-    },
-  ];
 
-  // ── Render ──
-  if (error && !loading) {
-    return (
-      <div className="max-w-5xl mx-auto">
-        <PageHeader
-          icon={<FiCalendar className="w-6 h-6" />}
-          title={lang === "fr" ? "Années académiques" : "Academic Years"}
-        />
-        <Card>
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-sm text-red-500 mb-4">{error}</p>
-            <Button variant="primary" onClick={loadYears}>
-              {lang === "fr" ? "Réessayer" : "Retry"}
-            </Button>
+          {/* Right: Stats + Radio */}
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex gap-3 sm:gap-5">
+              {year.status === "future" ? (
+                <>
+                  <div className="text-center px-3 sm:px-4 py-2.5 bg-surface-50 dark:bg-surface-800/50 rounded-lg border border-surface-100 dark:border-surface-700 min-w-[56px]">
+                    <div className="text-lg font-extrabold text-surface-300 leading-none mb-0.5">—</div>
+                    <div className="text-[10px] text-surface-400 font-medium">Students</div>
+                  </div>
+                  <div className="text-center px-3 sm:px-4 py-2.5 bg-surface-50 dark:bg-surface-800/50 rounded-lg border border-surface-100 dark:border-surface-700 min-w-[56px]">
+                    <div className="text-lg font-extrabold text-surface-300 leading-none mb-0.5">—</div>
+                    <div className="text-[10px] text-surface-400 font-medium">Teachers</div>
+                  </div>
+                  <div className="text-center px-3 sm:px-4 py-2.5 bg-surface-50 dark:bg-surface-800/50 rounded-lg border border-surface-100 dark:border-surface-700 min-w-[56px]">
+                    <div className="text-lg font-extrabold text-surface-300 leading-none mb-0.5">—</div>
+                    <div className="text-[10px] text-surface-400 font-medium">Classes</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-center px-3 sm:px-4 py-2.5 bg-surface-50 dark:bg-surface-800/50 rounded-lg border border-surface-100 dark:border-surface-700 min-w-[56px]">
+                    <div className="text-lg font-extrabold text-surface-800 dark:text-surface-100 leading-none mb-0.5">{year.students}</div>
+                    <div className="text-[10px] text-surface-400 font-medium">Students</div>
+                  </div>
+                  <div className="text-center px-3 sm:px-4 py-2.5 bg-surface-50 dark:bg-surface-800/50 rounded-lg border border-surface-100 dark:border-surface-700 min-w-[56px]">
+                    <div className="text-lg font-extrabold text-surface-800 dark:text-surface-100 leading-none mb-0.5">{year.teachers}</div>
+                    <div className="text-[10px] text-surface-400 font-medium">Teachers</div>
+                  </div>
+                  <div className="text-center px-3 sm:px-4 py-2.5 bg-surface-50 dark:bg-surface-800/50 rounded-lg border border-surface-100 dark:border-surface-700 min-w-[56px]">
+                    <div className="text-lg font-extrabold text-surface-800 dark:text-surface-100 leading-none mb-0.5">{year.classes}</div>
+                    <div className="text-[10px] text-surface-400 font-medium">Classes</div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Radio button */}
+            <div
+              className={`w-[22px] h-[22px] rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-250 self-center ${
+                selected ? "scale-110" : ""
+              }`}
+              style={
+                selected
+                  ? {
+                      backgroundColor: year.status === "active" ? "#085041" : year.status === "archive" ? "#F59E0B" : "#3B82F6",
+                      borderColor: year.status === "active" ? "#085041" : year.status === "archive" ? "#F59E0B" : "#3B82F6",
+                    }
+                  : { border: "2px solid #D8DBD5" }
+              }
+            >
+              <div
+                className={`w-[8px] h-[8px] rounded-full bg-white transition-all duration-200 ${
+                  selected ? "opacity-100 scale-100" : "opacity-0 scale-0"
+                }`}
+              />
+            </div>
           </div>
-        </Card>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="px-5 sm:px-[22px] py-3 border-t border-surface-50 dark:border-surface-700/50 bg-surface-50 dark:bg-surface-800/30 flex items-center justify-between">
+        <div className="flex-1 max-w-[300px]">
+          <div className="flex justify-between mb-1">
+            <span className="text-[11.5px] font-semibold text-surface-500">{year.footerLabel}</span>
+            {year.status === "active" && (
+              <span className="text-[11.5px] font-bold" style={{ color: year.iconColor }}>
+                {year.footerPct}%
+              </span>
+            )}
+            {year.status === "archive" && (
+              <span className="text-[11.5px] font-bold" style={{ color: year.iconColor }}>
+                {year.passRate}%
+              </span>
+            )}
+          </div>              <div className="h-[5px] bg-surface-200 dark:bg-surface-600 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${year.footerPct}%`,
+                    background: `linear-gradient(90deg, ${year.accentFrom}, ${year.accentTo})`,
+                    transition: "width 1.2s cubic-bezier(0.16,1,0.3,1)",
+                  }}
+                />
+              </div>
+        </div>
+        <div
+          className="flex items-center gap-1.5 text-xs font-medium"
+          style={{ color: year.footerActionColor }}
+        >
+          <year.footerActionIcon className="w-3 h-3" />
+          {year.footerAction}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Component ─────────────────────────────────────
+export default function AcademicYearsPage() {
+  const { i18n } = useTranslation("common");
+  const { primaryColor } = useTheme();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const lang = i18n.language === "fr" ? "fr" : "en";
+  const isFr = lang === "fr";
+  const pc = primaryColor || "#085041";
+
+  const [years, setYears] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [entering, setEntering] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // ── localStorage key for persisting user-created years ──
+  const LS_KEY = "akademee_academic_years";
+
+  // Remove React components before serializing (icon, footerActionIcon are functions)
+  const toSerializable = (yearsArray) =>
+    yearsArray.map(({ icon, footerActionIcon, ...rest }) => rest);
+
+  // ── Load years from mock server + localStorage fallback ──
+  useEffect(() => {
+    fetch(`${MOCK_API}/academicYears`)
+      .then((res) => res.json())
+      .then((data) => {
+        const serverYears = (data || []).map(transformYear);
+        // Restore user-created years from localStorage
+        let localYears = [];
+        try {
+          const raw = localStorage.getItem(LS_KEY);
+          if (raw) localYears = JSON.parse(raw).map(transformYear);
+        } catch { /* ignore */ }
+
+        // Merge: local-only (user-created) years at top, then server years without duplicates
+        const serverIds = new Set(serverYears.map((y) => y.id));
+        const onlyLocal = localYears.filter((ly) => !serverIds.has(ly.id));
+        const merged = [...onlyLocal, ...serverYears];
+        setYears(merged);
+        setLoading(false);
+      })
+      .catch(() => {
+        // Server unreachable — load from localStorage only
+        let localYears = [];
+        try {
+          const raw = localStorage.getItem(LS_KEY);
+          if (raw) localYears = JSON.parse(raw).map(transformYear);
+        } catch { /* ignore */ }
+        setYears(localYears);
+        setLoading(false);
+      });
+  }, []);
+
+  const selectedYear = years.find((y) => y.id === selectedId);
+
+  // Persist only serializable data (strip React components) whenever years change
+  useEffect(() => {
+    if (years.length > 0) {
+      try {
+        const serializable = toSerializable(years);
+        localStorage.setItem(LS_KEY, JSON.stringify(serializable));
+      } catch { /* quota / serialization error — silent */ }
+    }
+  }, [years]);
+
+  // Group years by status
+  const { activeYears, archiveYears, futureYears } = useMemo(() => {
+    return {
+      activeYears: years.filter((y) => y.status === "active"),
+      archiveYears: years.filter((y) => y.status === "archive"),
+      futureYears: years.filter((y) => y.status === "future"),
+    };
+  }, [years]);
+
+  const handleSelect = (year) => {
+    setSelectedId(year.id);
+  };
+
+  const handleEnter = () => {
+    if (!selectedYear) {
+      toast.error(isFr ? "Veuillez sélectionner une année" : "Please select a year");
+      return;
+    }
+
+    setEntering(true);
+    const status = selectedYear.status;
+    const messages = {
+      active: [isFr ? "Entrée dans l'année..." : "Entering academic year...", isFr ? "Chargement du tableau de bord" : "Loading your dashboard"],
+      archive: [isFr ? "Chargement des archives..." : "Loading archive...", isFr ? "Mode lecture seule" : "Read-only mode"],
+      future: [isFr ? "Ouverture du mode planification..." : "Opening planning mode...", isFr ? "Chargement de la configuration" : "Loading setup"],
+    };
+    const [msg, sub] = messages[status] || messages.active;
+
+    setTimeout(() => {
+      setEntering(false);
+      toast.success(isFr ? "Redirection vers le tableau de bord" : "Redirecting to dashboard");
+      navigate("/dashboard");
+    }, 1800);
+  };
+
+  const handleCreateNew = () => {
+    setShowCreateModal(true);
+  };
+
+  const handleYearCreated = (newYear) => {
+    setYears((prev) => [newYear, ...prev]);
+  };
+
+  const schoolInitials = (user?.schoolName || "SC")
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  // ── Loading State ──
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-[52px] h-[52px] rounded-full border-4 border-surface-200 dark:border-surface-600 border-t-primary-600 animate-spin" />
+          <div className="text-sm font-semibold text-surface-500">
+            {isFr ? "Chargement des années académiques..." : "Loading academic years..."}
+          </div>
+          <div className="text-xs text-surface-400">
+            {isFr ? "Préparation de votre espace de travail" : "Preparing your workspace"}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <PageHeader
-        icon={<FiCalendar className="w-6 h-6" />}
-        title={lang === "fr" ? "Années académiques" : "Academic Years"}
-        subtitle={
-          lang === "fr"
-            ? "Gérer les années scolaires et leurs trimestres"
-            : "Manage school years and their terms"
-        }
-      />
-
-      <Card>
-        {loading ? (
-          <div className="space-y-3 p-4">
-            <Skeleton variant="table" />
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-900 flex flex-col">
+      {/* ── Loading overlay ── */}
+      {entering && (
+        <div className="fixed inset-0 bg-surface-50/90 dark:bg-surface-900/90 backdrop-blur-sm z-50 flex items-center justify-center flex-col gap-4">
+          <div className="w-[52px] h-[52px] rounded-full border-4 border-surface-200 dark:border-surface-600 border-t-primary-600 animate-spin" />
+          <div className="text-sm font-semibold text-surface-500">
+            {selectedYear?.status === "active"
+              ? isFr ? "Entrée dans l'année..." : "Entering academic year..."
+              : selectedYear?.status === "archive"
+                ? isFr ? "Chargement des archives..." : "Loading archive..."
+                : isFr ? "Ouverture du mode planification..." : "Opening planning mode..."}
           </div>
-        ) : years.length === 0 ? (
-          <div className="py-8">
-            <EmptyState
-              icon={<FiCalendar className="w-8 h-8" />}
-              title={lang === "fr" ? "Aucune année" : "No academic years"}
-              subtitle={
-                lang === "fr"
-                  ? "Créez la première année scolaire pour commencer"
-                  : "Create the first academic year to get started"
-              }
-              action={
-                <Button variant="primary" onClick={openCreateDrawer}>
-                  {lang === "fr" ? "+ Créer une année" : "+ Create Year"}
-                </Button>
-              }
-            />
+          <div className="text-xs text-surface-400">
+            {selectedYear?.status === "active"
+              ? isFr ? "Chargement de votre tableau de bord" : "Loading your dashboard"
+              : selectedYear?.status === "archive"
+                ? isFr ? "Mode lecture seule" : "Read-only mode"
+                : isFr ? "Chargement de la configuration" : "Loading setup"}
           </div>
-        ) : (
-          <Table
-            columns={columns}
-            data={years}
-            searchable
-            searchPlaceholder={
-              lang === "fr" ? "Rechercher une année..." : "Search years..."
-            }
-            emptyMessage={
-              lang === "fr" ? "Aucune année trouvée" : "No years found"
-            }
-            onRowClick={(row) => {
-              if (expandedYearId === row.id) {
-                setExpandedYearId(null);
-              } else {
-                loadTerms(row.id);
-              }
-            }}
-            headerExtra={
-              <Button variant="primary" size="sm" onClick={openCreateDrawer}>
-                {lang === "fr" ? "+ Nouvelle" : "+ New"}
-              </Button>
-            }
-          />
-        )}
-      </Card>
-
-      {/* ── Expanded Terms Section ── */}
-      {expandedYearId && (
-        <Card className="mt-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-surface-700 dark:text-surface-200">
-              {lang === "fr" ? "Trimestres / Périodes" : "Terms / Periods"}
-            </h3>
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<FiPlus className="w-3.5 h-3.5" />}
-              onClick={() => openTermForm(expandedYearId)}
-            >
-              {lang === "fr" ? "Ajouter" : "Add"}
-            </Button>
-          </div>
-
-          {termsLoading ? (
-            <Skeleton variant="text" />
-          ) : terms.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-surface-400">
-                {lang === "fr"
-                  ? "Aucun trimestre. Ajoutez le premier trimestre (ex: Term 1, 1er Trimestre)."
-                  : "No terms yet. Add the first term (e.g. Term 1)."}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {terms.map((term) => (
-                <div
-                  key={term.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-surface-50 dark:bg-surface-900 border border-surface-100 dark:border-surface-700"
-                >
-                  <div>
-                    <div className="text-sm font-medium text-surface-800 dark:text-surface-100">
-                      {term.name}
-                    </div>
-                    <div className="text-xs text-surface-400 mt-0.5">
-                      {term.startDate
-                        ? new Date(term.startDate).toLocaleDateString(
-                            lang === "fr" ? "fr-FR" : "en-US"
-                          )
-                        : ""}
-                      {" → "}
-                      {term.endDate
-                        ? new Date(term.endDate).toLocaleDateString(
-                            lang === "fr" ? "fr-FR" : "en-US"
-                          )
-                        : ""}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteTerm(term.id)}
-                    className="p-1.5 text-surface-400 hover:text-red-500 transition-colors"
-                  >
-                    <FiTrash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
+        </div>
       )}
 
-      {/* ── Term Creation Drawer ── */}
-      <Drawer
-        isOpen={termFormOpen}
-        onClose={() => setTermFormOpen(false)}
-        title={lang === "fr" ? "Nouveau trimestre" : "New Term"}
-        size="sm"
-      >
-        <div className="space-y-4">
-          <Input
-            label={lang === "fr" ? "Nom du trimestre" : "Term Name"}
-            placeholder={lang === "fr" ? "Ex: Term 1, 1er Trimestre" : "E.g.: Term 1"}
-            value={termData.name}
-            onChange={(e) => setTermData({ ...termData, name: e.target.value })}
-            autoFocus
-          />
-          <Select
-            label={lang === "fr" ? "Type" : "Type"}
-            value={termData.type}
-            onChange={(e) => setTermData({ ...termData, type: e.target.value })}
-            options={[
-              { value: "term", label: lang === "fr" ? "Trimestre" : "Term" },
-              { value: "semester", label: lang === "fr" ? "Semestre" : "Semester" },
-              { value: "sequence", label: "Sequence" },
-              { value: "ca", label: "CA" },
-              { value: "exam", label: "Exam" },
-            ]}
-          />
-          <Input
-            label={lang === "fr" ? "Date de début" : "Start Date"}
-            type="date"
-            value={termData.startDate}
-            onChange={(e) => setTermData({ ...termData, startDate: e.target.value })}
-          />
-          <Input
-            label={lang === "fr" ? "Date de fin" : "End Date"}
-            type="date"
-            value={termData.endDate}
-            onChange={(e) => setTermData({ ...termData, endDate: e.target.value })}
-          />
-          <div className="flex gap-3 pt-4 border-t border-surface-200 dark:border-surface-700">
-            <Button variant="secondary" onClick={() => setTermFormOpen(false)} fullWidth>
-              {lang === "fr" ? "Annuler" : "Cancel"}
-            </Button>
-            <Button variant="primary" onClick={handleCreateTerm} loading={termSaving} fullWidth>
-              {lang === "fr" ? "Créer" : "Create"}
-            </Button>
+      {/* ── Top Nav ── */}
+      <nav className="flex items-center justify-between px-6 sm:px-10 py-[18px] bg-white dark:bg-surface-800 border-b border-surface-100 dark:border-surface-700 flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-[34px] h-[34px] rounded-lg bg-primary-900 flex items-center justify-center">
+            <FiHome className="w-[17px] h-[17px] text-white" />
+          </div>
+          <span className="font-display text-lg font-semibold text-surface-800 dark:text-surface-100">
+            Akademee
+          </span>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-primary-50 dark:bg-primary-900/30 border-2 border-primary-100 dark:border-primary-800 flex items-center justify-center text-[11px] font-extrabold text-primary-900 dark:text-primary-100">
+              {schoolInitials}
+            </div>
+            <div className="hidden sm:block">
+              <div className="text-[13.5px] font-bold text-surface-800 dark:text-surface-100">
+                {user?.schoolName || "Grace Bilingual Academy"}
+              </div>
+              <div className="text-[11.5px] text-surface-400">
+                {user?.subdomain ? `${user.subdomain}.akademee.cm` : "school.akademee.cm"}
+              </div>
+            </div>
           </div>
         </div>
-      </Drawer>
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="flex items-center gap-1.5 text-sm text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 bg-transparent border-none cursor-pointer px-3 py-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-all"
+        >
+          <FiLogOut className="w-3.5 h-3.5" />
+          {isFr ? "Sortir" : "Sign out"}
+        </button>
+      </nav>
 
-      {/* ── Year Create/Edit Drawer ── */}
-      <Drawer
-        isOpen={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        title={
-          editingYear
-            ? lang === "fr"
-              ? `Modifier ${editingYear.name}`
-              : `Edit ${editingYear.name}`
-            : lang === "fr"
-              ? "Nouvelle année"
-              : "New Academic Year"
-        }
-        size="sm"
+      {/* ── Hero — redesigned: clean, minimal, animated ── */}
+      <div
+        className="relative overflow-hidden px-6 sm:px-10 py-8 sm:py-10"
+        style={{
+          background: `linear-gradient(135deg, ${pc} 0%, #0a6650 70%, #085041 100%)`,
+        }}
       >
-        <div className="space-y-4">
-          <Input
-            label={lang === "fr" ? "Nom" : "Name"}
-            placeholder={lang === "fr" ? "Ex: 2024-2025" : "E.g.: 2024-2025"}
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            error={formErrors.name}
-            autoFocus
-          />
-          <Input
-            label={lang === "fr" ? "Date de début" : "Start Date"}
-            type="date"
-            value={formData.startDate}
-            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-            error={formErrors.startDate}
-          />
-          <Input
-            label={lang === "fr" ? "Date de fin" : "End Date"}
-            type="date"
-            value={formData.endDate}
-            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-            error={formErrors.endDate}
-          />
-          <div className="flex gap-3 pt-4 border-t border-surface-200 dark:border-surface-700">
-            <Button variant="secondary" onClick={() => setDrawerOpen(false)} fullWidth>
-              {lang === "fr" ? "Annuler" : "Cancel"}
-            </Button>
-            <Button variant="primary" onClick={handleSave} loading={saving} fullWidth>
-              {editingYear
-                ? lang === "fr" ? "Mettre à jour" : "Update"
-                : lang === "fr" ? "Créer" : "Create"}
-            </Button>
+        {/* Subtle floating orb decorations */}
+        <div
+          className="absolute -top-12 -right-12 w-48 h-48 rounded-full opacity-20 animate-float-slow-orb pointer-events-none"
+          style={{ background: `radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 70%)` }}
+        />
+        <div
+          className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full opacity-10 animate-float-reverse pointer-events-none"
+          style={{ background: `radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)` }}
+        />
+
+        <div className="relative z-10 max-w-[640px]">
+          {/* Breadcrumb-like label with entrance animation */}
+          <div className="flex items-center gap-2 mb-3 animate-fadeInUp">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[1.2px] uppercase text-white/50 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+              {isFr ? "Année académique" : "Academic Year"}
+            </span>
           </div>
+
+          {/* Title with staggered animation */}
+          <h1 className="font-display text-[clamp(20px,3vw,30px)] font-bold text-white leading-tight mb-1.5 animate-fadeInUp animate-fadeInUp-delay-1">
+            {isFr
+              ? "Sélectionnez votre année de travail"
+              : "Select your working year"}
+          </h1>
+
+          <p className="text-sm text-white/60 leading-relaxed max-w-[480px] animate-fadeInUp animate-fadeInUp-delay-2">
+            {isFr
+              ? "Choisissez l'année en cours, explorez les archives ou préparez une nouvelle année scolaire."
+              : "Choose the current year, explore archives, or set up a new academic year."}
+          </p>
         </div>
-      </Drawer>
 
-      {/* ── Delete Confirmation Modal ── */}
-      <Modal
-        isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        title={lang === "fr" ? "Confirmer la suppression" : "Confirm Deletion"}
-        size="sm"
-        footer={
-          <div className="flex gap-3">
-            <Button variant="secondary" onClick={() => setDeleteModalOpen(false)} fullWidth>
-              {lang === "fr" ? "Annuler" : "Cancel"}
-            </Button>
-            <Button variant="danger" onClick={handleDelete} loading={deleting} fullWidth>
-              {lang === "fr" ? "Supprimer" : "Delete"}
-            </Button>
+        {/* Animated year count badge */}
+        {!loading && (
+          <div
+            className="absolute right-6 sm:right-10 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-2.5 animate-fadeInUp animate-fadeInUp-delay-3"
+          >
+            <FiCalendar className="w-4 h-4 text-white/60" />
+            <span className="text-lg font-bold text-white/90">{years.length}</span>
+            <span className="text-[11px] text-white/50 font-medium">
+              {isFr ? "années" : "years"}
+            </span>
           </div>
-        }
-      >
-        <p className="text-sm text-surface-600 dark:text-surface-300">
-          {lang === "fr"
-            ? `Supprimer l'année ${deletingYear?.name} ? Cette action est irréversible.`
-            : `Delete ${deletingYear?.name}? This cannot be undone.`}
-        </p>
-      </Modal>
+        )}
+      </div>
+
+      {/* ── Main Content ── */}
+      <div className="flex-1 max-w-[800px] w-full mx-auto px-4 sm:px-6 py-10 pb-20">
+        {/* Archive notice */}
+        {selectedYear?.status === "archive" && (
+          <div className="flex items-center gap-2.5 px-4 py-3 rounded-lg bg-[rgba(245,158,11,0.06)] border border-[rgba(245,158,11,0.18)] text-sm text-surface-600 dark:text-surface-300 mb-4">
+            <FiArchive className="w-4 h-4 text-[#F59E0B] flex-shrink-0" />
+            <span>
+              {isFr
+                ? `Vous êtes sur le point d'entrer dans ${selectedYear.name} en mode lecture seule. Vous pourrez consulter les notes, rapports et dossiers, mais pas faire de modifications.`
+                : `You are about to enter ${selectedYear.name} in read-only mode. You will be able to view grades, reports and records, but not make any changes.`}
+            </span>
+          </div>
+        )}
+
+        {/* Active years */}
+        {activeYears.length > 0 && (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[11px] font-bold tracking-[1.5px] uppercase text-surface-400">
+                {isFr ? "Année en cours" : "Current year"}
+              </span>
+            </div>
+            {activeYears.map((year) => (
+              <YearCard key={year.id} year={year} selected={selectedId === year.id} onSelect={handleSelect} />
+            ))}
+          </>
+        )}
+
+        {/* Archive years */}
+        {archiveYears.length > 0 && (
+          <>
+            <div className="flex items-center justify-between mt-7 mb-4">
+              <span className="text-[11px] font-bold tracking-[1.5px] uppercase text-surface-400">
+                {isFr ? "Années passées — Archives" : "Past years — Archives"}
+              </span>
+              <span className="text-xs text-surface-400 bg-surface-100 dark:bg-surface-700 px-2.5 py-0.5 rounded-full font-semibold">
+                {isFr ? "Lecture seule" : "Read-only"}
+              </span>
+            </div>
+            {archiveYears.map((year) => (
+              <YearCard key={year.id} year={year} selected={selectedId === year.id} onSelect={handleSelect} />
+            ))}
+          </>
+        )}
+
+        {/* Future years */}
+        {futureYears.length > 0 && (
+          <>
+            <div className="flex items-center justify-between mt-7 mb-4">
+              <span className="text-[11px] font-bold tracking-[1.5px] uppercase text-surface-400">
+                {isFr ? "Année à venir" : "Upcoming year"}
+              </span>
+            </div>
+            {futureYears.map((year) => (
+              <YearCard key={year.id} year={year} selected={selectedId === year.id} onSelect={handleSelect} />
+            ))}
+          </>
+        )}
+
+        {/* Submit area */}
+        <div
+          className="sticky bottom-0 mt-8 -mx-4 sm:-mx-6 px-4 sm:px-6 py-6 pb-8 flex items-center justify-center gap-3"
+          style={{
+            background: `linear-gradient(to top, var(--color-surface-50, #F7F8F6) 60%, transparent)`,
+          }}
+        >
+          <button
+            onClick={handleCreateNew}
+            className="inline-flex items-center gap-2 h-[52px] px-7 rounded-xl bg-white dark:bg-surface-800 border-2 border-surface-200 dark:border-surface-600 
+              text-sm font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-all"
+          >
+            <FiPlus className="w-4 h-4" strokeWidth={2.5} />
+            {isFr ? "Nouvelle année" : "New academic year"}
+          </button>
+          <button
+            onClick={handleEnter}
+            disabled={!selectedYear}
+            className="inline-flex items-center gap-2 h-[52px] px-7 rounded-xl text-white text-[15px] font-bold 
+              transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: selectedYear?.status === "archive" ? "#F59E0B" : selectedYear?.status === "future" ? "#3B82F6" : pc,
+              boxShadow: selectedYear
+                ? `0 6px 20px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.15)`
+                : undefined,
+            }}
+          >
+            <FiArrowRight className="w-4 h-4" strokeWidth={2.5} />
+            {!selectedYear
+              ? isFr ? "Sélectionnez une année" : "Select a year to continue"
+              : selectedYear.status === "active"
+                ? isFr ? `Entrer ${selectedYear.name}` : `Enter ${selectedYear.name}`
+                : selectedYear.status === "archive"
+                  ? isFr ? `Consulter ${selectedYear.name}` : `View ${selectedYear.name}`
+                  : isFr ? `Configurer ${selectedYear.name}` : `Configure ${selectedYear.name}`}
+          </button>
+        </div>
+      </div>
+
+      {/* Create Year Modal */}
+      <CreateYearModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={handleYearCreated}
+      />
     </div>
   );
 }

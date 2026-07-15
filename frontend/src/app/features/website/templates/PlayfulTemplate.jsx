@@ -16,6 +16,7 @@ import EnrollmentForm from "../components/EnrollmentForm";
 import { useScrollProgress, ScrollProgressBar, BackToTopButton } from "../hooks/useScrollProgress.jsx";
 import { useActiveSection } from "../hooks/useActiveSection.jsx";
 import { useWebsiteLanguage, LanguageToggle } from "../hooks/useWebsiteLanguage.jsx";
+import { useWebsiteTheme } from "../hooks/useWebsiteTheme.jsx";
 import { TRANSLATIONS } from "../hooks/websiteTranslations.js";
 
 const PATH_TO_ICON = {
@@ -206,6 +207,7 @@ export default function PlayfulTemplate({ school }) {
   const { progress, showBackToTop } = useScrollProgress(300);
   const activeSection = useActiveSection(SECTIONS, 80);
   const { lang, isBilingual, toggleLang, t } = useWebsiteLanguage(s.educationalSystems);
+  const { isDark, ThemeToggle } = useWebsiteTheme("light");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -270,7 +272,7 @@ export default function PlayfulTemplate({ school }) {
   ];
 
   return (
-    <div className="font-sans antialiased bg-[#faf9f7] text-[#1a1a1a] overflow-x-hidden" style={{ "--p": pc, "--pl": pcl, "--pm": pcm }}>
+    <div className={`font-sans antialiased overflow-x-hidden ${isDark ? "website-dark" : ""}`} style={{ "--p": pc, "--pl": pcl, "--pm": pcm, background: isDark ? "#1a1a1a" : "#faf9f7", color: isDark ? "#d4d0c8" : "#1a1a1a" }}>
       <ScrollProgressBar progress={progress} color={pc} />
       <style>{`
         /* ─── Scroll reveals ─── */
@@ -307,6 +309,21 @@ export default function PlayfulTemplate({ school }) {
         /* ─── Ripple effect ─── */
         .playful-card { transition: all .3s cubic-bezier(.22,1,.36,1); }
         .playful-card:hover { transform: translateY(-4px) scale(1.01); }
+
+        /* ─── Dark mode overrides ─── */
+        .website-dark { --bg-card: #2a2a2a; --bg-section: #222222; --text-primary: #d4d0c8; --text-secondary: #8a8a8a; --border-color: #3a3a3a; }
+        .website-dark .bg-white { background-color: #2a2a2a !important; }
+        .website-dark .bg-\[\#faf9f7\] { background-color: #2a2a2a !important; }
+        .website-dark .text-\[\#1a1a1a\] { color: #d4d0c8 !important; }
+        .website-dark .text-\[\#4a4a4a\] { color: #b0aca4 !important; }
+        .website-dark .text-\[\#6a6a6a\] { color: #9a948a !important; }
+        .website-dark .text-\[\#8a8a8a\] { color: #7a746a !important; }
+        .website-dark .border-\[\#f0eeea\] { border-color: #3a3a3a !important; }
+        .website-dark .border-\[\#e0ddd8\] { border-color: #444444 !important; }
+        .website-dark .border-\[\#eee\] { border-color: #3a3a3a !important; }
+        .website-dark .bg-\[\#fff\] { background: #222222 !important; }
+        .website-dark .hover\:border-\[var\(--p\)\]:hover { border-color: var(--p) !important; }
+        .website-dark .shadow-md, .website-dark .shadow-sm, .website-dark .shadow-xl, .website-dark .shadow-lg { box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important; }
       `}</style>
 
       {/* ════════════════ NAVIGATION ════════════════ */}
@@ -352,6 +369,7 @@ export default function PlayfulTemplate({ school }) {
             </ul>
 
             <div className="hidden md:flex items-center gap-2">
+              <ThemeToggle variant="light" />
               <LanguageToggle lang={lang} isBilingual={isBilingual} onToggle={toggleLang} variant="light" />
               <a
                 href="/login"

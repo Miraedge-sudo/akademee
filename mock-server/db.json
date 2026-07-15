@@ -1,0 +1,888 @@
+{
+  "school": {
+    "id": 1,
+    "name": "École Test",
+    "educationalSystems": [
+      "anglo_general",
+      "franco_general"
+    ],
+    "systemConfigurations": {
+      "anglo_general": {
+        "isCustomized": false,
+        "levels": [
+          "Form 1",
+          "Form 2",
+          "Form 3",
+          "Form 4",
+          "Form 5",
+          "Lower 6th",
+          "Upper 6th"
+        ],
+        "streams": [
+          "General",
+          "Science",
+          "Arts",
+          "Commercial"
+        ],
+        "subjectTypes": [
+          "core",
+          "elective",
+          "language"
+        ],
+        "periods": [
+          "Term 1",
+          "Term 2",
+          "Term 3"
+        ],
+        "sequences": true,
+        "coefficientRange": {
+          "min": 1,
+          "max": 4
+        },
+        "examTypes": [
+          "GCE O Level",
+          "GCE A Level"
+        ]
+      },
+      "franco_general": {
+        "isCustomized": false,
+        "levels": [
+          "6ème",
+          "5ème",
+          "4ème",
+          "3ème",
+          "2nde",
+          "1ère",
+          "Tle"
+        ],
+        "series": [
+          "A4",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F1",
+          "F2",
+          "G"
+        ],
+        "subjectTypes": [
+          "theoretical",
+          "sports",
+          "artistic"
+        ],
+        "periods": [
+          "Semestre 1",
+          "Semestre 2"
+        ],
+        "ca": true,
+        "coefficientRange": {
+          "min": 1,
+          "max": 9
+        },
+        "examTypes": [
+          "BEPC",
+          "Probatoire",
+          "Baccalauréat"
+        ]
+      }
+    }
+  },
+  "educationalSystems": [
+    {
+      "id": "anglo_general",
+      "name": "Anglophone Général",
+      "description": "GCE O/A Level system with Terms and Sequences",
+      "icon": "graduation-cap",
+      "defaultConfig": {
+        "levels": [
+          "Form 1",
+          "Form 2",
+          "Form 3",
+          "Form 4",
+          "Form 5",
+          "Lower 6th",
+          "Upper 6th"
+        ],
+        "streams": [
+          "General",
+          "Science",
+          "Arts",
+          "Commercial"
+        ],
+        "subjectTypes": [
+          "core",
+          "elective",
+          "language"
+        ],
+        "periods": [
+          "Term 1",
+          "Term 2",
+          "Term 3"
+        ],
+        "sequences": true,
+        "coefficientRange": {
+          "min": 1,
+          "max": 4
+        },
+        "examTypes": [
+          "GCE O Level",
+          "GCE A Level"
+        ],
+        "evaluationStructure": {
+          "terms": 3,
+          "sequencesPerTerm": 2,
+          "hasPractical": false
+        }
+      }
+    },
+    {
+      "id": "anglo_tech",
+      "name": "Anglophone Technique",
+      "description": "GCE Technical with practical evaluations",
+      "icon": "wrench",
+      "defaultConfig": {
+        "levels": [
+          "Form 1",
+          "Form 2",
+          "Form 3",
+          "Form 4",
+          "Form 5",
+          "Lower 6th Tech",
+          "Upper 6th Tech"
+        ],
+        "streams": [
+          "Technical",
+          "Engineering",
+          "Vocational"
+        ],
+        "subjectTypes": [
+          "theory",
+          "practical",
+          "workshop",
+          "technical_drawing"
+        ],
+        "periods": [
+          "Term 1",
+          "Term 2",
+          "Term 3"
+        ],
+        "sequences": true,
+        "coefficientRange": {
+          "min": 1,
+          "max": 4
+        },
+        "examTypes": [
+          "GCE Technical",
+          "GTTC"
+        ],
+        "evaluationStructure": {
+          "terms": 3,
+          "sequencesPerTerm": 2,
+          "hasPractical": true,
+          "separatePracticalGrades": true
+        }
+      }
+    },
+    {
+      "id": "franco_general",
+      "name": "Francophone Général",
+      "description": "BEPC, Probatoire, Baccalauréat system with Semesters",
+      "icon": "book",
+      "defaultConfig": {
+        "levels": [
+          "6ème",
+          "5ème",
+          "4ème",
+          "3ème",
+          "2nde",
+          "1ère",
+          "Tle"
+        ],
+        "series": [
+          "A4",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F1",
+          "F2",
+          "G"
+        ],
+        "subjectTypes": [
+          "theoretical",
+          "sports",
+          "artistic"
+        ],
+        "periods": [
+          "Semestre 1",
+          "Semestre 2"
+        ],
+        "ca": true,
+        "coefficientRange": {
+          "min": 1,
+          "max": 9
+        },
+        "examTypes": [
+          "BEPC",
+          "Probatoire",
+          "Baccalauréat"
+        ],
+        "evaluationStructure": {
+          "semesters": 2,
+          "caPerSemester": 2,
+          "hasComposition": true,
+          "hasPractical": false
+        }
+      }
+    },
+    {
+      "id": "franco_tech",
+      "name": "Francophone Technique",
+      "description": "CAP, BEP, Bac Technique with practical workshops",
+      "icon": "cog",
+      "defaultConfig": {
+        "levels": [
+          "CAP 1",
+          "CAP 2",
+          "BEP 1",
+          "BEP 2",
+          "1ère Tech.",
+          "Tle Tech."
+        ],
+        "filieres": [
+          "AEBA",
+          "TIG",
+          "TBB",
+          "TI",
+          "ELE",
+          "MEC"
+        ],
+        "subjectTypes": [
+          "theoretical",
+          "practical",
+          "tp_atelier",
+          "dessin_technique"
+        ],
+        "periods": [
+          "Semestre 1",
+          "Semestre 2"
+        ],
+        "ca": true,
+        "coefficientRange": {
+          "min": 1,
+          "max": 9
+        },
+        "examTypes": [
+          "CAP",
+          "BEP",
+          "Bac Technique"
+        ],
+        "evaluationStructure": {
+          "semesters": 2,
+          "caPerSemester": 2,
+          "hasComposition": true,
+          "hasPractical": true,
+          "separatePracticalGrades": true,
+          "hasInternships": true
+        }
+      }
+    },
+    {
+      "id": "university",
+      "name": "Université LMD",
+      "description": "Licence-Master-Doctorat system with ECTS credits",
+      "icon": "university",
+      "defaultConfig": {
+        "levels": [
+          "L1",
+          "L2",
+          "L3",
+          "M1",
+          "M2",
+          "Doctorat"
+        ],
+        "ueTypes": [
+          "UEF",
+          "UEO",
+          "UET",
+          "UEL"
+        ],
+        "subjectTypes": [
+          "ue_fondamentale",
+          "ue_optionnelle",
+          "ue_transversale",
+          "ue_libre"
+        ],
+        "periods": [
+          "Semestre 1",
+          "Semestre 2"
+        ],
+        "ectsRange": {
+          "min": 1,
+          "max": 6
+        },
+        "coefficientRange": {
+          "min": 1,
+          "max": 6
+        },
+        "examTypes": [
+          "CC",
+          "Examen Final"
+        ],
+        "evaluationStructure": {
+          "semesters": 2,
+          "hasCC": true,
+          "hasFinalExam": true,
+          "hasPractical": true,
+          "hasTP_TD": true,
+          "creditsBased": true
+        }
+      }
+    }
+  ],
+  "classes": [
+    {
+      "name": "Form 1 Science",
+      "levelId": 1,
+      "seriesId": 2,
+      "capacity": 40,
+      "classTeacherId": null,
+      "studentsCount": 0,
+      "id": 1
+    }
+  ],
+  "subjects": [],
+  "series": [],
+  "academicYears": [
+    {
+      "id": "y2025",
+      "name": "2024 – 2025",
+      "startDate": "2024-09-01",
+      "endDate": "2025-06-30",
+      "isCurrent": true,
+      "status": "active",
+      "sequences": 6,
+      "students": 312,
+      "teachers": 24,
+      "classes": 18,
+      "passRate": null
+    },
+    {
+      "id": "y2024",
+      "name": "2023 – 2024",
+      "startDate": "2023-09-01",
+      "endDate": "2024-06-30",
+      "isCurrent": false,
+      "status": "archive",
+      "sequences": 6,
+      "students": 294,
+      "teachers": 22,
+      "classes": 16,
+      "passRate": 87
+    }
+  ],
+  "teachers": [
+    {
+      "id": 1,
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@school.cm",
+      "phone": "+237 655 123 456",
+      "specialty": "Mathematics"
+    },
+    {
+      "id": 2,
+      "firstName": "Marie",
+      "lastName": "Smith",
+      "email": "marie.smith@school.cm",
+      "phone": "+237 677 234 567",
+      "specialty": "English Literature"
+    },
+    {
+      "id": 3,
+      "firstName": "Pierre",
+      "lastName": "Kamga",
+      "email": "pierre.kamga@school.cm",
+      "phone": "+237 699 345 678",
+      "specialty": "Physics & Chemistry"
+    },
+    {
+      "id": 4,
+      "firstName": "Sarah",
+      "lastName": "Njiki",
+      "email": "sarah.njiki@school.cm",
+      "phone": "+237 688 456 789",
+      "specialty": "Biology"
+    },
+    {
+      "id": 5,
+      "firstName": "Tom",
+      "lastName": "Green",
+      "email": "tom.green@school.cm",
+      "phone": "+237 622 567 890",
+      "specialty": "History & Geography"
+    },
+    {
+      "id": 6,
+      "firstName": "Alice",
+      "lastName": "Mbah",
+      "email": "alice.mbah@school.cm",
+      "phone": "+237 644 678 901",
+      "specialty": "French"
+    },
+    {
+      "id": 7,
+      "firstName": "Paul",
+      "lastName": "Biyong",
+      "email": "paul.biyong@school.cm",
+      "phone": "+237 633 789 012",
+      "specialty": "Computer Science"
+    }
+  ],
+  "students": [
+    {
+      "id": 4,
+      "firstName": "Emilia",
+      "lastName": "Fotso",
+      "gender": "F",
+      "studentNumber": "MAT-2026-004",
+      "status": "active",
+      "feeStatus": "paid",
+      "classId": 2
+    },
+    {
+      "id": 5,
+      "firstName": "Jean",
+      "lastName": "Nkwi",
+      "gender": "M",
+      "studentNumber": "MAT-2026-005",
+      "status": "active",
+      "feeStatus": "paid",
+      "classId": 2
+    },
+    {
+      "id": 6,
+      "firstName": "Esther",
+      "lastName": "Tchinda",
+      "gender": "F",
+      "studentNumber": "MAT-2026-006",
+      "status": "active",
+      "feeStatus": "partial",
+      "classId": 3
+    },
+    {
+      "id": 7,
+      "firstName": "David",
+      "lastName": "Ngos",
+      "gender": "M",
+      "studentNumber": "MAT-2026-007",
+      "status": "active",
+      "feeStatus": "paid",
+      "classId": 4
+    },
+    {
+      "id": 8,
+      "firstName": "Grace",
+      "lastName": "Enow",
+      "gender": "F",
+      "studentNumber": "MAT-2026-008",
+      "status": "active",
+      "feeStatus": "paid",
+      "classId": 5
+    },
+    {
+      "id": 9,
+      "firstName": "Michael",
+      "lastName": "Tabot",
+      "gender": "M",
+      "studentNumber": "MAT-2026-009",
+      "status": "active",
+      "feeStatus": "paid",
+      "classId": 6
+    },
+    {
+      "id": 10,
+      "firstName": "Laura",
+      "lastName": "Bessala",
+      "gender": "F",
+      "studentNumber": "MAT-2026-010",
+      "status": "active",
+      "feeStatus": "unpaid",
+      "classId": 7
+    },
+    {
+      "id": 11,
+      "firstName": "Hervé",
+      "lastName": "Nana",
+      "gender": "M",
+      "studentNumber": "MAT-2026-011",
+      "status": "active",
+      "feeStatus": "paid",
+      "classId": 8
+    },
+    {
+      "id": 12,
+      "firstName": "Diane",
+      "lastName": "Tankeu",
+      "gender": "F",
+      "studentNumber": "MAT-2026-012",
+      "status": "active",
+      "feeStatus": "partial",
+      "classId": 9
+    },
+    {
+      "id": 13,
+      "firstName": "Paul",
+      "lastName": "Biya",
+      "gender": "M",
+      "studentNumber": "MAT-2026-013",
+      "status": "inactive",
+      "feeStatus": "unpaid",
+      "classId": 10
+    },
+    {
+      "id": 14,
+      "firstName": "Celine",
+      "lastName": "Ngono",
+      "gender": "F",
+      "studentNumber": "MAT-2026-014",
+      "status": "active",
+      "feeStatus": "paid",
+      "classId": 11
+    },
+    {
+      "id": 15,
+      "firstName": "Robert",
+      "lastName": "Ebene",
+      "gender": "M",
+      "studentNumber": "MAT-2026-015",
+      "status": "active",
+      "feeStatus": "paid",
+      "classId": 12
+    }
+  ],
+  "teacherAssignments": [
+    {
+      "id": 3,
+      "teacherId": 1,
+      "classId": 4
+    },
+    {
+      "id": 4,
+      "teacherId": 3,
+      "classId": 2
+    },
+    {
+      "id": 5,
+      "teacherId": 4,
+      "classId": 3
+    },
+    {
+      "id": 6,
+      "teacherId": 5,
+      "classId": 5
+    },
+    {
+      "id": 7,
+      "teacherId": 6,
+      "classId": 8
+    },
+    {
+      "id": 8,
+      "teacherId": 7,
+      "classId": 6
+    }
+  ],
+  "systemLevels": [
+    {
+      "id": 1,
+      "name": "Form 1",
+      "order": 1
+    },
+    {
+      "id": 2,
+      "name": "Form 2",
+      "order": 2
+    },
+    {
+      "id": 3,
+      "name": "Form 3",
+      "order": 3
+    },
+    {
+      "id": 4,
+      "name": "Form 4",
+      "order": 4
+    },
+    {
+      "id": 5,
+      "name": "Form 5",
+      "order": 5
+    },
+    {
+      "id": 6,
+      "name": "Lower 6th",
+      "order": 6
+    },
+    {
+      "id": 7,
+      "name": "Upper 6th",
+      "order": 7
+    },
+    {
+      "id": 8,
+      "name": "6ème",
+      "order": 8
+    },
+    {
+      "id": 9,
+      "name": "5ème",
+      "order": 9
+    },
+    {
+      "id": 10,
+      "name": "4ème",
+      "order": 10
+    },
+    {
+      "id": 11,
+      "name": "3ème",
+      "order": 11
+    },
+    {
+      "id": 12,
+      "name": "Seconde",
+      "order": 12
+    },
+    {
+      "id": 13,
+      "name": "Première",
+      "order": 13
+    },
+    {
+      "id": 14,
+      "name": "Terminale",
+      "order": 14
+    },
+    {
+      "id": 15,
+      "name": "CAP 1",
+      "order": 15
+    },
+    {
+      "id": 16,
+      "name": "CAP 2",
+      "order": 16
+    },
+    {
+      "id": 17,
+      "name": "BEP 1",
+      "order": 17
+    },
+    {
+      "id": 18,
+      "name": "BEP 2",
+      "order": 18
+    },
+    {
+      "id": 19,
+      "name": "1ère Tech.",
+      "order": 19
+    },
+    {
+      "id": 20,
+      "name": "Tle Tech.",
+      "order": 20
+    },
+    {
+      "id": 21,
+      "name": "L1",
+      "order": 21
+    },
+    {
+      "id": 22,
+      "name": "L2",
+      "order": 22
+    },
+    {
+      "id": 23,
+      "name": "L3",
+      "order": 23
+    },
+    {
+      "id": 24,
+      "name": "M1",
+      "order": 24
+    },
+    {
+      "id": 25,
+      "name": "M2",
+      "order": 25
+    },
+    {
+      "id": 26,
+      "name": "Doctorat",
+      "order": 26
+    },
+    {
+      "name": "Level",
+      "order": 1,
+      "id": 27
+    }
+  ],
+  "systemSeries": [
+    {
+      "id": 1,
+      "name": "General (Mainstream)"
+    },
+    {
+      "id": 2,
+      "name": "Science"
+    },
+    {
+      "id": 3,
+      "name": "Arts"
+    },
+    {
+      "id": 4,
+      "name": "Commercial"
+    },
+    {
+      "id": 5,
+      "name": "Série A (Lettres)"
+    },
+    {
+      "id": 6,
+      "name": "Série C (Math/Phys)"
+    },
+    {
+      "id": 7,
+      "name": "Série D (Math/SVT)"
+    },
+    {
+      "id": 8,
+      "name": "Série TI (Info)"
+    },
+    {
+      "id": 9,
+      "name": "Industrial (Technical)"
+    },
+    {
+      "id": 10,
+      "name": "AEBA"
+    },
+    {
+      "id": 11,
+      "name": "TIG"
+    },
+    {
+      "id": 12,
+      "name": "ELE"
+    },
+    {
+      "id": 13,
+      "name": "MEC"
+    },
+    {
+      "id": 14,
+      "name": "Sciences Fondamentales"
+    },
+    {
+      "id": 15,
+      "name": "Sciences de la Santé"
+    },
+    {
+      "id": 16,
+      "name": "Sciences Économiques"
+    },
+    {
+      "name": "Allemand",
+      "id": 17
+    }
+  ],
+  "periods": [
+    {
+      "id": 1,
+      "academicYearId": "y2025",
+      "name": "Term 1",
+      "nameFr": "1er Trimestre",
+      "order": 1,
+      "startDate": "2024-09-01",
+      "endDate": "2024-11-30"
+    },
+    {
+      "id": 2,
+      "academicYearId": "y2025",
+      "name": "Term 2",
+      "nameFr": "2e Trimestre",
+      "order": 2,
+      "startDate": "2024-12-01",
+      "endDate": "2025-02-28"
+    },
+    {
+      "id": 3,
+      "academicYearId": "y2025",
+      "name": "Term 3",
+      "nameFr": "3e Trimestre",
+      "order": 3,
+      "startDate": "2025-03-01",
+      "endDate": "2025-06-30"
+    }
+  ],
+  "sequences": [
+    {
+      "id": 1,
+      "periodId": 1,
+      "name": "Sequence 1",
+      "nameFr": "Séquence 1",
+      "number": 1,
+      "startDate": "2024-09-01",
+      "endDate": "2024-10-15"
+    },
+    {
+      "id": 2,
+      "periodId": 1,
+      "name": "Sequence 2",
+      "nameFr": "Séquence 2",
+      "number": 2,
+      "startDate": "2024-10-16",
+      "endDate": "2024-11-30"
+    },
+    {
+      "id": 3,
+      "periodId": 2,
+      "name": "Sequence 3",
+      "nameFr": "Séquence 3",
+      "number": 3,
+      "startDate": "2024-12-01",
+      "endDate": "2025-01-15"
+    },
+    {
+      "id": 4,
+      "periodId": 2,
+      "name": "Sequence 4",
+      "nameFr": "Séquence 4",
+      "number": 4,
+      "startDate": "2025-01-16",
+      "endDate": "2025-02-28"
+    },
+    {
+      "id": 5,
+      "periodId": 3,
+      "name": "Sequence 5",
+      "nameFr": "Séquence 5",
+      "number": 5,
+      "startDate": "2025-03-01",
+      "endDate": "2025-04-30"
+    },
+    {
+      "id": 6,
+      "periodId": 3,
+      "name": "Sequence 6",
+      "nameFr": "Séquence 6",
+      "number": 6,
+      "startDate": "2025-05-01",
+      "endDate": "2025-06-30"
+    }
+  ]
+}

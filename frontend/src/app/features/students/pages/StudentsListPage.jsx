@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { getStudents, deleteStudent } from "../../../core/api/studentService";
+import { YearContext } from "../../../core/context/YearContext";
 import AddStudentDrawer from "../components/AddStudentDrawer";
 import { FiUsers } from "react-icons/fi";
 import {
@@ -21,6 +22,8 @@ export default function StudentsListPage() {
   const lang = i18n.language === "fr" ? "fr" : "en";
   const navigate = useNavigate();
 
+  const { selectedYearId } = useContext(YearContext);
+
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,10 +38,11 @@ export default function StudentsListPage() {
   const [deleting, setDeleting] = useState(false);
 
   const loadStudents = useCallback(async () => {
+    const filter = selectedYearId ? { academicYearId: selectedYearId } : {};
     try {
       setLoading(true);
       setError(null);
-      const data = await getStudents();
+      const data = await getStudents({ ...filter });
       const list = Array.isArray(data) ? data : data?.students || data?.rows || [];
       setStudents(list);
     } catch (err) {
@@ -51,7 +55,7 @@ export default function StudentsListPage() {
     } finally {
       setLoading(false);
     }
-  }, [lang]);
+  }, [lang, yearFilter]);
 
   useEffect(() => {
     loadStudents();

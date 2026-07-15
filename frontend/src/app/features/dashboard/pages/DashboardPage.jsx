@@ -25,7 +25,6 @@ import StatCard from '../../../components/ui/StatCard';
 import PageHeader from '../../../components/ui/PageHeader';
 import Spinner from '../../../components/ui/Spinner';
 import Card from '../../../components/ui/Card';
-import YearSelector from '../../../components/ui/YearSelector';
 import { hexToRgba, formatCurrency } from '../../../components/utils/colors';
 
 // ── Month name short mapping ──
@@ -203,7 +202,7 @@ export default function DashboardPage() {
   const [activities, setActivities] = useState([]);
   const [revenue, setRevenue] = useState([]);
   const [chartLoading, setChartLoading] = useState(true);
-  const { selectedYearId, setSelectedYearId } = useContext(YearContext);
+  const { selectedYearId } = useContext(YearContext);
 
   const loadDashboardData = useCallback(async (yearId) => {
     setLoading(true);
@@ -293,14 +292,6 @@ export default function DashboardPage() {
         }
         color={pc}
       />
-
-      {/* ── Year Filter ── */}
-      <div className="flex items-center justify-between">
-        <div />
-        <div className="w-64">
-          <YearSelector value={selectedYearId} onChange={setSelectedYearId} />
-        </div>
-      </div>
 
       {/* ── Stats Cards ── */}
       {stats && (
