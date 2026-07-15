@@ -643,28 +643,10 @@ function getNavConfig(role, educationalSystems = []) {
     return baseConfig;
   }
 
-  const academicGroupIndex = baseConfig.findIndex(
-    (g) => g.group === "academic",
-  );
-  const gradesGroupIndex = baseConfig.findIndex((g) => g.group === "grades");
-
-  if (academicGroupIndex !== -1 && gradesGroupIndex !== -1) {
-    const newConfig = [...baseConfig];
-    newConfig.splice(academicGroupIndex + 1, 0, ...systemSections);
-    return newConfig;
-  }
-
   return [...baseConfig, ...systemSections];
 }
 
-// ── System section header colors ──
-const SYSTEM_SECTION_COLORS = {
-  [EDUCATIONAL_SYSTEMS.ANGLOPHONE_GENERAL]: { bar: "bg-blue-500", headerBg: "bg-blue-500/10", text: "text-blue-400", dot: "bg-blue-400" },
-  [EDUCATIONAL_SYSTEMS.FRANCOPHONE_GENERAL]: { bar: "bg-amber-500", headerBg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-400" },
-  [EDUCATIONAL_SYSTEMS.ANGLOPHONE_TECHNICAL]: { bar: "bg-cyan-500", headerBg: "bg-cyan-500/10", text: "text-cyan-400", dot: "bg-cyan-400" },
-  [EDUCATIONAL_SYSTEMS.FRANCOPHONE_TECHNICAL]: { bar: "bg-purple-500", headerBg: "bg-purple-500/10", text: "text-purple-400", dot: "bg-purple-400" },
-  [EDUCATIONAL_SYSTEMS.UNIVERSITY]: { bar: "bg-emerald-500", headerBg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-400" },
-};
+
 
 // ── Icon set ──
 const ICONS = {
@@ -847,7 +829,6 @@ function NavIcon({ name, className }) {
 function SystemSectionRenderer({ systemId, groups, collapsed: sidebarCollapsed, location, t, i18n, onCloseMobile }) {
   const [isOpen, setIsOpen] = useState(true);
   const labels = SYSTEM_LABELS[systemId];
-  const colors = SYSTEM_SECTION_COLORS[systemId];
   const isFr = i18n.language === "fr";
   const sysLabel = labels ? (isFr ? labels.fr : labels.en) : systemId;
 
@@ -880,18 +861,11 @@ function SystemSectionRenderer({ systemId, groups, collapsed: sidebarCollapsed, 
 
   return (
     <div className="relative mb-1">
-      {/* Colored left bar */}
-      <div className={`absolute left-[11px] top-0 bottom-0 w-[3px] rounded-full ${colors?.bar || "bg-primary-400"} opacity-25`} />
-
-      {/* System header button */}
+      {/* System header button — matching regular group header style */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative flex items-center gap-2 w-[calc(100%-16px)] mx-2 px-3 py-1.5 rounded-md text-[10px] font-semibold tracking-wider uppercase transition-all
-          ${colors?.text || "text-primary-300"} ${colors?.headerBg || "bg-white/[0.05]"}
-          hover:brightness-125`}
+        className="w-full flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase text-primary-400/60 px-5 pt-3 pb-1 whitespace-nowrap transition-opacity hover:text-primary-300"
       >
-        <span className={`w-1.5 h-1.5 rounded-full ${colors?.dot || "bg-primary-400"}`} />
-        <span className="flex-1 text-left truncate">{sysLabel}</span>
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -899,10 +873,12 @@ function SystemSectionRenderer({ systemId, groups, collapsed: sidebarCollapsed, 
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`w-3 h-3 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          className={`w-2.5 h-2.5 transition-transform duration-200 flex-shrink-0 ${isOpen ? "" : "-rotate-90"}`}
         >
           <polyline points="6 9 12 15 18 9" />
         </svg>
+        <span className="flex-1 text-left">{sysLabel}</span>
+        <span className="text-[9px] font-bold opacity-50">{groups.reduce((sum, g) => sum + g.items.length, 0)}</span>
       </button>
 
       {/* Groups */}
@@ -1070,7 +1046,7 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden py-2 scrollbar-none">
           {navGroups.map((group) => {
-            // System section — wrapped in colored collapsible header
+            // System section — collapsible
             if (group._type === "system_section") {
               return (
                 <SystemSectionRenderer

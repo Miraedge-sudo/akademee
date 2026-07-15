@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../core/hooks/useTheme";
@@ -43,46 +43,9 @@ const ROLE_META = {
 
 const ROLES = ["ADMIN", "TEACHER", "STUDENT", "ACCOUNTANT", "SECRETARY"];
 
-// ── Mock server URL ──
-const MOCK_API = "http://localhost:3001";
-
-// ── Mock data ──
-const NAMES = [
-  { first: "Emma", last: "Nkeng" }, { first: "Paul", last: "Effa" },
-  { first: "Marie", last: "Abena" }, { first: "Jean-Marc", last: "Essomba" },
-  { first: "Alice", last: "Mbarga" }, { first: "Boris", last: "Nguema" },
-  { first: "Sophie", last: "Talla" }, { first: "Chris", last: "Bilong" },
-  { first: "Grace", last: "Nkolo" }, { first: "Marc", last: "Biya" },
-  { first: "Claire", last: "Ateba" }, { first: "Louis", last: "Etame" },
-  { first: "Patricia", last: "Mbemba" }, { first: "Robert", last: "Onana" },
-  { first: "Celine", last: "Foko" }, { first: "Andre", last: "Ndoumbe" },
-  { first: "Fatou", last: "Diallo" }, { first: "Samuel", last: "Kang" },
-  { first: "Irene", last: "Mbu" }, { first: "Thierry", last: "Ndeh" },
-];
-
-const CLASSES = ["Form 4A", "Form 3B", "Form 5A", "Lower 6th Sci.", "Form 1A", "Upper 6th Art", "Form 2B", "Form 4B"];
-const SUBJECTS = ["Mathematics", "English", "Physics", "Chemistry", "Biology", "French", "History", "Geography"];
-
-function buildMockUsers() {
-  return NAMES.map((n, i) => {
-    const role = ROLES[i % ROLES.length];
-    const email = `${n.first.toLowerCase()}.${n.last.toLowerCase().replace(/[^a-z]/g, "")}@grace-bilingual.cm`;
-    return {
-      id: i + 1,
-      firstName: n.first,
-      lastName: n.last,
-      name: `${n.first} ${n.last}`,
-      email,
-      role,
-      class: role === "STUDENT" ? CLASSES[i % CLASSES.length] : null,
-      subjects: role === "TEACHER" ? SUBJECTS[i % SUBJECTS.length] : null,
-      status: i % 7 === 0 ? "inactive" : "active",
-      lastLogin: i % 3 === 0 ? "Today" : i % 3 === 1 ? "Yesterday" : `${i + 1} days ago`,
-      createdAt: `${["Sep", "Oct", "Nov", "Dec"][i % 4]} ${2024 + (i % 2)}`,
-      phone: `+237 6${String(70 + i).padStart(2, "0")} ${String(100 + i).slice(0, 3)} ${String(400 + i).slice(0, 3)}`,
-    };
-  });
-}
+import { getClasses } from "../../../core/api/classService";
+import { getSubjectTeacherAssignments, assignTeacherToSubject, removeTeacherAssignment } from "../../../core/api/subjectService";
+import { getUsers } from "../../../core/api/userManagementService";
 
 const PER_PAGE = 8;
 
@@ -92,7 +55,8 @@ export default function UsersListPage() {
   const isFr = i18n.language === "fr";
   const pc = primaryColor || "#085041";
 
-  const [users] = useState(buildMockUsers);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -100,23 +64,45 @@ export default function UsersListPage() {
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState(new Set());
 
+  // ── Load users from real API ──
+  const loadUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getUsers();
+      const list = data?.users || [];
+      setUsers(list.map((u) => ({
+        id: u.id,
+        firstName: u.firstName || "",
+        lastName: u.lastName || "",
+        name: `${u.firstName || ""} ${u.lastName || ""}`.trim(),
+        email: u.email || "",
+        role: u.roles?.[0]?.code || (u.role || "USER"),
+        status: u.isActive !== false ? "active" : "inactive",
+        lastLogin: u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : "—",
+        phone: u.phone || "—",
+      })));
+    } catch { /* silent */ }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadUsers(); }, [loadUsers]);
+
   // ── Teacher assignment modal ──
   const [assignTeacher, setAssignTeacher] = useState(null);
   const [classes, setClasses] = useState([]);
   const [teacherAssignments, setTeacherAssignments] = useState([]);
   const [loadingClasses, setLoadingClasses] = useState(false);
 
-  const openAssignModal = (teacher) => {
+  const openAssignModal = async (teacher) => {
     setAssignTeacher(teacher);
     setLoadingClasses(true);
-    Promise.all([
-      fetch(`${MOCK_API}/classes`).then((r) => r.json()),
-      fetch(`${MOCK_API}/teacherAssignments`).then((r) => r.json()),
-    ]).then(([cls, asgns]) => {
-      setClasses(cls || []);
-      setTeacherAssignments(asgns || []);
-      setLoadingClasses(false);
-    }).catch(() => setLoadingClasses(false));
+    try {
+      const clsData = await getClasses();
+      const asgnData = await getSubjectTeacherAssignments();
+      setClasses(clsData?.classes || clsData || []);
+      setTeacherAssignments(asgnData || []);
+    } catch { /* ignore */ }
+    setLoadingClasses(false);
   };
 
   const closeAssignModal = () => {
@@ -141,23 +127,18 @@ export default function UsersListPage() {
 
     if (existing) {
       // Remove
-      await fetch(`${MOCK_API}/teacherAssignments/${existing.id}`, {
-        method: "DELETE",
-      });
-      setTeacherAssignments((prev) => prev.filter((a) => a.id !== existing.id));
+      try {
+        await removeTeacherAssignment(existing.id);
+        setTeacherAssignments((prev) => prev.filter((a) => a.id !== existing.id));
+      } catch { /* ignore */ }
     } else {
       // Add
-      const maxId = teacherAssignments.reduce((max, a) => Math.max(max, a.id || 0), 0);
-      const res = await fetch(`${MOCK_API}/teacherAssignments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teacherId: assignTeacher.id, classId }),
-      });
-      if (res.ok) {
-        const saved = await res.json();
+      try {
+        const saved = await assignTeacherToSubject({ teacherId: String(assignTeacher.id), classId });
         setTeacherAssignments((prev) => [...prev, saved]);
-      } else {
-        setTeacherAssignments((prev) => [...prev, { id: maxId + 1, teacherId: assignTeacher.id, classId }]);
+      } catch {
+        // Fallback for UI responsiveness
+        setTeacherAssignments((prev) => [...prev, { id: Date.now(), teacherId: assignTeacher.id, classId }]);
       }
     }
   };

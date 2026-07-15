@@ -5,8 +5,7 @@ import { useAuth } from "../../../core/hooks/useAuth";
 import { YearContext } from "../../../core/context/YearContext";
 import { useTheme } from "../../../core/hooks/useTheme";
 import YearSelector from "../../../components/ui/YearSelector";
-
-const MOCK_API = "http://localhost:3001";
+import { getClasses } from "../../../core/api/classService";
 import {
   FiBookOpen,
   FiPlus,
@@ -370,9 +369,8 @@ export default function ClassesChildrenSection() {
   const loadClasses = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${MOCK_API}/classes`);
-      const data = await res.json();
-      setClasses(Array.isArray(data) ? data : []);
+      const data = await getClasses();
+      setClasses(data?.classes || []);
     } catch (err) {
       console.error("Error loading classes:", err);
       setClasses([]);

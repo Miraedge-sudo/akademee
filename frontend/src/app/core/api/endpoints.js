@@ -212,6 +212,18 @@ export const API_ENDPOINTS = {
     RECENT_ACTIVITIES: "/api/dashboard/activities",
     REVENUE: "/api/dashboard/revenue",
   },
+
+  // V1 API (sekouh backend)
+  V1: {
+    PERIODES: "/api/v1/periodes",
+    SEQUENCES: "/api/v1/sequences",
+    SEQUENCE: (id) => `/api/v1/sequences/${id}`,
+    SEQUENCES_BY_PERIODE: (periodeId) => `/api/v1/sequences/periode/${periodeId}`,
+    SEQUENCE_OPEN: (id) => `/api/v1/sequences/${id}/open`,
+    SEQUENCE_CLOSE: (id) => `/api/v1/sequences/${id}/close`,
+    SEQUENCE_LOCK: (id) => `/api/v1/sequences/${id}/lock`,
+    SEQUENCE_UNLOCK: (id) => `/api/v1/sequences/${id}/unlock`,
+  },
 };
 
 export default API_ENDPOINTS;

@@ -17,8 +17,31 @@ import {
   FiLoader,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
+import { getClassById, updateClass, deleteClass } from "../../../core/api/classService";
+import { getStudents } from "../../../core/api/studentService";
+import { getUsers } from "../../../core/api/userManagementService";
+import { getSubjectTeacherAssignments } from "../../../core/api/subjectService";
 
-const MOCK_API = "http://localhost:3001";
+// ── Static levels & series (will move to backend later) ──
+const EDUCATION_LEVELS = [
+  { id: 1, name: "Form 1" }, { id: 2, name: "Form 2" },
+  { id: 3, name: "Form 3" }, { id: 4, name: "Form 4" },
+  { id: 5, name: "Form 5" }, { id: 6, name: "Lower 6th" },
+  { id: 7, name: "Upper 6th" },
+  { id: 8, name: "6ème" }, { id: 9, name: "5ème" },
+  { id: 10, name: "4ème" }, { id: 11, name: "3ème" },
+  { id: 12, name: "Seconde" }, { id: 13, name: "Première" },
+  { id: 14, name: "Terminale" },
+];
+
+const EDUCATION_SERIES = [
+  { id: 1, name: "General" }, { id: 2, name: "Science" },
+  { id: 3, name: "Arts" }, { id: 4, name: "Commercial" },
+  { id: 5, name: "A4" }, { id: 6, name: "B" },
+  { id: 7, name: "C" }, { id: 8, name: "D" },
+  { id: 9, name: "E" }, { id: 10, name: "F1" },
+  { id: 11, name: "F2" }, { id: 12, name: "G" },
+];
 
 function hexToRgba(hex, alpha = 1) {
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -89,49 +112,45 @@ export default function ClassDetailPage() {
   const [editForm, setEditForm] = useState({ name: "", levelId: "", seriesId: "", capacity: 40, classTeacherId: "" });
   const [isEditing, setIsEditing] = useState(false);
 
-  // ── Load data from mock server ──
+  // ── Load data from real API ──
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const [classRes, levelsRes, seriesRes, teachersRes, studentsRes, assignRes] = await Promise.all([
-          fetch(`${MOCK_API}/classes/${id}`),
-          fetch(`${MOCK_API}/systemLevels`),
-          fetch(`${MOCK_API}/systemSeries`),
-          fetch(`${MOCK_API}/teachers`),
-          fetch(`${MOCK_API}/students`),
-          fetch(`${MOCK_API}/teacherAssignments`),
+        const [classData, studentsData, teachersData, assignmentsData] = await Promise.all([
+          getClassById(id),
+          getStudents(),
+          getUsers({ role: "TEACHER" }),
+          getSubjectTeacherAssignments(),
         ]);
 
-        if (!classRes.ok) { setError("NOT_FOUND"); setLoading(false); return; }
-
-        const classData = await classRes.json();
-        const levelsData = await levelsRes.json();
-        const seriesData = await seriesRes.json();
-        const teachersData = await teachersRes.json();
-        const studentsData = await studentsRes.json();
-        const assignmentsData = await assignRes.json();
+        if (!classData) { setError("NOT_FOUND"); setLoading(false); return; }
 
         setCls(classData);
-        setLevels(Array.isArray(levelsData) ? levelsData : []);
-        setSeries(Array.isArray(seriesData) ? seriesData : []);
-        setTeachers(Array.isArray(teachersData) ? teachersData : []);
+        setLevels(EDUCATION_LEVELS);
+        setSeries(EDUCATION_SERIES);
 
-        // Filter students by classId
-        const classStudents = Array.isArray(studentsData)
-          ? studentsData.filter((s) => s.classId === classData.id)
-          : [];
+        // Handle students — might be array or { students: [...] }
+        let allStudents = Array.isArray(studentsData) ? studentsData : (studentsData?.students || []);
+        // Filter students by classId OR className (fallback)
+        const classStudents = allStudents.filter((s) =>
+          s.classId === classData.id ||
+          s.classId === id ||
+          (s.className && classData.name && s.className === classData.name)
+        );
         setStudents(classStudents);
 
-        // Find teachers assigned to this class
-        const classAssignments = Array.isArray(assignmentsData)
-          ? assignmentsData.filter((a) => a.classId === classData.id)
-          : [];
+        // Handle teachers — might be array or { users: [...] }
+        let allTeachers = Array.isArray(teachersData) ? teachersData : (teachersData?.users || []);
+        setTeachers(allTeachers);
+
+        // Handle assignments — might be array or { data: [...] }
+        let allAssignments = Array.isArray(assignmentsData) ? assignmentsData : (assignmentsData?.data || []);
+        // Filter assignments for this class
+        const classAssignments = allAssignments.filter((a) => a.classId === classData.id || a.classId === id);
         const assignedTeacherIds = classAssignments.map((a) => a.teacherId);
-        const classTeachers = Array.isArray(teachersData)
-          ? teachersData.filter((t) => assignedTeacherIds.includes(t.id))
-          : [];
+        const classTeachers = allTeachers.filter((t) => assignedTeacherIds.includes(t.id));
 
         // Set classTeacherId from first assignment or from class data
         const classTeacher = classTeachers[0] || null;
@@ -172,14 +191,9 @@ export default function ClassDetailPage() {
         levelId: editForm.levelId ? Number(editForm.levelId) : null,
         seriesId: editForm.seriesId ? Number(editForm.seriesId) : null,
         capacity: editForm.capacity,
-        classTeacherId: editForm.classTeacherId ? Number(editForm.classTeacherId) : null,
+        classTeacherId: editForm.classTeacherId || null,
       };
-      const res = await fetch(`${MOCK_API}/classes/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const updated = await res.json();
+      const updated = await updateClass(id, payload);
       setCls((prev) => ({ ...prev, ...updated }));
       setIsEditing(false);
       toast.success(isFr ? "Modifications enregistrées" : "Changes saved");
@@ -194,7 +208,7 @@ export default function ClassDetailPage() {
   const handleDelete = async () => {
     if (!window.confirm(isFr ? "Supprimer cette classe ? Cette action est irréversible." : "Delete this class? This action cannot be undone.")) return;
     try {
-      await fetch(`${MOCK_API}/classes/${id}`, { method: "DELETE" });
+      await deleteClass(id);
       toast.success(isFr ? "Classe supprimée" : "Class deleted");
       navigate("/dashboard/classes");
     } catch {
@@ -470,6 +484,28 @@ export default function ClassDetailPage() {
                         {series.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
                     </div>
+                  </div>
+                  {/* Class Teacher */}
+                  <div>
+                    <label className={labelClass}>
+                      {isFr ? "Professeur titulaire" : "Class teacher"}
+                      <span className="text-surface-300 font-normal ml-1">({isFr ? "optionnel" : "optional"})</span>
+                    </label>
+                    <select
+                      value={editForm.classTeacherId}
+                      onChange={(e) => setEditForm((f) => ({ ...f, classTeacherId: e.target.value }))}
+                      className={inputClass}
+                    >
+                      <option value="">
+                        {isFr ? "Aucun professeur titulaire" : "No class teacher"}
+                      </option>
+                      {teachers.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.firstName} {t.lastName}
+                          {t.email ? ` — ${t.email}` : ""}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="flex gap-3 pt-2">
                     <button onClick={() => { setIsEditing(false); setEditForm({ name: cls.name, levelId: cls.levelId?.toString() || "", seriesId: cls.seriesId?.toString() || "", capacity: cls.capacity || 40, classTeacherId: cls.classTeacherId?.toString() || "" }); }}

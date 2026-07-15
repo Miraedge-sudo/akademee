@@ -30,6 +30,9 @@ import {
   FiLoader,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
+import { createUser } from "../../../core/api/userManagementService";
+import { getClasses } from "../../../core/api/classService";
+import { getSubjects } from "../../../core/api/subjectService";
 
 // ── Role Configuration ──────────────────────────────────
 const ROLES_CONFIG = {
@@ -89,19 +92,7 @@ const ROLES_CONFIG = {
   },
 };
 
-const ALL_SUBJECTS = [
-  "Mathematics", "English Language", "French", "Physics", "Chemistry",
-  "Biology", "History", "Geography", "Computer Science", "Economics",
-  "Literature in English", "Religious Studies", "Physical Education",
-  "Philosophy", "Citizenship", "ICT",
-];
 
-const AVAILABLE_CLASSES = [
-  "Form 1A", "Form 1B", "Form 2A", "Form 2B", "Form 3A", "Form 3B",
-  "Form 4A", "Form 5A", "Lower 6th Science", "Lower 6th Arts",
-  "Upper 6th Science", "Upper 6th Arts",
-  "6ème A", "5ème A", "4ème A", "3ème A", "2nde A", "1ère D", "Tle D",
-];
 
 // ── Helpers ─────────────────────────────────────────────
 function hexToRgb(hex) {
@@ -299,30 +290,47 @@ function PhotoUpload({ photo, onPhotoChange, onPhotoRemove }) {
 }
 
 // ── Subject Chips ──
-function SubjectChips({ selected, onToggle }) {
+function SubjectChips({ subjects = [], selected, onToggle }) {
+  if (subjects.length === 0) {
+    return (
+      <div className="flex flex-wrap gap-1.5 mt-2">
+        <span className="text-xs text-surface-400 italic">No subjects available — create subjects first</span>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-wrap gap-1.5 mt-2">
-      {ALL_SUBJECTS.map((s) => (
-        <button
-          key={s}
-          type="button"
-          onClick={() => onToggle(s)}
-          className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-all 
-            duration-180 select-none ${
-            selected.has(s)
-              ? "!border-primary-600 bg-primary-50 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100"
-              : "border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-500 dark:text-surface-400 hover:border-surface-300 hover:scale-105"
-          }`}
-        >
-          {s}
-        </button>
-      ))}
+      {subjects.map((s) => {
+        const name = s.name || s;
+        return (
+          <button
+            key={s.id || name}
+            type="button"
+            onClick={() => onToggle(name)}
+            className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-all 
+              duration-180 select-none ${
+              selected.has(name)
+                ? "!border-primary-600 bg-primary-50 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100"
+                : "border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-500 dark:text-surface-400 hover:border-surface-300 hover:scale-105"
+            }`}
+          >
+            {name}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
 // ── Class Tags ──
-function ClassTags({ selected, onAdd, onRemove }) {
+function ClassTags({ classes = [], selected, onAdd, onRemove }) {
+  if (classes.length === 0) {
+    return (
+      <div>
+        <span className="text-xs text-surface-400 italic">No classes available — create classes first</span>
+      </div>
+    );
+  }
   return (
     <div>
       <div className="relative">
@@ -340,11 +348,14 @@ function ClassTags({ selected, onAdd, onRemove }) {
           style={{ backgroundImage: `url("${SELECT_ARROW}")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
         >
           <option value="">+ Add a class</option>
-          {AVAILABLE_CLASSES.map((c) => (
-            <option key={c} value={c} disabled={selected.has(c)}>
-              {c} {selected.has(c) ? "(added)" : ""}
-            </option>
-          ))}
+          {classes.map((c) => {
+            const name = c.name || c;
+            return (
+              <option key={c.id || name} value={name} disabled={selected.has(name)}>
+                {name} {selected.has(name) ? "(added)" : ""}
+              </option>
+            );
+          })}
         </select>
       </div>
       <div className="flex flex-wrap gap-1.5 mt-2 min-h-[28px]">
@@ -483,6 +494,8 @@ export default function CreateUserPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPassword2, setShowPassword2] = useState(false);
   const [errors, setErrors] = useState({});
+  const [allClasses, setAllClasses] = useState([]);
+  const [allSubjects, setAllSubjects] = useState([]);
 
   const [formData, setFormData] = useState({
     firstName: "", lastName: "", gender: "", dob: "", phone: "", email: "",
@@ -493,6 +506,22 @@ export default function CreateUserPage() {
     feeAmount: "", feeDeadline: "",
     inviteEmail: "", inviteName: "",
   });
+
+  // ── Load real classes & subjects from API ──
+  useEffect(() => {
+    getClasses({ limit: 200 })
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data?.classes || [];
+        setAllClasses(list);
+      })
+      .catch(() => {});
+    getSubjects({ limit: 200 })
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data?.subjects || [];
+        setAllSubjects(list);
+      })
+      .catch(() => {});
+  }, []);
 
   // ── Pre-fill role from URL ?role=... ──
   useEffect(() => {
@@ -570,11 +599,19 @@ export default function CreateUserPage() {
 
     setSubmitting(true);
     try {
-      await new Promise((r) => setTimeout(r, 1800));
+      await createUser({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        phone: formData.phone?.trim() || undefined,
+        roleCode: selectedRole,
+      });
       setShowSuccess(true);
       toast.success(isFr ? "Utilisateur créé avec succès !" : "User created successfully!");
     } catch (err) {
-      toast.error(err?.message || (isFr ? "Erreur lors de la création" : "Error creating user"));
+      const apiMsg = err?.response?.data?.message || err?.message;
+      toast.error(apiMsg || (isFr ? "Erreur lors de la création" : "Error creating user"));
     } finally {
       setSubmitting(false);
     }
@@ -633,6 +670,7 @@ export default function CreateUserPage() {
                 Subjects to teach
               </label>
               <SubjectChips
+                subjects={allSubjects}
                 selected={selectedSubjects}
                 onToggle={(s) => {
                   setSelectedSubjects((prev) => {
@@ -648,6 +686,7 @@ export default function CreateUserPage() {
                 Assigned classes
               </label>
               <ClassTags
+                classes={allClasses}
                 selected={selectedClasses}
                 onAdd={(c) => setSelectedClasses((prev) => new Set(prev).add(c))}
                 onRemove={(c) => setSelectedClasses((prev) => {
@@ -672,9 +711,14 @@ export default function CreateUserPage() {
                 placeholder="Select class"
                 required
               >
-                {AVAILABLE_CLASSES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
+                {allClasses.length === 0 ? (
+                  <option value="" disabled>No classes available</option>
+                ) : (
+                  allClasses.map((c) => {
+                    const name = c.name || c;
+                    return <option key={c.id || name} value={name}>{name}</option>;
+                  })
+                )}
               </SelectField>
               <FieldInput
                 placeholder="Auto-generated if empty"

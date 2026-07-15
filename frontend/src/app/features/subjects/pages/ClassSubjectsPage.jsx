@@ -35,6 +35,7 @@ export default function ClassSubjectsPage() {
 
   // Add subject state
   const [addingSubjectId, setAddingSubjectId] = useState("");
+  const [addingCoeff, setAddingCoeff] = useState(1);
   const [adding, setAdding] = useState(false);
 
   // Removing state
@@ -110,9 +111,11 @@ export default function ClassSubjectsPage() {
       await assignSubjectToClass({
         classId: selectedClassId,
         subjectId: addingSubjectId,
+        coefficient: addingCoeff,
       });
       toast.success(lang === "fr" ? "Matière assignée" : "Subject assigned");
       setAddingSubjectId("");
+      setAddingCoeff(1);
       loadAssigned(selectedClassId);
     } catch (err) {
       const msg =
@@ -324,33 +327,64 @@ export default function ClassSubjectsPage() {
 
                 {/* Add subject */}
                 {unassignedSubjects.length > 0 && (
-                  <div className="flex items-end gap-3 pt-4 border-t border-surface-100 dark:border-surface-700">
-                    <div className="flex-1">
-                      <Select
-                        label={
-                          lang === "fr"
-                            ? "Ajouter une matière"
-                            : "Add a subject"
-                        }
-                        value={addingSubjectId}
-                        onChange={(e) => setAddingSubjectId(e.target.value)}
-                        options={subjectOptions}
-                        placeholder={
-                          lang === "fr"
-                            ? "Choisir une matière..."
-                            : "Choose a subject..."
-                        }
-                      />
+                  <div className="space-y-3 pt-4 border-t border-surface-100 dark:border-surface-700">
+                    <div className="flex items-end gap-3">
+                      <div className="flex-1">
+                        <Select
+                          label={
+                            lang === "fr"
+                              ? "Ajouter une matière"
+                              : "Add a subject"
+                          }
+                          value={addingSubjectId}
+                          onChange={(e) => { setAddingSubjectId(e.target.value); }}
+                          options={subjectOptions}
+                          placeholder={
+                            lang === "fr"
+                              ? "Choisir une matière..."
+                              : "Choose a subject..."
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[12.5px] font-bold text-surface-600 dark:text-surface-300 mb-1.5">
+                          {lang === "fr" ? "Coeff." : "Coeff."}
+                        </label>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setAddingCoeff(Math.max(1, addingCoeff - 1))}
+                            className="w-8 h-10 rounded-lg border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center text-surface-600 hover:bg-surface-50 transition-colors"
+                          >
+                            −
+                          </button>
+                          <span className="w-10 text-center font-extrabold text-base text-surface-800 dark:text-surface-100">
+                            {addingCoeff}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setAddingCoeff(Math.min(10, addingCoeff + 1))}
+                            className="w-8 h-10 rounded-lg border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center text-surface-600 hover:bg-surface-50 transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                      <Button
+                        variant="primary"
+                        icon={<FiPlus className="w-4 h-4" />}
+                        disabled={!addingSubjectId}
+                        loading={adding}
+                        onClick={handleAddSubject}
+                      >
+                        {lang === "fr" ? "Assigner" : "Assign"}
+                      </Button>
                     </div>
-                    <Button
-                      variant="primary"
-                      icon={<FiPlus className="w-4 h-4" />}
-                      disabled={!addingSubjectId}
-                      loading={adding}
-                      onClick={handleAddSubject}
-                    >
-                      {lang === "fr" ? "Assigner" : "Assign"}
-                    </Button>
+                    <p className="text-[11px] text-surface-400">
+                      {lang === "fr"
+                        ? "Le coefficient sera appliqué uniquement à cette classe."
+                        : "The coefficient applies only to this class."}
+                    </p>
                   </div>
                 )}
 

@@ -2,17 +2,9 @@ const sql = require('../config/database');
 
 class DashboardService {
   async getStats(schoolId, { academicYearId } = {}) {
-    const [studentCount] = academicYearId
-      ? await sql`
-          SELECT COUNT(DISTINCT e.student_id)::int AS total
-          FROM enrollments e
-          JOIN classes c ON e.class_id = c.class_id
-          WHERE c.school_id = ${schoolId} AND c.academic_year_id = ${academicYearId}
-            AND e.status = 'active'
-        `
-      : await sql`
-          SELECT COUNT(*)::int AS total FROM students WHERE school_id = ${schoolId} AND status = 'active'
-        `;
+    const [studentCount] = await sql`
+      SELECT COUNT(*)::int AS total FROM students WHERE school_id = ${schoolId} AND status = 'active'
+    `;
 
     const [teacherCount] = academicYearId
       ? await sql`
@@ -40,6 +32,10 @@ class DashboardService {
       WHERE school_id = ${schoolId} AND status = 'completed'
     `;
 
+    const [userCount] = await sql`
+      SELECT COUNT(*)::int AS total FROM users WHERE school_id = ${schoolId} AND is_active = true
+    `;
+
     const [activeYear] = await sql`
       SELECT COUNT(*)::int AS total FROM academic_years WHERE school_id = ${schoolId} AND is_current = true
     `;
@@ -47,6 +43,7 @@ class DashboardService {
     return {
       totalStudents: studentCount.total,
       totalTeachers: teacherCount.total,
+      totalUsers: userCount.total,
       totalClasses: classCount.total,
       totalRevenue: Number(revenueData.total),
       activeAcademicYear: activeYear.total > 0,

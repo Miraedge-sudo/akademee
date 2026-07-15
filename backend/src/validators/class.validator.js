@@ -8,7 +8,7 @@ const createClassValidator = [
 const updateClassValidator = [
   body('name').optional().trim().notEmpty(),
   body('capacity').optional().isInt({ min: 1, max: 500 }),
-  body('classTeacherId').optional().isInt(),
+  body('classTeacherId').optional().isUUID(),
 ];
 
 module.exports = { createClassValidator, updateClassValidator };
