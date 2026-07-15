@@ -1,15 +1,19 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../core/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import ThemeLangToggles from './ThemeLangToggles';
 import { ROLES } from '../core/constants/roles';
 import { buildSubdomainUrl } from '../core/utils/subdomainHelper';
+import { YearContext } from '../core/context/YearContext';
 
 export default function Navbar({ onToggleSidebar }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { t } = useTranslation('common');
+  const { selectedYearId, years } = useContext(YearContext);
+
+  const activeYear = years.find((y) => y.id === selectedYearId) || years.find((y) => y.isCurrent) || null;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -84,6 +88,22 @@ export default function Navbar({ onToggleSidebar }) {
         <span className="text-sm font-medium text-surface-800 dark:text-surface-100">
           {t('navbar.dashboard')}
         </span>
+
+        {/* Active academic year badge */}
+        {activeYear && (
+          <>
+            <span className="text-surface-300">/</span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-700/50">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              {activeYear.name}
+            </span>
+          </>
+        )}
       </div>
 
       {/* Search (desktop only) */}

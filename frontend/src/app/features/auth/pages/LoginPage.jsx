@@ -5,6 +5,7 @@ import { useAuth } from "../../../core/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
 import { getSubdomain, buildSubdomainUrl } from "../../../core/utils/subdomainHelper";
+import LoginLeftPanel from "../../../components/features/LoginLeftPanel";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -55,43 +56,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen lg:flex bg-[#ccef8d] lg:p-6 xl:p-9">
-      <aside className="hidden lg:flex lg:w-[48%] flex-shrink-0 rounded-[32px] bg-[#e3f4b9] p-8 xl:p-12">
-        <div className="flex flex-col w-full h-full rounded-[22px] border-[10px] border-[#1d463b] bg-[#d0eb8b] p-9 xl:p-12">
-          <div className="w-11 h-11 rounded-xl bg-[#1d463b] flex items-center justify-center">
-            <FiHome className="w-5 h-5 text-[#dff3a7]" />
-          </div>
+    <div className="min-h-screen lg:flex bg-white">
+      <LoginLeftPanel />
 
-          <div className="my-auto max-w-sm">
-            <p className="text-[11px] font-bold tracking-[.16em] uppercase text-[#52794d]">Akademee</p>
-            <h1 className="mt-4 font-display text-4xl xl:text-5xl leading-[1.06] font-medium text-[#1d463b]">
-              Votre école,
-              <span className="block">bien organisée.</span>
-            </h1>
-            <p className="mt-5 text-[15px] leading-7 text-[#496c54]">
-              Accédez à votre espace pour gérer les élèves, les équipes et la vie de votre campus.
-            </p>
-
-            <div className="mt-8 grid grid-cols-3 gap-2">
-              {["Élèves", "Notes", "Frais"].map((item) => (
-                <div key={item} className="rounded-lg bg-[#f3fad9] border border-[#b9d981] px-3 py-3 text-center text-xs font-semibold text-[#315a49]">
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-end gap-2 h-20" aria-hidden="true">
-            <div className="w-10 h-10 rounded-t-lg bg-[#77a962]" />
-            <div className="w-16 h-16 rounded-t-lg bg-[#4f8b63]" />
-            <div className="w-12 h-12 rounded-t-lg bg-[#315f50]" />
-            <div className="w-20 h-20 rounded-t-lg bg-[#1d463b]" />
-            <div className="flex-1 h-px mb-1 bg-[#8bb970]" />
-          </div>
-        </div>
-      </aside>
-
-      <div className="flex-1 flex flex-col min-h-screen lg:min-h-0 bg-white lg:rounded-r-[32px]">
+      <div className="flex-1 flex flex-col min-h-screen lg:min-h-0 bg-white">
         <div className="flex items-center justify-between px-6 lg:px-10 py-5 border-b border-surface-100">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-teal-900 flex items-center justify-center">

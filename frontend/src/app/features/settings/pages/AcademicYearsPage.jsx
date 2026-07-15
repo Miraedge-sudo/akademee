@@ -584,21 +584,56 @@ export default function AcademicYearsPage() {
   const [entering, setEntering] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // Load years from mock server
+  // ── localStorage key for persisting user-created years ──
+  const LS_KEY = "akademee_academic_years";
+
+  // Remove React components before serializing (icon, footerActionIcon are functions)
+  const toSerializable = (yearsArray) =>
+    yearsArray.map(({ icon, footerActionIcon, ...rest }) => rest);
+
+  // ── Load years from mock server + localStorage fallback ──
   useEffect(() => {
     fetch(`${MOCK_API}/academicYears`)
       .then((res) => res.json())
       .then((data) => {
-        const transformed = (data || []).map(transformYear);
-        setYears(transformed);
+        const serverYears = (data || []).map(transformYear);
+        // Restore user-created years from localStorage
+        let localYears = [];
+        try {
+          const raw = localStorage.getItem(LS_KEY);
+          if (raw) localYears = JSON.parse(raw).map(transformYear);
+        } catch { /* ignore */ }
+
+        // Merge: local-only (user-created) years at top, then server years without duplicates
+        const serverIds = new Set(serverYears.map((y) => y.id));
+        const onlyLocal = localYears.filter((ly) => !serverIds.has(ly.id));
+        const merged = [...onlyLocal, ...serverYears];
+        setYears(merged);
         setLoading(false);
       })
       .catch(() => {
+        // Server unreachable — load from localStorage only
+        let localYears = [];
+        try {
+          const raw = localStorage.getItem(LS_KEY);
+          if (raw) localYears = JSON.parse(raw).map(transformYear);
+        } catch { /* ignore */ }
+        setYears(localYears);
         setLoading(false);
       });
   }, []);
 
   const selectedYear = years.find((y) => y.id === selectedId);
+
+  // Persist only serializable data (strip React components) whenever years change
+  useEffect(() => {
+    if (years.length > 0) {
+      try {
+        const serializable = toSerializable(years);
+        localStorage.setItem(LS_KEY, JSON.stringify(serializable));
+      } catch { /* quota / serialization error — silent */ }
+    }
+  }, [years]);
 
   // Group years by status
   const { activeYears, archiveYears, futureYears } = useMemo(() => {
@@ -725,34 +760,58 @@ export default function AcademicYearsPage() {
         </button>
       </nav>
 
-      {/* ── Hero ── */}
+      {/* ── Hero — redesigned: clean, minimal, animated ── */}
       <div
-        className="relative overflow-hidden px-6 sm:px-10 py-[52px] text-center"
+        className="relative overflow-hidden px-6 sm:px-10 py-8 sm:py-10"
         style={{
-          background: `linear-gradient(135deg, ${pc} 0%, #0a6650 60%, #0F6E56 100%)`,
-          backgroundSize: "200% 200%",
+          background: `linear-gradient(135deg, ${pc} 0%, #0a6650 70%, #085041 100%)`,
         }}
       >
-        <div className="absolute inset-0 opacity-[0.025] pointer-events-none"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}
+        {/* Subtle floating orb decorations */}
+        <div
+          className="absolute -top-12 -right-12 w-48 h-48 rounded-full opacity-20 animate-float-slow-orb pointer-events-none"
+          style={{ background: `radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 70%)` }}
         />
-        <div className="relative z-10 max-w-[600px] mx-auto">
-          <div className="text-xs font-semibold tracking-[2px] uppercase text-white/55 mb-2.5">
-            {isFr ? "Bon retour" : "Welcome back"}
+        <div
+          className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full opacity-10 animate-float-reverse pointer-events-none"
+          style={{ background: `radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)` }}
+        />
+
+        <div className="relative z-10 max-w-[640px]">
+          {/* Breadcrumb-like label with entrance animation */}
+          <div className="flex items-center gap-2 mb-3 animate-fadeInUp">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[1.2px] uppercase text-white/50 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+              {isFr ? "Année académique" : "Academic Year"}
+            </span>
           </div>
-          <h1 className="font-display text-[clamp(24px,4vw,38px)] font-bold text-white leading-tight mb-2">
+
+          {/* Title with staggered animation */}
+          <h1 className="font-display text-[clamp(20px,3vw,30px)] font-bold text-white leading-tight mb-1.5 animate-fadeInUp animate-fadeInUp-delay-1">
             {isFr
-              ? "Sélectionnez l'année scolaire<br/>dans laquelle vous voulez travailler"
-              : "Select the academic year<br/>you want to work in"}
+              ? "Sélectionnez votre année de travail"
+              : "Select your working year"}
           </h1>
-          <p className="text-sm text-white/60 leading-relaxed">
+
+          <p className="text-sm text-white/60 leading-relaxed max-w-[480px] animate-fadeInUp animate-fadeInUp-delay-2">
             {isFr
-              ? "Choisissez l'année en cours pour gérer votre école, ou sélectionnez une année passée pour consulter les archives."
-              : "Choose the current year to manage your school, or select a past year to consult archived data."}
+              ? "Choisissez l'année en cours, explorez les archives ou préparez une nouvelle année scolaire."
+              : "Choose the current year, explore archives, or set up a new academic year."}
           </p>
         </div>
+
+        {/* Animated year count badge */}
+        {!loading && (
+          <div
+            className="absolute right-6 sm:right-10 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-2.5 animate-fadeInUp animate-fadeInUp-delay-3"
+          >
+            <FiCalendar className="w-4 h-4 text-white/60" />
+            <span className="text-lg font-bold text-white/90">{years.length}</span>
+            <span className="text-[11px] text-white/50 font-medium">
+              {isFr ? "années" : "years"}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ── Main Content ── */}

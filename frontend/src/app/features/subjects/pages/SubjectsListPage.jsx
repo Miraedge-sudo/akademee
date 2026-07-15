@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import {
@@ -7,6 +7,7 @@ import {
   updateSubject,
   deleteSubject,
 } from "../../../core/api/subjectService";
+import { YearContext } from "../../../core/context/YearContext";
 import { FiBook } from "react-icons/fi";
 import {
   Button,
@@ -25,6 +26,8 @@ export default function SubjectsListPage() {
   const { t, i18n } = useTranslation("common");
   const lang = i18n.language === "fr" ? "fr" : "en";
 
+  const { selectedYearId } = useContext(YearContext);
+
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,10 +45,11 @@ export default function SubjectsListPage() {
   const [deleting, setDeleting] = useState(false);
 
   const loadSubjects = useCallback(async () => {
+    const filter = selectedYearId ? { academicYearId: selectedYearId } : {};
     try {
       setLoading(true);
       setError(null);
-      const data = await getSubjects();
+      const data = await getSubjects({ ...filter });
       setSubjects(Array.isArray(data) ? data : data?.subjects || data?.rows || []);
     } catch (err) {
       console.error("Failed to load subjects:", err);
@@ -53,7 +57,7 @@ export default function SubjectsListPage() {
     } finally {
       setLoading(false);
     }
-  }, [lang]);
+  }, [lang, selectedYearId]);
 
   useEffect(() => {
     loadSubjects();

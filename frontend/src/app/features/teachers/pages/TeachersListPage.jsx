@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import {
@@ -7,6 +7,7 @@ import {
   updateUser,
   deleteUser,
 } from "../../../core/api/userManagementService";
+import { YearContext } from "../../../core/context/YearContext";
 import { getRoles } from "../../../core/api/roleService";
 import { FiUsers } from "react-icons/fi";
 import {
@@ -26,6 +27,8 @@ import {
 export default function TeachersListPage() {
   const { t, i18n } = useTranslation("common");
   const lang = i18n.language === "fr" ? "fr" : "en";
+
+  const { selectedYearId } = useContext(YearContext);
 
   const [teachers, setTeachers] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -52,10 +55,11 @@ export default function TeachersListPage() {
   const [deleting, setDeleting] = useState(false);
 
   const loadTeachers = useCallback(async () => {
+    const filter = selectedYearId ? { academicYearId: selectedYearId } : {};
     try {
       setLoading(true);
       setError(null);
-      const data = await getUsers({ role: "teacher", limit: 100 });
+      const data = await getUsers({ ...filter, role: "teacher", limit: 100 });
       setTeachers(Array.isArray(data) ? data : data?.users || data?.rows || []);
     } catch (err) {
       console.error("Failed to load teachers:", err);
@@ -67,7 +71,7 @@ export default function TeachersListPage() {
     } finally {
       setLoading(false);
     }
-  }, [lang]);
+  }, [lang, yearFilter]);
 
   const loadRoles = useCallback(async () => {
     try {

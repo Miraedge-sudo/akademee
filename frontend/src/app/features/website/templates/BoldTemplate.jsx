@@ -18,6 +18,7 @@ import { useScrollProgress, ScrollProgressBar, BackToTopButton } from "../hooks/
 import { useCursorGlow } from "../hooks/useCursorGlow.jsx";
 import { useActiveSection } from "../hooks/useActiveSection.jsx";
 import { useWebsiteLanguage, LanguageToggle } from "../hooks/useWebsiteLanguage.jsx";
+import { useWebsiteTheme } from "../hooks/useWebsiteTheme.jsx";
 import { TRANSLATIONS } from "../hooks/websiteTranslations.js";
 
 const PATH_TO_ICON = {
@@ -210,6 +211,7 @@ export default function BoldTemplate({ school }) {
   const { CursorGlow } = useCursorGlow(pc, 500, 0.04);
   const activeSection = useActiveSection(SECTIONS, 100);
   const { lang, isBilingual, toggleLang, t } = useWebsiteLanguage(s.educationalSystems);
+  const { isDark, ThemeToggle } = useWebsiteTheme("dark");
 
   // Scroll handler
   useEffect(() => {
@@ -280,8 +282,7 @@ export default function BoldTemplate({ school }) {
     { icon: PATHS.clock, label: t(TRANSLATIONS.contact.hours), value: "Mon – Fri · 7:30 AM – 4:00 PM" },
   ];
 
-  return (
-    <div className="font-sans antialiased bg-[#080808] text-white overflow-x-hidden relative" style={{ "--p": pc, "--pl": pcl, "--pm": pcm }}>
+  return (      <div className={`font-sans antialiased overflow-x-hidden relative ${!isDark ? "website-light" : ""}`} style={{ "--p": pc, "--pl": pcl, "--pm": pcm, background: isDark ? "#080808" : "#f5f5f0", color: isDark ? "white" : "#1a1a1a" }}>
       <CursorGlow />
       <ScrollProgressBar progress={progress} color={pc} />
       <style>{`
@@ -302,6 +303,25 @@ export default function BoldTemplate({ school }) {
         @keyframes bold-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
         @keyframes bold-border-draw { to { stroke-dashoffset: 0; } }
         @keyframes bold-scale-in { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+
+        /* ─── Light mode overrides ─── */
+        .website-light { --bg-card: #ffffff; --bg-section: #f0efea; --text-primary: #1a1a1a; --text-secondary: #6a6a6a; --border-light: #e0ddd8; }
+        .website-light .bold-glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(24px); border-color: rgba(0,0,0,0.06); }
+        .website-light .text-white\/40 { color: rgba(26,26,26,0.4) !important; }
+        .website-light .text-white\/50 { color: rgba(26,26,26,0.5) !important; }
+        .website-light .text-white\/45 { color: rgba(26,26,26,0.45) !important; }
+        .website-light .text-white\/70 { color: rgba(26,26,26,0.7) !important; }
+        .website-light .text-white\/80 { color: rgba(26,26,26,0.8) !important; }
+        .website-light .text-white\/30 { color: rgba(26,26,26,0.3) !important; }
+        .website-light .border-white\/10 { border-color: rgba(0,0,0,0.08) !important; }
+        .website-light .border-white\/5 { border-color: rgba(0,0,0,0.05) !important; }
+        .website-light .bg-white\/5 { background: rgba(0,0,0,0.03) !important; }
+        .website-light .bg-white\/10 { background: rgba(0,0,0,0.05) !important; }
+        .website-light .hover\:bg-white\/5:hover { background: rgba(0,0,0,0.03) !important; }
+        .website-light .hover\:bg-white\/10:hover { background: rgba(0,0,0,0.05) !important; }
+        .website-light .hover\:text-white:hover { color: #1a1a1a !important; }
+        .website-light .bg-\[\#0d0d0d\] { background: #f0efea !important; }
+        .website-light .bg-\[\#030303\] { background: #e8e7e2 !important; }
         
         /* ─── Tab active indicator ─── */
         .tab-active { background: var(--p) !important; color: #fff !important; }
@@ -355,6 +375,7 @@ export default function BoldTemplate({ school }) {
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-2.5">
+              <ThemeToggle variant="dark" />
               <LanguageToggle lang={lang} isBilingual={isBilingual} onToggle={toggleLang} variant="dark" />
               <a href="/login" className="h-9 px-4 rounded-xl text-[13px] font-medium text-white/70 no-underline inline-flex items-center transition-colors hover:text-white">
                 {t(TRANSLATIONS.nav.signIn)}
