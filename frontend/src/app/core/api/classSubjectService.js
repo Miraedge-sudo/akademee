@@ -28,14 +28,14 @@ export async function assignSubjectToClass(data) {
 }
 
 /**
- * Bulk assign subjects to a class
+ * Bulk assign subjects to a class (with optional coefficients)
  * @param {string} classId
- * @param {string[]} subjectIds
+ * @param {Array<{subjectId: string, coefficient?: number}>} subjects - array of subjects with optional coefficient
  */
-export async function bulkAssignSubjects(classId, subjectIds) {
+export async function bulkAssignSubjects(classId, subjects) {
   const response = await api.post(`${API_ENDPOINTS.ACADEMIC.CLASS_SUBJECTS}/bulk`, {
     classId,
-    subjectIds,
+    subjectIds: subjects,
   });
   return response.data.data;
 }

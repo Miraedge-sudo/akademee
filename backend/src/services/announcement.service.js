@@ -70,6 +70,19 @@ class AnnouncementService {
     };
   }
 
+  async listPublishedBySubdomain(subdomain) {
+    const rows = await sql`
+      SELECT a.*, CONCAT(u.first_name, ' ', u.last_name) AS creator_name
+      FROM announcements a
+      JOIN schools s ON a.school_id = s.school_id
+      LEFT JOIN users u ON a.created_by = u.user_id
+      WHERE s.subdomain = ${subdomain}
+        AND a.is_published = true
+      ORDER BY a.published_at DESC, a.created_at DESC
+    `;
+    return rows.map(r => this.formatAnnouncement(r));
+  }
+
   async update(schoolId, announcementId, data) {
     await this.getById(schoolId, announcementId);
     const { title, content, targetAudience, priority, isPublished } = data;
@@ -97,6 +110,18 @@ class AnnouncementService {
     await this.getById(schoolId, announcementId);
     await sql`DELETE FROM announcements WHERE announcement_id = ${announcementId} AND school_id = ${schoolId}`;
     return { deleted: true, announcementId };
+  }
+
+  async listPublished(schoolId) {
+    const rows = await sql`
+      SELECT a.*, CONCAT(u.first_name, ' ', u.last_name) AS creator_name
+      FROM announcements a
+      LEFT JOIN users u ON a.created_by = u.user_id
+      WHERE a.school_id = ${schoolId}
+        AND a.is_published = true
+      ORDER BY a.published_at DESC, a.created_at DESC
+    `;
+    return rows.map(r => this.formatAnnouncement(r));
   }
 
   async publish(schoolId, announcementId) {

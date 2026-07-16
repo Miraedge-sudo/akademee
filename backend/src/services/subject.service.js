@@ -11,11 +11,24 @@ class SubjectService {
     };
   }
 
+  /**
+   * Auto-generate a short code from the subject name.
+   * Takes the first 3 characters of the name.
+   * If the name has only 2 characters, takes those 2.
+   */
+  generateCode(name) {
+    if (!name || !name.trim()) return null;
+    const trimmed = name.trim();
+    const length = Math.min(trimmed.length, 3);
+    return trimmed.slice(0, length).toUpperCase();
+  }
+
   async create(schoolId, data) {
     const { name, code, coefficient } = data;
+    const finalCode = code || this.generateCode(name);
     const rows = await sql`
-      INSERT INTO subjects (school_id, name, coefficient)
-      VALUES (${schoolId}, ${name}, ${coefficient || 1})
+      INSERT INTO subjects (school_id, name, code, coefficient)
+      VALUES (${schoolId}, ${name}, ${finalCode}, ${coefficient || 1})
       RETURNING *
     `;
     return this.formatSubject(rows[0]);
@@ -52,10 +65,11 @@ class SubjectService {
 
   async update(schoolId, subjectId, data) {
     await this.getById(schoolId, subjectId);
-    const { name, coefficient } = data;
+    const { name, code, coefficient } = data;
     const rows = await sql`
       UPDATE subjects SET
         name = COALESCE(${name || null}, name),
+        code = COALESCE(${code || null}, code),
         coefficient = COALESCE(${coefficient ?? null}, coefficient)
       WHERE subject_id = ${subjectId} AND school_id = ${schoolId}
       RETURNING *

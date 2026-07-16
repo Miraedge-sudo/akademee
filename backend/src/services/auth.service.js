@@ -61,6 +61,7 @@ class AuthService {
         subdomain: school.subdomain,
         schoolName: school.name,
         roles: roleCodes,
+        onboardingCompleted: school.onboarding_completed ?? false,
       },
       token: accessToken,
       refreshToken,
@@ -81,7 +82,7 @@ class AuthService {
     const user = users[0];
 
     const schools = await sql`
-      SELECT s.school_id, s.name, s.subdomain, s.is_active, wt.template_code
+      SELECT s.school_id, s.name, s.subdomain, s.is_active, s.onboarding_completed, wt.template_code
       FROM schools s
       LEFT JOIN website_templates wt ON s.website_template_id = wt.template_id
       WHERE s.school_id = ${user.school_id}
@@ -112,6 +113,7 @@ class AuthService {
         subdomain: school.subdomain,
         schoolName: school.name,
         roles: roleCodes,
+        onboardingCompleted: school.onboarding_completed ?? false,
       },
     };
   }
@@ -172,7 +174,7 @@ class AuthService {
     `;
 
     const schoolWithTemplate = await sql`
-      SELECT s.school_id, s.name, s.subdomain, s.is_active, wt.template_code
+      SELECT s.school_id, s.name, s.subdomain, s.is_active, s.onboarding_completed, wt.template_code
       FROM schools s
       LEFT JOIN website_templates wt ON s.website_template_id = wt.template_id
       WHERE s.school_id = ${school.school_id}

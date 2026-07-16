@@ -8,6 +8,10 @@ const { createAnnouncementValidator, updateAnnouncementValidator } = require('..
 const { standardLimiter } = require('../middleware/rateLimiter.middleware');
 
 const router = express.Router();
+
+// Public route — no auth required, used by website templates
+router.get('/public', announcementController.listPublic);
+
 router.use(authMiddleware);
 
 router.get('/', announcementController.list);

@@ -165,6 +165,17 @@ export const API_ENDPOINTS = {
     REPORT: "/api/payments/report/generate",
   },
 
+  // Enrollments
+  ENROLLMENTS: {
+    LIST: "/api/enrollments",
+    CREATE: "/api/enrollments",
+    GET: (id) => `/api/enrollments/${id}`,
+    BY_STUDENT: (studentId) => `/api/enrollments/student/${studentId}`,
+    UPDATE_STATUS: (id) => `/api/enrollments/${id}/status`,
+    TRANSFER: (id) => `/api/enrollments/${id}/transfer`,
+    DELETE: (id) => `/api/enrollments/${id}`,
+  },
+
   // Fee Calculations
   FEE_CALCULATIONS: {
     RECALCULATE: "/api/fee-calculations/recalculate",
@@ -192,6 +203,15 @@ export const API_ENDPOINTS = {
     SEND: "/api/notifications/send",
   },
 
+  // Class-Teachers
+  CLASS_TEACHERS: {
+    LIST_ALL: "/api/classes/teachers",
+    BY_CLASS: (classId) => `/api/classes/${classId}/teachers`,
+    ASSIGN: (classId) => `/api/classes/${classId}/teachers`,
+    REMOVE: (classId, teacherId) => `/api/classes/${classId}/teachers/${teacherId}`,
+    AVAILABLE: "/api/classes/teachers/available",
+  },
+
   // Announcements
   ANNOUNCEMENTS: {
     LIST: "/api/announcements",
@@ -201,6 +221,7 @@ export const API_ENDPOINTS = {
     DELETE: (id) => `/api/announcements/${id}`,
     PUBLISH: (id) => `/api/announcements/${id}/publish`,
     UNPUBLISH: (id) => `/api/announcements/${id}/unpublish`,
+    PUBLIC: "/api/announcements/public",
   },
 
   // Config

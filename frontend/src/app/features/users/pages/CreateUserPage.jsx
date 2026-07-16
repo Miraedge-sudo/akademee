@@ -30,7 +30,8 @@ import {
   FiLoader,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
-import { createUser } from "../../../core/api/userManagementService";
+import { createUser, getUserById, updateUser } from "../../../core/api/userManagementService";
+import { createStudent } from "../../../core/api/studentService";
 import { getClasses } from "../../../core/api/classService";
 import { getSubjects } from "../../../core/api/subjectService";
 
@@ -486,6 +487,8 @@ export default function CreateUserPage() {
   // ── State ──
   const [selectedRole, setSelectedRole] = useState("TEACHER");
   const [mode, setMode] = useState("create");
+  const [editId, setEditId] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(false);
   const [photo, setPhoto] = useState(null);
   const [selectedSubjects, setSelectedSubjects] = useState(new Set());
   const [selectedClasses, setSelectedClasses] = useState(new Set());
@@ -496,6 +499,7 @@ export default function CreateUserPage() {
   const [errors, setErrors] = useState({});
   const [allClasses, setAllClasses] = useState([]);
   const [allSubjects, setAllSubjects] = useState([]);
+  const isEditing = editId !== null;
 
   const [formData, setFormData] = useState({
     firstName: "", lastName: "", gender: "", dob: "", phone: "", email: "",
@@ -523,11 +527,38 @@ export default function CreateUserPage() {
       .catch(() => {});
   }, []);
 
-  // ── Pre-fill role from URL ?role=... ──
+  // ── Detect edit mode + pre-fill role from URL ──
   useEffect(() => {
+    const editParam = searchParams.get("edit");
     const roleParam = searchParams.get("role");
+
     if (roleParam && ROLES_CONFIG[roleParam.toUpperCase()]) {
       setSelectedRole(roleParam.toUpperCase());
+    }
+
+    if (editParam) {
+      setEditId(editParam);
+      setMode("create"); // keep "create" as the form mode, but we change behavior
+      setLoadingUser(true);
+      getUserById(editParam)
+        .then((user) => {
+          if (!user) return;
+          const roleCode = user.roles?.[0]?.code || user.role || "TEACHER";
+          setSelectedRole(roleCode);
+          setFormData((prev) => ({
+            ...prev,
+            firstName: user.firstName || "",
+            lastName: user.lastName || "",
+            email: user.email || "",
+            phone: user.phone || "",
+            gender: user.gender || "",
+          }));
+        })
+        .catch((err) => {
+          toast.error(isFr ? "Erreur de chargement de l'utilisateur" : "Failed to load user");
+          console.error("Failed to load user for edit:", err);
+        })
+        .finally(() => setLoadingUser(false));
     }
   }, [searchParams]);
 
@@ -584,7 +615,7 @@ export default function CreateUserPage() {
     if (!formData.firstName?.trim()) errs.firstName = "First name is required";
     if (!formData.lastName?.trim()) errs.lastName = "Last name is required";
     if (!formData.email?.trim()?.includes("@")) errs.email = "A valid email is required";
-    if (!formData.password || formData.password.length < 8) errs.password = "Password must be at least 8 characters";
+    if (!isEditing && (!formData.password || formData.password.length < 8)) errs.password = "Password must be at least 8 characters";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -599,19 +630,57 @@ export default function CreateUserPage() {
 
     setSubmitting(true);
     try {
-      await createUser({
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        email: formData.email.trim(),
-        password: formData.password,
-        phone: formData.phone?.trim() || undefined,
-        roleCode: selectedRole,
-      });
+      if (isEditing) {
+        // ── UPDATE mode ──
+        if (selectedRole === "STUDENT") {
+          await updateUser(editId, {
+            firstName: formData.firstName.trim(),
+            lastName: formData.lastName.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone?.trim() || undefined,
+          });
+        } else {
+          await updateUser(editId, {
+            firstName: formData.firstName.trim(),
+            lastName: formData.lastName.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone?.trim() || undefined,
+          });
+        }
+        toast.success(isFr ? "Utilisateur mis à jour ✨" : "User updated ✨");
+        navigate("/dashboard/users");
+        return;
+      }
+
+      // ── CREATE mode ──
+      if (selectedRole === "STUDENT") {
+        const selectedClass = allClasses.find((c) => c.id === formData.studentClass);
+        await createStudent({
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone?.trim() || undefined,
+          gender: formData.gender || 'male',
+          classId: formData.studentClass || null,
+          className: selectedClass?.name || formData.studentClass || null,
+          status: 'active',
+          feeStatus: 'pending',
+        });
+      } else {
+        await createUser({
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.email.trim(),
+          password: formData.password,
+          phone: formData.phone?.trim() || undefined,
+          roleCode: selectedRole,
+        });
+      }
       setShowSuccess(true);
       toast.success(isFr ? "Utilisateur créé avec succès !" : "User created successfully!");
     } catch (err) {
       const apiMsg = err?.response?.data?.message || err?.message;
-      toast.error(apiMsg || (isFr ? "Erreur lors de la création" : "Error creating user"));
+      toast.error(apiMsg || (isFr ? "Erreur" : "Error"));
     } finally {
       setSubmitting(false);
     }
@@ -644,6 +713,8 @@ export default function CreateUserPage() {
 
   // ── Dynamic sections ──
   const renderDynamicSections = () => {
+    // En mode édition, on n'affiche que les sections qui seront réellement sauvegardées
+    if (isEditing) return null;
     switch (selectedRole) {
       case "TEACHER":
         return (
@@ -716,7 +787,7 @@ export default function CreateUserPage() {
                 ) : (
                   allClasses.map((c) => {
                     const name = c.name || c;
-                    return <option key={c.id || name} value={name}>{name}</option>;
+                    return <option key={c.id || name} value={c.id}>{name}</option>;
                   })
                 )}
               </SelectField>
@@ -921,79 +992,101 @@ export default function CreateUserPage() {
           </Link>
           <FiChevronRight className="w-3 h-3" />
           <span className="text-surface-800 dark:text-surface-100 font-medium">
-            {isFr ? "Ajouter un utilisateur" : "Add user"}
+            {isEditing
+              ? isFr ? "Modifier l'utilisateur" : "Edit user"
+              : isFr ? "Ajouter un utilisateur" : "Add user"}
           </span>
         </nav>
 
         <div className="flex items-center gap-2.5 mb-1">
           <div className="w-1 h-[26px] rounded-full" style={{ backgroundColor: pc }} />
           <h1 className="font-display text-2xl font-bold text-surface-800 dark:text-surface-100">
-            {isFr ? "Ajouter un nouvel utilisateur" : "Add a new user"}
+            {isEditing
+              ? isFr ? "Modifier l'utilisateur" : "Edit user"
+              : isFr ? "Ajouter un nouvel utilisateur" : "Add a new user"}
           </h1>
         </div>
         <p className="text-sm text-surface-400 ml-3.5">
-          {isFr
-            ? "Créez un compte ou envoyez une invitation par email. Le rôle détermine les accès."
-            : "Create an account or send an email invitation. The role determines what the user can access."}
+          {isEditing
+            ? isFr
+              ? "Modifiez les informations de l'utilisateur. Les changements sont appliqués immédiatement."
+              : "Edit user information. Changes are applied immediately."
+            : isFr
+              ? "Créez un compte ou envoyez une invitation par email. Le rôle détermine les accès."
+              : "Create an account or send an email invitation. The role determines what the user can access."}
         </p>
       </header>
 
       {/* ── Two-column Layout ── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-[22px] items-start">
         {/* ── Left: Form ── */}
-        <div>
-          {/* Mode Tabs */}
-          <div className="flex gap-0 bg-surface-50 dark:bg-surface-800 rounded-[10px] p-1 border border-surface-100 dark:border-surface-700 mb-6">
-            <button
-              type="button"
-              onClick={() => setMode("create")}
-              className={`flex-1 py-2 px-3 rounded-[8px] text-sm font-semibold cursor-pointer border-none
-                transition-all duration-200 flex items-center justify-center gap-1.5 ${
-                mode === "create"
-                  ? "bg-white dark:bg-surface-700 text-surface-800 dark:text-surface-100 shadow-sm"
-                  : "bg-transparent text-surface-400 hover:text-surface-600"
-              }`}
-            >
-              <FiUserPlus className="w-3.5 h-3.5" />
-              {isFr ? "Créer manuellement" : "Create manually"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("invite")}
-              className={`flex-1 py-2 px-3 rounded-[8px] text-sm font-semibold cursor-pointer border-none
-                transition-all duration-200 flex items-center justify-center gap-1.5 ${
-                mode === "invite"
-                  ? "bg-white dark:bg-surface-700 text-surface-800 dark:text-surface-100 shadow-sm"
-                  : "bg-transparent text-surface-400 hover:text-surface-600"
-              }`}
-            >
-              <FiMail className="w-3.5 h-3.5" />
-              {isFr ? "Inviter par email" : "Invite by email"}
-            </button>
-          </div>
+        <div>            {!isEditing && (
+              <div className="flex gap-0 bg-surface-50 dark:bg-surface-800 rounded-[10px] p-1 border border-surface-100 dark:border-surface-700 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setMode("create")}
+                  className={`flex-1 py-2 px-3 rounded-[8px] text-sm font-semibold cursor-pointer border-none
+                    transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                    mode === "create"
+                      ? "bg-white dark:bg-surface-700 text-surface-800 dark:text-surface-100 shadow-sm"
+                      : "bg-transparent text-surface-400 hover:text-surface-600"
+                  }`}
+                >
+                  <FiUserPlus className="w-3.5 h-3.5" />
+                  {isFr ? "Créer manuellement" : "Create manually"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("invite")}
+                  className={`flex-1 py-2 px-3 rounded-[8px] text-sm font-semibold cursor-pointer border-none
+                    transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                    mode === "invite"
+                      ? "bg-white dark:bg-surface-700 text-surface-800 dark:text-surface-100 shadow-sm"
+                      : "bg-transparent text-surface-400 hover:text-surface-600"
+                  }`}
+                >
+                  <FiMail className="w-3.5 h-3.5" />
+                  {isFr ? "Inviter par email" : "Invite by email"}
+                </button>
+              </div>
+            )}
 
           {/* ── Shared card (role selector + form content) ── */}
           <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm p-6 sm:p-7">
             {/* Role selector — visible in BOTH modes (as in original HTML design) */}
-            <SectionTitle>{isFr ? "Sélectionner le rôle" : "Select role"}</SectionTitle>
-            <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 mb-7">
-              {Object.entries(ROLES_CONFIG).map(([role, config]) => (
-                <RoleCard
-                  key={role}
-                  role={role}
-                  config={config}
-                  selected={selectedRole === role}
-                  onClick={() => {
-                    setSelectedRole(role);
-                    setSelectedSubjects(new Set());
-                    setSelectedClasses(new Set());
-                  }}
-                />
-              ))}
-            </div>
+            {!isEditing && (
+              <SectionTitle>{isFr ? "Sélectionner le rôle" : "Select role"}</SectionTitle>
+            )}
+            {!isEditing && (
+              <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 mb-7">
+                {Object.entries(ROLES_CONFIG).map(([role, config]) => (
+                  <RoleCard
+                    key={role}
+                    role={role}
+                    config={config}
+                    selected={selectedRole === role}
+                    onClick={() => {
+                      setSelectedRole(role);
+                      setSelectedSubjects(new Set());
+                      setSelectedClasses(new Set());
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* ── Loading state for edit mode ── */}
+            {loadingUser && (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
+                  <div className="w-10 h-10 rounded-full border-3 border-surface-200 dark:border-surface-600 border-t-primary-600 animate-spin mx-auto mb-4" />
+                  <p className="text-sm text-surface-400">{isFr ? "Chargement..." : "Loading..."}</p>
+                </div>
+              </div>
+            )}
 
             {/* ── CREATE FORM ── */}
-            {mode === "create" && (
+            {mode === "create" && !loadingUser && (
               <>
                 {/* Photo */}
                 <SectionTitle>{isFr ? "Photo de profil" : "Profile photo"}</SectionTitle>
@@ -1034,8 +1127,8 @@ export default function CreateUserPage() {
                     onChange={(e) => updateField("gender", e.target.value)}
                     placeholder="Select gender"
                   >
-                    <option>Female</option>
-                    <option>Male</option>
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
                   </SelectField>
                   <FieldInput
                     label={isFr ? "Date de naissance" : "Date of birth"}
@@ -1057,7 +1150,7 @@ export default function CreateUserPage() {
                 <SectionDivider />
 
                 {/* Account */}
-                <SectionTitle>{isFr ? "Compte et accès" : "Account & access"}</SectionTitle>
+                <SectionTitle>{isEditing ? isFr ? "Informations du compte" : "Account information" : isFr ? "Compte et accès" : "Account & access"}</SectionTitle>
                 <FieldInput
                   label="Email"
                   required
@@ -1069,57 +1162,62 @@ export default function CreateUserPage() {
                   hint={isFr ? "Utilisé pour se connecter à Akademee." : "Used to log in to Akademee."}
                   error={errors.email}
                 />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[12.5px] font-bold text-surface-600 dark:text-surface-300 mb-1.5">
-                      {isFr ? "Mot de passe" : "Password"} <span className="text-primary-600">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Min. 8 characters"
-                        value={formData.password}
-                        onChange={(e) => updateField("password", e.target.value)}
-                        className={`${inputClass} pr-11 ${errors.password ? "!border-red-500" : ""}`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
-                      >
-                        {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
-                      </button>
+                {!isEditing && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[12.5px] font-bold text-surface-600 dark:text-surface-300 mb-1.5">
+                        {isFr ? "Mot de passe" : "Password"} <span className="text-primary-600">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Min. 8 characters"
+                          value={formData.password}
+                          onChange={(e) => updateField("password", e.target.value)}
+                          className={`${inputClass} pr-11 ${errors.password ? "!border-red-500" : ""}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
+                        >
+                          {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
                     </div>
-                    {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-[12.5px] font-bold text-surface-600 dark:text-surface-300 mb-1.5">
-                      {isFr ? "Confirmer le mot de passe" : "Confirm password"} <span className="text-primary-600">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword2 ? "text" : "password"}
-                        placeholder="Repeat password"
-                        value={formData.password2}
-                        onChange={(e) => updateField("password2", e.target.value)}
-                        className={`${inputClass} pr-11`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword2(!showPassword2)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
-                      >
-                        {showPassword2 ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
-                      </button>
+                    <div>
+                      <label className="block text-[12.5px] font-bold text-surface-600 dark:text-surface-300 mb-1.5">
+                        {isFr ? "Confirmer le mot de passe" : "Confirm password"} <span className="text-primary-600">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword2 ? "text" : "password"}
+                          placeholder="Repeat password"
+                          value={formData.password2}
+                          onChange={(e) => updateField("password2", e.target.value)}
+                          className={`${inputClass} pr-11`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword2(!showPassword2)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
+                        >
+                          {showPassword2 ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Dynamic sections */}
                 {renderDynamicSections()}
 
-                <SectionDivider />
-                <SectionTitle>{isFr ? "Notes additionnelles" : "Additional notes"}</SectionTitle>
+                {!isEditing && (
+                  <>
+
+                  </>
+                )}
                 <div className="mb-[18px]">
                   <textarea
                     rows="3"
@@ -1158,8 +1256,10 @@ export default function CreateUserPage() {
                       <FiUserPlus className="w-4 h-4" />
                     )}
                     {submitting
-                      ? (isFr ? "Création..." : "Creating...")
-                      : (isFr ? "Créer l'utilisateur" : "Create user")}
+                      ? (isFr ? "Enregistrement..." : "Saving...")
+                      : isEditing
+                        ? (isFr ? "Enregistrer les modifications" : "Save changes")
+                        : (isFr ? "Créer l'utilisateur" : "Create user")}
                   </button>
                 </div>
               </>

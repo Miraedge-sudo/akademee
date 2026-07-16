@@ -36,18 +36,24 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Ne pas rediriger si on est déjà sur la page de login — le 401 y est attendu
+    // Ne pas rediriger si :
+    // - la requête est pour /auth/login (le 401 y est attendu)
+    // - la page courante est une page publique (login, register, site vitrine, etc.)
+    // - la requête n'a pas de token d'authentification (c'est une requête publique)
     if (error.response?.status === 401) {
       const isLoginRequest = error.config?.url?.includes("/auth/login");
-      const isPublicAuthPage = [
+      const isAuthMeRequest = error.config?.url?.includes("/auth/me");
+      const hasNoAuthHeader = !error.config?.headers?.Authorization;
+      const isPublicPage = [
         "/login",
         "/register",
         "/forgot-password",
         "/reset-password",
         "/verify-email",
+        "/site",
       ].includes(window.location.pathname);
 
-      if (!isLoginRequest && !isPublicAuthPage) {
+      if (!isLoginRequest && !isPublicPage && !(isAuthMeRequest && hasNoAuthHeader)) {
         localStorage.removeItem("token");
         setAccessToken(null);
         if (typeof window !== "undefined") {

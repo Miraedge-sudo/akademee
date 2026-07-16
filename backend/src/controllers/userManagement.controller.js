@@ -5,8 +5,8 @@ class UserManagementController {
   async list(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user.schoolId;
-      const { limit, offset, search, role } = req.query;
-      const result = await userManagementService.list(schoolId, { limit, offset, search, role });
+      const { limit, offset, search, role, includeInactive } = req.query;
+      const result = await userManagementService.list(schoolId, { limit, offset, search, role, includeInactive: includeInactive === 'true' });
       response.success(res, 'Users retrieved', result);
     } catch (error) { next(error); }
   }

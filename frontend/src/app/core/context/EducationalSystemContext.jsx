@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import api, { getAccessToken } from "../api/axios";
+import { API_ENDPOINTS } from "../api/endpoints";
 
 const EducationalSystemContext = createContext();
 
@@ -8,19 +10,27 @@ export const EducationalSystemProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Charger la configuration de l'école au montage
+  // Charger la configuration de l'école depuis le backend
   useEffect(() => {
     const fetchSchoolConfig = async () => {
+      // Si l'utilisateur n'est pas authentifié (pas de token), on saute l'appel API
+      // pour éviter que l'intercepteur axios 401 nous redirige vers /login
+      if (!getAccessToken()) {
+        setSchoolConfig({});
+        setSelectedSystems([]);
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:3000/school");
-        if (!response.ok) throw new Error("Failed to fetch school config");
-        const data = await response.json();
+        const response = await api.get(API_ENDPOINTS.SCHOOLS.ONBOARDING);
+        const data = response.data?.data || {};
         setSelectedSystems(data.educationalSystems || []);
         setSchoolConfig(data.systemConfigurations || {});
       } catch (err) {
-        setError(err.message);
-        console.error("Error loading school config:", err);
+        console.warn("EducationalSystem: could not load config from backend");
+        setSchoolConfig({});
       } finally {
         setLoading(false);
       }
@@ -34,19 +44,14 @@ export const EducationalSystemProvider = ({ children }) => {
     try {
       setSelectedSystems(systems);
 
-      // Mettre à jour le JSON server
-      const response = await fetch("http://localhost:3000/school", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ educationalSystems: systems }),
+      const response = await api.put(API_ENDPOINTS.SCHOOLS.ONBOARDING, {
+        educationalSystems: systems,
       });
 
-      if (!response.ok) throw new Error("Failed to update systems");
-
-      const data = await response.json();
+      const data = response.data?.data || {};
       setSchoolConfig(data.systemConfigurations || {});
     } catch (err) {
-      console.error("Error updating systems:", err);
+      console.warn("EducationalSystem: could not update systems on backend");
       setError(err.message);
     }
   };
@@ -57,7 +62,7 @@ export const EducationalSystemProvider = ({ children }) => {
       const updatedConfig = {
         ...schoolConfig,
         [systemId]: {
-          ...schoolConfig[systemId],
+          ...schoolConfig?.[systemId],
           ...config,
           isCustomized: true,
           customizedAt: new Date().toISOString(),
@@ -66,15 +71,11 @@ export const EducationalSystemProvider = ({ children }) => {
 
       setSchoolConfig(updatedConfig);
 
-      const response = await fetch("http://localhost:3000/school", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ systemConfigurations: updatedConfig }),
+      await api.put(API_ENDPOINTS.SCHOOLS.ONBOARDING, {
+        systemConfigurations: updatedConfig,
       });
-
-      if (!response.ok) throw new Error("Failed to update system config");
     } catch (err) {
-      console.error("Error updating system config:", err);
+      console.warn("EducationalSystem: could not update system config on backend");
       setError(err.message);
     }
   };
@@ -82,34 +83,25 @@ export const EducationalSystemProvider = ({ children }) => {
   // Réinitialiser un système à sa configuration par défaut
   const resetSystemToDefault = async (systemId) => {
     try {
-      // Récupérer la config par défaut
-      const response = await fetch(
-        `http://localhost:3000/educationalSystems/${systemId}`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch default config");
-      const systemData = await response.json();
-
-      const defaultConfig = systemData.defaultConfig;
+      if (!schoolConfig?.[systemId]) {
+        console.warn("No existing config to reset for", systemId);
+        return;
+      }
 
       const updatedConfig = {
         ...schoolConfig,
         [systemId]: {
-          ...defaultConfig,
           isCustomized: false,
         },
       };
 
       setSchoolConfig(updatedConfig);
 
-      const patchResponse = await fetch("http://localhost:3000/school", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ systemConfigurations: updatedConfig }),
+      await api.put(API_ENDPOINTS.SCHOOLS.ONBOARDING, {
+        systemConfigurations: updatedConfig,
       });
-
-      if (!patchResponse.ok) throw new Error("Failed to reset system config");
     } catch (err) {
-      console.error("Error resetting system config:", err);
+      console.warn("EducationalSystem: could not reset system config on backend");
       setError(err.message);
     }
   };
@@ -122,6 +114,7 @@ export const EducationalSystemProvider = ({ children }) => {
     updateSelectedSystems,
     updateSystemConfig,
     resetSystemToDefault,
+    systemsInitialized: !loading && schoolConfig !== null,
   };
 
   return (

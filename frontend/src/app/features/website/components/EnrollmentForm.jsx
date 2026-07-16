@@ -18,6 +18,7 @@ import { submitEnrolmentInquiry } from "../../../core/api/enrolmentService";
 export default function EnrollmentForm({
   variant = "light",
   primaryColor = "#085041",
+  isDark = false,
   className = "",
 }) {
   const lang = navigator.language?.startsWith("fr") ? "fr" : "en";
@@ -125,13 +126,13 @@ export default function EnrollmentForm({
     padding: "0.75rem 1rem",
     fontSize: "0.875rem",
     borderRadius: variant === "premium" ? "2px" : "0.75rem",
-    border: `1.5px solid ${variant === "dark" ? "rgba(255,255,255,0.12)" : "#d0ccc4"}`,
-    background: variant === "dark"
+    border: `1.5px solid ${variant === "dark" || isDark ? "rgba(255,255,255,0.12)" : "#d0ccc4"}`,
+    background: variant === "dark" || isDark
       ? "rgba(255,255,255,0.05)"
       : variant === "premium"
         ? "#fcfaf7"
         : "#fff",
-    color: variant === "dark" ? "#fff" : "#1a1a1a",
+    color: variant === "dark" || isDark ? "#fff" : "#1a1a1a",
     outline: "none",
     transition: "all 0.2s ease",
     boxSizing: "border-box",
@@ -142,7 +143,7 @@ export default function EnrollmentForm({
     fontSize: "0.75rem",
     fontWeight: 600,
     marginBottom: "0.375rem",
-    color: variant === "dark" ? "rgba(255,255,255,0.5)" : "#6a6a6a",
+    color: variant === "dark" || isDark ? "rgba(255,255,255,0.5)" : "#6a6a6a",
     letterSpacing: "0.5px",
     textTransform: "uppercase",
   };
@@ -162,13 +163,13 @@ export default function EnrollmentForm({
         </div>
         <h3
           className="text-xl font-semibold mb-2"
-          style={{ color: variant === "dark" ? "#fff" : "#1a1a1a" }}
+          style={{ color: variant === "dark" || isDark ? "#fff" : "#1a1a1a" }}
         >
           {isFr ? "Demande envoyée !" : "Application Submitted!"}
         </h3>
         <p
           className="text-sm leading-relaxed max-w-md mx-auto"
-          style={{ color: variant === "dark" ? "rgba(255,255,255,0.5)" : "#6a6a6a" }}
+          style={{ color: variant === "dark" || isDark ? "rgba(255,255,255,0.5)" : "#6a6a6a" }}
         >
           {isFr
             ? "Merci pour votre intérêt ! Notre équipe vous contactera dans les plus brefs délais pour discuter des prochaines étapes."
@@ -331,7 +332,7 @@ export default function EnrollmentForm({
               ...inputStyle,
               cursor: "pointer",
               appearance: "none",
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23${variant === "dark" ? "ffffff" : "1a1a1a"}40' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23${variant === "dark" || isDark ? "ffffff" : "1a1a1a"}40' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
               backgroundRepeat: "no-repeat",
               backgroundPosition: "right 0.75rem center",
               paddingRight: "2rem",
@@ -339,7 +340,7 @@ export default function EnrollmentForm({
           >
             {GRADES.map((g) => (
               <option key={g.value} value={g.value}
-                style={{ background: variant === "dark" ? "#1a1a1a" : "#fff", color: variant === "dark" ? "#fff" : "#1a1a1a" }}
+                style={{ background: variant === "dark" || isDark ? "#1a1a1a" : "#fff", color: variant === "dark" || isDark ? "#fff" : "#1a1a1a" }}
               >
                 {g.label}
               </option>
@@ -427,7 +428,7 @@ export default function EnrollmentForm({
 
       <p
         className="text-[11px] text-center mt-3"
-        style={{ color: variant === "dark" ? "rgba(255,255,255,0.25)" : "#aaa" }}
+        style={{ color: variant === "dark" || isDark ? "rgba(255,255,255,0.25)" : "#aaa" }}
       >
         {isFr
           ? "Nous respectons votre vie privée. Vos données ne seront pas partagées."

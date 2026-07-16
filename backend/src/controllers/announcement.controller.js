@@ -10,6 +10,17 @@ class AnnouncementController {
     } catch (error) { next(error); }
   }
 
+  async listPublic(req, res, next) {
+    try {
+      const subdomain = req.subdomain || req.query.subdomain;
+      if (!subdomain) {
+        return response.error(res, 'Subdomain is required', null, 400);
+      }
+      const result = await announcementService.listPublishedBySubdomain(subdomain);
+      response.success(res, 'Published announcements retrieved', result);
+    } catch (error) { next(error); }
+  }
+
   async list(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user?.schoolId;

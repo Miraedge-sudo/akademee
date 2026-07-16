@@ -17,7 +17,7 @@ class UserManagementService {
     };
   }
 
-  async list(schoolId, { limit = 50, offset = 0, search, role } = {}) {
+  async list(schoolId, { limit = 50, offset = 0, search, role, includeInactive = false } = {}) {
     limit = Math.min(Math.max(1, limit), 500);
     offset = Math.max(0, offset);
     const searchTerm = search ? `%${search.toLowerCase()}%` : null;
@@ -31,6 +31,7 @@ class UserManagementService {
       LEFT JOIN user_roles ur ON u.user_id = ur.user_id
       LEFT JOIN roles r ON ur.role_id = r.role_id
       WHERE u.school_id = ${schoolId}
+        ${!includeInactive ? sql`AND u.is_active = true` : sql``}
         ${searchTerm ? sql`AND (LOWER(u.first_name) LIKE ${searchTerm} OR LOWER(u.last_name) LIKE ${searchTerm} OR LOWER(u.email) LIKE ${searchTerm})` : sql``}
         ${role ? sql`AND r.role_code = ${role}` : sql``}
       GROUP BY u.user_id
@@ -40,6 +41,7 @@ class UserManagementService {
 
     const countRows = await sql`
       SELECT COUNT(*)::int AS total FROM users WHERE school_id = ${schoolId}
+        ${!includeInactive ? sql`AND is_active = true` : sql``}
     `;
 
     return {

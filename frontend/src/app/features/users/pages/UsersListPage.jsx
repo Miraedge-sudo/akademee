@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../core/hooks/useTheme";
-import {
+import toast from "react-hot-toast";import {
   FiPlus,
   FiUser,
   FiShield,
@@ -29,6 +29,7 @@ import {
   FiMoreVertical,
   FiBell,
   FiCheck,
+  FiLoader,
 } from "react-icons/fi";
 
 // ── Role config ──
@@ -44,8 +45,9 @@ const ROLE_META = {
 const ROLES = ["ADMIN", "TEACHER", "STUDENT", "ACCOUNTANT", "SECRETARY"];
 
 import { getClasses } from "../../../core/api/classService";
-import { getSubjectTeacherAssignments, assignTeacherToSubject, removeTeacherAssignment } from "../../../core/api/subjectService";
-import { getUsers } from "../../../core/api/userManagementService";
+import { getAllClassTeacherAssignments, assignClassTeacher, removeClassTeacher } from "../../../core/api/subjectService";
+import { getUsers, deleteUser } from "../../../core/api/userManagementService";
+import { getStudents } from "../../../core/api/studentService";
 
 const PER_PAGE = 8;
 
@@ -68,10 +70,22 @@ export default function UsersListPage() {
   const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getUsers();
-      const list = data?.users || [];
+      const [userData, studentData] = await Promise.all([
+        getUsers(),
+        getStudents({ limit: 500 }).catch(() => ({ students: [] })),
+      ]);
+      const list = userData?.users || [];
+      // Build a map of userId -> className for students
+      const studentMap = {};
+      const studentList = Array.isArray(studentData) ? studentData : (studentData?.students || []);
+      studentList.forEach((s) => {
+        if (s.className) {
+          studentMap[s.userId] = s.className;
+        }
+      });
       setUsers(list.map((u) => ({
         id: u.id,
+        userId: u.id,
         firstName: u.firstName || "",
         lastName: u.lastName || "",
         name: `${u.firstName || ""} ${u.lastName || ""}`.trim(),
@@ -80,12 +94,34 @@ export default function UsersListPage() {
         status: u.isActive !== false ? "active" : "inactive",
         lastLogin: u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : "—",
         phone: u.phone || "—",
+        class: studentMap[u.id] || "",
       })));
     } catch { /* silent */ }
     setLoading(false);
   }, []);
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
+
+  const navigate = useNavigate();
+
+  // ── Delete user state & handler ──
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteUser = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteUser(deleteTarget.id);
+      toast.success(isFr ? `Utilisateur ${deleteTarget.name} supprimé` : `User ${deleteTarget.name} deleted`);
+      setDeleteTarget(null);
+      loadUsers();
+    } catch (err) {
+      const msg = err?.response?.data?.message || (isFr ? "Erreur" : "Error");
+      toast.error(msg);
+    }
+    setDeleting(false);
+  };
 
   // ── Teacher assignment modal ──
   const [assignTeacher, setAssignTeacher] = useState(null);
@@ -97,10 +133,13 @@ export default function UsersListPage() {
     setAssignTeacher(teacher);
     setLoadingClasses(true);
     try {
-      const clsData = await getClasses();
-      const asgnData = await getSubjectTeacherAssignments();
+      const [clsData, asgnData] = await Promise.all([
+        getClasses(),
+        getAllClassTeacherAssignments().catch(() => []),
+      ]);
       setClasses(clsData?.classes || clsData || []);
-      setTeacherAssignments(asgnData || []);
+      const allAssignments = Array.isArray(asgnData) ? asgnData : (asgnData?.data || []);
+      setTeacherAssignments(allAssignments);
     } catch { /* ignore */ }
     setLoadingClasses(false);
   };
@@ -125,19 +164,19 @@ export default function UsersListPage() {
       (a) => a.teacherId === assignTeacher.id && a.classId === classId
     );
 
-    if (existing) {
-      // Remove
-      try {
-        await removeTeacherAssignment(existing.id);
+    try {
+      if (existing) {
+        await removeClassTeacher(classId, assignTeacher.id);
         setTeacherAssignments((prev) => prev.filter((a) => a.id !== existing.id));
-      } catch { /* ignore */ }
-    } else {
-      // Add
-      try {
-        const saved = await assignTeacherToSubject({ teacherId: String(assignTeacher.id), classId });
+      } else {
+        const saved = await assignClassTeacher(classId, { teacherId: assignTeacher.id });
         setTeacherAssignments((prev) => [...prev, saved]);
-      } catch {
-        // Fallback for UI responsiveness
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.message || (isFr ? "Erreur" : "Error");
+      toast.error(msg);
+      // Fallback for UI responsiveness
+      if (!existing) {
         setTeacherAssignments((prev) => [...prev, { id: Date.now(), teacherId: assignTeacher.id, classId }]);
       }
     }
@@ -384,21 +423,34 @@ export default function UsersListPage() {
                   <td className="px-3 py-3 text-right">
                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
+                        onClick={() => navigate(`/dashboard/users/new?edit=${u.id}&role=${u.role}`)}
                         className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-110 hover:border-surface-200 hover:shadow-sm transition-all"
                         title={isFr ? "Voir" : "View"}
                       >
                         <FiEye className="w-3 h-3 text-surface-400" />
                       </button>
-                      {u.role === "TEACHER" ? (
+                      {/* ── Role-specific actions ── */}
+                      {u.role === "TEACHER" && (
                         <button
                           onClick={() => openAssignModal(u)}
-                          className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-110 hover:border-teal-200 hover:bg-teal-50 hover:shadow-sm transition-all"
+                          className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-110 hover:border-blue-200 hover:bg-blue-50 hover:shadow-sm transition-all"
                           title={isFr ? "Assigner aux classes" : "Assign to classes"}
                         >
-                          <FiEdit2 className="w-3 h-3" style={{ color: "#085041" }} />
+                          <FiBookOpen className="w-3 h-3" style={{ color: "#3B82F6" }} />
                         </button>
-                      ) : (
+                      )}
+                      {u.role === "STUDENT" && (
                         <button
+                          onClick={() => navigate(`/dashboard/users/new?edit=${u.id}&role=${u.role}`)}
+                          className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-110 hover:border-purple-200 hover:bg-purple-50 hover:shadow-sm transition-all"
+                          title={isFr ? "Voir la fiche" : "View profile"}
+                        >
+                          <FiAward className="w-3 h-3" style={{ color: "#8B5CF6" }} />
+                        </button>
+                      )}
+                      {u.role !== "TEACHER" && u.role !== "STUDENT" && (
+                        <button
+                          onClick={() => navigate(`/dashboard/users/new?edit=${u.id}&role=${u.role}`)}
                           className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-110 hover:border-teal-200 hover:bg-teal-50 hover:shadow-sm transition-all"
                           title={isFr ? "Modifier" : "Edit"}
                         >
@@ -406,6 +458,7 @@ export default function UsersListPage() {
                         </button>
                       )}
                       <button
+                        onClick={() => setDeleteTarget(u)}
                         className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-110 hover:border-red-200 hover:bg-red-50 hover:shadow-sm transition-all"
                         title={isFr ? "Supprimer" : "Delete"}
                       >
@@ -726,6 +779,42 @@ export default function UsersListPage() {
 
       {/* ── Main content ── */}
       {view === "table" ? renderTableView() : renderCardsView()}
+
+      {/* ── Delete User Confirmation Modal ── */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDeleteTarget(null)} />
+          <div className="relative w-full max-w-[420px] bg-white dark:bg-surface-800 rounded-2xl shadow-2xl p-7">
+            <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-4">
+              <FiTrash2 className="w-6 h-6 text-red-400" />
+            </div>
+            <h3 className="font-display text-lg font-bold text-surface-800 dark:text-surface-100 text-center mb-2">
+              {isFr ? "Confirmer la suppression" : "Confirm deletion"}
+            </h3>
+            <p className="text-sm text-surface-500 text-center mb-7 leading-relaxed">
+              {isFr
+                ? `Êtes-vous sûr de vouloir supprimer définitivement "${deleteTarget.name}" ? Cette action est irréversible.`
+                : `Are you sure you want to permanently delete "${deleteTarget.name}"? This action cannot be undone.`}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 h-11 rounded-xl border-2 border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-semibold hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
+              >
+                {isFr ? "Annuler" : "Cancel"}
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                disabled={deleting}
+                className="flex-1 h-11 rounded-xl bg-red-500 text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-55 hover:bg-red-600 hover:-translate-y-0.5 active:translate-y-0 transition-all"
+              >
+                {deleting && <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
+                {isFr ? "Supprimer" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Teacher Class Assignment Modal ── */}
       {assignTeacher && (

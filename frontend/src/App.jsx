@@ -42,11 +42,14 @@ const CreateClassPage = lazy(() => import("./app/features/classes/pages/CreateCl
 const ClassDetailPage = lazy(() => import("./app/features/classes/pages/ClassDetailPage"));
 const ProgramsSection = lazy(() => import("./app/features/programs/pages/ProgramsSection"));
 const AdmissionsSection = lazy(() => import("./app/features/admissions/pages/AdmissionsSection"));
+const StudentsListPage = lazy(() => import("./app/features/students/pages/StudentsListPage"));
+const StudentProfilePage = lazy(() => import("./app/features/students/pages/StudentProfilePage"));
 const FacultiesPage = lazy(() => import("./app/features/faculties/pages/FacultiesPage"));
 const DepartmentsPage = lazy(() => import("./app/features/faculties/pages/DepartmentsPage"));
 const ResearchPage = lazy(() => import("./app/features/research/pages/ResearchPage"));
 const PublicationsPage = lazy(() => import("./app/features/research/pages/PublicationsPage"));
 const PublicWebsitePage = lazy(() => import("./app/features/website/pages/PublicWebsitePage"));
+const AnnouncementsAdminPage = lazy(() => import("./app/features/announcements/pages/AnnouncementsAdminPage"));
 
 // ── Lazy helpers ──
 const page = (Component) => (
@@ -199,6 +202,10 @@ function App() {
             <Route path="research" element={dashboardPage(ResearchPage)} />
             <Route path="publications" element={dashboardPage(PublicationsPage)} />
 
+            {/* Students */}
+            <Route path="students" element={dashboardPage(StudentsListPage)} />
+            <Route path="students/:id" element={dashboardPage(StudentProfilePage)} />
+
             {/* Admissions */}
             <Route path="admissions/applications" element={dashboardPage(AdmissionsSection)} />
             <Route path="admissions/enrollment" element={dashboardPage(AdmissionsSection)} />
@@ -206,6 +213,7 @@ function App() {
             {/* Settings */}
             <Route path="settings" element={dashboardPage(SettingsPage)} />
             <Route path="website" element={dashboardPage(WebsiteSettingsPage)} />
+            <Route path="announcements" element={dashboardPage(AnnouncementsAdminPage)} />
             <Route path="academic-years" element={dashboardPage(AcademicYearsPage)} />
             <Route path="system-configuration" element={dashboardPage(SystemConfigurationPage)} />
 

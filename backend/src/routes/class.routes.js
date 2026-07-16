@@ -4,6 +4,7 @@
 
 const express = require('express');
 const classController = require('../controllers/class.controller');
+const classTeacherController = require('../controllers/classTeacher.controller');
 const enrollmentController = require('../controllers/enrollment.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 const roleMiddleware = require('../middleware/role.middleware');
@@ -67,6 +68,44 @@ router.delete(
   roleMiddleware(['admin']),
   auditMiddleware('REMOVE_STUDENT', 'enrollments'),
   classController.removeStudent
+);
+
+// ── Class-Teacher assignments ──
+// ⚠️ Static routes MUST come BEFORE parameterized routes
+
+router.get(
+  '/teachers/available',
+  authMiddleware,
+  classTeacherController.availableTeachers
+);
+
+router.get(
+  '/teachers',
+  authMiddleware,
+  classTeacherController.listBySchool
+);
+
+router.get(
+  '/:id/teachers',
+  authMiddleware,
+  classTeacherController.listByClass
+);
+
+router.post(
+  '/:id/teachers',
+  authMiddleware,
+  roleMiddleware(['admin']),
+  standardLimiter,
+  auditMiddleware('ASSIGN_TEACHER', 'class_teachers'),
+  classTeacherController.assign
+);
+
+router.delete(
+  '/:id/teachers/:teacherId',
+  authMiddleware,
+  roleMiddleware(['admin']),
+  auditMiddleware('REMOVE_TEACHER', 'class_teachers'),
+  classTeacherController.remove
 );
 
 /**

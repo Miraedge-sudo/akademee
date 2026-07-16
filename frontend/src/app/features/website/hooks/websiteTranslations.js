@@ -5,6 +5,23 @@
  */
 
 export const TRANSLATIONS = {
+  announcements: {
+    title: { fr: "Annonces", en: "Announcements" },
+    latest: { fr: "Dernières Nouvelles", en: "Latest News & Updates" },
+    subtitle: { fr: "Restez informé des dernières annonces de l'école.", en: "Stay informed with the latest school announcements." },
+    important: { fr: "Important", en: "Important" },
+    info: { fr: "Info", en: "Info" },
+    general: { fr: "Général", en: "General" },
+    readMore: { fr: "Lire plus", en: "Read more" },
+    showLess: { fr: "Voir moins", en: "Show less" },
+    viewAll: { fr: "Voir toutes les annonces", en: "View all announcements" },
+    all: { fr: "Tout le monde", en: "Everyone" },
+    teachers: { fr: "Enseignants", en: "Teachers" },
+    students: { fr: "Élèves", en: "Students" },
+    parents: { fr: "Parents", en: "Parents" },
+  },
+
+
   nav: {
     about: { fr: "À propos", en: "About" },
     classes: { fr: "Classes", en: "Classes" },

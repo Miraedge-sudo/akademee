@@ -3,9 +3,11 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../core/hooks/useTheme";
 import {
+  FiCheck,
+  FiChevronLeft,
+  FiChevronRight,
   FiEdit2,
   FiPlus,
-  FiChevronLeft,
   FiSave,
   FiX,
   FiSearch,
@@ -19,8 +21,17 @@ import {
 import toast from "react-hot-toast";
 import { getClassById, updateClass, deleteClass } from "../../../core/api/classService";
 import { getStudents } from "../../../core/api/studentService";
-import { getUsers } from "../../../core/api/userManagementService";
-import { getSubjectTeacherAssignments } from "../../../core/api/subjectService";
+import {
+  getClassTeachers,
+  assignClassTeacher,
+  removeClassTeacher,
+  getAvailableTeachers,
+  getSubjects,
+  assignTeacherToSubject,
+  removeTeacherAssignment,
+  getTeacherSubjects,
+} from "../../../core/api/subjectService";
+import { getClassSubjectsByClass, removeSubjectFromClass, bulkAssignSubjects } from "../../../core/api/classSubjectService";
 
 // ── Static levels & series (will move to backend later) ──
 const EDUCATION_LEVELS = [
@@ -107,6 +118,27 @@ export default function ClassDetailPage() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("general");
   const [studentSearch, setStudentSearch] = useState("");
+  const [assignModal, setAssignModal] = useState(false);
+  const [subjects, setSubjects] = useState([]);
+  const [classTeacherAssignments, setClassTeacherAssignments] = useState([]);
+
+  // ── Class-subject assignment state (Subjects tab) ──
+  const [classSubjectAssignments, setClassSubjectAssignments] = useState([]);
+  const [showAddSubjectModal, setShowAddSubjectModal] = useState(false);
+  const [selectedSubjectsForAdd, setSelectedSubjectsForAdd] = useState(new Set());
+  const [subjectCoefficients, setSubjectCoefficients] = useState({});
+  const [savingClassSubjects, setSavingClassSubjects] = useState(false);
+  const [editCoeffAssignmentId, setEditCoeffAssignmentId] = useState(null);
+  const [editCoeffValue, setEditCoeffValue] = useState(1);
+  const [savingCoeff, setSavingCoeff] = useState(false);
+
+  // ── Teacher subject assignment state ──
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [classSubjectsForTeacher, setClassSubjectsForTeacher] = useState([]);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState(new Set());
+  const [existingSubjectAssignments, setExistingSubjectAssignments] = useState([]);
+  const [savingSubjects, setSavingSubjects] = useState(false);
+  const [teacherSubjectsMap, setTeacherSubjectsMap] = useState({});
 
   // ── Edit form state ──
   const [editForm, setEditForm] = useState({ name: "", levelId: "", seriesId: "", capacity: 40, classTeacherId: "" });
@@ -118,11 +150,13 @@ export default function ClassDetailPage() {
       setLoading(true);
       setError(null);
       try {
-        const [classData, studentsData, teachersData, assignmentsData] = await Promise.all([
+        const [classData, studentsData, teachersData, assignmentsData, subjectsData, classSubjectData] = await Promise.all([
           getClassById(id),
           getStudents(),
-          getUsers({ role: "TEACHER" }),
-          getSubjectTeacherAssignments(),
+          getAvailableTeachers(),
+          getClassTeachers(id),
+          getSubjects().catch(() => []),
+          getClassSubjectsByClass(id).catch(() => []),
         ]);
 
         if (!classData) { setError("NOT_FOUND"); setLoading(false); return; }
@@ -141,32 +175,68 @@ export default function ClassDetailPage() {
         );
         setStudents(classStudents);
 
-        // Handle teachers — might be array or { users: [...] }
-        let allTeachers = Array.isArray(teachersData) ? teachersData : (teachersData?.users || []);
+        // Handle teachers — getAvailableTeachers returns an array directly
+        const allTeachers = Array.isArray(teachersData) ? teachersData : (teachersData?.data || teachersData?.teachers || []);
         setTeachers(allTeachers);
 
-        // Handle assignments — might be array or { data: [...] }
-        let allAssignments = Array.isArray(assignmentsData) ? assignmentsData : (assignmentsData?.data || []);
-        // Filter assignments for this class
-        const classAssignments = allAssignments.filter((a) => a.classId === classData.id || a.classId === id);
-        const assignedTeacherIds = classAssignments.map((a) => a.teacherId);
-        const classTeachers = allTeachers.filter((t) => assignedTeacherIds.includes(t.id));
+        // Handle class-teacher assignments from the new API
+        const allAssignments = Array.isArray(assignmentsData) ? assignmentsData : (assignmentsData?.data || []);
+        setClassTeacherAssignments(allAssignments);
+        const classTeachers = allAssignments.map((a) => ({
+          id: a.teacherId,
+          firstName: a.teacherFirstName,
+          lastName: a.teacherLastName,
+          email: a.teacherEmail,
+          isMain: a.isMain,
+        }));
 
-        // Set classTeacherId from first assignment or from class data
-        const classTeacher = classTeachers[0] || null;
+        // Set classTeacherId from assignment marked as main, or first assignment
+        const mainTeacher = classTeachers.find((t) => t.isMain) || classTeachers[0] || null;
         setCls((prev) => ({
           ...prev,
-          classTeacherId: prev.classTeacherId || classTeacher?.id || null,
+          classTeacherId: prev.classTeacherId || mainTeacher?.id || null,
           assignedTeachers: classTeachers,
           students: classStudents,
         }));
+
+        // Handle subjects
+        const subjectsList = Array.isArray(subjectsData) ? subjectsData : (subjectsData?.subjects || subjectsData?.data || []);
+        setSubjects(subjectsList);
+
+        // Handle class-subject assignments (Subjects tab)
+        const classSubjData = Array.isArray(classSubjectData) ? classSubjectData : (classSubjectData?.data || classSubjectData?.assignments || []);
+        setClassSubjectAssignments(classSubjData);
+
+        // Load subject assignments for each assigned teacher
+        if (classTeachers.length > 0) {
+          try {
+            const teacherSubjResults = await Promise.all(
+              classTeachers.map((t) =>
+                getTeacherSubjects(t.id)
+                  .then((data) => ({
+                    teacherId: t.id,
+                    subjects: Array.isArray(data) ? data : (data?.data || []),
+                  }))
+                  .catch(() => ({ teacherId: t.id, subjects: [] }))
+              )
+            );
+            const map = {};
+            teacherSubjResults.forEach(({ teacherId, subjects }) => {
+              // Only include subjects assigned to THIS class
+              map[teacherId] = subjects.filter((s) => s.classId === id);
+            });
+            setTeacherSubjectsMap(map);
+          } catch {
+            // ignore
+          }
+        }
 
         setEditForm({
           name: classData.name || "",
           levelId: classData.levelId?.toString() || "",
           seriesId: classData.seriesId?.toString() || "",
           capacity: classData.capacity || 40,
-          classTeacherId: classData.classTeacherId?.toString() || classTeacher?.id?.toString() || "",
+          classTeacherId: classData.classTeacherId?.toString() || mainTeacher?.id?.toString() || "",
         });
       } catch (err) {
         console.error("Error:", err);
@@ -201,6 +271,201 @@ export default function ClassDetailPage() {
       toast.error(isFr ? "Erreur" : "Error saving");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // ── Open subject selection for a teacher ──
+  const openSubjectSelection = async (teacher) => {
+    setSelectedTeacher(teacher);
+    setSavingSubjects(false);
+    try {
+      // Load subjects assigned to this class
+      const [classSubjData, teacherSubjData] = await Promise.all([
+        getClassSubjectsByClass(id),
+        getTeacherSubjects(teacher.id).catch(() => []),
+      ]);
+      const classSubjects = Array.isArray(classSubjData) ? classSubjData : (classSubjData?.data || classSubjData?.assignments || []);
+      const teacherSubjects = Array.isArray(teacherSubjData) ? teacherSubjData : (teacherSubjData?.data || []);
+
+      setClassSubjectsForTeacher(classSubjects);
+      setExistingSubjectAssignments(teacherSubjects);
+
+      // Pre-select subjects this teacher already teaches in this class
+      const taughtInClass = teacherSubjects
+        .filter((a) => a.classId === id)
+        .map((a) => a.subjectId);
+      setSelectedSubjectIds(new Set(taughtInClass));
+    } catch {
+      setClassSubjectsForTeacher([]);
+      setExistingSubjectAssignments([]);
+      setSelectedSubjectIds(new Set());
+    }
+  };
+
+  // ── Toggle a subject checkbox ──
+  const toggleSubject = (subjectId) => {
+    setSelectedSubjectIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(subjectId)) {
+        next.delete(subjectId);
+      } else {
+        next.add(subjectId);
+      }
+      return next;
+    });
+  };
+
+  // ── Confirm subject assignments for teacher ──
+  const handleConfirmSubjects = async () => {
+    if (!selectedTeacher) return;
+    setSavingSubjects(true);
+    try {
+      // 1. Assign teacher to class (if not already)
+      const isAssigned = assignedTeachers.some((a) => a.id === selectedTeacher.id);
+      if (!isAssigned) {
+        await assignClassTeacher(id, { teacherId: selectedTeacher.id });
+      }
+
+      // 2. For each selected subject, assign teacher to subject
+      const existingMap = {};
+      existingSubjectAssignments
+        .filter((a) => a.classId === id)
+        .forEach((a) => { existingMap[a.subjectId] = a; });
+
+      const promises = [];
+      for (const subjectId of selectedSubjectIds) {
+        if (!existingMap[subjectId]) {
+          promises.push(
+            assignTeacherToSubject({
+              subjectId,
+              teacherId: selectedTeacher.id,
+              classId: id,
+            })
+          );
+        }
+      }
+      // Remove unselected subjects that were previously assigned
+      for (const [subjId, assignment] of Object.entries(existingMap)) {
+        if (!selectedSubjectIds.has(subjId) && assignment.id) {
+          promises.push(removeTeacherAssignment(assignment.id));
+        }
+      }
+
+      await Promise.all(promises);
+      toast.success(isFr ? "Matières assignées avec succès ✨" : "Subjects assigned ✨");
+      setSelectedTeacher(null);
+      window.location.reload();
+    } catch (err) {
+      const msg = err?.response?.data?.message || (isFr ? "Erreur" : "Error");
+      toast.error(msg);
+    } finally {
+      setSavingSubjects(false);
+    }
+  };
+
+  // ── Toggle subject selection in Add Subject modal ──
+  const toggleSubjectForAdd = (subjectId) => {
+    setSelectedSubjectsForAdd((prev) => {
+      const next = new Set(prev);
+      if (next.has(subjectId)) {
+        next.delete(subjectId);
+      } else {
+        next.add(subjectId);
+      }
+      return next;
+    });
+    // Init default coefficient if not set
+    setSubjectCoefficients((prev) => {
+      if (prev[subjectId] === undefined) {
+        return { ...prev, [subjectId]: 1 };
+      }
+      return prev;
+    });
+  };
+
+  // ── Update coefficient for a subject in the add modal ──
+  const handleCoefficientChange = (subjectId, value) => {
+    const coeff = Math.max(1, Math.min(20, parseInt(value) || 1));
+    setSubjectCoefficients((prev) => ({ ...prev, [subjectId]: coeff }));
+  };
+
+  // ── Confirm adding subjects to class (bulk) ──
+  const handleAddSubjects = async () => {
+    if (selectedSubjectsForAdd.size === 0) {
+      toast.error(isFr ? "Sélectionnez au moins une matière" : "Select at least one subject");
+      return;
+    }
+    setSavingClassSubjects(true);
+    try {
+      // Build array of { subjectId, coefficient } for the bulk endpoint
+      const subjects = Array.from(selectedSubjectsForAdd).map((subjectId) => ({
+        subjectId,
+        coefficient: subjectCoefficients[subjectId] || 1,
+      }));
+
+      await bulkAssignSubjects(id, subjects);
+      toast.success(isFr ? "Matières ajoutées avec succès ✨" : "Subjects added ✨");
+      setShowAddSubjectModal(false);
+      setSelectedSubjectsForAdd(new Set());
+      setSubjectCoefficients({});
+      // Reload class subjects with a single fresh fetch
+      const fresh = await getClassSubjectsByClass(id).catch(() => []);
+      const data = Array.isArray(fresh) ? fresh : (fresh?.data || fresh?.assignments || []);
+      setClassSubjectAssignments(data);
+    } catch (err) {
+      const msg = err?.response?.data?.message || (isFr ? "Erreur" : "Error");
+      toast.error(msg);
+    } finally {
+      setSavingClassSubjects(false);
+    }
+  };
+
+  // ── Start editing a subject's coefficient ──
+  const startEditCoeff = (assignmentId, currentCoeff) => {
+    setEditCoeffAssignmentId(assignmentId);
+    setEditCoeffValue(currentCoeff || 1);
+  };
+
+  // ── Cancel coefficient editing ──
+  const cancelEditCoeff = () => {
+    setEditCoeffAssignmentId(null);
+    setEditCoeffValue(1);
+  };
+
+  // ── Save updated coefficient ──
+  const saveCoeff = async () => {
+    if (!editCoeffAssignmentId || savingCoeff) return;
+    const assignment = classSubjectAssignments.find((a) => a.id === editCoeffAssignmentId);
+    if (!assignment) return;
+    const coeff = Math.max(1, Math.min(20, parseInt(editCoeffValue) || 1));
+    setSavingCoeff(true);
+    try {
+      await bulkAssignSubjects(id, [{ subjectId: assignment.subjectId, coefficient: coeff }]);
+      toast.success(isFr ? "Coefficient mis à jour ✨" : "Coefficient updated ✨");
+      setClassSubjectAssignments((prev) =>
+        prev.map((a) => (a.id === editCoeffAssignmentId ? { ...a, coefficient: coeff } : a))
+      );
+      setEditCoeffAssignmentId(null);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || (isFr ? "Erreur" : "Error"));
+    } finally {
+      setSavingCoeff(false);
+    }
+  };
+
+  // ── Remove a subject from this class ──
+  const handleRemoveSubject = async (assignmentId, subjectName) => {
+    if (!window.confirm(
+      isFr
+        ? `Retirer "${subjectName}" de cette classe ?`
+        : `Remove "${subjectName}" from this class?`
+    )) return;
+    try {
+      await removeSubjectFromClass(assignmentId);
+      toast.success(isFr ? "Matière retirée" : "Subject removed");
+      setClassSubjectAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
+    } catch (err) {
+      toast.error(isFr ? "Erreur" : "Error");
     }
   };
 
@@ -265,10 +530,13 @@ export default function ClassDetailPage() {
   const selectedSeries = series.find((s) => s.id === Number(editForm.seriesId));
   const assignedTeachers = cls.assignedTeachers || [];
 
+  const classSubjects = classSubjectAssignments;
+
   const tabs = [
     { key: "general", icon: <FiEdit2 className="w-4 h-4" />, label: isFr ? "Général" : "General" },
     { key: "teachers", icon: <FiUsers className="w-4 h-4" />, label: isFr ? "Enseignants" : "Teachers", count: assignedTeachers.length },
     { key: "students", icon: <FiUser className="w-4 h-4" />, label: isFr ? "Élèves" : "Students", count: enrolled },
+    { key: "subjects", icon: <FiBook className="w-4 h-4" />, label: isFr ? "Matières" : "Subjects", count: classSubjects.length },
   ];
 
   const filteredStudents = studentSearch.trim()
@@ -445,11 +713,12 @@ export default function ClassDetailPage() {
                   <div>
                     <label className={labelClass}>{isFr ? "Professeur titulaire" : "Class teacher"}</label>
                     <p className="text-sm font-semibold text-surface-800 dark:text-surface-100">
-                      {assignedTeachers.find((t) => t.id === cls.classTeacherId)
-                        ? `${assignedTeachers.find((t) => t.id === cls.classTeacherId).firstName} ${assignedTeachers.find((t) => t.id === cls.classTeacherId).lastName}`
-                        : assignedTeachers[0]
-                          ? `${assignedTeachers[0].firstName} ${assignedTeachers[0].lastName}`
-                          : isFr ? "Non assigné" : "Not assigned"}
+                      {(() => {
+                        const main = assignedTeachers.find((t) => t.isMain) || assignedTeachers[0];
+                        return main
+                          ? `${main.firstName || ""} ${main.lastName || ""}`.trim()
+                          : isFr ? "Non assigné" : "Not assigned";
+                      })()}
                     </p>
                   </div>
                   <div>
@@ -527,40 +796,494 @@ export default function ClassDetailPage() {
           {/* ═══════ TEACHERS TAB ═══════ */}
           {activeTab === "teachers" && (
             <div>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-surface-500">
+                  {isFr
+                    ? `${assignedTeachers.length} enseignant${assignedTeachers.length !== 1 ? "s" : ""} assigné${assignedTeachers.length !== 1 ? "s" : ""}`
+                    : `${assignedTeachers.length} teacher${assignedTeachers.length !== 1 ? "s" : ""} assigned`}
+                </p>
+                <button
+                  onClick={() => setAssignModal(true)}
+                  className="h-9 px-4 rounded-lg text-white text-xs font-semibold flex items-center gap-1.5 transition-all hover:shadow-md"
+                  style={{ backgroundColor: pc }}
+                >
+                  <FiPlus className="w-3.5 h-3.5" />
+                  {isFr ? "Ajouter un enseignant" : "Add teacher"}
+                </button>
+              </div>
+
               {assignedTeachers.length === 0 ? (
                 <EmptyTab
                   icon={<FiUsers className="w-8 h-8" />}
                   title={isFr ? "Aucun enseignant assigné" : "No teachers assigned"}
-                  subtitle={isFr ? "Assignez des enseignants à cette classe." : "Assign teachers to this class."}
+                  subtitle={isFr ? "Cliquez sur 'Ajouter un enseignant' pour commencer." : "Click 'Add teacher' to get started."}
                 />
               ) : (
                 <div className="flex flex-col gap-3">
                   {assignedTeachers.map((t, idx) => {
                     const initials = ((t.firstName?.[0] || "") + (t.lastName?.[0] || "")).toUpperCase();
                     const isMain = t.id === cls.classTeacherId || idx === 0;
+                    const teacherSubj = teacherSubjectsMap[t.id] || [];
                     return (
-                      <div key={t.id}
-                        className="flex items-center gap-3.5 p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 hover:shadow-sm transition-shadow"
+                      <button key={t.id}
+                        onClick={() => { setAssignModal(true); openSubjectSelection(t); }}
+                        className="w-full flex items-center gap-3.5 p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 hover:shadow-md hover:border-primary-200 dark:hover:border-primary-800 transition-all text-left group"
                       >
                         <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
                           style={{ background: hexToRgba(pc, 0.08), border: `1.5px solid ${hexToRgba(pc, 0.2)}`, color: pc }}>
                           {initials}
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="text-sm font-semibold text-surface-800 dark:text-surface-100">
                             {t.firstName} {t.lastName}
                           </div>
-                          <div className="text-xs text-surface-400">{t.email} · {t.specialty || ""}</div>
+                          <div className="text-xs text-surface-400 truncate">
+                            {t.email}
+                          </div>
+                          {teacherSubj.length > 0 ? (
+                            <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                              {teacherSubj.map((s) => (
+                                <span key={s.id || s.subjectId}
+                                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                                  style={{ background: hexToRgba(pc, 0.06), color: pc, border: `1px solid ${hexToRgba(pc, 0.15)}` }}
+                                >
+                                  {s.subjectName}
+                                </span>
+                              ))}
+                              <FiEdit2 className="w-2.5 h-2.5 text-surface-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-surface-400 flex items-center gap-1 mt-1">
+                              {isFr ? "Aucune matière assignée" : "No subjects assigned"}
+                              <FiEdit2 className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </span>
+                          )}
                         </div>
                         {isMain && (
-                          <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
+                          <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
                             style={{ background: hexToRgba(pc, 0.08), color: pc, border: `1px solid ${hexToRgba(pc, 0.2)}` }}>
                             {isFr ? "Titulaire" : "Class teacher"}
                           </span>
                         )}
-                      </div>
+                        <FiChevronRight className="w-4 h-4 text-surface-300 flex-shrink-0" />
+                      </button>
                     );
                   })}
+                </div>
+              )}
+
+              {/* ── Assign Teacher Modal ── */}
+              {assignModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setAssignModal(false); setSelectedTeacher(null); }} />
+                  <div className="relative w-full max-w-[520px] bg-white dark:bg-surface-800 rounded-2xl shadow-2xl overflow-hidden">
+
+                    {/* ═══ STEP 2: Subject Selection ═══ */}
+                    {selectedTeacher ? (
+                      <>
+                        <div className="flex items-center justify-between px-6 py-5 border-b border-surface-100 dark:border-surface-700">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                              <FiBook className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                              <h2 className="font-display text-lg font-bold text-surface-800 dark:text-surface-100">
+                                {isFr ? "Choisir les matières" : "Select subjects"}
+                              </h2>
+                              <p className="text-xs text-surface-400">
+                                {selectedTeacher.firstName} {selectedTeacher.lastName}
+                              </p>
+                            </div>
+                          </div>
+                          <button onClick={() => setSelectedTeacher(null)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors">
+                            <FiX className="w-4 h-4 text-surface-400" />
+                          </button>
+                        </div>
+
+                        <div className="p-6 max-h-[400px] overflow-y-auto">
+                          {classSubjectsForTeacher.length === 0 ? (
+                            <div className="text-center py-10">
+                              <FiBook className="w-10 h-10 text-surface-300 mx-auto mb-3" />
+                              <p className="text-sm font-semibold text-surface-500">
+                                {isFr
+                                  ? "Aucune matière assignée à cette classe"
+                                  : "No subjects assigned to this class"}
+                              </p>
+                              <p className="text-xs text-surface-400 mt-1">
+                                {isFr
+                                  ? "Ajoutez d'abord des matières dans l'onglet Matières."
+                                  : "Add subjects first in the Subjects tab."}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {classSubjectsForTeacher.map((cs) => {
+                                const subjId = cs.subjectId;
+                                const isSelected = selectedSubjectIds.has(subjId);
+                                return (
+                                  <button
+                                    key={cs.id}
+                                    onClick={() => toggleSubject(subjId)}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all ${
+                                      isSelected
+                                        ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"
+                                        : "bg-white dark:bg-surface-800 border-surface-100 dark:border-surface-700 hover:border-blue-200 hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
+                                    }`}
+                                  >
+                                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+                                      isSelected
+                                        ? "bg-blue-600 border-blue-600"
+                                        : "border-surface-300 dark:border-surface-500"
+                                    }`}>
+                                      {isSelected && <FiCheck className="w-3 h-3 text-white" strokeWidth={3} />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-[14px] font-bold text-surface-800 dark:text-surface-100 truncate">
+                                        {cs.subjectName}
+                                      </div>
+                                      {cs.coefficient && (
+                                        <div className="text-[11px] text-surface-400">
+                                          {isFr ? "Coefficient" : "Coeff"}: {cs.coefficient}
+                                        </div>
+                                      )}
+                                    </div>
+                                    {isSelected && (
+                                      <span className="text-[10px] font-bold text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-0.5 rounded-full border border-green-200 dark:border-green-700 flex-shrink-0">
+                                        {isFr ? "Assigné" : "Assigned"}
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-surface-100 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50">
+                          <button
+                            onClick={() => setSelectedTeacher(null)}
+                            className="h-[44px] px-4 rounded-xl border-2 border-surface-200 dark:border-surface-600 text-sm font-semibold text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-all flex items-center gap-2"
+                          >
+                            <FiChevronLeft className="w-4 h-4" />
+                            {isFr ? "Retour" : "Back"}
+                          </button>
+                          <button
+                            onClick={handleConfirmSubjects}
+                            disabled={savingSubjects || classSubjectsForTeacher.length === 0}
+                            className="h-[44px] px-6 rounded-xl bg-blue-600 text-white text-sm font-bold flex items-center gap-2 disabled:opacity-55 hover:bg-blue-700 transition-all hover:-translate-y-0.5"
+                          >
+                            {savingSubjects ? (
+                              <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                            ) : (
+                              <FiCheck className="w-4 h-4" />
+                            )}
+                            {savingSubjects
+                              ? isFr ? "Enregistrement..." : "Saving..."
+                              : isFr ? "Confirmer" : "Confirm"}
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      /* ═══ STEP 1: Teacher List ═══ */
+                      <>
+                        <div className="flex items-center justify-between px-6 py-5 border-b border-surface-100 dark:border-surface-700">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                              <FiUsers className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                              <h2 className="font-display text-lg font-bold text-surface-800 dark:text-surface-100">
+                                {isFr ? "Assigner un enseignant" : "Assign Teacher"}
+                              </h2>
+                              <p className="text-xs text-surface-400">
+                                {isFr
+                                  ? "Cliquez sur un enseignant pour choisir ses matières"
+                                  : "Click a teacher to choose their subjects"}
+                              </p>
+                            </div>
+                          </div>
+                          <button onClick={() => setAssignModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors">
+                            <FiX className="w-4 h-4 text-surface-400" />
+                          </button>
+                        </div>
+
+                        <div className="p-6 max-h-[400px] overflow-y-auto">
+                          {teachers.length === 0 ? (
+                            <div className="text-center py-10">
+                              <FiUsers className="w-10 h-10 text-surface-300 mx-auto mb-3" />
+                              <p className="text-sm font-semibold text-surface-500">{isFr ? "Aucun enseignant disponible" : "No teachers available"}</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {teachers.map((t) => {
+                                const isAssigned = assignedTeachers.some((a) => a.id === t.id);
+                                return (
+                                  <button
+                                    key={t.id}
+                                    onClick={() => openSubjectSelection(t)}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all ${
+                                      isAssigned
+                                        ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"
+                                        : "bg-white dark:bg-surface-800 border-surface-100 dark:border-surface-700 hover:border-blue-200 hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
+                                    }`}
+                                  >
+                                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+                                      isAssigned
+                                        ? "bg-blue-600 border-blue-600"
+                                        : "border-surface-300 dark:border-surface-500"
+                                    }`}>
+                                      {isAssigned && <FiCheck className="w-3 h-3 text-white" strokeWidth={3} />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-[14px] font-bold text-surface-800 dark:text-surface-100 truncate">{t.firstName} {t.lastName}</div>
+                                      <div className="text-[11px] text-surface-400">{t.email}</div>
+                                    </div>
+                                    <FiChevronRight className="w-4 h-4 text-surface-300 flex-shrink-0" />
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-surface-100 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50">
+                          <button onClick={() => setAssignModal(false)} className="h-[44px] px-5 rounded-xl border-2 border-surface-200 dark:border-surface-600 text-sm font-semibold text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-all">
+                            {isFr ? "Fermer" : "Close"}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ═══════ SUBJECTS TAB ═══════ */}
+          {activeTab === "subjects" && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-surface-500">
+                  {isFr
+                    ? `${classSubjects.length} matière${classSubjects.length !== 1 ? "s" : ""} dans cette classe`
+                    : `${classSubjects.length} subject${classSubjects.length !== 1 ? "s" : ""} in this class`}
+                </p>
+                <button
+                  onClick={() => setShowAddSubjectModal(true)}
+                  className="h-9 px-4 rounded-lg text-white text-xs font-semibold flex items-center gap-1.5 transition-all hover:shadow-md"
+                  style={{ backgroundColor: pc }}
+                >
+                  <FiPlus className="w-3.5 h-3.5" />
+                  {isFr ? "Ajouter une matière" : "Add subject"}
+                </button>
+              </div>
+
+              {classSubjects.length === 0 ? (
+                <EmptyTab
+                  icon={<FiBook className="w-8 h-8" />}
+                  title={isFr ? "Aucune matière assignée" : "No subjects assigned"}
+                  subtitle={isFr ? "Cliquez sur 'Ajouter une matière' pour commencer." : "Click 'Add subject' to get started."}
+                  action={
+                    <button
+                      onClick={() => setShowAddSubjectModal(true)}
+                      className="h-10 px-5 text-white text-xs font-semibold rounded-lg transition-all hover:shadow-md"
+                      style={{ backgroundColor: pc }}
+                    >
+                      <FiPlus className="w-3.5 h-3.5 inline mr-1.5" />
+                      {isFr ? "Ajouter une matière" : "Add subject"}
+                    </button>
+                  }
+                />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {classSubjects.map((subj) => (
+                    <div key={subj.id}
+                      className="flex items-center gap-3 p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 hover:shadow-sm transition-shadow group"
+                    >
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
+                        style={{ background: hexToRgba(pc, 0.08), border: `1.5px solid ${hexToRgba(pc, 0.2)}`, color: pc }}>
+                        {(subj.subjectName || subj.name || subj.code || "?")[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-surface-800 dark:text-surface-100 truncate">
+                          {subj.subjectName || subj.name || subj.code || "—"}
+                        </div>
+                        {editCoeffAssignmentId === subj.id ? (
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <input
+                              type="number"
+                              min={1}
+                              max={20}
+                              value={editCoeffValue}
+                              onChange={(e) => setEditCoeffValue(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                              className="w-12 h-7 rounded-md border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-900 text-xs font-semibold text-surface-800 dark:text-surface-100 text-center outline-none focus:border-blue-500 transition-all"
+                              autoFocus
+                              onKeyDown={(e) => { if (e.key === "Enter") saveCoeff(); if (e.key === "Escape") cancelEditCoeff(); }}
+                            />
+                            <button onClick={saveCoeff} disabled={savingCoeff}
+                              className="w-6 h-6 flex items-center justify-center rounded bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                              {savingCoeff ? (
+                                <div className="w-2.5 h-2.5 rounded-full border-[2px] border-white/40 border-t-white animate-spin" />
+                              ) : (
+                                <FiCheck className="w-3 h-3" strokeWidth={3} />
+                              )}
+                            </button>
+                            <button onClick={cancelEditCoeff} disabled={savingCoeff}
+                              className="w-6 h-6 flex items-center justify-center rounded bg-surface-200 dark:bg-surface-600 text-surface-500 hover:bg-surface-300 dark:hover:bg-surface-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                              <FiX className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => startEditCoeff(subj.id, subj.coefficient)}
+                            className="text-[11px] text-surface-400 hover:text-primary-600 transition-colors flex items-center gap-1 group/coeff"
+                          >
+                            {subj.coefficient > 0 ? (
+                              <>{isFr ? "Coefficient" : "Coeff"}: {subj.coefficient}</>
+                            ) : (
+                              <>{isFr ? "Ajouter un coefficient" : "Add coefficient"}</>
+                            )}
+                            <FiEdit2 className="w-2.5 h-2.5 opacity-0 group-hover/coeff:opacity-100 transition-opacity" />
+                          </button>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleRemoveSubject(subj.id, subj.subjectName || subj.name || "")}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition-all"
+                        title={isFr ? "Retirer" : "Remove"}
+                      >
+                        <FiX className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* ── Add Subject Modal ── */}
+              {showAddSubjectModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setShowAddSubjectModal(false); setSelectedSubjectsForAdd(new Set()); setSubjectCoefficients({}); }} />
+                  <div className="relative w-full max-w-[520px] bg-white dark:bg-surface-800 rounded-2xl shadow-2xl overflow-hidden">
+
+                    <div className="flex items-center justify-between px-6 py-5 border-b border-surface-100 dark:border-surface-700">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: hexToRgba(pc, 0.08) }}>
+                          <FiBook className="w-5 h-5" style={{ color: pc }} />
+                        </div>
+                        <div>
+                          <h2 className="font-display text-lg font-bold text-surface-800 dark:text-surface-100">
+                            {isFr ? "Ajouter des matières" : "Add subjects"}
+                          </h2>
+                          <p className="text-xs text-surface-400">
+                            {isFr
+                              ? `Cochez les matières à assigner à ${cls.name}`
+                              : `Select subjects to assign to ${cls.name}`}
+                          </p>
+                        </div>
+                      </div>
+                      <button onClick={() => { setShowAddSubjectModal(false); setSelectedSubjectsForAdd(new Set()); setSubjectCoefficients({}); }}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors">
+                        <FiX className="w-4 h-4 text-surface-400" />
+                      </button>
+                    </div>
+
+                    <div className="p-6 max-h-[420px] overflow-y-auto">
+                      {subjects.length === 0 ? (
+                        <div className="text-center py-10">
+                          <FiBook className="w-10 h-10 text-surface-300 mx-auto mb-3" />
+                          <p className="text-sm font-semibold text-surface-500">
+                            {isFr ? "Aucune matière disponible" : "No subjects available"}
+                          </p>
+                          <p className="text-xs text-surface-400 mt-1">
+                            {isFr
+                              ? "Créez d'abord des matières dans la section Subjects."
+                              : "Create subjects first in the Subjects section."}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {subjects.map((sbj) => {
+                            // Skip subjects already assigned to this class
+                            const isAlreadyAssigned = classSubjects.some((cs) => cs.subjectId === sbj.id || cs.id === sbj.id);
+                            if (isAlreadyAssigned) return null;
+                            const isSelected = selectedSubjectsForAdd.has(sbj.id);
+                            const coeffValue = subjectCoefficients[sbj.id] ?? "";
+                            return (
+                              <div
+                                key={sbj.id}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all ${
+                                  isSelected
+                                    ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"
+                                    : "bg-white dark:bg-surface-800 border-surface-100 dark:border-surface-700 hover:border-blue-200"
+                                }`}
+                              >
+                                <button
+                                  onClick={() => toggleSubjectForAdd(sbj.id)}
+                                  className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+                                    isSelected
+                                      ? "bg-blue-600 border-blue-600"
+                                      : "border-surface-300 dark:border-surface-500"
+                                  }`}
+                                >
+                                  {isSelected && <FiCheck className="w-3 h-3 text-white" strokeWidth={3} />}
+                                </button>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-[14px] font-bold text-surface-800 dark:text-surface-100 truncate">
+                                    {sbj.name}
+                                  </div>
+                                  {sbj.code && (
+                                    <div className="text-[11px] text-surface-400">{sbj.code}</div>
+                                  )}
+                                </div>
+                                {isSelected && (
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <label className="text-xs text-surface-500">
+                                      {isFr ? "Coef." : "Coeff."}
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      max={20}
+                                      value={coeffValue}
+                                      onChange={(e) => handleCoefficientChange(sbj.id, e.target.value)}
+                                      className="w-14 h-9 rounded-lg border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-900 text-sm font-semibold text-surface-800 dark:text-surface-100 text-center outline-none focus:border-blue-500 transition-all"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-surface-100 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50">
+                      <button
+                        onClick={() => { setShowAddSubjectModal(false); setSelectedSubjectsForAdd(new Set()); setSubjectCoefficients({}); }}
+                        className="h-[44px] px-5 rounded-xl border-2 border-surface-200 dark:border-surface-600 text-sm font-semibold text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-all"
+                      >
+                        {isFr ? "Annuler" : "Cancel"}
+                      </button>
+                      <button
+                        onClick={handleAddSubjects}
+                        disabled={savingClassSubjects || selectedSubjectsForAdd.size === 0}
+                        className="h-[44px] px-6 rounded-xl text-white text-sm font-bold flex items-center gap-2 disabled:opacity-55 transition-all hover:-translate-y-0.5"
+                        style={{ backgroundColor: pc }}
+                      >
+                        {savingClassSubjects ? (
+                          <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        ) : (
+                          <FiPlus className="w-4 h-4" />
+                        )}
+                        {savingClassSubjects
+                          ? isFr ? "Ajout..." : "Adding..."
+                          : isFr
+                            ? `Ajouter (${selectedSubjectsForAdd.size})`
+                            : `Add (${selectedSubjectsForAdd.size})`}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
