@@ -9,6 +9,7 @@ const createStudentValidator = [
   body('lastName').trim().notEmpty().withMessage('Last name is required'),
   body('email').optional({ values: 'falsy' }).isEmail(),
   body('phone').optional({ values: 'falsy' }).trim(),
+  body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('className').trim().notEmpty().withMessage('Class is required'),
   body('classId').optional({ values: 'falsy' }).isUUID(),
   body('dateOfBirth').optional({ values: 'falsy' }).isISO8601(),
@@ -28,6 +29,7 @@ const updateStudentValidator = [
   body('dateOfBirth').optional({ values: 'falsy' }).isISO8601(),
   body('gender').optional().isIn(['male', 'female', 'other']),
   body('status').optional().isIn(['active', 'inactive', 'graduated', 'transferred', 'suspended']),
+  body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('feeStatus').optional().isIn(['pending', 'partial', 'paid', 'overdue', 'unpaid']),
 ];
 

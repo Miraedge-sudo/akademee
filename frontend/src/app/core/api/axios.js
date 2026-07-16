@@ -19,6 +19,56 @@ export function getAccessToken() {
   return _accessToken;
 }
 
+// ── Token refresh queue ──────────────────────────────────────────
+let _refreshPromise = null;
+let _failedQueue = [];
+
+function processQueue(error, token = null) {
+  _failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  });
+  _failedQueue = [];
+}
+
+/**
+ * Attempt to refresh the access token using the httpOnly refresh cookie.
+ * Only one refresh attempt runs at a time; concurrent 401s are queued.
+ */
+async function refreshAccessToken() {
+  // If a refresh is already in progress, queue this request
+  if (_refreshPromise) {
+    return new Promise((resolve, reject) => {
+      _failedQueue.push({ resolve, reject });
+    });
+  }
+
+  _refreshPromise = api
+    .post("/api/auth/refresh")
+    .then((res) => {
+      const newToken = res.data?.data?.token;
+      if (newToken) {
+        _accessToken = newToken;
+        localStorage.setItem("token", newToken);
+      }
+      processQueue(null, newToken);
+      return newToken;
+    })
+    .catch((err) => {
+      processQueue(err, null);
+      throw err;
+    })
+    .finally(() => {
+      _refreshPromise = null;
+    });
+
+  return _refreshPromise;
+}
+
+// ── Request interceptor ──────────────────────────────────────────
 api.interceptors.request.use(
   (config) => {
     const subdomain = getSubdomain();
@@ -33,36 +83,63 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+// ── Response interceptor — automatic refresh on 401 ──────────────
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // Ne pas rediriger si :
-    // - la requête est pour /auth/login (le 401 y est attendu)
-    // - la page courante est une page publique (login, register, site vitrine, etc.)
-    // - la requête n'a pas de token d'authentification (c'est une requête publique)
-    if (error.response?.status === 401) {
-      const isLoginRequest = error.config?.url?.includes("/auth/login");
-      const isAuthMeRequest = error.config?.url?.includes("/auth/me");
-      const hasNoAuthHeader = !error.config?.headers?.Authorization;
-      const isPublicPage = [
-        "/login",
-        "/register",
-        "/forgot-password",
-        "/reset-password",
-        "/verify-email",
-        "/site",
-      ].includes(window.location.pathname);
+  async (error) => {
+    const originalRequest = error.config;
+    const status = error.response?.status;
 
-      if (!isLoginRequest && !isPublicPage && !(isAuthMeRequest && hasNoAuthHeader)) {
-        localStorage.removeItem("token");
-        setAccessToken(null);
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
-        }
+    // Only attempt refresh on 401
+    if (status !== 401) {
+      return Promise.reject(error);
+    }
+
+    const requestUrl = originalRequest?.url || "";
+
+    // Never retry these endpoints
+    const isLoginRequest = requestUrl.includes("/auth/login");
+    const isRefreshRequest = requestUrl.includes("/auth/refresh");
+    const isPublicPage = [
+      "/login",
+      "/register",
+      "/forgot-password",
+      "/reset-password",
+      "/verify-email",
+      "/site",
+    ].includes(window.location.pathname);
+
+    if (isLoginRequest || isRefreshRequest || isPublicPage) {
+      return Promise.reject(error);
+    }
+
+    // Don't retry if we've already tried refreshing for this request
+    if (originalRequest._retry) {
+      // Refresh failed — force logout
+      localStorage.removeItem("token");
+      _accessToken = null;
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
+
+    originalRequest._retry = true;
+
+    try {
+      const newToken = await refreshAccessToken();
+      if (newToken) {
+        // Retry the original request with the new token
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return api(originalRequest);
       }
+    } catch {
+      // Refresh itself failed — force logout
+      localStorage.removeItem("token");
+      _accessToken = null;
+      window.location.href = "/login";
     }
 
     return Promise.reject(error);
   },
 );
+
 export default api;

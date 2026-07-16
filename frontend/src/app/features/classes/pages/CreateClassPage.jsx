@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../core/hooks/useTheme";
@@ -38,6 +38,9 @@ export default function CreateClassPage() {
     classTeacherId: "",
   });
 
+  const nameEdited = useRef(false);
+  const prevAutoName = useRef("");
+
   // Load levels, series, and class data (if editing)
   useEffect(() => {
     const loadData = async () => {
@@ -56,9 +59,7 @@ export default function CreateClassPage() {
         } catch (err) {
           console.warn("Could not load teachers:", err);
           setTeachers([]);
-        }
-
-        if (isEditing) {
+        }        if (isEditing) {
           const cls = await getClassById(id);
           setForm({
             name: cls.name || "",
@@ -67,6 +68,7 @@ export default function CreateClassPage() {
             capacity: cls.capacity || 40,
             classTeacherId: cls.classTeacherId?.toString() || "",
           });
+          nameEdited.current = true;
         }
       } catch (err) {
         console.error("Error loading data:", err);
@@ -78,11 +80,14 @@ export default function CreateClassPage() {
   }, [id, isEditing]);
 
   const updateField = (field, value) => {
+    if (field === "name") {
+      nameEdited.current = true;
+    }
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const selectedLevel = levels.find((l) => l.id === Number(form.levelId));
-  const selectedSeries = series.find((s) => s.id === Number(form.seriesId));
+  const selectedLevel = levels.find((l) => String(l.id) === String(form.levelId));
+  const selectedSeries = series.find((s) => String(s.id) === String(form.seriesId));
 
   // Auto-generate name from level + series
   const autoName = useMemo(() => {
@@ -93,11 +98,32 @@ export default function CreateClassPage() {
     return parts.join(" ");
   }, [selectedLevel, selectedSeries]);
 
+  // Auto-fill name when level/series changes, but only if user hasn't manually edited it
   useEffect(() => {
-    if (autoName && !isEditing) {
+    if (isEditing) return;
+    if (!autoName) return;
+    if (nameEdited.current) return;
+
+    prevAutoName.current = autoName;
+    setForm((prev) => ({ ...prev, name: autoName }));
+  }, [autoName, isEditing]);
+
+  const handleNameFocus = () => {
+    // If the name matches the auto-generated suggestion, select all text for easy editing
+    if (autoName && form.name === autoName) {
+      nameEdited.current = false;
+    }
+  };
+
+  const restoreAutoName = () => {
+    if (autoName) {
+      nameEdited.current = false;
+      prevAutoName.current = autoName;
       setForm((prev) => ({ ...prev, name: autoName }));
     }
-  }, [autoName, isEditing]);
+  };
+
+  const showAutoSuggestion = autoName && form.name !== autoName && !isEditing;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -184,17 +210,35 @@ export default function CreateClassPage() {
             <label className={labelClass}>
               {isFr ? "Nom de la classe" : "Class name"} <span className="text-primary-600">*</span>
             </label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => updateField("name", e.target.value)}
-              placeholder={isFr ? "Ex: Form 1A, 6ème B, Science" : "e.g. Form 1A, 6ème B, Science"}
-              className={inputClass}
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => updateField("name", e.target.value)}
+                onFocus={handleNameFocus}
+                placeholder={isFr ? "Ex: Form 1A, 6ème B, Science" : "e.g. Form 1A, 6ème B, Science"}
+                className={`${inputClass} ${showAutoSuggestion ? "border-primary-400 ring-1 ring-primary-200 dark:ring-primary-800" : ""}`}
+              />
+              {showAutoSuggestion && (
+                <button
+                  type="button"
+                  onClick={restoreAutoName}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2 h-7 rounded-md text-[11px] font-semibold bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800 hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-all whitespace-nowrap"
+                  title={isFr ? "Restaurer le nom suggéré" : "Restore suggested name"}
+                >
+                  <FiPlus className="w-2.5 h-2.5 rotate-45" strokeWidth={3} />
+                  {isFr ? `"${autoName}"` : `"${autoName}"`}
+                </button>
+              )}
+            </div>
             <p className={hintClass}>
               {isFr
-                ? "Généré automatiquement si un niveau et une série sont sélectionnés"
-                : "Auto-generated if a level and series are selected"}
+                ? showAutoSuggestion
+                  ? `Suggestion : cliquez sur « ${autoName} » pour restaurer le nom auto-généré`
+                  : "Le nom est auto-généré à partir du niveau et de la série sélectionnés"
+                : showAutoSuggestion
+                  ? `Suggestion: click "${autoName}" to restore the auto-generated name`
+                  : "The name is auto-generated from the selected level and series"}
             </p>
           </div>
 

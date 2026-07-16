@@ -29,6 +29,7 @@ export default function AddStudentDrawer({ isOpen, onClose, onSuccess, student }
     lastName: "",
     email: "",
     phone: "",
+    password: "",
     dateOfBirth: "",
     gender: "male",
     className: "",
@@ -55,6 +56,7 @@ export default function AddStudentDrawer({ isOpen, onClose, onSuccess, student }
         lastName: student.lastName || "",
         email: student.email || "",
         phone: student.phone || "",
+        password: "",
         dateOfBirth: student.dateOfBirth ? student.dateOfBirth.split("T")[0] : "",
         gender: student.gender || "male",
         className: student.className || "",
@@ -68,6 +70,7 @@ export default function AddStudentDrawer({ isOpen, onClose, onSuccess, student }
         lastName: "",
         email: "",
         phone: "",
+        password: "",
         dateOfBirth: "",
         gender: "male",
         className: "",
@@ -126,6 +129,7 @@ export default function AddStudentDrawer({ isOpen, onClose, onSuccess, student }
         lastName: formData.lastName.trim(),
         email: formData.email.trim() || null,
         phone: formData.phone.trim() || null,
+        password: formData.password || null,
         dateOfBirth: formData.dateOfBirth || null,
         gender: formData.gender,
         className: formData.className || null,
@@ -225,7 +229,7 @@ export default function AddStudentDrawer({ isOpen, onClose, onSuccess, student }
         {/* Section contact */}
         <div>
           <h4 className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">
-            {lang === "fr" ? "Contact" : "Contact"}
+            {lang === "fr" ? "Contact & Connexion" : "Contact & Login"}
           </h4>
           <Input
             label="Email"
@@ -243,6 +247,22 @@ export default function AddStudentDrawer({ isOpen, onClose, onSuccess, student }
               value={formData.phone}
               onChange={handleChange("phone")}
             />
+          </div>
+          <div className="mt-4">
+            <Input
+              label={lang === "fr" ? "Mot de passe" : "Password"}
+              type="password"
+              placeholder={isEditing ? (lang === "fr" ? "Laisser vide pour conserver" : "Leave blank to keep current") : (lang === "fr" ? "Minimum 6 caractères" : "Minimum 6 characters")}
+              value={formData.password}
+              onChange={handleChange("password")}
+            />
+            {isEditing && (
+              <p className="text-[11px] text-surface-400 mt-1.5">
+                {lang === "fr"
+                  ? "Laissez vide pour conserver le mot de passe actuel"
+                  : "Leave blank to keep the current password"}
+              </p>
+            )}
           </div>
         </div>
 

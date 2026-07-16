@@ -14,14 +14,21 @@ export function AuthProvider({ children }) {
   const { updatePrimaryColor } = useContext(ThemeContext);
   const onboardingCompleted = user?.onboardingCompleted ?? false;
 
+  // ── Restore token from localStorage on mount ──
   useEffect(() => {
     const urlToken = getTokenFromUrl();
+    const savedToken = localStorage.getItem("token");
+    if (savedToken && !urlToken) {
+      setAccessToken(savedToken);
+      setToken(savedToken);
+    }
     const exchangePromise = urlToken
       ? api.post(API_ENDPOINTS.AUTH.EXCHANGE, { token: urlToken }).then(res => {
           const exchangeToken = res.data?.data?.token;
           if (exchangeToken) {
             setAccessToken(exchangeToken);
             setToken(exchangeToken);
+            localStorage.setItem("token", exchangeToken);
           }
         }).catch(() => {})
       : Promise.resolve();
@@ -51,6 +58,7 @@ export function AuthProvider({ children }) {
 
       setAccessToken(data.token);
       setToken(data.token);
+      localStorage.setItem("token", data.token);
 
       // Immediately fetch full user profile (includes school.educationalSystems)
       try {
@@ -94,6 +102,7 @@ export function AuthProvider({ children }) {
     } catch { /* continue */ }
     setAccessToken(null);
     setToken(null);
+    localStorage.removeItem("token");
     clearSubdomain();
     setUser(null);
     setIsAuthenticated(false);

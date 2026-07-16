@@ -7,6 +7,7 @@ import {
   FiCheck,
   FiX,
   FiGrid,
+  FiSearch,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import seriesService from "../../../core/api/seriesService";
@@ -20,6 +21,7 @@ export default function SeriesManagementPage() {
   const [newName, setNewName] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchSeries = () => {
     setLoading(true);
@@ -32,6 +34,10 @@ export default function SeriesManagementPage() {
   };
 
   useEffect(() => { fetchSeries(); }, []);
+
+  const filteredSeries = series.filter((s) =>
+    s.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleAdd = async () => {
     if (!newName.trim()) return;
@@ -81,6 +87,28 @@ export default function SeriesManagementPage() {
         </div>
       </div>
 
+      {/* Search bar */}
+      <div className="flex items-center gap-2.5 mb-3 p-2.5 bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700">
+        <div className="relative flex-1">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-surface-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={isFr ? "Rechercher une série…" : "Search series…"}
+            className="w-full h-[40px] pl-9 pr-3 border border-surface-200 dark:border-surface-600 rounded-lg text-sm outline-none focus:border-primary-600 bg-transparent text-surface-800 dark:text-surface-100 transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+            >
+              <FiX className="w-3 h-3 text-surface-400" strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Add form */}
       <div className="flex items-center gap-2.5 mb-5 p-3 bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700">
         <input
@@ -106,6 +134,22 @@ export default function SeriesManagementPage() {
         {loading ? (
           <div className="flex justify-center py-14">
             <div className="w-8 h-8 rounded-full border-4 border-surface-200 dark:border-surface-600 border-t-primary-600 animate-spin" />
+          </div>
+        ) : filteredSeries.length === 0 && searchQuery ? (
+          <div className="text-center py-14">
+            <div className="w-[60px] h-[60px] rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center mx-auto mb-3">
+              <FiSearch className="w-6 h-6 text-surface-400" />
+            </div>
+            <p className="text-sm font-semibold text-surface-500">
+              {isFr
+                ? `Aucune série ne correspond à "${searchQuery}"`
+                : `No series match "${searchQuery}"`}
+            </p>
+            <p className="text-xs text-surface-400 mt-1">
+              {isFr
+                ? "Essayez un autre terme de recherche"
+                : "Try a different search term"}
+            </p>
           </div>
         ) : series.length === 0 ? (
           <div className="text-center py-14">
@@ -136,7 +180,7 @@ export default function SeriesManagementPage() {
                 </tr>
               </thead>
               <tbody>
-                {series.map((s, index) => {
+                {filteredSeries.map((s, index) => {
                   const isEditing = editingId === s.id;
                   return (
                     <tr

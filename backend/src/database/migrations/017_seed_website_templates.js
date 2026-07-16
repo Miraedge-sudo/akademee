@@ -1,7 +1,7 @@
 /**
  * Migration 017: Seed website_templates with bold/playful/premium
  */
-exports.up = async (sql) => {
+module.exports = async (sql) => {
   await sql`
     INSERT INTO website_templates (template_code, name, description)
     VALUES
@@ -10,8 +10,4 @@ exports.up = async (sql) => {
       ('premium', 'Premium', 'Serif typography, muted earth tones, elegant transitions')
     ON CONFLICT (template_code) DO NOTHING
   `;
-};
-
-exports.down = async (sql) => {
-  await sql`DELETE FROM website_templates WHERE template_code IN ('bold', 'playful', 'premium')`;
 };
