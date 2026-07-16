@@ -13,17 +13,19 @@ class AnnouncementService {
       creatorName: row.creator_name,
       isPublished: row.is_published,
       publishedAt: row.published_at,
+      files: row.files || [],
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };
   }
 
   async create(schoolId, data) {
-    const { title, content, targetAudience, priority, createdBy, isPublished } = data;
+    const { title, content, targetAudience, priority, createdBy, isPublished, files } = data;
     const publishedAt = isPublished ? new Date() : null;
+    const filesJson = JSON.stringify(files || []);
     const rows = await sql`
-      INSERT INTO announcements (school_id, title, content, target_audience, priority, created_by, is_published, published_at)
-      VALUES (${schoolId}, ${title}, ${content}, ${targetAudience || 'all'}, ${priority || 'normal'}, ${createdBy}, ${isPublished || false}, ${publishedAt})
+      INSERT INTO announcements (school_id, title, content, target_audience, priority, created_by, is_published, published_at, files)
+      VALUES (${schoolId}, ${title}, ${content}, ${targetAudience || 'all'}, ${priority || 'normal'}, ${createdBy}, ${isPublished || false}, ${publishedAt}, ${filesJson}::jsonb)
       RETURNING *
     `;
     return this.formatAnnouncement(rows[0]);
@@ -85,12 +87,13 @@ class AnnouncementService {
 
   async update(schoolId, announcementId, data) {
     await this.getById(schoolId, announcementId);
-    const { title, content, targetAudience, priority, isPublished } = data;
+    const { title, content, targetAudience, priority, isPublished, files } = data;
     let publishedAt = null;
     if (isPublished === true) {
       const current = await sql`SELECT published_at FROM announcements WHERE announcement_id = ${announcementId}`;
       publishedAt = current[0]?.published_at || new Date();
     }
+    const filesJson = files ? JSON.stringify(files) : null;
     const rows = await sql`
       UPDATE announcements SET
         title = COALESCE(${title || null}, title),
@@ -99,6 +102,7 @@ class AnnouncementService {
         priority = COALESCE(${priority || null}, priority),
         is_published = COALESCE(${isPublished ?? null}, is_published),
         published_at = CASE WHEN ${isPublished} = true AND published_at IS NULL THEN NOW() ELSE published_at END,
+        files = COALESCE(${filesJson}::jsonb, files),
         updated_at = NOW()
       WHERE announcement_id = ${announcementId} AND school_id = ${schoolId}
       RETURNING *

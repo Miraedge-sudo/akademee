@@ -49,6 +49,10 @@ const auditRoutes = require('./routes/audit.routes');
 const announcementRoutes = require('./routes/announcement.routes');
 const enrolmentRoutes = require('./routes/enrolment.routes');
 const swaggerRoutes = require('./routes/swagger.routes');
+const levelRoutes = require('./routes/level.routes');
+const seriesRoutes = require('./routes/series.routes');
+const v1PeriodRoutes = require('./routes/v1/period.routes');
+const v1SequenceRoutes = require('./routes/v1/sequence.routes');
 
 const app = express();
 
@@ -115,6 +119,10 @@ app.use('/api/roles', roleRoutes);
 app.use('/api/audit-logs', auditRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/website', enrolmentRoutes);
+app.use('/api/levels', levelRoutes);
+app.use('/api/series', seriesRoutes);
+app.use('/api/v1/periodes', v1PeriodRoutes);
+app.use('/api/v1/sequences', v1SequenceRoutes);
 
 // API documentation
 app.use('/api-docs', swaggerRoutes);

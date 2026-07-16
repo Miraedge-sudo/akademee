@@ -5,9 +5,9 @@ const enrollmentService = require('../services/enrollment.service');
 class ClassController {
   async createClass(req, res, next) {
     try {
-      const { name, classTeacherId, academicYearId, capacity } = req.body;
+      const { name, classTeacherId, academicYearId, capacity, levelId, seriesId } = req.body;
       const { schoolId } = req;
-      const result = await classService.create(schoolId, { name, classTeacherId, academicYearId, capacity });
+      const result = await classService.create(schoolId, { name, classTeacherId, academicYearId, capacity, levelId, seriesId });
       response.success(res, 'Class created', result, 201);
     } catch (error) {
       next(error);

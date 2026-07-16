@@ -162,8 +162,13 @@ export default function ClassDetailPage() {
         if (!classData) { setError("NOT_FOUND"); setLoading(false); return; }
 
         setCls(classData);
-        setLevels(EDUCATION_LEVELS);
-        setSeries(EDUCATION_SERIES);
+
+        const [levelsData, seriesData] = await Promise.all([
+          levelService.list().catch(() => []),
+          seriesService.list().catch(() => []),
+        ]);
+        setLevels(levelsData);
+        setSeries(seriesData);
 
         // Handle students — might be array or { students: [...] }
         let allStudents = Array.isArray(studentsData) ? studentsData : (studentsData?.students || []);
@@ -258,8 +263,8 @@ export default function ClassDetailPage() {
     try {
       const payload = {
         name: editForm.name.trim(),
-        levelId: editForm.levelId ? Number(editForm.levelId) : null,
-        seriesId: editForm.seriesId ? Number(editForm.seriesId) : null,
+        levelId: editForm.levelId || null,
+        seriesId: editForm.seriesId || null,
         capacity: editForm.capacity,
         classTeacherId: editForm.classTeacherId || null,
       };

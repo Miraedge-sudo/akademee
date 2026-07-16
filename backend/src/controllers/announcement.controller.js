@@ -1,11 +1,23 @@
 const response = require('../utils/response');
 const announcementService = require('../services/announcement.service');
+const { uploadFiles } = require('../services/announcementUpload.service');
 
 class AnnouncementController {
   async create(req, res, next) {
     try {
+      const schoolId = req.schoolId || req.user?.schoolId;
       const data = { ...req.body, createdBy: req.user?.userId };
-      const result = await announcementService.create(req.schoolId || req.user?.schoolId, data);
+
+      if (data.isPublished === 'true') data.isPublished = true;
+      if (data.isPublished === 'false') data.isPublished = false;
+      if (data.files === '') delete data.files;
+
+      if (req.files && req.files.length > 0) {
+        const uploaded = await uploadFiles(req.files, schoolId);
+        data.files = uploaded;
+      }
+
+      const result = await announcementService.create(schoolId, data);
       response.success(res, 'Announcement created', result, 201);
     } catch (error) { next(error); }
   }
@@ -47,7 +59,18 @@ class AnnouncementController {
   async update(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user?.schoolId;
-      const result = await announcementService.update(schoolId, req.params.id, req.body);
+      const data = { ...req.body };
+
+      if (data.isPublished === 'true') data.isPublished = true;
+      if (data.isPublished === 'false') data.isPublished = false;
+      if (data.files === '') delete data.files;
+
+      if (req.files && req.files.length > 0) {
+        const uploaded = await uploadFiles(req.files, schoolId);
+        data.files = uploaded;
+      }
+
+      const result = await announcementService.update(schoolId, req.params.id, data);
       response.success(res, 'Announcement updated', result);
     } catch (error) {
       if (error.message === 'Announcement not found') return response.error(res, error.message, null, 404);
