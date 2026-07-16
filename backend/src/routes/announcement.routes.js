@@ -9,6 +9,10 @@ const { standardLimiter } = require('../middleware/rateLimiter.middleware');
 const announcementUpload = require('../middleware/announcementUpload.middleware');
 
 const router = express.Router();
+
+// Public route — no auth required, used by website templates
+router.get('/public', announcementController.listPublic);
+
 router.use(authMiddleware);
 
 router.get('/', announcementController.list);

@@ -72,18 +72,25 @@ class ClassSubjectService {
     return { deleted: true, classSubjectId };
   }
 
-  async bulkAssign(schoolId, classId, subjectIds) {
-    if (!subjectIds || subjectIds.length === 0) return [];
-    const values = subjectIds.map(subjectId => ({
-      school_id: schoolId,
-      class_id: classId,
-      subject_id: subjectId,
-    }));
+  async bulkAssign(schoolId, classId, subjects) {
+    if (!subjects || subjects.length === 0) return [];
+    // subjects can be either an array of UUID strings (legacy) or an array of { subjectId, coefficient? }
+    const values = subjects.map(s => {
+      const subjectId = typeof s === 'string' ? s : s.subjectId;
+      const coefficient = typeof s === 'string' ? null : (s.coefficient || null);
+      return {
+        school_id: schoolId,
+        class_id: classId,
+        subject_id: subjectId,
+        coefficient,
+      };
+    });
     const rows = await sql`
-      INSERT INTO class_subjects (school_id, class_id, subject_id)
+      INSERT INTO class_subjects (school_id, class_id, subject_id, coefficient)
       SELECT * FROM jsonb_to_recordset(${sql.json(values)})
-        AS x(school_id uuid, class_id uuid, subject_id uuid)
-      ON CONFLICT (class_id, subject_id) DO NOTHING
+        AS x(school_id uuid, class_id uuid, subject_id uuid, coefficient numeric)
+      ON CONFLICT (class_id, subject_id) DO UPDATE SET
+        coefficient = COALESCE(EXCLUDED.coefficient, class_subjects.coefficient)
       RETURNING *
     `;
     return rows.map(r => this.format(r));

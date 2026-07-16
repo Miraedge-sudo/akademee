@@ -7,13 +7,14 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-const SECTIONS = ["about", "classes", "gallery", "testimonials", "enrol", "contact"];
+const SECTIONS = ["about", "classes", "gallery", "announcements", "testimonials", "enrol", "contact"];
 const CLASS_LEVELS = ["All", "Junior", "Senior", "O Level", "A Level"];
 
 // ──────────────────────────── Reusable sub-components ────────────────────────────
 
 import { FiHome, FiLogIn, FiPhone, FiMail, FiMapPin, FiArrowRight, FiStar, FiUsers, FiImage, FiPlay, FiCalendar, FiMessageCircle, FiClock, FiChevronLeft, FiChevronRight, FiX, FiSearch, FiCrosshair, FiHeart, FiEdit3 } from "react-icons/fi";
 import EnrollmentForm from "../components/EnrollmentForm";
+import WebsiteAnnouncements from "../components/WebsiteAnnouncements";
 import { useScrollProgress, ScrollProgressBar, BackToTopButton } from "../hooks/useScrollProgress.jsx";
 import { useCursorGlow } from "../hooks/useCursorGlow.jsx";
 import { useActiveSection } from "../hooks/useActiveSection.jsx";
@@ -584,7 +585,7 @@ export default function BoldTemplate({ school }) {
       </section>
 
       {/* ════════════════ VALUES ════════════════ */}
-      <section className="py-28 max-md:py-16 relative overflow-hidden" style={{ background: "#0d0d0d" }}>
+      <section className="py-28 max-md:py-16 relative overflow-hidden" style={{ background: isDark ? "#0d0d0d" : "#f0efea" }}>
         <div className="absolute top-1/2 right-0 w-[500px] h-[500px] rounded-full opacity-[0.03]" style={{ background: pc, filter: "blur(100px)" }} />
         <div className="relative max-w-[1280px] mx-auto px-6">
           <div className="text-center mb-16">
@@ -672,7 +673,7 @@ export default function BoldTemplate({ school }) {
       )}
 
       {/* ════════════════ CLASSES ════════════════ */}
-      <section className="py-28 max-md:py-16" style={{ background: "#0d0d0d" }} id="classes">
+      <section className="py-28 max-md:py-16" style={{ background: isDark ? "#0d0d0d" : "#f0efea" }} id="classes">
         <div className="max-w-[1280px] mx-auto px-6">
           <div className="text-center mb-12">
             <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-4" style={{ color: pc }} data-reveal>{t(TRANSLATIONS.classes.academics)}</p>
@@ -724,6 +725,16 @@ export default function BoldTemplate({ school }) {
           </div>
         </div>
       </section>
+
+      {/* ════════════════ ANNOUNCEMENTS ════════════════ */}
+      <WebsiteAnnouncements
+        school={school}
+        variant="bold"
+        primaryColor={pc}
+        t={t}
+        TRANSLATIONS={TRANSLATIONS}
+        theme={{ isDark }}
+      />
 
       {/* ════════════════ TESTIMONIALS ════════════════ */}
       <section className="py-28 max-md:py-16 relative overflow-hidden" id="testimonials">
@@ -797,7 +808,7 @@ export default function BoldTemplate({ school }) {
       </section>
 
       {/* ════════════════ GALLERY ════════════════ */}
-      <section className="py-28 max-md:py-16" style={{ background: "#0d0d0d" }} id="gallery">
+      <section className="py-28 max-md:py-16" style={{ background: isDark ? "#0d0d0d" : "#f0efea" }} id="gallery">
         <div className="max-w-[1280px] mx-auto px-6">
           <div className="text-center mb-14">
             <p className="text-[10px] font-semibold tracking-[3px] uppercase mb-4" style={{ color: pc }} data-reveal>{t(TRANSLATIONS.gallery.gallery)}</p>
@@ -861,7 +872,7 @@ export default function BoldTemplate({ school }) {
       )}
 
       {/* ════════════════ ENROLMENT FORM ════════════════ */}
-      <section className="py-28 max-md:py-16" style={{ background: "#0d0d0d" }} id="enrol">
+      <section className="py-28 max-md:py-16" style={{ background: isDark ? "#0d0d0d" : "#f0efea" }} id="enrol">
         <div className="max-w-[1280px] mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-md:gap-10 items-start">
             <div>
@@ -933,7 +944,7 @@ export default function BoldTemplate({ school }) {
       </section>
 
       {/* ════════════════ CONTACT ════════════════ */}
-      <section className="py-28 max-md:py-16" style={{ background: "#0d0d0d" }} id="contact">
+      <section className="py-28 max-md:py-16" style={{ background: isDark ? "#0d0d0d" : "#f0efea" }} id="contact">
         <div className="max-w-[1280px] mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-md:gap-10">
             <div>
@@ -980,7 +991,7 @@ export default function BoldTemplate({ school }) {
       </section>
 
       {/* ════════════════ FOOTER ════════════════ */}
-      <footer style={{ background: "#030303", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+      <footer style={{ background: isDark ? "#030303" : "#e8e7e2", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
         <div className="max-w-[1280px] mx-auto px-6 py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
             {/* Brand */}

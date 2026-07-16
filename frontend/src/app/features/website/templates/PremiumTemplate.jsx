@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { FiHome, FiLogIn, FiPhone, FiMail, FiMapPin, FiArrowRight, FiStar, FiUsers, FiImage, FiPlay, FiMessageCircle, FiBookOpen, FiClock, FiFeather, FiAward, FiEdit3 } from "react-icons/fi";
 import EnrollmentForm from "../components/EnrollmentForm";
+import WebsiteAnnouncements from "../components/WebsiteAnnouncements";
 import { useScrollProgress, ScrollProgressBar, BackToTopButton } from "../hooks/useScrollProgress.jsx";
 import { useActiveSection } from "../hooks/useActiveSection.jsx";
 import { useCursorGlow } from "../hooks/useCursorGlow.jsx";
@@ -15,7 +16,7 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-const SECTIONS = ["about", "classes", "gallery", "enrol", "contact"];
+const SECTIONS = ["about", "classes", "gallery", "announcements", "enrol", "contact"];
 
 // ──────────────────── Icons ────────────────────
 
@@ -298,7 +299,7 @@ export default function PremiumTemplate({ school }) {
       </header>
 
       {/* Mobile Menu */}
-      <div className={`fixed inset-0 z-40 flex-col pt-24 px-8 pb-8 ${mobileOpen ? "flex" : "hidden"}`} style={{ background: "#fcfaf7" }}>
+      <div className={`fixed inset-0 z-40 flex-col pt-24 px-8 pb-8 ${mobileOpen ? "flex" : "hidden"} bg-[#fcfaf7]`}>
         {[...SECTIONS, "heritage", "testimonials"].map((item) => (
           <a
             key={item}
@@ -679,6 +680,16 @@ export default function PremiumTemplate({ school }) {
         </div>
       </section>
 
+      {/* ════════════════ ANNOUNCEMENTS ════════════════ */}
+      <WebsiteAnnouncements
+        school={school}
+        variant="premium"
+        primaryColor={pc}
+        t={t}
+        TRANSLATIONS={TRANSLATIONS}
+        theme={{ isDark }}
+      />
+
       {/* ════════════════ ENROLMENT FORM ════════════════ */}
       <section className="py-32 max-md:py-20" id="enrol">
         <div className="max-w-[1200px] mx-auto px-8">
@@ -697,6 +708,7 @@ export default function PremiumTemplate({ school }) {
               <EnrollmentForm
                 variant="premium"
                 primaryColor={pc}
+                isDark={isDark}
               />
             </div>
           </div>
@@ -753,7 +765,7 @@ export default function PremiumTemplate({ school }) {
       </section>
 
       {/* ════════════════ FOOTER ════════════════ */}
-      <footer className="border-t border-[#e8e4de]" style={{ background: "#fcfaf7" }}>
+      <footer className="border-t border-[#e8e4de] bg-[#fcfaf7]">
         <div className="max-w-[1200px] mx-auto px-8 py-20">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-12">
             <div className="col-span-2 md:col-span-1">

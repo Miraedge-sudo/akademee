@@ -64,7 +64,7 @@ class AuthController {
 
       const roles = decoded.roles || [];
       const schools = await sql`
-        SELECT s.school_id, s.name, s.subdomain, s.is_active, wt.template_code
+        SELECT s.school_id, s.name, s.subdomain, s.is_active, s.onboarding_completed, wt.template_code
         FROM schools s
         LEFT JOIN website_templates wt ON s.website_template_id = wt.template_id
         WHERE s.school_id = ${decoded.schoolId}

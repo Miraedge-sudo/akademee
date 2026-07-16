@@ -490,23 +490,6 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
       ],
     },
-    {
-      group: "admissions",
-      label: "Admissions",
-      labelFr: "Admissions",
-      items: [
-        {
-          key: "applications",
-          path: "/dashboard/admissions/applications",
-          icon: "users",
-        },
-        {
-          key: "enrollment",
-          path: "/dashboard/admissions/enrollment",
-          icon: "barchart",
-        },
-      ],
-    },
   ],
 };
 
@@ -562,6 +545,12 @@ const BASE_NAV_CONFIG = {
           icon: "dollar",
           badge: 3,
         },
+      ],
+    },
+    {
+      group: "admissions",
+      items: [
+        { key: "applications", path: "/dashboard/admissions/applications", icon: "users" },
       ],
     },
     {
@@ -827,7 +816,7 @@ function NavIcon({ name, className }) {
 
 // ── System Section Renderer ──
 function SystemSectionRenderer({ systemId, groups, collapsed: sidebarCollapsed, location, t, i18n, onCloseMobile }) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const labels = SYSTEM_LABELS[systemId];
   const isFr = i18n.language === "fr";
   const sysLabel = labels ? (isFr ? labels.fr : labels.en) : systemId;

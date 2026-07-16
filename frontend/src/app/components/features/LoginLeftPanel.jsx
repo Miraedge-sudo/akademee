@@ -193,7 +193,7 @@ export default function LoginLeftPanel() {
             {KPIS.map((k) => {
               const v = useCountUp(k.target, k.decimals || 0);
               return (
-                <div key={k.label}>
+                <div key={k.labelKey}>
                   <b className="block font-display text-[26px] text-white font-medium">
                     {k.decimals ? v.toFixed(k.decimals) : v}
                     {k.suffix}

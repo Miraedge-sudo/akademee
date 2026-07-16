@@ -8,17 +8,18 @@ class DashboardService {
 
     const [teacherCount] = academicYearId
       ? await sql`
-          SELECT COUNT(DISTINCT c.class_teacher_id)::int AS total
-          FROM classes c
-          WHERE c.school_id = ${schoolId} AND c.academic_year_id = ${academicYearId}
-            AND c.class_teacher_id IS NOT NULL
+          SELECT COUNT(DISTINCT ct.teacher_id)::int AS total
+          FROM class_teachers ct
+          JOIN classes c ON ct.class_id = c.class_id
+          WHERE ct.school_id = ${schoolId}
+            AND c.academic_year_id = ${academicYearId}
         `
       : await sql`
           SELECT COUNT(*)::int AS total
           FROM user_roles ur
           JOIN users u ON ur.user_id = u.user_id
           JOIN roles r ON ur.role_id = r.role_id
-          WHERE u.school_id = ${schoolId} AND r.role_code = 'teacher' AND u.is_active = true
+          WHERE u.school_id = ${schoolId} AND r.role_code = 'TEACHER' AND u.is_active = true
         `;
 
     const [classCount] = await sql`

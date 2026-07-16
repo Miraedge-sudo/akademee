@@ -7,12 +7,13 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-const SECTIONS = ["about", "classes", "gallery", "enrol", "contact"];
+const SECTIONS = ["about", "classes", "gallery", "announcements", "enrol", "contact"];
 
 // ──────────────────── Icons ────────────────────
 
 import { FiHome, FiLogIn, FiPhone, FiMail, FiMapPin, FiArrowRight, FiStar, FiUsers, FiImage, FiPlay, FiCalendar, FiClock, FiChevronDown, FiHeart, FiSmile, FiEdit3, FiAward, FiBook, FiBookOpen, FiCamera, FiClipboard, FiCrosshair, FiInfo, FiTrendingUp, FiDollarSign, FiBarChart2, FiFeather, FiMessageCircle } from "react-icons/fi";
 import EnrollmentForm from "../components/EnrollmentForm";
+import WebsiteAnnouncements from "../components/WebsiteAnnouncements";
 import { useScrollProgress, ScrollProgressBar, BackToTopButton } from "../hooks/useScrollProgress.jsx";
 import { useActiveSection } from "../hooks/useActiveSection.jsx";
 import { useWebsiteLanguage, LanguageToggle } from "../hooks/useWebsiteLanguage.jsx";
@@ -322,6 +323,9 @@ export default function PlayfulTemplate({ school }) {
         .website-dark .border-\[\#e0ddd8\] { border-color: #444444 !important; }
         .website-dark .border-\[\#eee\] { border-color: #3a3a3a !important; }
         .website-dark .bg-\[\#fff\] { background: #222222 !important; }
+        .website-dark .bg-white\/90 { background-color: rgba(42,42,42,0.9) !important; }
+        .website-dark .bg-white\/95 { background-color: rgba(42,42,42,0.95) !important; }
+        .website-dark .border-white { border-color: #3a3a3a !important; }
         .website-dark .hover\:border-\[var\(--p\)\]:hover { border-color: var(--p) !important; }
         .website-dark .shadow-md, .website-dark .shadow-sm, .website-dark .shadow-xl, .website-dark .shadow-lg { box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important; }
       `}</style>
@@ -331,7 +335,7 @@ export default function PlayfulTemplate({ school }) {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled ? "shadow-lg shadow-black/5" : "bg-transparent"
         }`}
-        style={{ background: scrolled ? "rgba(250,249,247,0.92)" : "transparent", backdropFilter: scrolled ? "blur(16px)" : "none" }}
+        style={{ background: scrolled ? (isDark ? "rgba(42,42,42,0.92)" : "rgba(250,249,247,0.92)") : "transparent", backdropFilter: scrolled ? "blur(16px)" : "none" }}
       >
         <div className="max-w-[1200px] mx-auto px-5">
           <div className="flex items-center justify-between h-[72px]">
@@ -396,7 +400,7 @@ export default function PlayfulTemplate({ school }) {
       {/* Mobile Menu */}
       <div
         className={`fixed inset-0 z-40 flex-col pt-20 px-5 pb-8 ${mobileOpen ? "flex" : "hidden"}`}
-        style={{ background: "rgba(250,249,247,0.97)", backdropFilter: "blur(24px)" }}
+        style={{ background: isDark ? "rgba(42,42,42,0.97)" : "rgba(250,249,247,0.97)", backdropFilter: "blur(24px)" }}
       >
         {[...SECTIONS, "testimonials"].map((item) => (
           <a
@@ -559,7 +563,7 @@ export default function PlayfulTemplate({ school }) {
       </section>
 
       {/* ════════════════ VALUES ════════════════ */}
-      <section className="py-24 max-md:py-16" style={{ background: "#fff" }}>
+      <section className="py-24 max-md:py-16 bg-white" style={{ background: isDark ? "#2a2a2a" : "#fff" }}>
         <div className="max-w-[1200px] mx-auto px-5">
           <div className="text-center mb-14">              <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
                 <Icon path={PATHS.star} className="w-3.5 h-3.5 inline-block mr-1" /> {t(TRANSLATIONS.values.ourValues)}
@@ -631,7 +635,7 @@ export default function PlayfulTemplate({ school }) {
       )}
 
       {/* ════════════════ CLASSES (Accordion) ════════════════ */}
-      <section className="py-24 max-md:py-16" style={{ background: "#fff" }} id="classes">
+      <section className="py-24 max-md:py-16" style={{ background: isDark ? "#2a2a2a" : "#fff" }} id="classes">
         <div className="max-w-[800px] mx-auto px-5">
           <div className="text-center mb-14">              <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
                 <Icon path={PATHS.bookOpen} className="w-3.5 h-3.5 inline-block mr-1" /> {t(TRANSLATIONS.classes.academics)}
@@ -755,8 +759,18 @@ export default function PlayfulTemplate({ school }) {
         </div>
       </section>
 
+      {/* ════════════════ ANNOUNCEMENTS ════════════════ */}
+      <WebsiteAnnouncements
+        school={school}
+        variant="playful"
+        primaryColor={pc}
+        t={t}
+        TRANSLATIONS={TRANSLATIONS}
+        theme={{ isDark }}
+      />
+
       {/* ════════════════ TESTIMONIALS ════════════════ */}
-      <section className="py-24 max-md:py-16 relative overflow-hidden" style={{ background: "#fff" }} id="testimonials">
+      <section className="py-24 max-md:py-16 relative overflow-hidden" style={{ background: isDark ? "#2a2a2a" : "#fff" }} id="testimonials">
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full opacity-[0.05]" style={{ background: pc, filter: "blur(70px)" }} />
         <div className="absolute bottom-10 right-10 opacity-[0.04]" style={{ animation: "playful-float 7s ease-in-out infinite" }}><Icon path={PATHS.messageCircle} className="w-12 h-12" /></div>
 
@@ -817,7 +831,7 @@ export default function PlayfulTemplate({ school }) {
       </section>
 
       {/* ════════════════ ENROLMENT FORM ════════════════ */}
-      <section className="py-24 max-md:py-16" style={{ background: "#fff" }} id="enrol">
+      <section className="py-24 max-md:py-16" style={{ background: isDark ? "#2a2a2a" : "#fff" }} id="enrol">
         <div className="max-w-[1200px] mx-auto px-5">
           <div className="text-center mb-12">              <p className="inline-block text-[11px] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4" style={{ background: pcl, color: pc }} data-reveal-p>
                 <Icon path={PATHS.edit3} className="w-3.5 h-3.5 inline-block mr-1" /> {t(TRANSLATIONS.enrolment.enrolment)}
@@ -834,6 +848,7 @@ export default function PlayfulTemplate({ school }) {
               <EnrollmentForm
                 variant="light"
                 primaryColor={pc}
+                isDark={isDark}
               />
             </div>
           </div>
@@ -891,7 +906,7 @@ export default function PlayfulTemplate({ school }) {
       </section>
 
       {/* ════════════════ FOOTER ════════════════ */}
-      <footer className="border-t-2 border-[#f0eeea]" style={{ background: "#fff" }}>
+      <footer className="border-t-2 border-[#f0eeea]" style={{ background: isDark ? "#1a1a1a" : "#fff" }}>
         <div className="max-w-[1200px] mx-auto px-5 py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-10">
             <div className="col-span-2 md:col-span-1">
@@ -926,7 +941,7 @@ export default function PlayfulTemplate({ school }) {
       </footer>
 
       {/* Sticky Mobile CTA */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 border-t-2 border-[#f0eeea] p-3 pb-[max(12px,env(safe-area-inset-bottom))] flex gap-2.5" style={{ backdropFilter: "blur(12px)" }}>
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t-2 border-[#f0eeea] p-3 pb-[max(12px,env(safe-area-inset-bottom))] flex gap-2.5" style={{ background: isDark ? "rgba(42,42,42,0.95)" : "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)" }}>
         <a
           href="/login"
           className="playful-btn flex-1 h-12 flex items-center justify-center rounded-full text-[14px] font-bold text-white no-underline shadow-lg"

@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { getStudents, deleteStudent } from "../../../core/api/studentService";
+import { getClasses } from "../../../core/api/classService";
+import { createEnrollment } from "../../../core/api/enrollmentService";
 import { YearContext } from "../../../core/context/YearContext";
 import AddStudentDrawer from "../components/AddStudentDrawer";
-import { FiUsers } from "react-icons/fi";
+import { FiUsers, FiCheckCircle } from "react-icons/fi";
 import {
   Button,
   Card,
@@ -37,12 +39,20 @@ export default function StudentsListPage() {
   const [deletingStudent, setDeletingStudent] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Enroll modal
+  const [enrollModalOpen, setEnrollModalOpen] = useState(false);
+  const [enrollingStudent, setEnrollingStudent] = useState(null);
+  const [enrollClassId, setEnrollClassId] = useState("");
+  const [enrolling, setEnrolling] = useState(false);
+  const [classes, setClasses] = useState([]);
+  const [loadingClasses, setLoadingClasses] = useState(false);
+
   const loadStudents = useCallback(async () => {
     const filter = selectedYearId ? { academicYearId: selectedYearId } : {};
     try {
       setLoading(true);
       setError(null);
-      const data = await getStudents({ ...filter });
+      const data = await getStudents({ ...filter, limit: 500 });
       const list = Array.isArray(data) ? data : data?.students || data?.rows || [];
       setStudents(list);
     } catch (err) {
@@ -55,7 +65,7 @@ export default function StudentsListPage() {
     } finally {
       setLoading(false);
     }
-  }, [lang, yearFilter]);
+  }, [lang, selectedYearId]);
 
   useEffect(() => {
     loadStudents();
@@ -74,6 +84,42 @@ export default function StudentsListPage() {
 
   const handleDrawerSuccess = () => {
     loadStudents();
+  };
+
+  // ── Enroll handlers ──
+  const openEnrollModal = async (student) => {
+    setEnrollingStudent(student);
+    setEnrollClassId("");
+    setEnrollModalOpen(true);
+    setLoadingClasses(true);
+    try {
+      const data = await getClasses({ limit: 200 });
+      const list = Array.isArray(data) ? data : data?.classes || [];
+      setClasses(list);
+    } catch {
+      setClasses([]);
+    }
+    setLoadingClasses(false);
+  };
+
+  const handleEnroll = async () => {
+    if (!enrollingStudent || !enrollClassId) return;
+    setEnrolling(true);
+    try {
+      await createEnrollment({
+        studentId: enrollingStudent.id,
+        classId: enrollClassId,
+        academicYearId: selectedYearId || undefined,
+      });
+      toast.success(lang === "fr" ? "Élève inscrit avec succès ✨" : "Student enrolled successfully ✨");
+      setEnrollModalOpen(false);
+      setEnrollingStudent(null);
+      loadStudents();
+    } catch (err) {
+      const msg = err?.response?.data?.message || (lang === "fr" ? "Erreur d'inscription" : "Enrollment failed");
+      toast.error(msg);
+    }
+    setEnrolling(false);
   };
 
   // ── Delete handler ──
@@ -167,9 +213,20 @@ export default function StudentsListPage() {
     {
       key: "actions",
       label: "",
-      width: 100,
+      width: 140,
       render: (_, row) => (
         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          {!row.classId && row.status === "active" && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => openEnrollModal(row)}
+              className="!bg-primary-900 !text-white text-[11px] !px-2.5 !py-1"
+            >
+              <FiCheckCircle className="w-3 h-3 mr-1" />
+              {lang === "fr" ? "Inscrire" : "Enroll"}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -280,6 +337,64 @@ export default function StudentsListPage() {
         onSuccess={handleDrawerSuccess}
         student={editingStudent}
       />
+
+      {/* Enroll Modal */}
+      <Modal
+        isOpen={enrollModalOpen}
+        onClose={() => setEnrollModalOpen(false)}
+        title={lang === "fr" ? "Inscrire un élève" : "Enroll Student"}
+        size="sm"
+        footer={
+          <div className="flex gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => setEnrollModalOpen(false)}
+              fullWidth
+            >
+              {lang === "fr" ? "Annuler" : "Cancel"}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleEnroll}
+              loading={enrolling}
+              fullWidth
+              disabled={!enrollClassId}
+            >
+              {lang === "fr" ? "Inscrire" : "Enroll"}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-surface-600 dark:text-surface-300">
+            {lang === "fr"
+              ? `Sélectionnez une classe pour inscrire ${enrollingStudent?.firstName} ${enrollingStudent?.lastName}.`
+              : `Select a class to enroll ${enrollingStudent?.firstName} ${enrollingStudent?.lastName}.`}
+          </p>
+          {loadingClasses ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="w-6 h-6 rounded-full border-2 border-surface-300 border-t-primary-600 animate-spin" />
+            </div>
+          ) : classes.length === 0 ? (
+            <p className="text-sm text-surface-400 italic">
+              {lang === "fr" ? "Aucune classe disponible. Créez d'abord des classes." : "No classes available. Create classes first."}
+            </p>
+          ) : (
+            <select
+              value={enrollClassId}
+              onChange={(e) => setEnrollClassId(e.target.value)}
+              className="w-full h-11 px-3.5 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-sm outline-none focus:border-primary-500"
+            >
+              <option value="">{lang === "fr" ? "-- Choisir une classe --" : "-- Select a class --"}</option>
+              {classes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal

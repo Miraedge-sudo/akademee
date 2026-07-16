@@ -98,7 +98,7 @@ const SYSTEM_ICONS = {
 export default function EducationalSystemSelectionPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("common");
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { selectedSystems, updateSelectedSystems, loading } =
     useEducationalSystems();
 
@@ -130,6 +130,7 @@ export default function EducationalSystemSelectionPage() {
 
     try {
       await updateSelectedSystems(localSelected);
+      await refreshUser();
       navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error("Save error:", err);

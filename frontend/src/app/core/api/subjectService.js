@@ -103,3 +103,50 @@ export async function removeTeacherAssignment(id) {
   const response = await api.delete(API_ENDPOINTS.SUBJECT_TEACHERS.DELETE(id));
   return response.data.data;
 }
+
+// ── Class-Teacher Assignments ──
+
+/**
+ * Get all class-teacher assignments across all classes
+ */
+export async function getAllClassTeacherAssignments() {
+  const response = await api.get(API_ENDPOINTS.CLASS_TEACHERS.LIST_ALL);
+  return response.data.data;
+}
+
+/**
+ * Get teachers assigned to a specific class
+ * @param {string} classId
+ */
+export async function getClassTeachers(classId) {
+  const response = await api.get(API_ENDPOINTS.CLASS_TEACHERS.BY_CLASS(classId));
+  return response.data.data;
+}
+
+/**
+ * Assign a teacher to a class
+ * @param {string} classId
+ * @param {object} data - { teacherId, isMain? }
+ */
+export async function assignClassTeacher(classId, data) {
+  const response = await api.post(API_ENDPOINTS.CLASS_TEACHERS.ASSIGN(classId), data);
+  return response.data.data;
+}
+
+/**
+ * Remove a teacher from a class
+ * @param {string} classId
+ * @param {string} teacherId
+ */
+export async function removeClassTeacher(classId, teacherId) {
+  const response = await api.delete(API_ENDPOINTS.CLASS_TEACHERS.REMOVE(classId, teacherId));
+  return response.data.data;
+}
+
+/**
+ * Get available teachers (users with TEACHER role)
+ */
+export async function getAvailableTeachers() {
+  const response = await api.get(API_ENDPOINTS.CLASS_TEACHERS.AVAILABLE);
+  return response.data.data;
+}

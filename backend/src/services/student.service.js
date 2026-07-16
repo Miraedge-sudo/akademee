@@ -69,16 +69,52 @@ class StudentService {
       feeStatus = 'pending',
     } = data;
 
-    const users = await sql`
-      INSERT INTO users (school_id, first_name, last_name, email, phone, is_active, created_at)
-      VALUES (
-        ${schoolId}, ${firstName}, ${lastName},
-        ${email || null}, ${phone || null}, true, NOW()
-      )
-      RETURNING user_id, first_name, last_name, email, phone
-    `;
+    // ── Reuse existing user if email already exists in this school ──
+    let user;
+    if (email) {
+      const existing = await sql`
+        SELECT user_id, first_name, last_name, email, phone
+        FROM users
+        WHERE email = ${email} AND school_id = ${schoolId}
+        LIMIT 1
+      `;
+      if (existing.length > 0) {
+        user = existing[0];
+        // Update the existing user's name/phone in case they changed
+        await sql`
+          UPDATE users SET
+            first_name = ${firstName},
+            last_name = ${lastName},
+            phone = COALESCE(${phone || null}, phone),
+            is_active = true,
+            updated_at = NOW()
+          WHERE user_id = ${user.user_id} AND school_id = ${schoolId}
+        `;
+      }
+    }
 
-    const user = users[0];
+    if (!user) {
+      const users = await sql`
+        INSERT INTO users (school_id, first_name, last_name, email, phone, is_active, created_at)
+        VALUES (
+          ${schoolId}, ${firstName}, ${lastName},
+          ${email || null}, ${phone || null}, true, NOW()
+        )
+        RETURNING user_id, first_name, last_name, email, phone
+      `;
+      user = users[0];
+    }
+
+    // ── Assign STUDENT role ──
+    const studentRole = await sql`SELECT role_id FROM roles WHERE role_code = 'STUDENT' LIMIT 1`;
+    if (studentRole.length > 0) {
+      await sql`
+        INSERT INTO user_roles (user_id, role_id)
+        VALUES (${user.user_id}, ${studentRole[0].role_id})
+        ON CONFLICT DO NOTHING
+      `;
+    }
+
     const number = studentNumber || `STU-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
     const students = await sql`

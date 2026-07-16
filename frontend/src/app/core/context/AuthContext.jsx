@@ -49,23 +49,36 @@ export function AuthProvider({ children }) {
       const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
       const data = response.data.data;
 
-      const userData = data.user;
-
       setAccessToken(data.token);
       setToken(data.token);
-      setUser(userData);
-      setIsAuthenticated(true);
 
-      if (userData.school?.primaryColor) {
-        updatePrimaryColor(userData.school.primaryColor);
+      // Immediately fetch full user profile (includes school.educationalSystems)
+      try {
+        const meResponse = await api.get(API_ENDPOINTS.AUTH.ME);
+        const fullUserData = meResponse.data.data;
+        setUser(fullUserData);
+        setIsAuthenticated(true);
+        if (fullUserData.school?.primaryColor) {
+          updatePrimaryColor(fullUserData.school.primaryColor);
+        }
+        return {
+          success: true,
+          onboardingCompleted: fullUserData.onboardingCompleted,
+          subdomain: fullUserData.subdomain,
+          token: data.token,
+        };
+      } catch {
+        // Fallback: use basic user data from login response
+        const userData = data.user;
+        setUser(userData);
+        setIsAuthenticated(true);
+        return {
+          success: true,
+          onboardingCompleted: userData.onboardingCompleted,
+          subdomain: userData.subdomain,
+          token: data.token,
+        };
       }
-
-      return {
-        success: true,
-        onboardingCompleted: userData.onboardingCompleted,
-        subdomain: userData.subdomain,
-        token: data.token,
-      };
     } catch (error) {
       console.error("Login error:", error);
       return {
@@ -87,6 +100,22 @@ export function AuthProvider({ children }) {
     updatePrimaryColor("#085041");
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await api.get(API_ENDPOINTS.AUTH.ME);
+      const userData = response.data.data;
+      setUser(userData);
+      setIsAuthenticated(true);
+      if (userData.school?.primaryColor) {
+        updatePrimaryColor(userData.school.primaryColor);
+      }
+      return userData;
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      return null;
+    }
+  };
+
   const verifySchool = async (subdomain) => {
     const response = await api.post(API_ENDPOINTS.AUTH.VERIFY_SCHOOL, {
       subdomain,
@@ -104,6 +133,7 @@ export function AuthProvider({ children }) {
         token,
         login,
         logout,
+        refreshUser,
         verifySchool,
       }}
     >

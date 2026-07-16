@@ -591,7 +591,7 @@ export default function OnboardingPage() {
   const [searchParams] = useSearchParams();
   const isSettingsMode = searchParams.get("mode") === "settings";
   const { t } = useTranslation("onboarding");
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { updatePrimaryColor } = useContext(ThemeContext);
   const { updateSelectedSystems } = useEducationalSystems();
 
@@ -685,7 +685,7 @@ export default function OnboardingPage() {
         rankingCity: result.rankingCity || "",
         yearFounded: result.yearFounded || "",
         classesConfig: result.classesConfig || [],
-        aboutPhotos: result.aboutPhotos || [],
+        aboutPhotos: Array.isArray(result.aboutPhotos) ? result.aboutPhotos : [],
         gallery: Array.isArray(result.gallery) ? result.gallery : [],
         websitePublished: result.websitePublished || false,
       });
@@ -1013,6 +1013,28 @@ export default function OnboardingPage() {
     };
   };
 
+  /**
+   * Calculates whether white (#ffffff) or dark (#1a1a1a) text
+   * provides better contrast on the given background color.
+   * Uses WCAG relative luminance formula.
+   */
+  const getContrastTextColor = (hex) => {
+    // Remove # and parse RGB
+    const c = hex.replace("#", "");
+    const r = parseInt(c.substring(0, 2), 16) / 255;
+    const g = parseInt(c.substring(2, 4), 16) / 255;
+    const b = parseInt(c.substring(4, 6), 16) / 255;
+
+    // Linearize sRGB values
+    const lin = (v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+
+    // Relative luminance
+    const luminance = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+
+    // WCAG threshold: if luminance > 0.179, use dark text; otherwise white
+    return luminance > 0.179 ? "#1a1a1a" : "#ffffff";
+  };
+
   const applyPrimaryColor = (primaryColor) => {
     localStorage.setItem("akademee-primary-color", primaryColor);
     document.documentElement.style.setProperty("--primary-color", primaryColor);
@@ -1127,7 +1149,7 @@ export default function OnboardingPage() {
       return currentIdx > 0 ? allowed[currentIdx - 1] : s;
     });
   };
-  const skip = () => {
+  const skip = async () => {
     const allowed =
       TEMPLATE_VISIBLE_STEPS[data.templateCode] || TEMPLATE_VISIBLE_STEPS.bold;
     const last = allowed[allowed.length - 1];
@@ -1137,6 +1159,7 @@ export default function OnboardingPage() {
         return idx < allowed.length - 1 ? allowed[idx + 1] : s;
       });
     } else {
+      await refreshUser();
       navigate("/dashboard");
     }
   };
@@ -1425,25 +1448,82 @@ export default function OnboardingPage() {
                   value={pc}
                   onChange={(e) => handleColorChange(e.target.value)}
                   className="absolute opacity-0 w-0 h-0"
-                />
-                <span className="text-sm font-medium text-surface-700 dark:text-surface-200 font-mono min-w-[4.5rem]">
+                />            <span className="text-sm font-medium text-surface-700 dark:text-surface-200 font-mono min-w-[4.5rem]">
                   {pc}
                 </span>
               </div>
-              <div className="flex gap-1.5 flex-wrap">
-                {COLOR_PRESETS.map((hex) => (
-                  <button
-                    key={hex}
-                    type="button"
-                    onClick={() => handleColorChange(hex)}
-                    className={`w-7 h-7 rounded-full flex-shrink-0 transition-all hover:scale-110 ${
-                      pc.toLowerCase() === hex.toLowerCase()
-                        ? "ring-2 ring-offset-2 ring-surface-800 dark:ring-surface-200 dark:ring-offset-surface-900 scale-110"
-                        : ""
-                    }`}
-                    style={{ backgroundColor: hex }}
-                  />
-                ))}
+              <div className="flex gap-2 flex-wrap">
+                {COLOR_PRESETS.map((hex) => {
+                  const textColor = getContrastTextColor(hex);
+                  const isSelected = pc.toLowerCase() === hex.toLowerCase();
+                  return (
+                    <button
+                      key={hex}
+                      type="button"
+                      onClick={() => handleColorChange(hex)}
+                      className={`w-10 h-10 rounded-lg flex-shrink-0 transition-all duration-200 flex items-center justify-center text-[11px] font-bold tracking-wider ${
+                        isSelected
+                          ? "ring-2 ring-offset-2 ring-surface-800 dark:ring-surface-200 dark:ring-offset-surface-900 scale-110 shadow-lg"
+                          : "hover:scale-110 hover:shadow-md"
+                      }`}
+                      style={{ backgroundColor: hex, color: textColor }}
+                      title={hex}
+                    >
+                      Aa
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Live preview — how text looks on the selected color */}
+            <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+              <h2 className="text-sm font-semibold text-surface-800 dark:text-surface-100 mb-3">
+                Text preview
+              </h2>
+              <div className="space-y-3">
+                <div
+                  className="rounded-lg p-4 transition-all duration-300"
+                  style={{ backgroundColor: pc }}
+                >
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: getContrastTextColor(pc) }}
+                  >
+                    Primary button — Lorem ipsum dolor sit amet
+                  </p>
+                  <p
+                    className="text-[11px] mt-1.5 opacity-80"
+                    style={{ color: getContrastTextColor(pc) }}
+                  >
+                    Secondary text with reduced opacity
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <span
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
+                    style={{
+                      backgroundColor: pc + "18",
+                      color: getContrastTextColor(pc),
+                    }}
+                  >
+                    Badge / Tag
+                  </span>
+                  <span
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
+                    style={{
+                      backgroundColor: pc,
+                      color: getContrastTextColor(pc),
+                    }}
+                  >
+                    Solid badge
+                  </span>
+                </div>
+                <p className="text-[10px] text-surface-400 mt-1">
+                  {getContrastTextColor(pc) === "#ffffff"
+                    ? "✓ White text on this background"
+                    : "✓ Dark text on this background"}
+                </p>
               </div>
             </div>
           </div>
