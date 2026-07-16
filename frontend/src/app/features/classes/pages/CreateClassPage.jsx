@@ -12,27 +12,8 @@ import {
 import toast from "react-hot-toast";
 import { getClassById, createClass, updateClass } from "../../../core/api/classService";
 import { getUsers } from "../../../core/api/userManagementService";
-
-// ── Static levels & series (will move to backend later) ──
-const EDUCATION_LEVELS = [
-  { id: 1, name: "Form 1" }, { id: 2, name: "Form 2" },
-  { id: 3, name: "Form 3" }, { id: 4, name: "Form 4" },
-  { id: 5, name: "Form 5" }, { id: 6, name: "Lower 6th" },
-  { id: 7, name: "Upper 6th" },
-  { id: 8, name: "6ème" }, { id: 9, name: "5ème" },
-  { id: 10, name: "4ème" }, { id: 11, name: "3ème" },
-  { id: 12, name: "Seconde" }, { id: 13, name: "Première" },
-  { id: 14, name: "Terminale" },
-];
-
-const EDUCATION_SERIES = [
-  { id: 1, name: "General" }, { id: 2, name: "Science" },
-  { id: 3, name: "Arts" }, { id: 4, name: "Commercial" },
-  { id: 5, name: "A4" }, { id: 6, name: "B" },
-  { id: 7, name: "C" }, { id: 8, name: "D" },
-  { id: 9, name: "E" }, { id: 10, name: "F1" },
-  { id: 11, name: "F2" }, { id: 12, name: "G" },
-];
+import levelService from "../../../core/api/levelService";
+import seriesService from "../../../core/api/seriesService";
 
 export default function CreateClassPage() {
   const { id } = useParams();
@@ -62,11 +43,13 @@ export default function CreateClassPage() {
     const loadData = async () => {
       setLoading(true);
       try {
-        // Static reference data (will move to backend later)
-        setLevels(EDUCATION_LEVELS);
-        setSeries(EDUCATION_SERIES);
+        const [levelsData, seriesData] = await Promise.all([
+          levelService.list().catch(() => []),
+          seriesService.list().catch(() => []),
+        ]);
+        setLevels(levelsData);
+        setSeries(seriesData);
 
-        // Fetch teachers for the class teacher dropdown
         try {
           const teachersData = await getUsers({ role: "TEACHER" });
           setTeachers(Array.isArray(teachersData) ? teachersData : (teachersData?.users || []));
@@ -126,8 +109,8 @@ export default function CreateClassPage() {
     try {
       const payload = {
         name: form.name.trim(),
-        levelId: form.levelId ? Number(form.levelId) : null,
-        seriesId: form.seriesId ? Number(form.seriesId) : null,
+        levelId: form.levelId || null,
+        seriesId: form.seriesId || null,
         capacity: form.capacity,
         classTeacherId: form.classTeacherId || null,
       };

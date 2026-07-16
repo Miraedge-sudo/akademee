@@ -6,6 +6,7 @@ const validateMiddleware = require('../middleware/validate.middleware');
 const auditMiddleware = require('../middleware/audit.middleware');
 const { createAnnouncementValidator, updateAnnouncementValidator } = require('../validators/announcement.validator');
 const { standardLimiter } = require('../middleware/rateLimiter.middleware');
+const announcementUpload = require('../middleware/announcementUpload.middleware');
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -14,6 +15,7 @@ router.get('/', announcementController.list);
 router.post(
   '/',
   roleMiddleware(['admin']),
+  announcementUpload,
   createAnnouncementValidator,
   validateMiddleware,
   standardLimiter,
@@ -24,6 +26,7 @@ router.get('/:id', announcementController.getById);
 router.put(
   '/:id',
   roleMiddleware(['admin']),
+  announcementUpload,
   updateAnnouncementValidator,
   validateMiddleware,
   auditMiddleware('UPDATE', 'announcements'),

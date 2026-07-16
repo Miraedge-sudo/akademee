@@ -21,27 +21,8 @@ import { getClassById, updateClass, deleteClass } from "../../../core/api/classS
 import { getStudents } from "../../../core/api/studentService";
 import { getUsers } from "../../../core/api/userManagementService";
 import { getSubjectTeacherAssignments } from "../../../core/api/subjectService";
-
-// ── Static levels & series (will move to backend later) ──
-const EDUCATION_LEVELS = [
-  { id: 1, name: "Form 1" }, { id: 2, name: "Form 2" },
-  { id: 3, name: "Form 3" }, { id: 4, name: "Form 4" },
-  { id: 5, name: "Form 5" }, { id: 6, name: "Lower 6th" },
-  { id: 7, name: "Upper 6th" },
-  { id: 8, name: "6ème" }, { id: 9, name: "5ème" },
-  { id: 10, name: "4ème" }, { id: 11, name: "3ème" },
-  { id: 12, name: "Seconde" }, { id: 13, name: "Première" },
-  { id: 14, name: "Terminale" },
-];
-
-const EDUCATION_SERIES = [
-  { id: 1, name: "General" }, { id: 2, name: "Science" },
-  { id: 3, name: "Arts" }, { id: 4, name: "Commercial" },
-  { id: 5, name: "A4" }, { id: 6, name: "B" },
-  { id: 7, name: "C" }, { id: 8, name: "D" },
-  { id: 9, name: "E" }, { id: 10, name: "F1" },
-  { id: 11, name: "F2" }, { id: 12, name: "G" },
-];
+import levelService from "../../../core/api/levelService";
+import seriesService from "../../../core/api/seriesService";
 
 function hexToRgba(hex, alpha = 1) {
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -128,8 +109,13 @@ export default function ClassDetailPage() {
         if (!classData) { setError("NOT_FOUND"); setLoading(false); return; }
 
         setCls(classData);
-        setLevels(EDUCATION_LEVELS);
-        setSeries(EDUCATION_SERIES);
+
+        const [levelsData, seriesData] = await Promise.all([
+          levelService.list().catch(() => []),
+          seriesService.list().catch(() => []),
+        ]);
+        setLevels(levelsData);
+        setSeries(seriesData);
 
         // Handle students — might be array or { students: [...] }
         let allStudents = Array.isArray(studentsData) ? studentsData : (studentsData?.students || []);
@@ -188,8 +174,8 @@ export default function ClassDetailPage() {
     try {
       const payload = {
         name: editForm.name.trim(),
-        levelId: editForm.levelId ? Number(editForm.levelId) : null,
-        seriesId: editForm.seriesId ? Number(editForm.seriesId) : null,
+        levelId: editForm.levelId || null,
+        seriesId: editForm.seriesId || null,
         capacity: editForm.capacity,
         classTeacherId: editForm.classTeacherId || null,
       };

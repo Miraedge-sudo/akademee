@@ -9,8 +9,7 @@ import {
   FiGrid,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
-
-const MOCK_API = "http://localhost:3001";
+import seriesService from "../../../core/api/seriesService";
 
 export default function SeriesManagementPage() {
   const { i18n } = useTranslation("common");
@@ -24,8 +23,7 @@ export default function SeriesManagementPage() {
 
   const fetchSeries = () => {
     setLoading(true);
-    fetch(`${MOCK_API}/systemSeries`)
-      .then((r) => r.json())
+    seriesService.list()
       .then((data) => {
         setSeries(data || []);
         setLoading(false);
@@ -38,41 +36,27 @@ export default function SeriesManagementPage() {
   const handleAdd = async () => {
     if (!newName.trim()) return;
     try {
-      const res = await fetch(`${MOCK_API}/systemSeries`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim() }),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setSeries((prev) => [...prev, saved]);
-        setNewName("");
-        toast.success(isFr ? "Série ajoutée" : "Series added");
-      }
+      const saved = await seriesService.create({ name: newName.trim() });
+      setSeries((prev) => [...prev, saved]);
+      setNewName("");
+      toast.success(isFr ? "Série ajoutée" : "Series added");
     } catch { toast.error(isFr ? "Erreur" : "Error"); }
   };
 
   const handleEdit = async (id) => {
     if (!editName.trim()) return;
     try {
-      const res = await fetch(`${MOCK_API}/systemSeries/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editName.trim() }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setSeries((prev) => prev.map((s) => (s.id === id ? { ...s, ...updated } : s)));
-        setEditingId(null);
-        setEditName("");
-        toast.success(isFr ? "Série modifiée" : "Series updated");
-      }
+      const updated = await seriesService.update(id, { name: editName.trim() });
+      setSeries((prev) => prev.map((s) => (s.id === id ? { ...s, ...updated } : s)));
+      setEditingId(null);
+      setEditName("");
+      toast.success(isFr ? "Série modifiée" : "Series updated");
     } catch { toast.error(isFr ? "Erreur" : "Error"); }
   };
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`${MOCK_API}/systemSeries/${id}`, { method: "DELETE" });
+      await seriesService.delete(id);
       setSeries((prev) => prev.filter((s) => s.id !== id));
       toast.success(isFr ? "Série supprimée" : "Series deleted");
     } catch { toast.error(isFr ? "Erreur" : "Error"); }

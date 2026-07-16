@@ -11,8 +11,7 @@ import {
   FiLayers,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
-
-const MOCK_API = "http://localhost:3001";
+import levelService from "../../../core/api/levelService";
 
 export default function LevelsListPage() {
   const { i18n } = useTranslation("common");
@@ -26,8 +25,7 @@ export default function LevelsListPage() {
 
   const fetchLevels = () => {
     setLoading(true);
-    fetch(`${MOCK_API}/systemLevels`)
-      .then((r) => r.json())
+    levelService.list()
       .then((data) => {
         setLevels((data || []).sort((a, b) => (a.order || 0) - (b.order || 0)));
         setLoading(false);
@@ -42,43 +40,29 @@ export default function LevelsListPage() {
   const handleAdd = async () => {
     if (!newName.trim()) return;
     try {
-      const res = await fetch(`${MOCK_API}/systemLevels`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim(), order: maxOrder + 1 }),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setLevels((prev) => [...prev, saved].sort((a, b) => (a.order || 0) - (b.order || 0)));
-        setNewName("");
-        toast.success(isFr ? "Niveau ajouté" : "Level added");
-      }
+      const saved = await levelService.create({ name: newName.trim(), order: maxOrder + 1 });
+      setLevels((prev) => [...prev, saved].sort((a, b) => (a.order || 0) - (b.order || 0)));
+      setNewName("");
+      toast.success(isFr ? "Niveau ajouté" : "Level added");
     } catch { toast.error(isFr ? "Erreur" : "Error"); }
   };
 
   const handleEdit = async (id) => {
     if (!editName.trim()) return;
     try {
-      const res = await fetch(`${MOCK_API}/systemLevels/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editName.trim() }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setLevels((prev) =>
-          prev.map((l) => (l.id === id ? { ...l, ...updated } : l))
-        );
-        setEditingId(null);
-        setEditName("");
-        toast.success(isFr ? "Niveau modifié" : "Level updated");
-      }
+      const updated = await levelService.update(id, { name: editName.trim() });
+      setLevels((prev) =>
+        prev.map((l) => (l.id === id ? { ...l, ...updated } : l))
+      );
+      setEditingId(null);
+      setEditName("");
+      toast.success(isFr ? "Niveau modifié" : "Level updated");
     } catch { toast.error(isFr ? "Erreur" : "Error"); }
   };
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`${MOCK_API}/systemLevels/${id}`, { method: "DELETE" });
+      await levelService.delete(id);
       setLevels((prev) => prev.filter((l) => l.id !== id));
       toast.success(isFr ? "Niveau supprimé" : "Level deleted");
     } catch { toast.error(isFr ? "Erreur" : "Error"); }
@@ -90,7 +74,6 @@ export default function LevelsListPage() {
     if (!a || !b) return;
     const aOrder = a.order;
     const bOrder = b.order;
-    // Optimistic update (find by ID to stay stable if state changes)
     setLevels((prev) => {
       const next = [...prev];
       const aIdx = next.findIndex(x => x.id === a.id);
@@ -101,16 +84,8 @@ export default function LevelsListPage() {
       return next.sort((x, y) => (x.order || 0) - (y.order || 0));
     });
     await Promise.all([
-      fetch(`${MOCK_API}/systemLevels/${a.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ order: bOrder }),
-      }),
-      fetch(`${MOCK_API}/systemLevels/${b.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ order: aOrder }),
-      }),
+      levelService.update(a.id, { order: bOrder }),
+      levelService.update(b.id, { order: aOrder }),
     ]);
   };
 

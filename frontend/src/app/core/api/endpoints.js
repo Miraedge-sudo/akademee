@@ -213,6 +213,22 @@ export const API_ENDPOINTS = {
     REVENUE: "/api/dashboard/revenue",
   },
 
+  // Levels & Series
+  LEVELS: {
+    LIST: "/api/levels",
+    GET: (id) => `/api/levels/${id}`,
+    CREATE: "/api/levels",
+    UPDATE: (id) => `/api/levels/${id}`,
+    DELETE: (id) => `/api/levels/${id}`,
+  },
+  SERIES: {
+    LIST: "/api/series",
+    GET: (id) => `/api/series/${id}`,
+    CREATE: "/api/series",
+    UPDATE: (id) => `/api/series/${id}`,
+    DELETE: (id) => `/api/series/${id}`,
+  },
+
   // V1 API (sekouh backend)
   V1: {
     PERIODES: "/api/v1/periodes",
