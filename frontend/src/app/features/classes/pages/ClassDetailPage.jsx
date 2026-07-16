@@ -32,6 +32,8 @@ import {
   getTeacherSubjects,
 } from "../../../core/api/subjectService";
 import { getClassSubjectsByClass, removeSubjectFromClass, bulkAssignSubjects } from "../../../core/api/classSubjectService";
+import levelService from "../../../core/api/levelService";
+import seriesService from "../../../core/api/seriesService";
 
 // ── Static levels & series (will move to backend later) ──
 const EDUCATION_LEVELS = [
@@ -531,8 +533,8 @@ export default function ClassDetailPage() {
   const isFull = pct >= 90;
   const sectionInitial = (cls.name?.match(/[A-Z]/g) || [cls.name?.[0] || "A"]).slice(-1)[0];
 
-  const selectedLevel = levels.find((l) => l.id === Number(editForm.levelId));
-  const selectedSeries = series.find((s) => s.id === Number(editForm.seriesId));
+  const selectedLevel = levels.find((l) => String(l.id) === String(editForm.levelId));
+  const selectedSeries = series.find((s) => String(s.id) === String(editForm.seriesId));
   const assignedTeachers = cls.assignedTeachers || [];
 
   const classSubjects = classSubjectAssignments;

@@ -7,7 +7,7 @@
  * NOTE: student_fees table uses INTEGER FKs referencing UUID PKs — that
  * type mismatch prevents index creation. Fix separately if needed.
  */
-exports.up = async (sql) => {
+module.exports = async (sql) => {
   // === P0: FOREIGN KEY INDEXES ===
   await sql`CREATE INDEX IF NOT EXISTS idx_fees_academic_year_id ON fees(academic_year_id)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_attendance_marked_by ON attendance(marked_by)`;
@@ -69,53 +69,4 @@ exports.up = async (sql) => {
 
   // Fees: active fees per class
   await sql`CREATE INDEX IF NOT EXISTS idx_fees_school_class_active ON fees(school_id, class_id, is_active)`;
-};
-
-exports.down = async (sql) => {
-  const indexes = [
-    'fees_academic_year_id',
-    'attendance_marked_by',
-    'attendance_class_id',
-    'role_permissions_role_id',
-    'role_permissions_permission_id',
-    'exams_academic_year_id',
-    'subject_teachers_class_id',
-    'class_subjects_subject_id',
-    'enrollments_enrolled_by',
-    'announcements_created_by',
-    'grades_period_id',
-    'schools_website_template_id',
-    'enrollments_status',
-    'fees_is_active',
-    'fees_due_date',
-    'schools_is_active',
-    'users_is_active',
-    'attendance_status',
-    'notifications_type',
-    'periods_type',
-    'periods_is_current',
-    'exam_registrations_status',
-    'exam_registrations_fee_paid',
-    'school_media_media_type',
-    'schools_subscription_plan',
-    'schools_subscription_status',
-    'exams_exam_type',
-    'announcements_target_audience',
-    'announcements_priority',
-    'attendance_school_student_date',
-    'attendance_school_class_date',
-    'grades_school_student_period',
-    'grades_school_student_subject',
-    'enrollments_school_class_year',
-    'enrollments_school_student_year',
-    'payments_school_student_status',
-    'payments_school_created_at',
-    'notifications_school_user_read',
-    'periods_school_year_current',
-    'exams_school_type_year',
-    'fees_school_class_active',
-  ];
-  for (const idx of indexes) {
-    await sql`DROP INDEX IF EXISTS ${sql(idx)}`;
-  }
 };

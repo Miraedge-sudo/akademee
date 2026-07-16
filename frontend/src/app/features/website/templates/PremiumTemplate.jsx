@@ -183,7 +183,7 @@ export default function PremiumTemplate({ school }) {
   ];
 
   return (
-    <div className={`antialiased overflow-x-hidden ${isDark ? "website-dark" : ""}`} style={{ fontFamily: "'Inter', system-ui, sans-serif", "--p": pc, "--pl": pcl, "--pm": pcm, background: isDark ? "#1a1a1a" : "#fcfaf7", color: isDark ? "#d4d0c8" : "#2d2a24" }}>
+    <div className={`antialiased overflow-x-hidden ${isDark ? "website-dark dark" : ""}`} style={{ fontFamily: "'Inter', system-ui, sans-serif", "--p": pc, "--pl": pcl, "--pm": pcm, background: isDark ? "#1a1a1a" : "#fcfaf7", color: isDark ? "#d4d0c8" : "#2d2a24" }}>
       <CursorGlow />
       <ScrollProgressBar progress={progress} color={pc} />
       <style>{`
@@ -226,6 +226,10 @@ export default function PremiumTemplate({ school }) {
         .website-dark .border-\[\#e8e4de\] { border-color: #333333 !important; }
         .website-dark .border-\[\#ddd8d0\] { border-color: #444444 !important; }
         .website-dark .bg-\[\#fcfaf7\]\/90 { background-color: rgba(37,37,37,0.9) !important; }
+        .website-dark .text-\[\#9a948a\] { color: #b0a898 !important; }
+        .website-dark .bg-\[\#2d2a24\] { background: #d4d0c8 !important; }
+        .website-dark .border-\[\#d8d4ce\] { border-color: #444444 !important; }
+        .website-dark .hover\:text-\[\#2d2a24\]:hover { color: #d4d0c8 !important; }
         .website-dark .milestone-dot { border-color: #252525; }
       `}</style>
 
@@ -325,7 +329,7 @@ export default function PremiumTemplate({ school }) {
           {s.heroImageUrl ? (
             <img src={s.heroImageUrl} alt="" className="w-full h-full object-cover opacity-25" />
           ) : null}
-          <div className="absolute inset-0" style={{ background: `linear-gradient(170deg, #fcfaf7 0%, ${hexToRgba(pc, 0.05)} 50%, #fcfaf7 100%)` }} />
+          <div className="absolute inset-0" style={{ background: isDark ? `linear-gradient(170deg, #1a1a1a 0%, ${hexToRgba(pc, 0.15)} 50%, #1a1a1a 100%)` : `linear-gradient(170deg, #fcfaf7 0%, ${hexToRgba(pc, 0.05)} 50%, #fcfaf7 100%)` }} />
           {s.heroImageUrl2 && (
             <div className="absolute bottom-0 right-0 w-1/3 h-2/3 opacity-10" style={{
               backgroundImage: `url(${s.heroImageUrl2})`,

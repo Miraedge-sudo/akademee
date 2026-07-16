@@ -7,7 +7,7 @@ import { useAuth } from "../core/hooks/useAuth";
 const BOTTOM_CONFIG = {
   ADMIN: [
     { key: "dashboard", path: "/dashboard", icon: "grid" },
-    { key: "students", path: "/dashboard/students", icon: "users" },
+    { key: "users", path: "/dashboard/users", icon: "users" },
     { key: "gradeReports", path: "/dashboard/grades", icon: "barchart" },
     { key: "finance", path: "/dashboard/finance", icon: "dollar" },
   ],

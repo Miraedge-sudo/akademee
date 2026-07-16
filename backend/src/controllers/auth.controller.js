@@ -95,7 +95,7 @@ class AuthController {
       const result = await authService.refreshTokens(refreshToken);
 
       setAuthCookies(res, result.token, result.refreshToken);
-      response.success(res, 'Tokens refreshed', { user: result.user });
+      response.success(res, 'Tokens refreshed', { user: result.user, token: result.token });
     } catch (error) {
       if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
         clearAuthCookies(res);

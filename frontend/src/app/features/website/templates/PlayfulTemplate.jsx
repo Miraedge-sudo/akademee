@@ -273,7 +273,7 @@ export default function PlayfulTemplate({ school }) {
   ];
 
   return (
-    <div className={`font-sans antialiased overflow-x-hidden ${isDark ? "website-dark" : ""}`} style={{ "--p": pc, "--pl": pcl, "--pm": pcm, background: isDark ? "#1a1a1a" : "#faf9f7", color: isDark ? "#d4d0c8" : "#1a1a1a" }}>
+    <div className={`font-sans antialiased overflow-x-hidden ${isDark ? "website-dark dark" : ""}`} style={{ "--p": pc, "--pl": pcl, "--pm": pcm, background: isDark ? "#1a1a1a" : "#faf9f7", color: isDark ? "#d4d0c8" : "#1a1a1a" }}>
       <ScrollProgressBar progress={progress} color={pc} />
       <style>{`
         /* ─── Scroll reveals ─── */
@@ -328,6 +328,7 @@ export default function PlayfulTemplate({ school }) {
         .website-dark .border-white { border-color: #3a3a3a !important; }
         .website-dark .hover\:border-\[var\(--p\)\]:hover { border-color: var(--p) !important; }
         .website-dark .shadow-md, .website-dark .shadow-sm, .website-dark .shadow-xl, .website-dark .shadow-lg { box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important; }
+        .website-dark .bg-\[\#1a1a1a\] { background: #d4d0c8 !important; }
       `}</style>
 
       {/* ════════════════ NAVIGATION ════════════════ */}
