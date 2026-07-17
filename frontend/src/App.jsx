@@ -50,6 +50,9 @@ const ResearchPage = lazy(() => import("./app/features/research/pages/ResearchPa
 const PublicationsPage = lazy(() => import("./app/features/research/pages/PublicationsPage"));
 const PublicWebsitePage = lazy(() => import("./app/features/website/pages/PublicWebsitePage"));
 const AnnouncementsAdminPage = lazy(() => import("./app/features/announcements/pages/AnnouncementsAdminPage"));
+const TeacherDashboardPage = lazy(() => import("./app/features/teachers/pages/TeacherDashboardPage"));
+const AccountantDashboardPage = lazy(() => import("./app/features/accountant/pages/AccountantDashboardPage"));
+const StudentDashboardPage = lazy(() => import("./app/features/students/pages/StudentDashboardPage"));
 
 // ── Lazy helpers ──
 const page = (Component) => (
@@ -215,7 +218,10 @@ function App() {
             <Route path="website" element={dashboardPage(WebsiteSettingsPage)} />
             <Route path="announcements" element={dashboardPage(AnnouncementsAdminPage)} />
             <Route path="academic-years" element={dashboardPage(AcademicYearsPage)} />
-            <Route path="system-configuration" element={dashboardPage(SystemConfigurationPage)} />
+            {/* Role-specific home dashboards */}
+            <Route path="teacher-home" element={dashboardPage(TeacherDashboardPage)} />
+            <Route path="accountant-home" element={dashboardPage(AccountantDashboardPage)} />
+            <Route path="student-home" element={dashboardPage(StudentDashboardPage)} />
 
             {/* Teacher-specific routes */}
             <Route path="my-classes" element={<div className="p-6">My Classes — coming soon</div>} />
