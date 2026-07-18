@@ -155,7 +155,7 @@ class UserManagementService {
 
   async update(schoolId, userId, data, file = null) {
     await this.getById(schoolId, userId);
-    const { firstName, lastName, email, phone, isActive, avatarUrl } = data;
+    const { firstName, lastName, email, phone, isActive, password, avatarUrl } = data;
 
     let savedAvatarUrl = avatarUrl ?? null;
     let savedAvatarPublicId = null;
@@ -164,6 +164,12 @@ class UserManagementService {
       const avatarUpload = await mediaService.safeUploadAvatar(file, `akademee/schools/${schoolId}/avatars`);
       savedAvatarUrl = avatarUpload.avatarUrl || savedAvatarUrl;
       savedAvatarPublicId = avatarUpload.avatarPublicId || savedAvatarPublicId;
+    }
+
+    // Hash password if provided
+    let passwordHash = null;
+    if (password) {
+      passwordHash = await bcrypt.hash(password, 10);
     }
 
     const rows = await sql`
@@ -176,6 +182,7 @@ class UserManagementService {
         avatar_public_id = COALESCE(${savedAvatarPublicId ?? null}, avatar_public_id),
         is_active = COALESCE(${isActive ?? null}, is_active),
         updated_at = NOW()
+        ${passwordHash ? sql`, password_hash = ${passwordHash}` : sql``}
       WHERE user_id = ${userId} AND school_id = ${schoolId}
       RETURNING *
     `;

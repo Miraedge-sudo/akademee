@@ -23,6 +23,12 @@ const BOTTOM_CONFIG = {
     { key: "myAttendance", path: "/dashboard/my-attendance", icon: "calendar" },
     { key: "myFees", path: "/dashboard/my-fees", icon: "dollar" },
   ],
+  ACCOUNTANT: [
+    { key: "dashboard", path: "/dashboard", icon: "grid" },
+    { key: "payments", path: "/dashboard/payments", icon: "dollar" },
+    { key: "fees", path: "/dashboard/fees", icon: "dollar" },
+    { key: "financeReports", path: "/dashboard/finance/reports", icon: "barchart" },
+  ],
 };
 
 // ── Tiny icons specifically for the bottom bar ──
