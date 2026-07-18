@@ -568,7 +568,7 @@ const BASE_NAV_CONFIG = {
   TEACHER: [
     {
       group: "overview",
-      items: [{ key: "dashboard", path: "/dashboard/teacher-home", icon: "grid" }],
+      items: [{ key: "dashboard", path: "/dashboard", icon: "grid" }],
     },
     {
       group: "academic",
@@ -582,7 +582,7 @@ const BASE_NAV_CONFIG = {
   STUDENT: [
     {
       group: "overview",
-      items: [{ key: "dashboard", path: "/dashboard/student-home", icon: "grid" }],
+      items: [{ key: "dashboard", path: "/dashboard", icon: "grid" }],
     },
     {
       group: "academic",
@@ -597,13 +597,29 @@ const BASE_NAV_CONFIG = {
       ],
     },
   ],
+  ACCOUNTANT: [
+    {
+      group: "overview",
+      items: [{ key: "dashboard", path: "/dashboard", icon: "grid" }],
+    },
+    {
+      group: "finance",
+      items: [
+        { key: "payments", path: "/dashboard/payments", icon: "dollar" },
+        { key: "fees", path: "/dashboard/fees", icon: "dollar" },
+        { key: "financeReports", path: "/dashboard/finance/reports", icon: "barchart" },
+      ],
+    },
+  ],
 };
 
 // ── Get filtered nav config based on educational systems ──
+// Only ADMIN users see system-specific navigation sections.
 function getNavConfig(role, educationalSystems = []) {
   const baseConfig = BASE_NAV_CONFIG[role] || BASE_NAV_CONFIG.ADMIN;
 
-  if (!educationalSystems || educationalSystems.length === 0) {
+  // Only ADMIN sees educational system sections
+  if (role !== "ADMIN" || !educationalSystems || educationalSystems.length === 0) {
     return baseConfig;
   }
 
@@ -1012,8 +1028,8 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
           </div>
         </div>
 
-        {/* System badges */}
-        {educationalSystems.length > 0 && !collapsed && (
+        {/* System badges — only visible to ADMIN */}
+        {role === "ADMIN" && educationalSystems.length > 0 && !collapsed && (
           <div className="px-3 py-2 flex flex-wrap gap-1.5 border-b border-white/[0.07]">
             {educationalSystems.map((sys) => {
               const colors = SYSTEM_COLORS[sys];

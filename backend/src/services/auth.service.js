@@ -151,7 +151,7 @@ class AuthService {
     const users = await sql`
       SELECT user_id, school_id, email, login_email, first_name, last_name, password_hash, is_active, phone
       FROM users
-      WHERE (login_email = ${email} OR (login_email IS NULL AND email = ${email})) AND school_id = ${school.school_id}
+      WHERE (login_email = ${email} OR email = ${email}) AND school_id = ${school.school_id}
     `;
 
     if (users.length === 0) {

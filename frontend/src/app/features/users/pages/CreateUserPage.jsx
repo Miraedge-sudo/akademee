@@ -486,6 +486,7 @@ export default function CreateUserPage() {
 
   // ── State ──
   const [selectedRole, setSelectedRole] = useState("TEACHER");
+  const [lastCreatedUser, setLastCreatedUser] = useState(null);
   const [mode, setMode] = useState("create");
   const [editId, setEditId] = useState(null);
   const [loadingUser, setLoadingUser] = useState(false);
@@ -616,7 +617,16 @@ export default function CreateUserPage() {
     if (!formData.firstName?.trim()) errs.firstName = "First name is required";
     if (!formData.lastName?.trim()) errs.lastName = "Last name is required";
     if (!formData.email?.trim()?.includes("@")) errs.email = "A valid email is required";
-    if (!isEditing && (!formData.password || formData.password.length < 8)) errs.password = "Password must be at least 8 characters";
+    // Password validation
+    if (formData.password && formData.password.length < 8) {
+      errs.password = "Password must be at least 8 characters";
+    } else if (!isEditing && !formData.password) {
+      errs.password = "Password is required";
+    }
+    // Password confirmation match check
+    if (formData.password && formData.password !== formData.password2) {
+      errs.password2 = "Passwords do not match";
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -640,6 +650,10 @@ export default function CreateUserPage() {
           phone: formData.phone?.trim() || undefined,
           avatar: photoFile || undefined,
         };
+        // Include password only if user entered one
+        if (formData.password) {
+          updatePayload.password = formData.password;
+        }
 
         await updateUser(editId, updatePayload);
         toast.success(isFr ? "Utilisateur mis à jour ✨" : "User updated ✨");
@@ -648,9 +662,10 @@ export default function CreateUserPage() {
       }
 
       // ── CREATE mode ──
+      let createdUser = null;
       if (selectedRole === "STUDENT") {
         const selectedClass = allClasses.find((c) => c.id === formData.studentClass);
-        await createStudent({
+        createdUser = await createStudent({
           firstName: formData.firstName.trim(),
           lastName: formData.lastName.trim(),
           email: formData.email.trim(),
@@ -661,8 +676,15 @@ export default function CreateUserPage() {
           status: 'active',
           feeStatus: 'pending',
         });
+        // Generate loginEmail for display (student API doesn't return it)
+        const emailParts = formData.email.trim().split('@');
+        createdUser = {
+          ...createdUser,
+          email: formData.email.trim(),
+          loginEmail: emailParts.length === 2 ? `${emailParts[0]}.student@${emailParts[1]}` : formData.email.trim(),
+        };
       } else {
-        await createUser({
+        createdUser = await createUser({
           firstName: formData.firstName.trim(),
           lastName: formData.lastName.trim(),
           email: formData.email.trim(),
@@ -672,6 +694,7 @@ export default function CreateUserPage() {
           avatar: photoFile || undefined,
         });
       }
+      setLastCreatedUser(createdUser);
       setShowSuccess(true);
       toast.success(isFr ? "Utilisateur créé avec succès !" : "User created successfully!");
     } catch (err) {
@@ -692,6 +715,7 @@ export default function CreateUserPage() {
 
   const handleAddAnother = () => {
     setShowSuccess(false);
+    setLastCreatedUser(null);
     setFormData({
       firstName: "", lastName: "", gender: "", dob: "", phone: "", email: "",
       password: "", password2: "", notes: "",
@@ -952,6 +976,23 @@ export default function CreateUserPage() {
               {isFr ? " a été ajouté comme " : " has been added as "}
               <span style={{ color: roleConfig?.color || pc }}>{roleLabel}</span>.
             </p>
+            {/* Show loginEmail for non-admin users */}
+            {lastCreatedUser?.loginEmail && lastCreatedUser?.loginEmail !== lastCreatedUser?.email && (
+              <div className="mb-5 px-4 py-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 text-left">
+                <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1 flex items-center gap-1.5">
+                  <FiInfo className="w-3.5 h-3.5" />
+                  {isFr ? "Email de connexion" : "Login email"}
+                </p>
+                <p className="text-sm font-bold text-amber-900 dark:text-amber-100 break-all">
+                  {lastCreatedUser.loginEmail}
+                </p>
+                <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-1">
+                  {isFr
+                    ? "Cet email doit être utilisé pour se connecter (différent de l'email personnel)"
+                    : "Use this email to sign in (different from personal email)"}
+                </p>
+              </div>
+            )}
             <div className="flex gap-2 justify-center">
               <button
                 type="button"
@@ -1165,16 +1206,17 @@ export default function CreateUserPage() {
                   hint={isFr ? "Utilisé pour se connecter à Akademee." : "Used to log in to Akademee."}
                   error={errors.email}
                 />
-                {!isEditing && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[12.5px] font-bold text-surface-600 dark:text-surface-300 mb-1.5">
-                        {isFr ? "Mot de passe" : "Password"} <span className="text-primary-600">*</span>
+                        {isFr ? "Mot de passe" : "Password"}
+                        {!isEditing && <span className="text-primary-600"> *</span>}
+                        {isEditing && <span className="text-surface-400 text-[11px] font-normal ml-1">({isFr ? "optionnel" : "optional"})</span>}
                       </label>
                       <div className="relative">
                         <input
                           type={showPassword ? "text" : "password"}
-                          placeholder="Min. 8 characters"
+                          placeholder={isEditing ? "Leave empty to keep current" : "Min. 8 characters"}
                           value={formData.password}
                           onChange={(e) => updateField("password", e.target.value)}
                           className={`${inputClass} pr-11 ${errors.password ? "!border-red-500" : ""}`}
@@ -1191,12 +1233,13 @@ export default function CreateUserPage() {
                     </div>
                     <div>
                       <label className="block text-[12.5px] font-bold text-surface-600 dark:text-surface-300 mb-1.5">
-                        {isFr ? "Confirmer le mot de passe" : "Confirm password"} <span className="text-primary-600">*</span>
+                        {isFr ? "Confirmer le mot de passe" : "Confirm password"}
+                        {!isEditing && <span className="text-primary-600"> *</span>}
                       </label>
                       <div className="relative">
                         <input
                           type={showPassword2 ? "text" : "password"}
-                          placeholder="Repeat password"
+                          placeholder={isEditing ? "Leave empty to keep current" : "Repeat password"}
                           value={formData.password2}
                           onChange={(e) => updateField("password2", e.target.value)}
                           className={`${inputClass} pr-11`}
@@ -1211,7 +1254,6 @@ export default function CreateUserPage() {
                       </div>
                     </div>
                   </div>
-                )}
 
                 {/* Dynamic sections */}
                 {renderDynamicSections()}

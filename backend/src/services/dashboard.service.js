@@ -1,7 +1,17 @@
-const sql = require('../config/database');
+const sql = require("../config/database");
 
 class DashboardService {
   async getStats(schoolId, { academicYearId } = {}) {
+    // If no academicYearId provided, use the active academic year
+    if (!academicYearId) {
+      const [activeYear] = await sql`
+        SELECT academic_year_id FROM academic_years 
+        WHERE school_id = ${schoolId} AND is_current = true
+        LIMIT 1
+      `;
+      academicYearId = activeYear?.academic_year_id || null;
+    }
+
     const [studentCount] = await sql`
       SELECT COUNT(*)::int AS total FROM students WHERE school_id = ${schoolId} AND status = 'active'
     `;
@@ -63,13 +73,14 @@ class DashboardService {
       SELECT COALESCE(SUM(amount), 0)::numeric AS total
       FROM payments
       WHERE school_id = ${schoolId} AND status = 'completed'
+        ${academicYearId ? sql`AND academic_year_id = ${academicYearId}` : sql``}
     `;
 
     const [userCount] = await sql`
       SELECT COUNT(*)::int AS total FROM users WHERE school_id = ${schoolId} AND is_active = true
     `;
 
-    const [activeYear] = await sql`
+    const [activeYearCheck] = await sql`
       SELECT COUNT(*)::int AS total FROM academic_years WHERE school_id = ${schoolId} AND is_current = true
     `;
 
@@ -82,12 +93,23 @@ class DashboardService {
       totalUsers: userCount.total,
       totalClasses: classCount.total,
       totalRevenue: Number(revenueData.total),
-      activeAcademicYear: activeYear.total > 0,
+      activeAcademicYear: activeYearCheck.total > 0,
+      academicYearId: academicYearId,
     };
   }
 
   async getRecentActivities(schoolId, { limit = 10, academicYearId } = {}) {
     limit = Math.min(Math.max(1, limit), 50);
+
+    // If no academicYearId provided, use the active academic year
+    if (!academicYearId) {
+      const [activeYear] = await sql`
+        SELECT academic_year_id FROM academic_years 
+        WHERE school_id = ${schoolId} AND is_current = true
+        LIMIT 1
+      `;
+      academicYearId = activeYear?.academic_year_id || null;
+    }
 
     const students = await sql`
       SELECT CONCAT(u.first_name, ' ', u.last_name) AS name, 'student_created' AS action, st.created_at AS date
@@ -128,17 +150,28 @@ class DashboardService {
       .slice(0, limit);
 
     return all.map((a) => ({
-      description: a.action === 'student_created'
-        ? `New student "${a.name}" enrolled`
-        : a.action === 'payment_received'
-          ? `Payment received from ${a.name || 'a student'}`
-          : `Grade recorded for ${a.name || 'a student'}`,
+      description:
+        a.action === "student_created"
+          ? `New student "${a.name}" enrolled`
+          : a.action === "payment_received"
+            ? `Payment received from ${a.name || "a student"}`
+            : `Grade recorded for ${a.name || "a student"}`,
       date: a.date,
       type: a.action,
     }));
   }
 
   async getRevenueData(schoolId, { months = 6, academicYearId } = {}) {
+    // If no academicYearId provided, use the active academic year
+    if (!academicYearId) {
+      const [activeYear] = await sql`
+        SELECT academic_year_id FROM academic_years 
+        WHERE school_id = ${schoolId} AND is_current = true
+        LIMIT 1
+      `;
+      academicYearId = activeYear?.academic_yearId || null;
+    }
+
     const rows = await sql`
       SELECT
         DATE_TRUNC('month', created_at) AS month,
@@ -150,7 +183,7 @@ class DashboardService {
       ORDER BY month ASC
     `;
 
-    return rows.map(r => ({
+    return rows.map((r) => ({
       month: r.month,
       total: Number(r.total),
     }));

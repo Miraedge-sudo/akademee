@@ -71,7 +71,7 @@ export default function UsersListPage() {
     setLoading(true);
     try {
       const [userData, studentData] = await Promise.all([
-        getUsers(),
+        getUsers({ limit: 500, includeInactive: true }),
         getStudents({ limit: 500 }).catch(() => ({ students: [] })),
       ]);
       const list = userData?.users || [];
@@ -83,20 +83,25 @@ export default function UsersListPage() {
           studentMap[s.userId] = s.className;
         }
       });
-      setUsers(list.map((u) => ({
+      const mapped = list.map((u) => ({
         id: u.id,
         userId: u.id,
         firstName: u.firstName || "",
         lastName: u.lastName || "",
         name: `${u.firstName || ""} ${u.lastName || ""}`.trim(),
         email: u.email || "",
+        loginEmail: u.loginEmail || u.email || "",
         role: u.roles?.[0]?.code || (u.role || "USER"),
         status: u.isActive !== false ? "active" : "inactive",
         lastLogin: u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : "—",
         phone: u.phone || "—",
         class: studentMap[u.id] || "",
-      })));
-    } catch { /* silent */ }
+      }));
+      console.log(`[UsersListPage] Loaded ${mapped.length} users (${mapped.filter((u) => u.role === "TEACHER").length} teachers)`);
+      setUsers(mapped);
+    } catch (err) {
+      console.error("[UsersListPage] Failed to load users:", err);
+    }
     setLoading(false);
   }, []);
 
@@ -332,6 +337,9 @@ export default function UsersListPage() {
               <th className="px-3 py-2.5 text-left text-[11px] font-bold tracking-wider uppercase text-surface-400 hidden md:table-cell">
                 {isFr ? "Statut" : "Status"}
               </th>
+              <th className="px-3 py-2.5 text-left text-[11px] font-bold tracking-wider uppercase text-surface-400 hidden md:table-cell">
+                {isFr ? "Email de connexion" : "Login email"}
+              </th>
               <th className="px-3 py-2.5 text-left text-[11px] font-bold tracking-wider uppercase text-surface-400 hidden lg:table-cell">
                 <span className="inline-flex items-center gap-1">
                   {isFr ? "Dernière connexion" : "Last login"} <ChevronsUpDown />
@@ -416,6 +424,9 @@ export default function UsersListPage() {
                         {u.status === "active" ? "Active" : "Inactive"}
                       </span>
                     </div>
+                  </td>
+                  <td className="px-3 py-3 text-[12.5px] text-surface-500 dark:text-surface-400 font-mono hidden md:table-cell max-w-[140px] truncate">
+                    {u.loginEmail !== u.email ? u.loginEmail : u.email}
                   </td>
                   <td className="px-3 py-3 text-[12.5px] text-surface-400 hidden lg:table-cell">
                     {u.lastLogin}

@@ -52,6 +52,7 @@
     "ADMIN": "Administrateur",
     "TEACHER": "Enseignant",
     "STUDENT": "Élève",
+    "ACCOUNTANT": "Comptable",
     "PARENT": "Parent"
   },
   "announcements": {
@@ -127,6 +128,9 @@
   },
   "admissions": {
     "title": "Admissions",
+    "payments": "Paiements",
+    "fees": "Frais",
+    "financeReports": "Rapports financiers",
     "applications": "Demandes",
     "enrollment": "Inscriptions",
     "inquiries": "Demandes d'inscription",

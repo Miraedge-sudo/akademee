@@ -34,6 +34,7 @@ import {
 import { getClassSubjectsByClass, removeSubjectFromClass, bulkAssignSubjects } from "../../../core/api/classSubjectService";
 import levelService from "../../../core/api/levelService";
 import seriesService from "../../../core/api/seriesService";
+import ConfirmDialog from "../../../components/ui/ConfirmDialog";
 
 // ── Static levels & series (will move to backend later) ──
 const EDUCATION_LEVELS = [
@@ -141,6 +142,11 @@ export default function ClassDetailPage() {
   const [existingSubjectAssignments, setExistingSubjectAssignments] = useState([]);
   const [savingSubjects, setSavingSubjects] = useState(false);
   const [teacherSubjectsMap, setTeacherSubjectsMap] = useState({});
+
+  // ── Confirm dialog states ──
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
+  const [removeSubjectConfirm, setRemoveSubjectConfirm] = useState({ open: false, assignmentId: null, subjectName: "" });
 
   // ── Edit form state ──
   const [editForm, setEditForm] = useState({ name: "", levelId: "", seriesId: "", capacity: 40, classTeacherId: "" });
@@ -460,13 +466,27 @@ export default function ClassDetailPage() {
     }
   };
 
-  // ── Remove a subject from this class ──
+  // ── Delete class ──
+  const handleDelete = async () => {
+    setDeleteConfirmLoading(true);
+    try {
+      await deleteClass(id);
+      toast.success(isFr ? "Classe supprimée" : "Class deleted");
+      setDeleteConfirmOpen(false);
+      navigate("/dashboard/classes");
+    } catch {
+      toast.error(isFr ? "Erreur" : "Error");
+      setDeleteConfirmLoading(false);
+    }
+  };
+
+  // ── Remove subject from class (via ConfirmDialog) ──
   const handleRemoveSubject = async (assignmentId, subjectName) => {
-    if (!window.confirm(
-      isFr
-        ? `Retirer "${subjectName}" de cette classe ?`
-        : `Remove "${subjectName}" from this class?`
-    )) return;
+    setRemoveSubjectConfirm({ open: true, assignmentId, subjectName });
+  };
+
+  const handleConfirmRemoveSubject = async () => {
+    const { assignmentId } = removeSubjectConfirm;
     try {
       await removeSubjectFromClass(assignmentId);
       toast.success(isFr ? "Matière retirée" : "Subject removed");
@@ -474,18 +494,7 @@ export default function ClassDetailPage() {
     } catch (err) {
       toast.error(isFr ? "Erreur" : "Error");
     }
-  };
-
-  // ── Delete class ──
-  const handleDelete = async () => {
-    if (!window.confirm(isFr ? "Supprimer cette classe ? Cette action est irréversible." : "Delete this class? This action cannot be undone.")) return;
-    try {
-      await deleteClass(id);
-      toast.success(isFr ? "Classe supprimée" : "Class deleted");
-      navigate("/dashboard/classes");
-    } catch {
-      toast.error(isFr ? "Erreur" : "Error");
-    }
+    setRemoveSubjectConfirm({ open: false, assignmentId: null, subjectName: "" });
   };
 
   // ── Loading ──
@@ -619,7 +628,7 @@ export default function ClassDetailPage() {
               </button>
             ) : null}
             <button
-              onClick={handleDelete}
+              onClick={() => setDeleteConfirmOpen(true)}
               className="h-9 px-3.5 rounded-lg border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 transition-colors flex items-center gap-1.5"
             >
               <FiTrash2 className="w-3.5 h-3.5" />
@@ -1407,6 +1416,33 @@ export default function ClassDetailPage() {
           )}
         </div>
       </div>
+
+      {/* ── Confirm Delete Class Dialog ── */}
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDelete}
+        variant="danger"
+        title={isFr ? "Supprimer la classe" : "Delete class"}
+        message={isFr ? `Êtes-vous sûr de vouloir supprimer ${cls?.name} ? Cette action est irréversible.` : `Are you sure you want to delete ${cls?.name}? This action cannot be undone.`}
+        confirmLabel={isFr ? "Supprimer" : "Delete"}
+        cancelLabel={isFr ? "Annuler" : "Cancel"}
+        loading={deleteConfirmLoading}
+      />
+
+      {/* ── Confirm Remove Subject Dialog ── */}
+      <ConfirmDialog
+        isOpen={removeSubjectConfirm.open}
+        onClose={() => setRemoveSubjectConfirm({ open: false, assignmentId: null, subjectName: "" })}
+        onConfirm={handleConfirmRemoveSubject}
+        variant="warning"
+        title={isFr ? "Retirer la matière" : "Remove subject"}
+        message={isFr
+          ? `Voulez-vous retirer "${removeSubjectConfirm.subjectName}" de cette classe ?`
+          : `Remove "${removeSubjectConfirm.subjectName}" from this class?`}
+        confirmLabel={isFr ? "Retirer" : "Remove"}
+        cancelLabel={isFr ? "Annuler" : "Cancel"}
+      />
     </div>
   );
 }

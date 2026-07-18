@@ -12,16 +12,22 @@ const BOTTOM_CONFIG = {
     { key: "finance", path: "/dashboard/finance", icon: "dollar" },
   ],
   TEACHER: [
-    { key: "dashboard", path: "/dashboard/teacher-home", icon: "grid" },
+    { key: "dashboard", path: "/dashboard", icon: "grid" },
     { key: "myClasses", path: "/dashboard/my-classes", icon: "classes" },
     { key: "gradeEntry", path: "/dashboard/grade-entry", icon: "barchart" },
     { key: "attendance", path: "/dashboard/attendance", icon: "calendar" },
   ],
   STUDENT: [
-    { key: "dashboard", path: "/dashboard/student-home", icon: "grid" },
+    { key: "dashboard", path: "/dashboard", icon: "grid" },
     { key: "myGrades", path: "/dashboard/my-grades", icon: "barchart" },
     { key: "myAttendance", path: "/dashboard/my-attendance", icon: "calendar" },
     { key: "myFees", path: "/dashboard/my-fees", icon: "dollar" },
+  ],
+  ACCOUNTANT: [
+    { key: "dashboard", path: "/dashboard", icon: "grid" },
+    { key: "payments", path: "/dashboard/payments", icon: "dollar" },
+    { key: "fees", path: "/dashboard/fees", icon: "dollar" },
+    { key: "financeReports", path: "/dashboard/finance/reports", icon: "barchart" },
   ],
 };
 
