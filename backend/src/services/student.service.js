@@ -164,7 +164,7 @@ class StudentService {
     return this.formatStudent(rows[0]);
   }
 
-  async listStudents(schoolId, { limit = 50, offset = 0, search, status, className } = {}) {
+  async listStudents(schoolId, { limit = 50, offset = 0, search, status = 'active', className } = {}) {
     limit = Math.min(Math.max(1, limit), 500);
     offset = Math.max(0, offset);
     const searchTerm = search ? `%${search.toLowerCase()}%` : null;
@@ -179,7 +179,7 @@ class StudentService {
       FROM students st
       INNER JOIN users u ON st.user_id = u.user_id
       WHERE st.school_id = ${schoolId}
-        ${status ? sql`AND st.status = ${status}` : sql``}
+        AND st.status = ${status}
         ${className ? sql`AND st.class_label = ${className}` : sql``}
         ${searchTerm
           ? sql`AND (
@@ -197,7 +197,7 @@ class StudentService {
       FROM students st
       INNER JOIN users u ON st.user_id = u.user_id
       WHERE st.school_id = ${schoolId}
-        ${status ? sql`AND st.status = ${status}` : sql``}
+        AND st.status = ${status}
         ${className ? sql`AND st.class_label = ${className}` : sql``}
         ${searchTerm
           ? sql`AND (

@@ -41,7 +41,10 @@ export default function LoginPage() {
           window.location.hostname === "localhost" ||
           window.location.hostname === "127.0.0.1";
 
-        const role = result?.user?.roles?.[0] || result?.user?.role || "ADMIN";
+        const userRoles = result?.user?.roles || [];
+        // Priority-based role resolution (same as RoleDashboardRouter)
+        const rolePriority = ['ADMIN', 'STUDENT', 'TEACHER', 'ACCOUNTANT', 'PARENT', 'SECRETARY'];
+        const role = rolePriority.find(r => userRoles.includes(r)) || result?.user?.role || 'ADMIN';
         const dashboardPath =
           role === ROLES.TEACHER ? "/dashboard/teacher-home" :
           role === ROLES.STUDENT ? "/dashboard/student-home" :

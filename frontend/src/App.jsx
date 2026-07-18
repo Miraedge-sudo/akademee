@@ -53,6 +53,8 @@ const PublicationsPage = lazy(() => import("./app/features/research/pages/Public
 const PublicWebsitePage = lazy(() => import("./app/features/website/pages/PublicWebsitePage"));
 const AnnouncementsAdminPage = lazy(() => import("./app/features/announcements/pages/AnnouncementsAdminPage"));
 const TeacherDashboardPage = lazy(() => import("./app/features/teachers/pages/TeacherDashboardPage"));
+const MyClassesPage = lazy(() => import("./app/features/teachers/pages/MyClassesPage"));
+const GradeEntryPage = lazy(() => import("./app/features/teachers/pages/GradeEntryPage"));
 const AccountantDashboardPage = lazy(() => import("./app/features/accountant/pages/AccountantDashboardPage"));
 const StudentDashboardPage = lazy(() => import("./app/features/students/pages/StudentDashboardPage"));
 
@@ -72,7 +74,13 @@ const dashboardPage = (Component) => (
 // ── Role-based dashboard router ──
 function RoleDashboardRouter() {
   const { user } = useAuth();
-  const role = user?.roles?.[0] || "ADMIN";
+  const roles = user?.roles || [];
+
+  // Priority-based role resolution: ADMIN > STUDENT > TEACHER > ACCOUNTANT
+  // ADMIN first ensures school admins always see the admin dashboard.
+  // STUDENT second ensures students never see the teacher dashboard.
+  const rolePriority = ['ADMIN', 'STUDENT', 'TEACHER', 'ACCOUNTANT', 'PARENT', 'SECRETARY'];
+  const role = rolePriority.find(r => roles.includes(r)) || 'ADMIN';
 
   const roleDashboards = {
     ADMIN: DashboardPage,
@@ -272,8 +280,22 @@ function App() {
             />
 
             {/* Teacher-specific routes */}
-            <Route path="my-classes" element={<div className="p-6">My Classes — coming soon</div>} />
-            <Route path="grade-entry" element={<div className="p-6">Grade Entry — coming soon</div>} />
+            <Route
+              path="my-classes"
+              element={
+                <RoleRoute allowedRoles={["TEACHER"]}>
+                  {dashboardPage(MyClassesPage)}
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="grade-entry"
+              element={
+                <RoleRoute allowedRoles={["TEACHER"]}>
+                  {dashboardPage(GradeEntryPage)}
+                </RoleRoute>
+              }
+            />
 
             {/* Student-specific routes */}
             <Route path="my-grades" element={<div className="p-6">My Grades — coming soon</div>} />

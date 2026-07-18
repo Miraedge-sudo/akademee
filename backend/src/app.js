@@ -81,7 +81,7 @@ app.use(tenantMiddleware);
 // Cache TTLs (seconds) for low-churn GET endpoints
 app.use('/api/config', cacheMiddleware(600));
 app.use('/api/website', cacheMiddleware(300));
-app.use('/api/dashboard', cacheMiddleware(120));
+app.use('/api/dashboard', cacheMiddleware(30));
 app.use('/api/reports', cacheMiddleware(300));
 app.use('/api/grades', cacheMiddleware(120));
 app.use('/api/grade-calculations', cacheMiddleware(120));
