@@ -568,7 +568,7 @@ const BASE_NAV_CONFIG = {
   TEACHER: [
     {
       group: "overview",
-      items: [{ key: "dashboard", path: "/dashboard", icon: "grid" }],
+      items: [{ key: "dashboard", path: "/dashboard/teacher-home", icon: "grid" }],
     },
     {
       group: "academic",
@@ -582,7 +582,7 @@ const BASE_NAV_CONFIG = {
   STUDENT: [
     {
       group: "overview",
-      items: [{ key: "dashboard", path: "/dashboard", icon: "grid" }],
+      items: [{ key: "dashboard", path: "/dashboard/student-home", icon: "grid" }],
     },
     {
       group: "academic",

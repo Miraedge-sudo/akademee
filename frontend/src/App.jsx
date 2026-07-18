@@ -7,6 +7,7 @@ import LoadingFallback from "./app/components/ui/LoadingFallback";
 import ProtectedRoute from "./app/core/guards/ProtectedRoute";
 import AcademicYearGuard from "./app/core/guards/AcademicYearGuard";
 import AdminLayout from "./app/layout/AdminLayout";
+import { useAuth } from "./app/core/hooks/useAuth";
 
 // ── Lazy-loaded page components (code-split at route level) ──
 const LandingPage = lazy(() => import("./app/features/landing/LandingPage"));
@@ -66,6 +67,23 @@ const dashboardPage = (Component) => (
     <Component />
   </Suspense>
 );
+
+// ── Role-based dashboard router ──
+function RoleDashboardRouter() {
+  const { user } = useAuth();
+  const role = user?.roles?.[0] || "ADMIN";
+
+  const roleDashboards = {
+    ADMIN: DashboardPage,
+    TEACHER: TeacherDashboardPage,
+    STUDENT: StudentDashboardPage,
+    ACCOUNTANT: AccountantDashboardPage,
+  };
+
+  const Component = roleDashboards[role] || DashboardPage;
+
+  return dashboardPage(Component);
+}
 
 function App() {
   return (
@@ -127,8 +145,8 @@ function App() {
               </ProtectedRoute>
             }
           >
-            {/* Dashboard home */}
-            <Route index element={dashboardPage(DashboardPage)} />
+            {/* Dashboard home — role-aware */}
+            <Route index element={<RoleDashboardRouter />} />
 
             {/* Users management (unified creation) */}
             <Route path="users" element={dashboardPage(UsersListPage)} />
