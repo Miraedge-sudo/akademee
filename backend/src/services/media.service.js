@@ -28,8 +28,36 @@ class MediaService {
           else resolve(result);
         }
       );
+
+      stream.on('error', (error) => reject(error));
       stream.end(file.buffer);
     });
+  }
+
+  async safeUploadAvatar(file, folder) {
+    if (!file) {
+      return { avatarUrl: null, avatarPublicId: null };
+    }
+
+    try {
+      const upload = await Promise.race([
+        this.uploadToCloudinary(file, folder),
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Avatar upload timed out')), 15000);
+        }),
+      ]);
+
+      return {
+        avatarUrl: upload.secure_url,
+        avatarPublicId: upload.public_id,
+      };
+    } catch (error) {
+      console.warn(`[MediaService] Avatar upload skipped: ${error.message}`);
+      return {
+        avatarUrl: null,
+        avatarPublicId: null,
+      };
+    }
   }
 
   /**

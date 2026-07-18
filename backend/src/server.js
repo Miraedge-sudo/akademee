@@ -39,5 +39,4 @@ process.on('uncaughtException', (error) => {
 
 process.on('unhandledRejection', (reason) => {
   logger.error('Unhandled Rejection', { reason: reason?.stack || reason });
-  process.exit(1);
 });

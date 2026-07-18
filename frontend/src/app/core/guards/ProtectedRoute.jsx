@@ -2,6 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { YearContext } from "../context/YearContext";
+import { ROLES } from "../constants/roles";
 
 export default function ProtectedRoute({ children }) {
   const { isAuthenticated, loading, onboardingCompleted, user } = useAuth();
@@ -28,8 +29,11 @@ export default function ProtectedRoute({ children }) {
   }
 
   // After onboarding, if no educational systems selected, redirect to selection page
+  const userRoles = (user?.roles || []).map((role) => String(role).toUpperCase());
+  const isAdmin = userRoles.includes(ROLES.ADMIN);
   const educationalSystems = user?.school?.educationalSystems;
   const needsSystemSelection = onboardingCompleted &&
+    !isAdmin &&
     (!educationalSystems || educationalSystems.length === 0) &&
     location.pathname !== "/educational-system-selection";
 

@@ -1,4 +1,5 @@
 const express = require('express');
+const multer = require('../config/multer');
 const userManagementController = require('../controllers/userManagement.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 const roleMiddleware = require('../middleware/role.middleware');
@@ -7,6 +8,8 @@ const auditMiddleware = require('../middleware/audit.middleware');
 const { createUserValidator, updateUserValidator } = require('../validators/userManagement.validator');
 const { standardLimiter } = require('../middleware/rateLimiter.middleware');
 
+const avatarUpload = multer.single('avatar');
+
 const router = express.Router();
 router.use(authMiddleware);
 
@@ -14,6 +17,7 @@ router.get('/', roleMiddleware(['admin']), userManagementController.list);
 router.post(
   '/',
   roleMiddleware(['admin']),
+  avatarUpload,
   createUserValidator,
   validateMiddleware,
   standardLimiter,
@@ -24,6 +28,7 @@ router.get('/:id', roleMiddleware(['admin']), userManagementController.getById);
 router.put(
   '/:id',
   roleMiddleware(['admin']),
+  avatarUpload,
   updateUserValidator,
   validateMiddleware,
   auditMiddleware('UPDATE', 'users'),

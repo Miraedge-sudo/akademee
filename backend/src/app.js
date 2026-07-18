@@ -51,6 +51,7 @@ const enrolmentRoutes = require('./routes/enrolment.routes');
 const swaggerRoutes = require('./routes/swagger.routes');
 const levelRoutes = require('./routes/level.routes');
 const seriesRoutes = require('./routes/series.routes');
+const inviteRoutes = require('./routes/invite.routes');
 const v1PeriodRoutes = require('./routes/v1/period.routes');
 const v1SequenceRoutes = require('./routes/v1/sequence.routes');
 
@@ -121,6 +122,7 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/website', enrolmentRoutes);
 app.use('/api/levels', levelRoutes);
 app.use('/api/series', seriesRoutes);
+app.use('/api/invites', inviteRoutes);
 app.use('/api/v1/periodes', v1PeriodRoutes);
 app.use('/api/v1/sequences', v1SequenceRoutes);
 

@@ -55,36 +55,60 @@ export function AuthProvider({ children }) {
     try {
       const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
       const data = response.data.data;
+      const loginUser = data.user || {};
 
       setAccessToken(data.token);
       setToken(data.token);
       localStorage.setItem("token", data.token);
 
-      // Immediately fetch full user profile (includes school.educationalSystems)
+      const fallbackUser = {
+        ...loginUser,
+        school: loginUser.school || {
+          id: loginUser.schoolId,
+          name: loginUser.schoolName,
+          subdomain: loginUser.subdomain,
+          educationalSystems: loginUser.educationalSystems || [],
+        },
+      };
+
+      setUser(fallbackUser);
+      setIsAuthenticated(true);
+      if (fallbackUser.school?.primaryColor) {
+        updatePrimaryColor(fallbackUser.school.primaryColor);
+      }
+
       try {
         const meResponse = await api.get(API_ENDPOINTS.AUTH.ME);
         const fullUserData = meResponse.data.data;
-        setUser(fullUserData);
+        const mergedUser = {
+          ...fallbackUser,
+          ...fullUserData,
+          school: {
+            ...(fallbackUser.school || {}),
+            ...(fullUserData.school || {}),
+          },
+        };
+
+        setUser(mergedUser);
         setIsAuthenticated(true);
-        if (fullUserData.school?.primaryColor) {
-          updatePrimaryColor(fullUserData.school.primaryColor);
+        if (mergedUser.school?.primaryColor) {
+          updatePrimaryColor(mergedUser.school.primaryColor);
         }
+
         return {
           success: true,
-          onboardingCompleted: fullUserData.onboardingCompleted,
-          subdomain: fullUserData.subdomain,
+          onboardingCompleted: mergedUser.onboardingCompleted,
+          subdomain: mergedUser.subdomain,
           token: data.token,
+          user: mergedUser,
         };
       } catch {
-        // Fallback: use basic user data from login response
-        const userData = data.user;
-        setUser(userData);
-        setIsAuthenticated(true);
         return {
           success: true,
-          onboardingCompleted: userData.onboardingCompleted,
-          subdomain: userData.subdomain,
+          onboardingCompleted: fallbackUser.onboardingCompleted,
+          subdomain: fallbackUser.subdomain,
           token: data.token,
+          user: fallbackUser,
         };
       }
     } catch (error) {

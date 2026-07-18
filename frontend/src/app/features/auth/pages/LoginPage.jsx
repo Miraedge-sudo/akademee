@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
 import { getSubdomain, buildSubdomainUrl } from "../../../core/utils/subdomainHelper";
 import LoginLeftPanel from "../../../components/features/LoginLeftPanel";
+import { ROLES } from "../../../core/constants/roles";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -39,11 +40,20 @@ export default function LoginPage() {
         const isLocalhost =
           window.location.hostname === "localhost" ||
           window.location.hostname === "127.0.0.1";
+
+        const role = result?.user?.roles?.[0] || result?.user?.role || "ADMIN";
+        const dashboardPath =
+          role === ROLES.TEACHER ? "/dashboard/teacher-home" :
+          role === ROLES.STUDENT ? "/dashboard/student-home" :
+          role === ROLES.PARENT ? "/dashboard/parent-home" :
+          role === ROLES.ACCOUNTANT ? "/dashboard/accountant-home" :
+          "/dashboard";
+
         if (result.subdomain && isLocalhost) {
-          const dashboardUrl = buildSubdomainUrl(result.subdomain, `/dashboard?token=${result.token}`);
+          const dashboardUrl = buildSubdomainUrl(result.subdomain, `${dashboardPath}?token=${result.token}`);
           window.location.href = dashboardUrl;
         } else {
-          navigate("/dashboard");
+          navigate(dashboardPath);
         }
       } else {
         setError(result.message);

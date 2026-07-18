@@ -62,6 +62,15 @@ class AuthService {
         schoolName: school.name,
         roles: roleCodes,
         onboardingCompleted: school.onboarding_completed ?? false,
+        school: {
+          id: school.school_id,
+          name: school.name,
+          subdomain: school.subdomain,
+          educationalSystems: school.educational_systems || [],
+          primaryColor: school.primary_color || null,
+          logoUrl: school.logo_url || null,
+          heroImageUrl: school.hero_image_url || null,
+        },
       },
       token: accessToken,
       refreshToken,
@@ -140,9 +149,9 @@ class AuthService {
     }
 
     const users = await sql`
-      SELECT user_id, school_id, email, first_name, last_name, password_hash, is_active, phone
+      SELECT user_id, school_id, email, login_email, first_name, last_name, password_hash, is_active, phone
       FROM users
-      WHERE email = ${email} AND school_id = ${school.school_id}
+      WHERE (login_email = ${email} OR (login_email IS NULL AND email = ${email})) AND school_id = ${school.school_id}
     `;
 
     if (users.length === 0) {
@@ -152,7 +161,7 @@ class AuthService {
     const user = users[0];
 
     if (!user.is_active) {
-      throw new Error('Invalid email or password');
+      throw new Error('User account is inactive');
     }
 
     const isValid = await bcrypt.compare(password, user.password_hash);
@@ -174,7 +183,9 @@ class AuthService {
     `;
 
     const schoolWithTemplate = await sql`
-      SELECT s.school_id, s.name, s.subdomain, s.is_active, s.onboarding_completed, wt.template_code
+      SELECT s.school_id, s.name, s.subdomain, s.is_active, s.onboarding_completed,
+             s.educational_systems, s.primary_color, s.logo_url, s.hero_image_url,
+             wt.template_code
       FROM schools s
       LEFT JOIN website_templates wt ON s.website_template_id = wt.template_id
       WHERE s.school_id = ${school.school_id}
@@ -210,7 +221,7 @@ class AuthService {
    */
   async getCurrentUser(userId, schoolId) {
     const users = await sql`
-      SELECT user_id, email, first_name, last_name, school_id, is_active
+      SELECT user_id, email, first_name, last_name, school_id, is_active, phone, avatar_url, gender, date_of_birth, nationality
       FROM users
       WHERE user_id = ${userId} AND school_id = ${schoolId}
     `;
@@ -261,6 +272,11 @@ class AuthService {
       firstName: user.first_name,
       lastName: user.last_name,
       schoolId: user.school_id,
+      phone: user.phone,
+      avatarUrl: user.avatar_url,
+      gender: user.gender,
+      dateOfBirth: user.date_of_birth,
+      nationality: user.nationality,
       roles: roles.map(r => r.role_code),
       school,
       schoolName: school?.name || null,

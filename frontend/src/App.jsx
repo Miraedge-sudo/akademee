@@ -6,6 +6,7 @@ import { Toaster } from "react-hot-toast";
 import LoadingFallback from "./app/components/ui/LoadingFallback";
 import ProtectedRoute from "./app/core/guards/ProtectedRoute";
 import AcademicYearGuard from "./app/core/guards/AcademicYearGuard";
+import RoleRoute from "./app/core/guards/RoleRoute";
 import AdminLayout from "./app/layout/AdminLayout";
 
 // ── Lazy-loaded page components (code-split at route level) ──
@@ -219,9 +220,38 @@ function App() {
             <Route path="announcements" element={dashboardPage(AnnouncementsAdminPage)} />
             <Route path="academic-years" element={dashboardPage(AcademicYearsPage)} />
             {/* Role-specific home dashboards */}
-            <Route path="teacher-home" element={dashboardPage(TeacherDashboardPage)} />
-            <Route path="accountant-home" element={dashboardPage(AccountantDashboardPage)} />
-            <Route path="student-home" element={dashboardPage(StudentDashboardPage)} />
+            <Route
+              path="teacher-home"
+              element={
+                <RoleRoute allowedRoles={["TEACHER"]}>
+                  {dashboardPage(TeacherDashboardPage)}
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="accountant-home"
+              element={
+                <RoleRoute allowedRoles={["ACCOUNTANT"]}>
+                  {dashboardPage(AccountantDashboardPage)}
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="student-home"
+              element={
+                <RoleRoute allowedRoles={["STUDENT"]}>
+                  {dashboardPage(StudentDashboardPage)}
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="parent-home"
+              element={
+                <RoleRoute allowedRoles={["PARENT"]}>
+                  {dashboardPage(StudentDashboardPage)}
+                </RoleRoute>
+              }
+            />
 
             {/* Teacher-specific routes */}
             <Route path="my-classes" element={<div className="p-6">My Classes — coming soon</div>} />

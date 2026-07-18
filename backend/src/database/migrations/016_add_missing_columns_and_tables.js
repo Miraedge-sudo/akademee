@@ -7,10 +7,8 @@
  * - attendance: marked_by, remarks, class_id
  * - users: employee_number, date_of_hired, qualification
  * - student_fees table
- *
- * NOTE: All foreign keys use UUID to match existing table schemas.
  */
-module.exports = async (sql) => {
+exports.up = async (sql) => {
   // fees columns
   await sql`ALTER TABLE fees ADD COLUMN IF NOT EXISTS academic_year_id UUID REFERENCES academic_years(academic_year_id)`;
   await sql`ALTER TABLE fees ADD COLUMN IF NOT EXISTS due_date DATE`;
@@ -50,4 +48,18 @@ module.exports = async (sql) => {
     CREATE UNIQUE INDEX IF NOT EXISTS idx_student_fees_unique
     ON student_fees(student_id, fee_id, academic_year_id)
   `;
+};
+
+exports.down = async (sql) => {
+  await sql`DROP TABLE IF EXISTS student_fees`;
+  await sql`ALTER TABLE fees DROP COLUMN IF EXISTS academic_year_id`;
+  await sql`ALTER TABLE fees DROP COLUMN IF EXISTS due_date`;
+  await sql`ALTER TABLE fees DROP COLUMN IF EXISTS is_active`;
+  await sql`ALTER TABLE subjects DROP COLUMN IF EXISTS credits`;
+  await sql`ALTER TABLE attendance DROP COLUMN IF EXISTS marked_by`;
+  await sql`ALTER TABLE attendance DROP COLUMN IF EXISTS remarks`;
+  await sql`ALTER TABLE attendance DROP COLUMN IF EXISTS class_id`;
+  await sql`ALTER TABLE users DROP COLUMN IF EXISTS employee_number`;
+  await sql`ALTER TABLE users DROP COLUMN IF EXISTS date_of_hired`;
+  await sql`ALTER TABLE users DROP COLUMN IF EXISTS qualification`;
 };

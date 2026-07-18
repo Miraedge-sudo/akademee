@@ -2,7 +2,12 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../core/hooks/useTheme";
-import toast from "react-hot-toast";import {
+import { getClasses } from "../../../core/api/classService";
+import { getAllClassTeacherAssignments, assignClassTeacher, removeClassTeacher } from "../../../core/api/subjectService";
+import { getUsers, deleteUser } from "../../../core/api/userManagementService";
+import { getStudents } from "../../../core/api/studentService";
+import toast from "react-hot-toast";
+import {
   FiPlus,
   FiUser,
   FiShield,
@@ -43,11 +48,6 @@ const ROLE_META = {
 };
 
 const ROLES = ["ADMIN", "TEACHER", "STUDENT", "ACCOUNTANT", "SECRETARY"];
-
-import { getClasses } from "../../../core/api/classService";
-import { getAllClassTeacherAssignments, assignClassTeacher, removeClassTeacher } from "../../../core/api/subjectService";
-import { getUsers, deleteUser } from "../../../core/api/userManagementService";
-import { getStudents } from "../../../core/api/studentService";
 
 const PER_PAGE = 8;
 

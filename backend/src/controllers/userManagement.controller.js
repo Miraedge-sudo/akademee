@@ -25,7 +25,7 @@ class UserManagementController {
   async create(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user.schoolId;
-      const result = await userManagementService.create(schoolId, req.body);
+      const result = await userManagementService.create(schoolId, req.body, req.file);
       response.success(res, 'User created', result, 201);
     } catch (error) {
       if (error.message.includes('already')) return response.error(res, error.message, null, 409);
@@ -36,7 +36,7 @@ class UserManagementController {
   async update(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user.schoolId;
-      const result = await userManagementService.update(schoolId, req.params.id, req.body);
+      const result = await userManagementService.update(schoolId, req.params.id, req.body, req.file);
       response.success(res, 'User updated', result);
     } catch (error) {
       if (error.message === 'User not found') return response.error(res, error.message, null, 404);
@@ -48,7 +48,7 @@ class UserManagementController {
     try {
       const schoolId = req.schoolId || req.user.schoolId;
       const result = await userManagementService.delete(schoolId, req.params.id);
-      response.success(res, 'User deactivated', result);
+      response.success(res, 'User deleted', result);
     } catch (error) {
       if (error.message === 'User not found') return response.error(res, error.message, null, 404);
       next(error);

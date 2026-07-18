@@ -14,6 +14,7 @@ if (!connectionString) {
 }
 
 const sql = postgres(connectionString, {
+  prepare: false,
   ssl: process.env.DATABASE_SSL === 'true' ? 'require' : undefined,
 });
 

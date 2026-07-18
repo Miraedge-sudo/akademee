@@ -19,38 +19,13 @@ class SequenceService {
   async create(schoolId, data) {
     const { label, periodeId, dateDebut, dateFin } = data;
 
-    // ── Validation ──
-    if (!label || !label.trim()) {
-      throw new Error('Le libellé de la séquence est requis');
-    }
-    if (!periodeId) {
-      throw new Error('La période est requise — une séquence doit être liée à une période');
-    }
-    if (!dateDebut) {
-      throw new Error('La date de début est requise');
-    }
-    if (!dateFin) {
-      throw new Error('La date de fin est requise');
-    }
-    if (new Date(dateFin) <= new Date(dateDebut)) {
-      throw new Error('La date de fin doit être après la date de début');
-    }
-
-    // Vérifier que la période existe et appartient à cette école
-    const periodExists = await sql`
-      SELECT 1 FROM periods WHERE period_id = ${periodeId} AND school_id = ${schoolId}
-    `;
-    if (periodExists.length === 0) {
-      throw new Error('Période introuvable ou ne correspond pas à cette école');
-    }
-
     const maxOrder = await sql`
       SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM sequences WHERE period_id = ${periodeId}
     `;
 
     const rows = await sql`
       INSERT INTO sequences (school_id, period_id, label, date_debut, date_fin, sort_order)
-      VALUES (${schoolId}, ${periodeId}, ${label.trim()}, ${dateDebut}, ${dateFin}, ${maxOrder[0].next_order})
+      VALUES (${schoolId}, ${periodeId}, ${label}, ${dateDebut || null}, ${dateFin || null}, ${maxOrder[0].next_order})
       RETURNING *
     `;
     return this.formatSequence(rows[0]);
@@ -75,18 +50,9 @@ class SequenceService {
   async update(schoolId, sequenceId, data) {
     await this.getById(schoolId, sequenceId);
     const { label, dateDebut, dateFin } = data;
-
-    // ── Validation ──
-    if (label !== undefined && !label.trim()) {
-      throw new Error('Le libellé ne peut pas être vide');
-    }
-    if (dateDebut && dateFin && new Date(dateFin) <= new Date(dateDebut)) {
-      throw new Error('La date de fin doit être après la date de début');
-    }
-
     const rows = await sql`
       UPDATE sequences SET
-        label = COALESCE(${label ? label.trim() : null}, label),
+        label = COALESCE(${label || null}, label),
         date_debut = COALESCE(${dateDebut || null}, date_debut),
         date_fin = COALESCE(${dateFin || null}, date_fin),
         updated_at = now()

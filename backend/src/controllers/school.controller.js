@@ -68,8 +68,9 @@ class SchoolController {
 
       if (result.token) {
         const { token, refreshToken } = result;
-        const ACCESS_COOKIE_OPTIONS = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 15 * 60 * 1000 };
-        const REFRESH_COOKIE_OPTIONS = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 30 * 24 * 60 * 60 * 1000 };
+        const jwtConfig = require('../config/jwt');
+        const ACCESS_COOKIE_OPTIONS = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: jwtConfig.accessCookieMaxAgeMs };
+        const REFRESH_COOKIE_OPTIONS = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: jwtConfig.refreshCookieMaxAgeMs };
         res.cookie('access_token', token, ACCESS_COOKIE_OPTIONS);
         if (refreshToken) res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
       }

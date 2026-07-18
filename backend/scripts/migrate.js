@@ -35,14 +35,21 @@ async function getMigrationFiles() {
 async function runMigration(migrationFile) {
   try {
     const filePath = path.join(__dirname, '../src/database/migrations', migrationFile);
-    const migration = require(filePath);
-    
+    const migrationModule = require(filePath);
+    const migration = typeof migrationModule === 'function'
+      ? migrationModule
+      : migrationModule.up || migrationModule.default;
+
+    if (typeof migration !== 'function') {
+      throw new Error('Migration file must export an async function or an object with an up() function.');
+    }
+
     console.log(`\n${'='.repeat(60)}`);
     console.log(`Running: ${migrationFile}`);
     console.log('='.repeat(60));
-    
+
     await migration(sql);
-    
+
     console.log(`✅ ${migrationFile} completed successfully\n`);
     return true;
   } catch (error) {
@@ -115,15 +122,15 @@ async function main() {
     let migrationsToRun = files;
 
     if (migrationArg) {
-      // Run specific migration
-      const specificMigration = files.find(f => f.startsWith(migrationArg));
-      if (!specificMigration) {
+      // Run specific migration prefix; allows multiple migrations sharing the same prefix
+      const matchingMigrations = files.filter(f => f.startsWith(migrationArg));
+      if (!matchingMigrations.length) {
         console.error(`❌ Migration ${migrationArg} not found`);
         console.log('Available migrations:');
         files.forEach(f => console.log(`  - ${f}`));
         process.exit(1);
       }
-      migrationsToRun = [specificMigration];
+      migrationsToRun = matchingMigrations;
     }
 
     // Run migrations
