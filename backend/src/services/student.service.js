@@ -4,8 +4,8 @@
  */
 
 const crypto = require('crypto');
-const bcrypt = require('bcrypt');
 const sql = require('../config/database');
+const { generateLoginEmail } = require('../utils/emailGenerator');
 
 class StudentService {
   formatStudent(row) {
@@ -61,7 +61,6 @@ class StudentService {
       lastName,
       email,
       phone,
-      password,
       className,
       classId,
       dateOfBirth,
@@ -71,25 +70,27 @@ class StudentService {
       feeStatus = 'pending',
     } = data;
 
-    // ── Reuse existing user if email already exists in this school ──
+    // ── Generate login_email with .student extension ──
+    const userEmail = email;
+    const loginEmail = generateLoginEmail(userEmail, 'STUDENT');
+
+    // ── Reuse existing user if login_email already exists in this school ──
     let user;
-    if (email) {
+    if (userEmail) {
       const existing = await sql`
-        SELECT user_id, first_name, last_name, email, phone
+        SELECT user_id, first_name, last_name, email, login_email, phone
         FROM users
-        WHERE email = ${email} AND school_id = ${schoolId}
+        WHERE (login_email = ${loginEmail} OR email = ${userEmail}) AND school_id = ${schoolId}
         LIMIT 1
       `;
       if (existing.length > 0) {
         user = existing[0];
         // Update the existing user's name/phone in case they changed
-        const passwordHash = password ? await bcrypt.hash(password, 10) : null;
         await sql`
           UPDATE users SET
             first_name = ${firstName},
             last_name = ${lastName},
             phone = COALESCE(${phone || null}, phone),
-            ${passwordHash ? sql`password_hash = ${passwordHash},` : sql``}
             is_active = true,
             updated_at = NOW()
           WHERE user_id = ${user.user_id} AND school_id = ${schoolId}
@@ -98,14 +99,13 @@ class StudentService {
     }
 
     if (!user) {
-      const pwdHash = password ? await bcrypt.hash(password, 10) : null;
       const users = await sql`
-        INSERT INTO users (school_id, first_name, last_name, email, phone, password_hash, is_active, created_at)
+        INSERT INTO users (school_id, first_name, last_name, email, login_email, phone, is_active, created_at)
         VALUES (
           ${schoolId}, ${firstName}, ${lastName},
-          ${email || null}, ${phone || null}, ${pwdHash}, true, NOW()
+          ${userEmail || null}, ${loginEmail}, ${phone || null}, true, NOW()
         )
-        RETURNING user_id, first_name, last_name, email, phone
+        RETURNING user_id, first_name, last_name, email, login_email, phone
       `;
       user = users[0];
     }
@@ -224,7 +224,6 @@ class StudentService {
       lastName,
       email,
       phone,
-      password,
       className,
       dateOfBirth,
       gender,
@@ -239,15 +238,13 @@ class StudentService {
 
     const userId = studentRows[0].user_id;
 
-    if (firstName || lastName || email !== undefined || phone !== undefined || password) {
-      const passwordHash = password ? await bcrypt.hash(password, 10) : null;
+    if (firstName || lastName || email !== undefined || phone !== undefined) {
       await sql`
         UPDATE users SET
           first_name = COALESCE(${firstName || null}, first_name),
           last_name = COALESCE(${lastName || null}, last_name),
           email = COALESCE(${email ?? null}, email),
           phone = COALESCE(${phone ?? null}, phone),
-          ${passwordHash ? sql`password_hash = ${passwordHash},` : sql``}
           updated_at = NOW()
         WHERE user_id = ${userId} AND school_id = ${schoolId}
       `;

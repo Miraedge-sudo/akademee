@@ -91,9 +91,9 @@ class SchoolService {
       const school = schools[0];
 
       const users = await tx`
-        INSERT INTO users (school_id, first_name, last_name, email, password_hash, phone, is_active, created_at)
-        VALUES (${school.school_id}, ${firstName}, ${lastName}, ${adminEmail}, ${passwordHash}, ${phone || null}, true, NOW())
-        RETURNING user_id, first_name, last_name, email, school_id
+        INSERT INTO users (school_id, first_name, last_name, email, login_email, password_hash, phone, is_active, created_at)
+        VALUES (${school.school_id}, ${firstName}, ${lastName}, ${adminEmail}, ${adminEmail}, ${passwordHash}, ${phone || null}, true, NOW())
+        RETURNING user_id, first_name, last_name, email, login_email, school_id
       `;
 
       const user = users[0];

@@ -237,7 +237,7 @@ function PhotoUpload({ photo, onPhotoChange, onPhotoRemove }) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => onPhotoChange(ev.target.result);
+    reader.onload = (ev) => onPhotoChange(file, ev.target.result);
     reader.readAsDataURL(file);
   };
 
@@ -490,6 +490,7 @@ export default function CreateUserPage() {
   const [editId, setEditId] = useState(null);
   const [loadingUser, setLoadingUser] = useState(false);
   const [photo, setPhoto] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
   const [selectedSubjects, setSelectedSubjects] = useState(new Set());
   const [selectedClasses, setSelectedClasses] = useState(new Set());
   const [submitting, setSubmitting] = useState(false);
@@ -632,21 +633,15 @@ export default function CreateUserPage() {
     try {
       if (isEditing) {
         // ── UPDATE mode ──
-        if (selectedRole === "STUDENT") {
-          await updateUser(editId, {
-            firstName: formData.firstName.trim(),
-            lastName: formData.lastName.trim(),
-            email: formData.email.trim(),
-            phone: formData.phone?.trim() || undefined,
-          });
-        } else {
-          await updateUser(editId, {
-            firstName: formData.firstName.trim(),
-            lastName: formData.lastName.trim(),
-            email: formData.email.trim(),
-            phone: formData.phone?.trim() || undefined,
-          });
-        }
+        const updatePayload = {
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone?.trim() || undefined,
+          avatar: photoFile || undefined,
+        };
+
+        await updateUser(editId, updatePayload);
         toast.success(isFr ? "Utilisateur mis à jour ✨" : "User updated ✨");
         navigate("/dashboard/users");
         return;
@@ -674,6 +669,7 @@ export default function CreateUserPage() {
           password: formData.password,
           phone: formData.phone?.trim() || undefined,
           roleCode: selectedRole,
+          avatar: photoFile || undefined,
         });
       }
       setShowSuccess(true);
@@ -708,6 +704,7 @@ export default function CreateUserPage() {
     setSelectedSubjects(new Set());
     setSelectedClasses(new Set());
     setPhoto(null);
+    setPhotoFile(null);
     setErrors({});
   };
 
@@ -1092,8 +1089,14 @@ export default function CreateUserPage() {
                 <SectionTitle>{isFr ? "Photo de profil" : "Profile photo"}</SectionTitle>
                 <PhotoUpload
                   photo={photo}
-                  onPhotoChange={setPhoto}
-                  onPhotoRemove={() => setPhoto(null)}
+                  onPhotoChange={(file, preview) => {
+                    setPhotoFile(file);
+                    setPhoto(preview);
+                  }}
+                  onPhotoRemove={() => {
+                    setPhoto(null);
+                    setPhotoFile(null);
+                  }}
                 />
 
                 <SectionDivider />

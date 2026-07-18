@@ -65,7 +65,7 @@ const saveOnboardingValidator = [
     .withMessage("Website stats must be a valid object."),
   body("websiteValues")
     .optional({ nullable: true })
-    .isArray({ max: 4 })
+    .isArray()
     .withMessage("Website values must be a valid list."),
   body("educationalSystems")
     .optional({ nullable: true })

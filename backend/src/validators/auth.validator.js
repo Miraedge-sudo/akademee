@@ -22,7 +22,7 @@ const loginValidator = [
     .customSanitizer((value) => value.toLowerCase())
     .matches(SUBDOMAIN_PATTERN)
     .withMessage('Subdomain may only contain lowercase letters, numbers, and hyphens'),
-  body('email').isEmail().normalizeEmail(),
+  body('email').isEmail().normalizeEmail({ gmail_remove_dots: false, all_lowercase: true }),
   body('password').notEmpty().withMessage('Password is required'),
 ];
 

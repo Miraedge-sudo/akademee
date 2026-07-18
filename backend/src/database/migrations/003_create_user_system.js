@@ -19,6 +19,7 @@ module.exports = async (sql) => {
 
       phone VARCHAR(50),
       avatar_url TEXT,
+      avatar_public_id TEXT,
 
       is_active BOOLEAN DEFAULT TRUE,
       last_login TIMESTAMP,

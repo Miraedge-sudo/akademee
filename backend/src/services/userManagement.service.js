@@ -1,5 +1,9 @@
 const bcrypt = require('bcrypt');
 const sql = require('../config/database');
+const emailService = require('./email.service');
+const domains = require('../config/domains');
+const mediaService = require('./media.service');
+const { generateLoginEmail } = require('../utils/emailGenerator');
 
 class UserManagementService {
   formatUser(row) {
@@ -9,7 +13,12 @@ class UserManagementService {
       firstName: row.first_name,
       lastName: row.last_name,
       email: row.email,
+      loginEmail: row.login_email,
       phone: row.phone,
+      avatarUrl: row.avatar_url,
+      gender: row.gender,
+      dateOfBirth: row.date_of_birth,
+      nationality: row.nationality,
       isActive: row.is_active,
       lastLogin: row.last_login,
       roles: row.roles || [],
@@ -68,33 +77,94 @@ class UserManagementService {
     return this.formatUser(rows[0]);
   }
 
-  async create(schoolId, data) {
-    const { firstName, lastName, email, password, phone, roleCode } = data;
+  async create(schoolId, data, file = null) {
+    const { firstName, lastName, email, password, phone, roleCode, gender, dob, nationality, className, guardianName, guardianPhone, feeAmount, avatarUrl } = data;
 
-    const existing = await sql`SELECT user_id FROM users WHERE email = ${email}`;
-    if (existing.length > 0) throw new Error('Email already in use');
+    // Get school subdomain for email generation
+    const school = await sql`SELECT subdomain, name FROM schools WHERE school_id = ${schoolId}`;
+    if (school.length === 0) throw new Error('School not found');
+    
+    const schoolSubdomain = school[0].subdomain;
+    const schoolName = school[0].name;
+
+    // Generate login_email with role extension (admin keeps original email)
+    const userEmail = email;
+    const loginEmail = generateLoginEmail(userEmail, roleCode || 'ADMIN');
+
+    // Check if login_email already exists for active users
+    const existingLogin = await sql`SELECT user_id FROM users WHERE login_email = ${loginEmail} AND is_active = true`;
+    if (existingLogin.length > 0) throw new Error('Login email already in use');
 
     const passwordHash = await bcrypt.hash(password, 10);
+
+    let savedAvatarUrl = avatarUrl || null;
+    let savedAvatarPublicId = null;
+
+    if (file) {
+      const avatarUpload = await mediaService.safeUploadAvatar(file, `akademee/schools/${schoolId}/avatars`);
+      savedAvatarUrl = avatarUpload.avatarUrl || savedAvatarUrl;
+      savedAvatarPublicId = avatarUpload.avatarPublicId || savedAvatarPublicId;
+    }
+
     const rows = await sql`
-      INSERT INTO users (school_id, first_name, last_name, email, password_hash, phone, is_active)
-      VALUES (${schoolId}, ${firstName}, ${lastName}, ${email}, ${passwordHash}, ${phone || null}, true)
+      INSERT INTO users (school_id, first_name, last_name, email, login_email, password_hash, phone, gender, date_of_birth, nationality, avatar_url, avatar_public_id, is_active)
+      VALUES (${schoolId}, ${firstName}, ${lastName}, ${userEmail}, ${loginEmail}, ${passwordHash}, ${phone || null}, ${gender || null}, ${dob || null}, ${nationality || null}, ${savedAvatarUrl}, ${savedAvatarPublicId}, true)
       RETURNING *
     `;
     const user = rows[0];
 
     if (roleCode) {
-      const role = await sql`SELECT role_id FROM roles WHERE role_code = ${roleCode}`;
+      const role = await sql`SELECT role_id, role_code FROM roles WHERE UPPER(role_code) = UPPER(${roleCode})`;
       if (role.length > 0) {
-        await sql`INSERT INTO user_roles (user_id, role_id) VALUES (${user.user_id}, ${role[0].role_id})`;
+        await sql`INSERT INTO user_roles (user_id, role_id) VALUES (${user.user_id}, ${role[0].role_id}) ON CONFLICT DO NOTHING`;
       }
+    }
+
+    // Send welcome email with all user details
+    try {
+      const protocol = domains.getProtocol();
+      const domain = domains.getActiveTenantDomain();
+      const port = domains.isProduction ? '' : `:${domains.frontendPort}`;
+      const loginUrl = `${protocol}://${schoolSubdomain}.${domain}${port}/login`;
+
+      await emailService.sendWelcomeEmail({
+        email: userEmail,
+        loginEmail,
+        firstName,
+        lastName,
+        password,
+        role: roleCode || 'User',
+        schoolName,
+        loginUrl,
+        phone,
+        gender,
+        dob,
+        nationality,
+        className,
+        guardianName,
+        guardianPhone,
+        feeAmount,
+      });
+    } catch (emailError) {
+      console.error('[UserManagementService] Failed to send welcome email:', emailError.message);
+      // Don't fail user creation if email fails
     }
 
     return this.formatUser({ ...user, roles: roleCode ? [{ code: roleCode }] : [] });
   }
 
-  async update(schoolId, userId, data) {
+  async update(schoolId, userId, data, file = null) {
     await this.getById(schoolId, userId);
-    const { firstName, lastName, email, phone, isActive } = data;
+    const { firstName, lastName, email, phone, isActive, avatarUrl } = data;
+
+    let savedAvatarUrl = avatarUrl ?? null;
+    let savedAvatarPublicId = null;
+
+    if (file) {
+      const avatarUpload = await mediaService.safeUploadAvatar(file, `akademee/schools/${schoolId}/avatars`);
+      savedAvatarUrl = avatarUpload.avatarUrl || savedAvatarUrl;
+      savedAvatarPublicId = avatarUpload.avatarPublicId || savedAvatarPublicId;
+    }
 
     const rows = await sql`
       UPDATE users SET
@@ -102,6 +172,8 @@ class UserManagementService {
         last_name = COALESCE(${lastName || null}, last_name),
         email = COALESCE(${email ?? null}, email),
         phone = COALESCE(${phone ?? null}, phone),
+        avatar_url = COALESCE(${savedAvatarUrl ?? null}, avatar_url),
+        avatar_public_id = COALESCE(${savedAvatarPublicId ?? null}, avatar_public_id),
         is_active = COALESCE(${isActive ?? null}, is_active),
         updated_at = NOW()
       WHERE user_id = ${userId} AND school_id = ${schoolId}
@@ -112,7 +184,19 @@ class UserManagementService {
 
   async delete(schoolId, userId) {
     await this.getById(schoolId, userId);
-    await sql`UPDATE users SET is_active = false, updated_at = NOW() WHERE user_id = ${userId} AND school_id = ${schoolId}`;
+
+    await sql.begin(async (tx) => {
+      await tx`DELETE FROM notifications WHERE user_id = ${userId}`;
+      await tx`DELETE FROM attachments WHERE uploaded_by = ${userId}`;
+      await tx`DELETE FROM announcements WHERE created_by = ${userId}`;
+      await tx`DELETE FROM invites WHERE created_by = ${userId}`;
+      await tx`DELETE FROM attendance WHERE marked_by = ${userId}`;
+      await tx`DELETE FROM enrollments WHERE enrolled_by = ${userId}`;
+      await tx`DELETE FROM audit_logs WHERE user_id = ${userId}`;
+      await tx`DELETE FROM user_roles WHERE user_id = ${userId}`;
+      await tx`DELETE FROM users WHERE user_id = ${userId} AND school_id = ${schoolId}`;
+    });
+
     return { deleted: true, userId };
   }
 }

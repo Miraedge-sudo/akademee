@@ -19,8 +19,40 @@ class DashboardService {
           FROM user_roles ur
           JOIN users u ON ur.user_id = u.user_id
           JOIN roles r ON ur.role_id = r.role_id
-          WHERE u.school_id = ${schoolId} AND r.role_code = 'TEACHER' AND u.is_active = true
+          WHERE u.school_id = ${schoolId} 
+            AND UPPER(r.role_code) = 'TEACHER' 
+            AND u.is_active = true
         `;
+
+    const [secretaryCount] = await sql`
+      SELECT COUNT(*)::int AS total
+      FROM user_roles ur
+      JOIN users u ON ur.user_id = u.user_id
+      JOIN roles r ON ur.role_id = r.role_id
+      WHERE u.school_id = ${schoolId} 
+        AND UPPER(r.role_code) = 'SECRETARY' 
+        AND u.is_active = true
+    `;
+
+    const [parentCount] = await sql`
+      SELECT COUNT(*)::int AS total
+      FROM user_roles ur
+      JOIN users u ON ur.user_id = u.user_id
+      JOIN roles r ON ur.role_id = r.role_id
+      WHERE u.school_id = ${schoolId} 
+        AND UPPER(r.role_code) = 'PARENT' 
+        AND u.is_active = true
+    `;
+
+    const [accountantCount] = await sql`
+      SELECT COUNT(*)::int AS total
+      FROM user_roles ur
+      JOIN users u ON ur.user_id = u.user_id
+      JOIN roles r ON ur.role_id = r.role_id
+      WHERE u.school_id = ${schoolId} 
+        AND UPPER(r.role_code) = 'ACCOUNTANT' 
+        AND u.is_active = true
+    `;
 
     const [classCount] = await sql`
       SELECT COUNT(*)::int AS total FROM classes WHERE school_id = ${schoolId}
@@ -44,6 +76,9 @@ class DashboardService {
     return {
       totalStudents: studentCount.total,
       totalTeachers: teacherCount.total,
+      totalSecretaries: secretaryCount.total,
+      totalParents: parentCount.total,
+      totalAccountants: accountantCount.total,
       totalUsers: userCount.total,
       totalClasses: classCount.total,
       totalRevenue: Number(revenueData.total),

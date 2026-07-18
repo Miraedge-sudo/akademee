@@ -4,6 +4,7 @@
 
 const sql = require('../config/database');
 const authService = require('../services/auth.service');
+const jwtConfig = require('../config/jwt');
 const response = require('../utils/response');
 
 const COOKIE_OPTIONS = {
@@ -13,8 +14,8 @@ const COOKIE_OPTIONS = {
   path: '/',
 };
 
-const ACCESS_COOKIE_OPTIONS = { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 };
-const REFRESH_COOKIE_OPTIONS = { ...COOKIE_OPTIONS, maxAge: 30 * 24 * 60 * 60 * 1000 };
+const ACCESS_COOKIE_OPTIONS = { ...COOKIE_OPTIONS, maxAge: jwtConfig.accessCookieMaxAgeMs };
+const REFRESH_COOKIE_OPTIONS = { ...COOKIE_OPTIONS, maxAge: jwtConfig.refreshCookieMaxAgeMs };
 
 function setAuthCookies(res, token, refreshToken) {
   res.cookie('access_token', token, ACCESS_COOKIE_OPTIONS);
@@ -41,6 +42,9 @@ class AuthController {
         urls: result.urls,
       });
     } catch (error) {
+      if (error.message === 'User account is inactive') {
+        return response.error(res, 'Your account is inactive. Please contact your administrator.', null, 401);
+      }
       if (
         error.message === 'Invalid email or password' ||
         error.message === 'School account is inactive'
