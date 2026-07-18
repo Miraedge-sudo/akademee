@@ -12,27 +12,23 @@ class DashboardService {
       academicYearId = activeYear?.academic_year_id || null;
     }
 
+    // Student count: ALL active students regardless of academic year.
     const [studentCount] = await sql`
       SELECT COUNT(*)::int AS total FROM students WHERE school_id = ${schoolId} AND status = 'active'
     `;
 
-    const [teacherCount] = academicYearId
-      ? await sql`
-          SELECT COUNT(DISTINCT ct.teacher_id)::int AS total
-          FROM class_teachers ct
-          JOIN classes c ON ct.class_id = c.class_id
-          WHERE ct.school_id = ${schoolId}
-            AND c.academic_year_id = ${academicYearId}
-        `
-      : await sql`
-          SELECT COUNT(*)::int AS total
-          FROM user_roles ur
-          JOIN users u ON ur.user_id = u.user_id
-          JOIN roles r ON ur.role_id = r.role_id
-          WHERE u.school_id = ${schoolId} 
-            AND UPPER(r.role_code) = 'TEACHER' 
-            AND u.is_active = true
-        `;
+    // Teacher count: from user_roles (not class_teachers) because teachers may
+    // be assigned via subject_teachers rather than class_teachers. The frontend
+    // explicitly requests stats without academic year filtering.
+    const [teacherCount] = await sql`
+      SELECT COUNT(*)::int AS total
+      FROM user_roles ur
+      JOIN users u ON ur.user_id = u.user_id
+      JOIN roles r ON ur.role_id = r.role_id
+      WHERE u.school_id = ${schoolId} 
+        AND UPPER(r.role_code) = 'TEACHER' 
+        AND u.is_active = true
+    `;
 
     const [secretaryCount] = await sql`
       SELECT COUNT(*)::int AS total
@@ -64,9 +60,10 @@ class DashboardService {
         AND u.is_active = true
     `;
 
+    // Class count: ALL classes regardless of academic year.
+    // The frontend explicitly requests stats without year filtering.
     const [classCount] = await sql`
       SELECT COUNT(*)::int AS total FROM classes WHERE school_id = ${schoolId}
-        ${academicYearId ? sql`AND academic_year_id = ${academicYearId}` : sql``}
     `;
 
     const [revenueData] = await sql`
@@ -169,7 +166,7 @@ class DashboardService {
         WHERE school_id = ${schoolId} AND is_current = true
         LIMIT 1
       `;
-      academicYearId = activeYear?.academic_yearId || null;
+      academicYearId = activeYear?.academic_year_id || null;
     }
 
     const rows = await sql`

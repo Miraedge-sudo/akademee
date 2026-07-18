@@ -82,7 +82,7 @@ const QUICK_ACTIONS = [
     label: 'Add Student',
     labelFr: 'Ajouter Étudiant',
     icon: FiPlus,
-    path: '/dashboard/students',
+    path: '/dashboard/users/new',
     color: 'bg-primary-100 dark:bg-primary-900/30',
     iconColor: 'text-primary-600 dark:text-primary-400',
   },
