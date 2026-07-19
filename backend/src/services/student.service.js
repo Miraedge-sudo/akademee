@@ -6,6 +6,8 @@
 const crypto = require('crypto');
 const sql = require('../config/database');
 const { generateLoginEmail } = require('../utils/emailGenerator');
+const emailService = require('./email.service');
+const domains = require('../config/domains');
 
 class StudentService {
   formatStudent(row) {
@@ -60,6 +62,7 @@ class StudentService {
       firstName,
       lastName,
       email,
+      password,
       phone,
       className,
       classId,
@@ -68,7 +71,13 @@ class StudentService {
       studentNumber,
       status = 'active',
       feeStatus = 'pending',
+      educationalSystem,
     } = data;
+
+    // Get school subdomain and name for email
+    const school = await sql`SELECT subdomain, name FROM schools WHERE school_id = ${schoolId}`;
+    const schoolSubdomain = school[0]?.subdomain || '';
+    const schoolName = school[0]?.name || '';
 
     // ── Generate login_email with .student extension ──
     const userEmail = email;
@@ -85,12 +94,15 @@ class StudentService {
       `;
       if (existing.length > 0) {
         user = existing[0];
-        // Update the existing user's name/phone in case they changed
+        // Update the existing user's name/phone/password in case they changed
+        const bcrypt = require('bcrypt');
+        const passwordHash = password ? await bcrypt.hash(password, 10) : null;
         await sql`
           UPDATE users SET
             first_name = ${firstName},
             last_name = ${lastName},
             phone = COALESCE(${phone || null}, phone),
+            ${passwordHash ? sql`password_hash = ${passwordHash},` : sql``}
             is_active = true,
             updated_at = NOW()
           WHERE user_id = ${user.user_id} AND school_id = ${schoolId}
@@ -99,11 +111,13 @@ class StudentService {
     }
 
     if (!user) {
+      const bcrypt = require('bcrypt');
+      const passwordHash = await bcrypt.hash(password, 10);
       const users = await sql`
-        INSERT INTO users (school_id, first_name, last_name, email, login_email, phone, is_active, created_at)
+        INSERT INTO users (school_id, first_name, last_name, email, login_email, password_hash, phone, is_active, created_at)
         VALUES (
           ${schoolId}, ${firstName}, ${lastName},
-          ${userEmail || null}, ${loginEmail}, ${phone || null}, true, NOW()
+          ${userEmail || null}, ${loginEmail}, ${passwordHash}, ${phone || null}, true, NOW()
         )
         RETURNING user_id, first_name, last_name, email, login_email, phone
       `;
@@ -125,12 +139,12 @@ class StudentService {
     const students = await sql`
       INSERT INTO students (
         school_id, user_id, student_number, date_of_birth, gender,
-        status, class_label, fee_status, created_at
+        status, class_label, fee_status, educational_system, created_at
       )
       VALUES (
         ${schoolId}, ${user.user_id}, ${number},
         ${dateOfBirth || null}, ${gender}, ${status},
-        ${className || null}, ${feeStatus}, NOW()
+        ${className || null}, ${feeStatus}, ${educationalSystem || null}, NOW()
       )
       RETURNING student_id
     `;
@@ -141,6 +155,32 @@ class StudentService {
         INSERT INTO enrollments (school_id, student_id, class_id, status)
         VALUES (${schoolId}, ${students[0].student_id}, ${classId}, 'active')
       `;
+    }
+
+    // Send welcome email with student account details
+    try {
+      const protocol = domains.getProtocol();
+      const domain = domains.getActiveTenantDomain();
+      const port = domains.isProduction ? '' : `:${domains.frontendPort}`;
+      const loginUrl = `${protocol}://${schoolSubdomain}.${domain}${port}/login`;
+
+      await emailService.sendWelcomeEmail({
+        email: userEmail,
+        loginEmail,
+        firstName,
+        lastName,
+        password,
+        role: 'Student',
+        schoolName,
+        loginUrl,
+        phone,
+        gender,
+        dob: dateOfBirth,
+        className,
+        educationalSystem,
+      });
+    } catch (emailError) {
+      console.error('[StudentService] Failed to send welcome email:', emailError.message);
     }
 
     const rows = await this.studentSelectQuery(

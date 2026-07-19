@@ -11,6 +11,8 @@ class ClassController {
       response.success(res, 'Class created', result, 201);
     } catch (error) {
       next(error);
+
+      console.error('Unable to create class', error);
     }
   }
 
