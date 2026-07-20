@@ -235,7 +235,7 @@ class EmailService {
   /**
    * Send welcome email for manually created users
    */
-  async sendWelcomeEmail({ email, loginEmail, firstName, lastName, password, role, schoolName, loginUrl, phone, className, guardianName, guardianPhone, feeAmount, gender, dob, nationality }) {
+  async sendWelcomeEmail({ email, loginEmail, firstName, lastName, password, role, schoolName, loginUrl, phone, className, guardianName, guardianPhone, feeAmount, gender, dob, nationality, educationalSystem }) {
     if (!emailConfig.isConfigured) {
       console.warn('[EmailService] SMTP not configured — welcome email not sent');
       return { sent: false, reason: 'SMTP not configured' };
@@ -251,6 +251,7 @@ class EmailService {
     if (gender) additionalDetails += `<li><strong>Gender:</strong> ${gender}</li>`;
     if (dob) additionalDetails += `<li><strong>Date of Birth:</strong> ${dob}</li>`;
     if (nationality) additionalDetails += `<li><strong>Nationality:</strong> ${nationality}</li>`;
+    if (educationalSystem) additionalDetails += `<li><strong>Educational System:</strong> ${educationalSystem}</li>`;
     if (className) additionalDetails += `<li><strong>Class:</strong> ${className}</li>`;
     if (guardianName) additionalDetails += `<li><strong>Guardian Name:</strong> ${guardianName}</li>`;
     if (guardianPhone) additionalDetails += `<li><strong>Guardian Phone:</strong> ${guardianPhone}</li>`;

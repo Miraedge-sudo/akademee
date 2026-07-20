@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../core/hooks/useTheme";
+import { useEducationalSystems } from "../../../core/context/EducationalSystemContext";
 import {
   FiCheck,
   FiChevronLeft,
@@ -479,6 +480,7 @@ export default function CreateUserPage() {
   const { t, i18n } = useTranslation("common");
   const navigate = useNavigate();
   const { primaryColor } = useTheme();
+  const { selectedSystems } = useEducationalSystems();
   const [searchParams] = useSearchParams();
   const lang = i18n.language === "fr" ? "fr" : "en";
   const isFr = lang === "fr";
@@ -511,6 +513,7 @@ export default function CreateUserPage() {
     guardianFn: "", guardianLn: "", guardianRel: "", guardianPhone: "",
     feeAmount: "", feeDeadline: "",
     inviteEmail: "", inviteName: "",
+    educationalSystem: "",
   });
 
   // ── Load real classes & subjects from API ──
@@ -669,12 +672,14 @@ export default function CreateUserPage() {
           firstName: formData.firstName.trim(),
           lastName: formData.lastName.trim(),
           email: formData.email.trim(),
+          password: formData.password,
           phone: formData.phone?.trim() || undefined,
           gender: formData.gender || 'male',
           classId: formData.studentClass || null,
           className: selectedClass?.name || formData.studentClass || null,
           status: 'active',
           feeStatus: 'pending',
+          educationalSystem: formData.educationalSystem || null,
         });
         // Generate loginEmail for display (student API doesn't return it)
         const emailParts = formData.email.trim().split('@');
@@ -798,6 +803,16 @@ export default function CreateUserPage() {
             <SectionTitle>Academic information</SectionTitle>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <SelectField
+                value={formData.educationalSystem || ""}
+                onChange={(e) => updateField("educationalSystem", e.target.value)}
+                placeholder="Select educational system"
+              >
+                <option value="">No system selected</option>
+                {selectedSystems.map((system) => (
+                  <option key={system} value={system}>{system}</option>
+                ))}
+              </SelectField>
+              <SelectField
                 value={formData.studentClass || ""}
                 onChange={(e) => updateField("studentClass", e.target.value)}
                 placeholder="Select class"
@@ -812,6 +827,8 @@ export default function CreateUserPage() {
                   })
                 )}
               </SelectField>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FieldInput
                 placeholder="Auto-generated if empty"
                 value={formData.matricule || ""}
@@ -819,8 +836,6 @@ export default function CreateUserPage() {
                 name="matricule"
                 hint="Leave empty to auto-generate"
               />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <SelectField
                 value={formData.enrollType || "New student"}
                 onChange={(e) => updateField("enrollType", e.target.value)}
@@ -830,6 +845,8 @@ export default function CreateUserPage() {
                 <option>Transfer</option>
                 <option>Repeating</option>
               </SelectField>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FieldInput
                 placeholder="e.g. Cameroonian"
                 value={formData.nationality || ""}
