@@ -2,19 +2,28 @@
  * TeacherGreeting — animated header with teacher name, date badge and class/grade summary.
  */
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 function getGreeting() {
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
+  if (h < 12) return 'greetingMorning';
+  if (h < 18) return 'greetingAfternoon';
+  return 'greetingEvening';
 }
 
 export default function TeacherGreeting({ teacher, classesToday = 0, pendingGrades = 0, pc = '#085041' }) {
+  const { t, i18n } = useTranslation('common');
+  const isFr = i18n.language === 'fr';
   const now = new Date();
   const dateDay = now.getDate();
-  const dateMonth = now.toLocaleDateString('en', { month: 'long', year: 'numeric' });
-  const greeting = useMemo(() => getGreeting(), []);
+  const dateMonth = now.toLocaleDateString(isFr ? 'fr' : 'en',
+    { month: 'long', year: 'numeric' }
+  );
+  const greetingKey = useMemo(() => getGreeting(), []);
+
+  const gradeText = pendingGrades > 0
+    ? t('teacher.greeting.pendingGrades', { count: pendingGrades })
+    : t('teacher.greeting.noPendingGrades');
 
   return (
     <div className="flex items-end justify-between flex-wrap gap-4 mb-7">
@@ -24,19 +33,18 @@ export default function TeacherGreeting({ teacher, classesToday = 0, pendingGrad
           className="text-[11px] font-semibold tracking-[1.5px] uppercase mb-1.5"
           style={{ color: pc }}
         >
-          Teacher dashboard
+          {t('teacher.greeting.title')}
         </p>
         <h1 className="font-display text-[clamp(22px,3vw,30px)] font-bold text-surface-900 dark:text-surface-50 leading-tight">
-          {greeting},{' '}
+          {t(`teacher.greeting.${greetingKey}`)},{' '}
           <span style={{ color: pc }}>{teacher?.firstName ? `${teacher.firstName}` : 'Teacher'}</span> 👋
         </h1>
         <p className="text-sm text-surface-400 mt-1">
-          You have{' '}
-          <strong className="text-surface-700 dark:text-surface-200">{classesToday} classes</strong> today
+          {t('teacher.greeting.classesToday', { count: classesToday })}
           {pendingGrades > 0 && (
             <>
-              {' '}and{' '}
-              <strong className="text-amber-600">{pendingGrades} grades</strong> pending entry
+              {' '}{t('teacher.greeting.and')}{' '}
+              <strong className="text-amber-600">{gradeText}</strong>
             </>
           )}.
         </p>

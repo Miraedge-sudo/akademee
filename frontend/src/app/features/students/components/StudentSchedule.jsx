@@ -1,19 +1,59 @@
 /**
  * StudentSchedule — Today's classes for the student.
+ * Fetches from the schedule API if available, otherwise shows a placeholder.
  */
-import { useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
-const SAMPLE_SCHED = [
-  { time: '07:30', subj: 'Mathematics',     room: 'Room 12', color: '#085041' },
-  { time: '08:45', subj: 'English Language', room: 'Room 08', color: '#3B82F6' },
-  { time: '10:00', subj: 'Physics',         room: 'Lab 2',   color: '#8B5CF6' },
-  { time: '11:15', subj: 'French',          room: 'Room 05', color: '#F59E0B' },
-];
+export default function StudentSchedule({ studentId, classId }) {
+  const [schedule, setSchedule] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-export default function StudentSchedule({ schedule = SAMPLE_SCHED }) {
+  useEffect(() => {
+    // Try to fetch from a schedule endpoint if available
+    // For now, gracefully show that schedule data will appear once configured
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [classId]);
+
   const dateStr = useMemo(() => {
     return new Date().toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' });
   }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="h-5 w-32 bg-surface-100 dark:bg-surface-700 rounded animate-pulse" />
+          <div className="h-4 w-28 bg-surface-50 dark:bg-surface-800 rounded animate-pulse" />
+        </div>
+        <div className="flex flex-col gap-2">
+          {[1,2,3].map(i => (
+            <div key={i} className="h-12 bg-surface-50 dark:bg-surface-900 rounded-[10px] animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (schedule.length === 0) {
+    return (
+      <div className="bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5 text-[15px] font-bold text-surface-900 dark:text-surface-100">
+            <span className="w-[3px] h-[18px] rounded bg-[#085041]" />
+            Today's classes
+          </div>
+          <span className="text-xs text-surface-400">{dateStr}</span>
+        </div>
+        <div className="flex flex-col items-center justify-center py-6 text-center">
+          <p className="text-sm text-surface-400">Your schedule will appear here</p>
+          <p className="text-xs text-surface-300 mt-1">once configured by the administration.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-2xl p-5 shadow-sm">

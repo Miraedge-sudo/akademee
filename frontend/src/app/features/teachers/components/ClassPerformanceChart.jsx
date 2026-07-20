@@ -1,5 +1,5 @@
-
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const CLASS_DATA = {
   'Form 4A': {
@@ -25,6 +25,7 @@ function getColor(avg) {
 }
 
 export default function ClassPerformanceChart() {
+  const { t } = useTranslation('common');
   const [selected, setSelected] = useState(CLASS_OPTIONS[0]);
   const data = CLASS_DATA[selected];
 
@@ -43,7 +44,7 @@ export default function ClassPerformanceChart() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5 text-[15px] font-bold text-surface-900 dark:text-surface-100">
           <span className="w-[3px] h-[18px] rounded bg-[#085041]" />
-          Class performance — Sequence 3
+          {t('teacher.performance.title')}
         </div>
         <select
           value={selected}
@@ -56,9 +57,9 @@ export default function ClassPerformanceChart() {
 
       <div className="flex gap-4 mb-4">
         {[
-          { color: '#1D9E75', label: 'Pass' },
-          { color: '#EF4444', label: 'Fail' },
-          { color: '#F59E0B', label: 'At risk' },
+          { color: '#1D9E75', label: t('teacher.performance.pass') },
+          { color: '#EF4444', label: t('teacher.performance.fail') },
+          { color: '#F59E0B', label: t('teacher.performance.atRisk') },
         ].map((l) => (
           <div key={l.label} className="flex items-center gap-1.5 text-[11.5px] text-surface-400">
             <div className="w-2.5 h-2.5 rounded-[3px]" style={{ background: l.color }} />
@@ -102,9 +103,9 @@ export default function ClassPerformanceChart() {
       {/* Summary */}
       <div className="grid grid-cols-3 gap-2.5 mt-4 pt-4 border-t border-surface-100 dark:border-surface-700">
         {[
-          { value: pass, label: 'Passed',  color: '#1D9E75' },
-          { value: fail, label: 'Failed',  color: '#EF4444' },
-          { value: risk, label: 'At risk', color: '#F59E0B' },
+          { value: pass, label: t('teacher.performance.passed'),  color: '#1D9E75' },
+          { value: fail, label: t('teacher.performance.failed'),  color: '#EF4444' },
+          { value: risk, label: t('teacher.performance.atRiskLabel'), color: '#F59E0B' },
         ].map((s) => (
           <div key={s.label} className="text-center">
             <div className="text-[20px] font-extrabold" style={{ color: s.color }}>{s.value}</div>

@@ -2,6 +2,7 @@
  * TeacherStatCards — 4 animated KPI cards: classes, students, grades pending, attendance rate.
  */
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BookOpen,
   Users,
@@ -105,30 +106,31 @@ function StatCard({ icon: Icon, iconBg, iconColor, value, suffix = '', label, tr
 }
 
 export default function TeacherStatCards({ stats }) {
+  const { t } = useTranslation('common');
   const { classes = 6, students = 187, pendingGrades = 12, attendanceRate = 94 } = stats || {};
 
   const cards = [
     {
       icon: BookOpen, iconBg: 'rgba(8,80,65,.08)', iconColor: '#085041',
-      value: classes, label: 'Classes assigned', trend: '+2', trendUp: true,
+      value: classes, label: t('teacher.statCards.classesAssigned'), trend: '+2', trendUp: true,
       sparkKey: 'classes', sparkColor: '#5DCAA5', sparkFill: 'rgba(8,80,65,.06)',
       delay: 0.04,
     },
     {
       icon: Users, iconBg: 'rgba(59,130,246,.09)', iconColor: '#3B82F6',
-      value: students, label: 'Total students', trend: '+8', trendUp: true,
+      value: students, label: t('teacher.statCards.totalStudents'), trend: '+8', trendUp: true,
       sparkKey: 'students', sparkColor: '#3B82F6',
       delay: 0.1,
     },
     {
       icon: ClipboardList, iconBg: 'rgba(245,158,11,.09)', iconColor: '#F59E0B',
-      value: pendingGrades, label: 'Grades to enter', trend: 'Urgent', trendUp: false,
+      value: pendingGrades, label: t('teacher.statCards.gradesToEnter'), trend: t('teacher.statCards.urgent'), trendUp: false,
       sparkKey: 'grades', sparkColor: '#F59E0B', valueColor: '#F59E0B',
       delay: 0.16,
     },
     {
       icon: CheckCircle2, iconBg: 'rgba(139,92,246,.09)', iconColor: '#8B5CF6',
-      value: attendanceRate, suffix: '%', label: 'Avg. attendance rate', trend: '+3%', trendUp: true,
+      value: attendanceRate, suffix: '%', label: t('teacher.statCards.avgAttendanceRate'), trend: '+3%', trendUp: true,
       sparkKey: 'attendance', sparkColor: '#8B5CF6',
       delay: 0.22,
     },

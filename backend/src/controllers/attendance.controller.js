@@ -7,7 +7,15 @@ class AttendanceController {
     try {
       const { studentId, classId, academicYearId, date, status, markedBy, remarks } = req.body;
       const { schoolId } = req;
-      const result = await attendanceService.create(schoolId, { studentId, classId, academicYearId, date, status, markedBy, remarks });
+      const result = await attendanceService.create(schoolId, {
+        studentId,
+        classId,
+        academicYearId,
+        date,
+        status: status?.toLowerCase(),
+        markedBy,
+        remarks,
+      });
       response.success(res, 'Attendance recorded', result, 201);
     } catch (error) {
       next(error);
@@ -31,7 +39,8 @@ class AttendanceController {
       const { classId, date } = req.params;
       const schoolId = req.schoolId || req.user?.schoolId;
       const { academicYearId } = req.query;
-      const result = await attendanceService.listBySchool(schoolId, { startDate: date, endDate: date, academicYearId });
+      // Use listByClass to filter by classId, not listBySchool (which has no classId filter)
+      const result = await attendanceService.listByClass(schoolId, classId, { startDate: date, endDate: date, academicYearId });
       response.success(res, 'Class attendance retrieved', result);
     } catch (error) {
       next(error);
@@ -96,12 +105,21 @@ class AttendanceController {
 
   async bulkRecordAttendance(req, res, next) {
     try {
-      const { attendanceData } = req.body;
+      const { records, date, classId } = req.body;
       const { schoolId } = req;
-      if (!attendanceData || !Array.isArray(attendanceData)) {
-        return response.error(res, 'attendanceData must be an array', null, 400);
+      if (!records || !Array.isArray(records)) {
+        return response.error(res, 'Attendance records are required', null, 400);
       }
-      const result = await attendanceService.bulkCreate(schoolId, attendanceData);
+      // Enrich each record with date, classId, markedBy from the top-level payload
+      const enrichedData = records.map(r => ({
+        studentId: r.studentId,
+        date: date,
+        status: r.status,
+        classId: classId,
+        markedBy: req.user?.userId || null,
+        remarks: r.remarks || null,
+      }));
+      const result = await attendanceService.bulkCreate(schoolId, enrichedData);
       response.success(res, 'Bulk attendance recorded', result, 201);
     } catch (error) {
       next(error);

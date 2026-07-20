@@ -13,7 +13,7 @@ class EnrollmentService {
       academicYearId: row.academic_year_id,
       status: row.status,
       enrollmentNumber: row.enrollment_number,
-      enrolledAt: row.created_at,
+      enrolledAt: row.updated_at,
     };
   }
 
@@ -89,7 +89,7 @@ class EnrollmentService {
         ${classId ? sql`AND e.class_id = ${classId}` : sql``}
         ${status ? sql`AND e.status = ${status}` : sql``}
         ${academicYearId ? sql`AND e.academic_year_id = ${academicYearId}` : sql``}
-      ORDER BY e.created_at DESC
+      ORDER BY e.updated_at DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
@@ -116,7 +116,7 @@ class EnrollmentService {
       FROM enrollments e
       LEFT JOIN classes c ON e.class_id = c.class_id
       WHERE e.student_id = ${studentId} AND e.school_id = ${schoolId}
-      ORDER BY e.created_at DESC
+      ORDER BY e.updated_at DESC
     `;
     return rows.map(r => this.formatEnrollment(r));
   }

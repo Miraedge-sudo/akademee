@@ -2,6 +2,7 @@ import { FiMenu, FiGrid, FiUsers, FiBarChart2, FiDollarSign, FiBook, FiCalendar 
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../core/hooks/useAuth";
+import { getPrimaryRole } from "../core/utils/roleUtils";
 
 // ── Primary entries per role (max 4) + Menu ──
 const BOTTOM_CONFIG = {
@@ -51,7 +52,7 @@ export default function MobileBottomNav({ onOpenMenu }) {
   const { user } = useAuth();
   const location = useLocation();
 
-  const role = user?.roles?.[0] || "ADMIN";
+  const role = getPrimaryRole(user?.roles);
   const items = BOTTOM_CONFIG[role] || BOTTOM_CONFIG.ADMIN;
 
   // Vérifie si le path est actif (match exact OU commence par le path si ce n'est pas /dashboard)

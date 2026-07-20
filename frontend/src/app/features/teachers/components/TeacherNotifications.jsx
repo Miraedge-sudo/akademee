@@ -2,6 +2,7 @@
  * TeacherNotifications — notification list with icon, title, time and unread pulse dot.
  */
 import { Bell, UserCheck, Calendar } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const ICON_MAP = { bell: Bell, 'user-check': UserCheck, calendar: Calendar };
 
@@ -12,6 +13,7 @@ const SAMPLE_NOTIFS = [
 ];
 
 export default function TeacherNotifications({ notifications = SAMPLE_NOTIFS }) {
+  const { t } = useTranslation('common');
   const hasUnread = notifications.some((n) => n.unread);
 
   return (
@@ -19,7 +21,7 @@ export default function TeacherNotifications({ notifications = SAMPLE_NOTIFS }) 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5 text-[15px] font-bold text-surface-900 dark:text-surface-100">
           <span className="w-[3px] h-[18px] rounded bg-[#085041]" />
-          Notifications
+          {t('teacher.notifications.title')}
         </div>
         {hasUnread && (
           <span className="w-[7px] h-[7px] rounded-full bg-red-500 animate-pulse" />

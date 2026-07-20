@@ -35,7 +35,6 @@ function StatCard({ icon: Icon, iconBg, iconColor, value, isDecimal, suffix, val
       className="bg-white dark:bg-surface-800 rounded-2xl border-[1.5px] border-surface-100 dark:border-surface-700 p-4 shadow-sm relative overflow-hidden transition-all duration-250 hover:-translate-y-1 hover:shadow-lg group"
       style={{ animationDelay: `${delay}s` }}
     >
-      {/* shimmer */}
       <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent animate-[shimmer_2.5s_1.5s_ease-in-out]" />
 
       <div
@@ -60,36 +59,45 @@ function StatCard({ icon: Icon, iconBg, iconColor, value, isDecimal, suffix, val
 }
 
 export default function StudentStatStrip({
-  annualAvg = 14.2,
-  attendanceRate = 94,
-  feesPaidPct = 67,
-  rankStr = '3rd',
+  annualAvg = 0,
+  attendanceRate = 0,
+  feesPaidPct = 0,
+  rankStr = '-',
+  totalAbsences = 0,
+  totalDue = 0,
+  totalPaid = 0,
 }) {
+  const rateColor = attendanceRate >= 75 ? '#3B82F6' : attendanceRate >= 50 ? '#F59E0B' : '#EF4444';
+
   const cards = [
     {
       icon: BarChart2, iconBg: 'rgba(8,80,65,.08)', iconColor: '#085041',
       value: annualAvg, isDecimal: true, suffix: '/20',
-      label: 'Annual average', subtext: '/ 20 — Very Good',
-      delay: 0.04
+      label: 'Annual average',
+      subtext: annualAvg >= 12 ? 'Good standing' : annualAvg >= 10 ? 'Average' : 'Needs improvement',
+      delay: 0.04,
     },
     {
       icon: CalendarCheck, iconBg: 'rgba(59,130,246,.08)', iconColor: '#3B82F6',
-      value: attendanceRate, isDecimal: false, suffix: '%', valueColor: '#3B82F6',
-      label: 'Attendance rate', subtext: '4 absences this year',
-      delay: 0.1
+      value: attendanceRate, isDecimal: false, suffix: '%', valueColor: rateColor,
+      label: 'Attendance rate',
+      subtext: `${totalAbsences} absence(s) recorded`,
+      delay: 0.1,
     },
     {
       icon: CreditCard, iconBg: 'rgba(245,158,11,.08)', iconColor: '#F59E0B',
-      value: feesPaidPct, isDecimal: false, suffix: '%', valueColor: '#F59E0B',
-      label: 'Fees paid', subtext: '80 000 / 120 000 FCFA',
-      delay: 0.16
+      value: feesPaidPct, isDecimal: false, suffix: '%', valueColor: feesPaidPct >= 75 ? '#1D9E75' : '#F59E0B',
+      label: 'Fees paid',
+      subtext: totalDue > 0 ? `${totalPaid.toLocaleString()} / ${totalDue.toLocaleString()} FCFA` : 'No fees due',
+      delay: 0.16,
     },
     {
       icon: Award, iconBg: 'rgba(139,92,246,.08)', iconColor: '#8B5CF6',
       value: rankStr, isRank: true, valueColor: '#8B5CF6',
-      label: 'Class ranking', subtext: 'Form 4A · 45 students',
-      delay: 0.22
-    }
+      label: 'Class ranking',
+      subtext: rankStr !== '-' ? 'Based on overall average' : 'Not ranked yet',
+      delay: 0.22,
+    },
   ];
 
   return (

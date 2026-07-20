@@ -17,6 +17,8 @@ const uuidParam = [param('id').isUUID().withMessage('Student ID must be a valid 
 
 router.use(authMiddleware, tenantMiddleware);
 
+router.get('/me', studentController.getMyProfile);
+
 router.post(
   '/',
   roleMiddleware(['admin', 'teacher']),

@@ -70,6 +70,17 @@ class ClassController {
     }
   }
 
+  async getTeacherClasses(req, res, next) {
+    try {
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const { teacherId } = req.params;
+      const result = await classService.getTeacherClasses(schoolId, teacherId);
+      response.success(res, 'Teacher classes retrieved', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async removeStudent(req, res, next) {
     try {
       const { id, studentId } = req.params;

@@ -4,16 +4,16 @@
 import { useEffect, useRef } from 'react';
 
 export default function StudentHeroBanner({
-  name = 'Emma',
-  className = 'Form 4A',
-  matricule = 'STU-2024-0142',
+  name = 'Student',
+  className = '',
+  matricule = '',
   status = 'Active',
-  rank = 3,
-  totalStudents = 45,
-  annualAvg = 14.2,
+  rank = '-',
+  totalStudents = 0,
+  annualAvg = 0,
 }) {
   const arcRef = useRef(null);
-  const pct = annualAvg / 20;
+  const pct = annualAvg > 0 ? annualAvg / 20 : 0;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -47,65 +47,71 @@ export default function StudentHeroBanner({
           {/* Left info */}
           <div>
             <div className="text-[11px] font-semibold tracking-[2px] uppercase text-white/60 mb-1.5">
-              Student portal · 2024 – 2025
+              Student portal · {new Date().getFullYear() - 1} – {new Date().getFullYear()}
             </div>
             <h1 className="font-display text-[clamp(22px,3.5vw,36px)] font-bold text-white leading-tight mb-2">
               Welcome back, {name}
             </h1>
             <div className="text-[13.5px] text-white/65 flex flex-wrap items-center gap-3">
-              <span>{className}</span>
-              <span className="w-px h-3.5 bg-white/25" />
-              <span>Matricule: {matricule}</span>
-              <span className="w-px h-3.5 bg-white/25" />
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                {status}
-              </span>
+              {className && <span>{className}</span>}
+              {className && matricule && <span className="w-px h-3.5 bg-white/25" />}
+              {matricule && <span>Matricule: {matricule}</span>}
+              {(className || matricule) && status && <span className="w-px h-3.5 bg-white/25" />}
+              {status && (
+                <span className="flex items-center gap-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${status === 'Active' ? 'bg-teal-400' : 'bg-amber-400'}`} />
+                  {status}
+                </span>
+              )}
             </div>
           </div>
 
           {/* Right stats */}
-          <div className="hidden sm:flex items-center gap-6">
-            <div className="relative w-[110px] h-[110px]">
-              <svg viewBox="0 0 110 110" className="w-full h-full -rotate-90">
-                <circle cx="55" cy="55" r="45" fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="10" />
-                <circle
-                  ref={arcRef}
-                  cx="55" cy="55" r="45"
-                  fill="none"
-                  stroke="rgba(255,255,255,.85)"
-                  strokeWidth="10"
-                  strokeLinecap="round"
-                  strokeDasharray="283"
-                  strokeDashoffset="283"
-                  style={{ '--full': 283, '--target': 283 }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="font-display text-[26px] font-bold text-white leading-none">
-                  {annualAvg}
-                </div>
-                <div className="text-[9px] font-semibold tracking-[1px] uppercase text-white/50 mt-0.5">
-                  Annual avg
+          {annualAvg > 0 && (
+            <div className="hidden sm:flex items-center gap-6">
+              <div className="relative w-[110px] h-[110px]">
+                <svg viewBox="0 0 110 110" className="w-full h-full -rotate-90">
+                  <circle cx="55" cy="55" r="45" fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="10" />
+                  <circle
+                    ref={arcRef}
+                    cx="55" cy="55" r="45"
+                    fill="none"
+                    stroke="rgba(255,255,255,.85)"
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                    strokeDasharray="283"
+                    strokeDashoffset="283"
+                    style={{ '--full': 283, '--target': 283 }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <div className="font-display text-[26px] font-bold text-white leading-none">
+                    {annualAvg}
+                  </div>
+                  <div className="text-[9px] font-semibold tracking-[1px] uppercase text-white/50 mt-0.5">
+                    Annual avg
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="text-right">
-              <div className="text-[11px] font-semibold tracking-[1px] uppercase text-white/50 mb-0.5">
-                Class rank
-              </div>
-              <div className="font-display text-[22px] font-bold text-white">
-                {rank}
-                <sup className="text-sm font-normal opacity-70">
-                  {rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th'}
-                </sup>
-                <span className="text-[14px] font-normal opacity-70 ml-1">
-                  / {totalStudents}
-                </span>
-              </div>
+              {totalStudents > 0 && (
+                <div className="text-right">
+                  <div className="text-[11px] font-semibold tracking-[1px] uppercase text-white/50 mb-0.5">
+                    Class rank
+                  </div>
+                  <div className="font-display text-[22px] font-bold text-white">
+                    {rank}
+                    <sup className="text-sm font-normal opacity-70">
+                      {rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th'}
+                    </sup>
+                    <span className="text-[14px] font-normal opacity-70 ml-1">
+                      / {totalStudents}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </>

@@ -204,6 +204,19 @@ class StudentService {
     return this.formatStudent(rows[0]);
   }
 
+  async getStudentByUserId(schoolId, userId) {
+    const rows = await this.studentSelectQuery(
+      schoolId,
+      sql`AND st.user_id = ${userId}`
+    );
+
+    if (rows.length === 0) {
+      throw new Error('Student not found');
+    }
+
+    return this.formatStudent(rows[0]);
+  }
+
   async listStudents(schoolId, { limit = 50, offset = 0, search, status = 'active', className } = {}) {
     limit = Math.min(Math.max(1, limit), 500);
     offset = Math.max(0, offset);

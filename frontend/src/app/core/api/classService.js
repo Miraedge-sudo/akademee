@@ -86,6 +86,17 @@ export async function getClassSubjects(classId) {
 import { getAcademicYears as getYearsFromService } from './academicYearService';
 
 /**
+ * Récupère toutes les classes assignées à un professeur
+ * (combine class_teacher + subject_teacher côté backend)
+ * @param {string} teacherId
+ */
+export async function getTeacherClasses(teacherId) {
+  const response = await api.get(API_ENDPOINTS.TEACHER_CLASSES.LIST(teacherId));
+  return response.data.data;
+}
+
+
+/**
  * Récupère la liste des années académiques
  * @deprecated Use academicYearService.getAcademicYears() instead
  */

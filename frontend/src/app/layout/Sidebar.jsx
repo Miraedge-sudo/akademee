@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../core/hooks/useAuth";
+import { getPrimaryRole } from "../core/utils/roleUtils";
 import akademeeLogo from "../../assets/Logo.png";
 
 // ── Educational System Types ──
@@ -511,6 +512,11 @@ const BASE_NAV_CONFIG = {
           path: "/dashboard/subject-classes",
           icon: "subjects",
         },
+        {
+          key: "teacherAssignment",
+          path: "/dashboard/teacher-assignments",
+          icon: "users",
+        },
       ],
     },
     {
@@ -937,7 +943,7 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
   const { user } = useAuth();
   const location = useLocation();
 
-  const role = user?.roles?.[0] || "ADMIN";
+  const role = getPrimaryRole(user?.roles);
   const educationalSystems = user?.school?.educationalSystems || [];
   const navGroups = getNavConfig(role, educationalSystems);
 
