@@ -31,6 +31,13 @@ router.post(
 
 router.get('/', authMiddleware, tenantMiddleware, classController.getSchoolClasses);
 
+// ⚠️ Static routes MUST come BEFORE parameterized /:id routes
+router.get(
+  '/teacher/:teacherId',
+  authMiddleware,
+  classController.getTeacherClasses
+);
+
 router.get('/:id', authMiddleware, classController.getClass);
 
 router.put(

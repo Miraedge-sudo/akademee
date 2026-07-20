@@ -1,6 +1,7 @@
 /**
  * UpcomingAssessments — list of upcoming exams/tests with date box and type badge.
  */
+import { useTranslation } from 'react-i18next';
 
 const SAMPLE_ASSESSMENTS = [
   { day: '18', month: 'Jan', name: 'Sequence 3 — Mathematics', meta: 'Form 4A · 2h', type: 'Exam',  typeColor: '#085041', typeBg: 'rgba(8,80,65,.07)' },
@@ -9,11 +10,13 @@ const SAMPLE_ASSESSMENTS = [
 ];
 
 export default function UpcomingAssessments({ assessments = SAMPLE_ASSESSMENTS }) {
+  const { t } = useTranslation('common');
+
   return (
     <div className="bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-2xl p-5 shadow-sm flex-1">
       <div className="flex items-center gap-2.5 text-[15px] font-bold text-surface-900 dark:text-surface-100 mb-4">
         <span className="w-[3px] h-[18px] rounded bg-[#085041]" />
-        Upcoming assessments
+        {t('teacher.upcomingAssessments.title')}
       </div>
 
       <div className="divide-y divide-surface-50 dark:divide-surface-700/50">

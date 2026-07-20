@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../core/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import { getPrimaryRole } from '../core/utils/roleUtils';
 import ThemeLangToggles from './ThemeLangToggles';
 import { ROLES } from '../core/constants/roles';
 import { buildSubdomainUrl } from '../core/utils/subdomainHelper';
@@ -19,7 +20,7 @@ export default function Navbar({ onToggleSidebar }) {
   const [confirmLogout, setConfirmLogout] = useState(false);
   const dropdownRef = useRef(null);
 
-  const role = user?.roles?.[0] || ROLES.ADMIN;
+  const role = getPrimaryRole(user?.roles);
 
   // Settings menu items based on role
   const settingsItems = [];

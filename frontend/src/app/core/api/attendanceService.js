@@ -61,3 +61,21 @@ export async function updateAttendance(id, data) {
   const response = await api.put(API_ENDPOINTS.ATTENDANCE.UPDATE(id), data);
   return response.data.data;
 }
+
+/**
+ * Get attendance stats for a class (via attendance-stats service)
+ * @param {string} classId
+ */
+export async function getClassAttendanceStats(classId) {
+  const response = await api.get(API_ENDPOINTS.ATTENDANCE_STATS.CLASS(classId));
+  return response.data.data;
+}
+
+/**
+ * Get monthly attendance trends
+ * @param {object} params - { months? }
+ */
+export async function getMonthlyTrends(params = {}) {
+  const response = await api.get(API_ENDPOINTS.ATTENDANCE_STATS.MONTHLY_TRENDS, { params });
+  return response.data.data;
+}

@@ -131,23 +131,50 @@ class AttendanceService {
     if (!records || records.length === 0) {
       throw new Error('No attendance records provided');
     }
-    const values = records.map(r => ({
-      school_id: schoolId,
-      student_id: r.studentId,
-      date: r.date,
-      status: r.status,
-      class_id: r.classId || null,
-      marked_by: r.markedBy || null,
-      remarks: r.remarks || null,
-      academic_year_id: r.academicYearId || null,
-    }));
-    const rows = await sql`
-      INSERT INTO attendance (school_id, student_id, academic_year_id, date, status, class_id, marked_by, remarks)
-      SELECT * FROM jsonb_to_recordset(${sql.json(values)})
-        AS x(school_id uuid, student_id uuid, academic_year_id uuid, date date, status text, class_id uuid, marked_by uuid, remarks text)
-      RETURNING *
-    `;
-    return rows.map(r => this.formatAttendance(r));
+
+    const { date, classId } = records[0];
+
+    // Use a transaction: delete existing records for this class+date then re-insert
+    // This prevents duplicates, handles student unmarking, and avoids data loss
+    return await sql.begin(async (tx) => {
+      if (date && classId) {
+        await tx`
+          DELETE FROM attendance
+          WHERE school_id = ${schoolId}
+            AND class_id = ${classId}
+            AND date = ${date}::date
+        `;
+      }
+
+      const values = records.map(r => ({
+        school_id: schoolId,
+        student_id: r.studentId,
+        date: r.date,
+        status: r.status,
+        class_id: r.classId || null,
+        marked_by: r.markedBy || null,
+        remarks: r.remarks || null,
+        academic_year_id: r.academicYearId || null,
+      }));
+
+      const rows = await tx`
+        INSERT INTO attendance (school_id, student_id, academic_year_id, date, status, class_id, marked_by, remarks)
+        SELECT
+          school_id,
+          student_id,
+          academic_year_id,
+          date,
+          status::attendance_status_enum,
+          class_id,
+          marked_by,
+          remarks
+        FROM jsonb_to_recordset(${tx.json(values)})
+          AS x(school_id uuid, student_id uuid, academic_year_id uuid, date date, status text, class_id uuid, marked_by uuid, remarks text)
+        RETURNING *
+      `;
+
+      return rows.map(r => this.formatAttendance(r));
+    });
   }
 }
 

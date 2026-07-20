@@ -12,8 +12,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useTheme } from "../../../core/hooks/useTheme";
-import { getClasses } from "../../../core/api/classService";
-import { getAllClassTeacherAssignments } from "../../../core/api/subjectService";
+import { useTranslation } from "react-i18next";
+import { getTeacherClasses } from "../../../core/api/classService";
 import { getTeacherSubjects } from "../../../core/api/subjectService";
 import { getEnrollments } from "../../../core/api/enrollmentService";
 import AttendanceGridModal from "../components/AttendanceGridModal";
@@ -75,6 +75,7 @@ const STATUS_COLORS = {
 
 // ── Class Card ──
 function ClassCard({ cls, subjects, onViewStudents, onTakeAttendance, pc }) {
+  const { t } = useTranslation('common');
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -102,7 +103,7 @@ function ClassCard({ cls, subjects, onViewStudents, onTakeAttendance, pc }) {
           <p className="text-[12px] text-surface-400 mt-0.5">
             {subjects.length > 0
               ? subjects.map((s) => s.name || s.subjectName).join(", ")
-              : "No subjects assigned"}
+              : t('teacher.myClasses.noSubjects')}
           </p>
         </div>
 
@@ -112,7 +113,7 @@ function ClassCard({ cls, subjects, onViewStudents, onTakeAttendance, pc }) {
             <div className="text-[16px] font-extrabold text-surface-800 dark:text-surface-100">
               {cls.studentCount || 0}
             </div>
-            <div className="text-[10px] text-surface-400 font-medium">Students</div>
+            <div className="text-[10px] text-surface-400 font-medium">{t('teacher.myClasses.students')}</div>
           </div>
         </div>
 
@@ -137,7 +138,7 @@ function ClassCard({ cls, subjects, onViewStudents, onTakeAttendance, pc }) {
               className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-surface-50 dark:bg-surface-900 text-surface-600 dark:text-surface-300 text-[12px] font-semibold hover:bg-surface-100 dark:hover:bg-surface-700 transition-all hover:-translate-y-0.5"
             >
               <Users size={13} />
-              View Students
+              {t('teacher.myClasses.viewStudents')}
             </button>
             <button
               onClick={() => onTakeAttendance(cls)}
@@ -145,7 +146,7 @@ function ClassCard({ cls, subjects, onViewStudents, onTakeAttendance, pc }) {
               style={{ background: pc }}
             >
               <ClipboardCheck size={13} />
-              Take Attendance
+              {t('teacher.myClasses.takeAttendance')}
             </button>
           </div>
 
@@ -155,19 +156,19 @@ function ClassCard({ cls, subjects, onViewStudents, onTakeAttendance, pc }) {
               <div className="text-[14px] font-extrabold text-surface-800 dark:text-surface-100">
                 {cls.studentCount || 0}
               </div>
-              <div className="text-[10px] text-surface-400">Enrolled</div>
+              <div className="text-[10px] text-surface-400">{t('teacher.myClasses.enrolled')}</div>
             </div>
             <div className="text-center p-2.5 rounded-lg bg-surface-50 dark:bg-surface-900/50">
               <div className="text-[14px] font-extrabold text-surface-800 dark:text-surface-100">
                 {subjects.length}
               </div>
-              <div className="text-[10px] text-surface-400">Subjects</div>
+              <div className="text-[10px] text-surface-400">{t('teacher.myClasses.subjectsTaught')}</div>
             </div>
             <div className="text-center p-2.5 rounded-lg bg-surface-50 dark:bg-surface-900/50">
               <div className="text-[14px] font-extrabold text-teal-600">
                 —
               </div>
-              <div className="text-[10px] text-surface-400">Avg. Grade</div>
+              <div className="text-[10px] text-surface-400">{t('teacher.myClasses.avgGrade')}</div>
             </div>
           </div>
         </div>
@@ -235,6 +236,8 @@ function StudentRow({ student, attendance }) {
 export default function MyClassesPage() {
   const { user } = useAuth();
   const { primaryColor } = useTheme();
+  const { t, i18n } = useTranslation('common');
+  const isFr = i18n.language === 'fr';
   const pc = primaryColor || "#085041";
 
   const [loading, setLoading] = useState(true);
@@ -264,31 +267,20 @@ export default function MyClassesPage() {
     try {
       const teacherId = user?.id;
 
-      const [classData, assignmentData, subjectData] = await Promise.all([
-        getClasses().catch(() => ({ classes: [] })),
+      const [classesData, subjectData] = await Promise.all([
         teacherId
-          ? getAllClassTeacherAssignments().catch(() => [])
+          ? getTeacherClasses(teacherId).catch(() => [])
           : Promise.resolve([]),
         teacherId
           ? getTeacherSubjects(teacherId).catch(() => [])
           : Promise.resolve([]),
       ]);
 
-      const allClasses = classData?.classes || classData || [];
-      const allAssignments = Array.isArray(assignmentData)
-        ? assignmentData
-        : assignmentData?.data || [];
+      // Le backend nous retourne directement toutes les classes du professeur
+      const myClasses = Array.isArray(classesData) ? classesData : (classesData?.data || []);
       const teacherSubjects = Array.isArray(subjectData)
         ? subjectData
         : subjectData?.data || [];
-
-      // Filter classes assigned to this teacher
-      const teacherClassIds = new Set(
-        allAssignments
-          .filter((a) => String(a.teacherId) === String(teacherId))
-          .map((a) => a.classId)
-      );
-      const myClasses = allClasses.filter((c) => teacherClassIds.has(c.id));
 
           // Build subjects map: classId -> subjects[]
       const subjectsByClass = {};
@@ -343,6 +335,8 @@ export default function MyClassesPage() {
     c.name?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const studentCount = classes.reduce((s, c) => s + (c.studentCount || 0), 0);
+
   // ── Loading state ──
   if (loading) {
     return (
@@ -379,14 +373,14 @@ export default function MyClassesPage() {
           <AlertCircle className="w-8 h-8 text-red-500" />
         </div>
         <h3 className="text-lg font-medium text-surface-700 dark:text-surface-200 mb-2">
-          Error loading classes
+          {t('teacher.myClasses.errorTitle')}
         </h3>
         <p className="text-sm text-surface-400 max-w-md mb-5">{error}</p>
         <button
           onClick={loadData}
           className="h-10 px-5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition-colors"
         >
-          Retry
+          {t('teacher.myClasses.retry')}
         </button>
       </div>
     );
@@ -426,17 +420,12 @@ export default function MyClassesPage() {
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
               <h1 className="font-display text-[clamp(22px,3vw,30px)] font-bold text-white leading-tight mb-2">
-                My Classes
+                {t('teacher.myClasses.title')}
               </h1>
               <p className="text-white/70 text-sm max-w-lg">
                 {classes.length > 0
-                  ? `You are assigned to ${classes.length} class${
-                      classes.length > 1 ? "es" : ""
-                    } — ${classes.reduce(
-                      (s, c) => s + (c.studentCount || 0),
-                      0
-                    )} total students`
-                  : "No classes assigned yet"}
+                  ? t('teacher.myClasses.subtitle', { count: classes.length, students: studentCount })
+                  : t('teacher.myClasses.noClasses')}
               </p>
             </div>
             <button
@@ -444,7 +433,7 @@ export default function MyClassesPage() {
               className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all hover:scale-105"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              Refresh
+              {t('teacher.myClasses.refresh')}
             </button>
           </div>
         </div>
@@ -461,7 +450,7 @@ export default function MyClassesPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search classes..."
+            placeholder={t('teacher.myClasses.search')}
             className="w-full h-10 pl-9 pr-4 bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-sm text-surface-800 dark:text-surface-100 placeholder:text-surface-400 focus:outline-none focus:border-primary-400 transition-colors"
           />
         </div>
@@ -474,14 +463,14 @@ export default function MyClassesPage() {
             {
               icon: BookOpen,
               value: classes.length,
-              label: "Assigned classes",
+              label: t('teacher.myClasses.assignedClasses'),
               color: pc,
               bg: `${pc}12`,
             },
             {
               icon: Users,
-              value: classes.reduce((s, c) => s + (c.studentCount || 0), 0),
-              label: "Total students",
+              value: studentCount,
+              label: t('teacher.myClasses.totalStudents'),
               color: "#3B82F6",
               bg: "rgba(59,130,246,.08)",
             },
@@ -491,14 +480,14 @@ export default function MyClassesPage() {
                 (s, c) => s + (subjectsMap[c.id]?.length || 0),
                 0
               ),
-              label: "Subjects taught",
+              label: t('teacher.myClasses.subjectsTaught'),
               color: "#8B5CF6",
               bg: "rgba(139,92,246,.08)",
             },
             {
               icon: Calendar,
-              value: new Date().toLocaleDateString("en", { weekday: "short" }),
-              label: "Today",
+              value: new Date().toLocaleDateString(isFr ? "fr" : "en", { weekday: "short" }),
+              label: t('teacher.myClasses.today'),
               color: "#F59E0B",
               bg: "rgba(245,158,11,.08)",
             },
@@ -535,11 +524,10 @@ export default function MyClassesPage() {
             <BookOpen size={32} className="text-surface-300 dark:text-surface-500" />
           </div>
           <h3 className="text-lg font-semibold text-surface-700 dark:text-surface-200 mb-1.5">
-            No classes assigned
+            {t('teacher.myClasses.noClasses')}
           </h3>
           <p className="text-sm text-surface-400 max-w-sm">
-            You haven't been assigned to any classes yet. Contact your school
-            administrator to get assigned.
+            {t('teacher.myClasses.noClassesDesc')}
           </p>
         </div>
       )}
@@ -612,6 +600,7 @@ function StudentListModal({
   onClose,
   onTakeAttendance,
 }) {
+  const { t } = useTranslation('common');
   const [searchTerm, setSearchTerm] = useState("");
 
   const filtered = students.filter((s) => {
@@ -635,7 +624,7 @@ function StudentListModal({
               {cls?.name}
             </h2>
             <p className="text-[12px] text-surface-400 mt-0.5">
-              {students.length} student{students.length !== 1 ? "s" : ""} enrolled
+              {students.length} {students.length <= 1 ? t('teacher.myClasses.student_one') : t('teacher.myClasses.student_other')} {t('teacher.myClasses.enrolled')}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -645,7 +634,7 @@ function StudentListModal({
               style={{ background: pc }}
             >
               <ClipboardCheck size={13} className="inline mr-1" />
-              Attendance
+              {t('teacher.myClasses.takeAttendance')}
             </button>
             <button
               onClick={onClose}
@@ -667,7 +656,7 @@ function StudentListModal({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search students..."
+              placeholder={t('teacher.myClasses.searchStudents')}
               className="w-full h-9 pl-9 pr-3 bg-surface-50 dark:bg-surface-900 border border-surface-100 dark:border-surface-700 rounded-lg text-[13px] text-surface-800 dark:text-surface-100 placeholder:text-surface-400 focus:outline-none focus:border-primary-400 transition-colors"
             />
           </div>
@@ -689,8 +678,8 @@ function StudentListModal({
               <Users size={24} className="text-surface-300 mb-2" />
               <p className="text-sm text-surface-400">
                 {searchTerm
-                  ? "No students match your search"
-                  : "No students in this class"}
+                  ? t('teacher.myClasses.noSearchResults')
+                  : t('teacher.myClasses.noStudentsInClass')}
               </p>
             </div>
           ) : (

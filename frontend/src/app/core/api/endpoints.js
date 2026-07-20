@@ -203,6 +203,11 @@ export const API_ENDPOINTS = {
     SEND: "/api/notifications/send",
   },
 
+  // Classes for a specific teacher (dedicated endpoint)
+  TEACHER_CLASSES: {
+    LIST: (teacherId) => `/api/classes/teacher/${teacherId}`,
+  },
+
   // Class-Teachers
   CLASS_TEACHERS: {
     LIST_ALL: "/api/classes/teachers",

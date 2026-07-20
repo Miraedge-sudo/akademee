@@ -37,6 +37,7 @@
     "periods": "Périodes",
     "sequences": "Séquences",
     "subjectAssignment": "Affectation matières",
+    "teacherAssignment": "Affectation enseignants",
     "systemConfig": "Configuration",
     "group": {
       "overview": "Aperçu",
@@ -114,6 +115,137 @@
     "high": "Haute",
     "unpublishTitle": "Dépublier",
     "publishTitle": "Publier"
+  },
+  "teacher": {
+    "greeting": {
+      "title": "Tableau de bord enseignant",
+      "greetingMorning": "Bonjour",
+      "greetingAfternoon": "Bon après-midi",
+      "greetingEvening": "Bonsoir",
+      "classesToday": "Vous avez {count} cours aujourd'hui",
+      "and": "et",
+      "pendingGrades": "{count} notes en attente de saisie",
+      "noPendingGrades": "aucune note en attente"
+    },
+    "statCards": {
+      "classesAssigned": "Classes assignées",
+      "totalStudents": "Total élèves",
+      "gradesToEnter": "Notes à saisir",
+      "avgAttendanceRate": "Taux de présence moyen",
+      "urgent": "Urgent"
+    },
+    "assignedClasses": {
+      "title": "Mes Salles de Classe",
+      "mainTeacher": "Professeur principal",
+      "students": "Élèves",
+      "subjects": "Matières",
+      "capacity": "Capacité",
+      "occupancy": "Occupation",
+      "search": "Rechercher une classe...",
+      "details": "Détails",
+      "attendance": "Appel",
+      "viewAll": "Voir tout",
+      "noClasses": "Aucune salle de classe assignée",
+      "noClassesDesc": "Vous n'avez été assigné à aucune salle de classe. Contactez l'administration de votre école pour obtenir une affectation.",
+      "noSearchResults": "Aucune classe ne correspond à votre recherche",
+      "totalStudentsLabel": "Total élèves",
+      "subjectsTaught": "Matières enseignées",
+      "asMainTeacher": "Comme principal",
+      "more": "plus",
+      "class_one": "classe",
+      "class_other": "classes"
+    },
+    "myClasses": {
+      "title": "Mes Classes",
+      "subtitle": "Vous êtes assigné à {count} classe(s) — {students} élève(s) au total",
+      "noClasses": "Aucune classe assignée",
+      "noClassesDesc": "Vous n'avez pas encore été assigné à des classes. Contactez l'administration de votre école.",
+      "refresh": "Actualiser",
+      "search": "Rechercher des classes...",
+      "assignedClasses": "Classes assignées",
+      "totalStudents": "Total élèves",
+      "subjectsTaught": "Matières enseignées",
+      "today": "Aujourd'hui",
+      "noSubjects": "Aucune matière assignée",
+      "students": "Élèves",
+      "enrolled": "Inscrits",
+      "avgGrade": "Moy. générale",
+      "viewStudents": "Voir les élèves",
+      "takeAttendance": "Faire l'appel",
+      "errorTitle": "Erreur de chargement des classes",
+      "retry": "Réessayer",
+      "student_one": "élève",
+      "student_other": "élèves",
+      "searchStudents": "Rechercher des élèves...",
+      "noSearchResults": "Aucun élève ne correspond à votre recherche",
+      "noStudentsInClass": "Aucun élève dans cette classe"
+    },
+    "schedule": {
+      "title": "Emploi du temps du jour",
+      "fullTimetable": "Voir tout",
+      "noClasses": "Aucun cours prévu aujourd'hui."
+    },
+    "pendingTasks": {
+      "title": "Tâches en attente",
+      "remaining": "restante(s)"
+    },
+    "performance": {
+      "title": "Performances de la classe — Séquence 3",
+      "pass": "Réussite",
+      "fail": "Échec",
+      "atRisk": "En difficulté",
+      "passed": "Réussies",
+      "failed": "Échouées",
+      "atRiskLabel": "Difficiles"
+    },
+    "topStudents": {
+      "title": "Meilleurs élèves",
+      "viewAll": "Voir tout"
+    },
+    "attendanceIssues": {
+      "title": "Problèmes de présence récents",
+      "fullReport": "Rapport complet",
+      "absent": "Absent(e)",
+      "late": "En retard",
+      "now": "En cours"
+    },
+    "upcomingAssessments": {
+      "title": "Évaluations à venir"
+    },
+    "notifications": {
+      "title": "Notifications"
+    },
+    "gradeEntry": {
+      "title": "Saisie des notes",
+      "subtitle": "Enregistrez les notes de vos élèves — sélectionnez une classe et une matière",
+      "selectClass": "Sélectionner une classe...",
+      "selectSubject": "Sélectionner une matière...",
+      "searchStudents": "Rechercher des élèves...",
+      "students": "Élèves",
+      "subjects": "Matières",
+      "gradesEntered": "Notes saisies",
+      "score": "Note /20",
+      "status": "Statut",
+      "updateGrade": "Modifier la note",
+      "newGrade": "Nouvelle note",
+      "noStudents": "Aucun élève inscrit dans cette classe",
+      "noSearchResults": "Aucun élève ne correspond à votre recherche",
+      "selectHint": "Choisissez une classe et une matière dans les listes ci-dessus pour commencer à saisir les notes.",
+      "saveAll": "Tout enregistrer",
+      "saving": "Enregistrement...",
+      "savedSuccess": "Notes enregistrées avec succès !",
+      "saveError": "Veuillez sélectionner une classe et une matière",
+      "scoreError": "Veuillez saisir au moins une note",
+      "selectPeriod": "Sélectionner une période...",
+      "selectSequence": "Sélectionner une séquence...",
+      "currentPeriod": "En cours",
+      "savingIn": "Les notes seront enregistrées dans :",
+      "periodSelected": "Période sélectionnée",
+      "statusOpen": "Ouverte",
+      "statusClosed": "Fermée",
+      "statusLocked": "Verrouillée",
+      "statusPending": "En attente"
+    }
   },
   "actions": {
     "save": "Enregistrer",

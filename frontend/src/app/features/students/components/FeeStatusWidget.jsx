@@ -1,23 +1,35 @@
 /**
  * FeeStatusWidget — showing paid vs remaining fees with SVG progress ring.
+ * Uses real data from the API passed via props.
  */
 import { useEffect, useRef } from 'react';
 import { Clock } from 'lucide-react';
 
+function getStatusConfig(status, pct) {
+  if (status === 'paid' || pct >= 100) {
+    return { color: '#1D9E75', label: 'Paid', bg: 'bg-teal-500/10 text-teal-600' };
+  }
+  if (status === 'partial' || (pct > 0 && pct < 100)) {
+    return { color: '#F59E0B', label: 'Partial', bg: 'bg-amber-500/10 text-amber-500' };
+  }
+  return { color: '#EF4444', label: 'Unpaid', bg: 'bg-red-500/10 text-red-500' };
+}
+
 export default function FeeStatusWidget({
-  paid = 80000,
-  remaining = 40000,
-  total = 120000,
-  dueDate = 'February 28, 2025'
+  paid = 0,
+  total = 0,
+  status = 'pending',
+  dueDate = '',
 }) {
   const arcRef = useRef(null);
-  const pct = paid / total;
+  const pct = total > 0 ? paid / total : 0;
   const pctText = Math.round(pct * 100);
+  const statusCfg = getStatusConfig(status, pctText);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (arcRef.current) {
-        const circumference = 226; // 2 * PI * 36
+        const circumference = 226;
         arcRef.current.style.setProperty('--target', circumference * (1 - pct));
         arcRef.current.style.animation = 'studentDrawLine 1.4s cubic-bezier(.16,1,.3,1) forwards';
       }
@@ -32,8 +44,8 @@ export default function FeeStatusWidget({
           <span className="w-[3px] h-[18px] rounded bg-[#085041]" />
           Fee status
         </div>
-        <span className="inline-flex text-[10.5px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500">
-          Partial
+        <span className={`inline-flex text-[10.5px] font-bold px-2.5 py-0.5 rounded-full ${statusCfg.bg}`}>
+          {statusCfg.label}
         </span>
       </div>
 
@@ -52,7 +64,7 @@ export default function FeeStatusWidget({
               ref={arcRef}
               cx="45" cy="45" r="36"
               fill="none"
-              stroke="#F59E0B"
+              stroke={statusCfg.color}
               strokeWidth="9"
               strokeLinecap="round"
               strokeDasharray="226"
@@ -78,17 +90,17 @@ export default function FeeStatusWidget({
               <span className="text-surface-500">Paid</span>
             </div>
             <span className="font-bold text-teal-700 dark:text-teal-400">
-              {paid.toLocaleString('fr')} FCFA
+              {paid.toLocaleString('en')} FCFA
             </span>
           </div>
 
           <div className="flex items-center justify-between text-[12.5px]">
             <div className="flex items-center">
-              <div className="w-2 h-2 rounded-[3px] bg-amber-500 mr-2" />
+              <div className="w-2 h-2 rounded-[3px] mr-2" style={{ background: statusCfg.color }} />
               <span className="text-surface-500">Remaining</span>
             </div>
-            <span className="font-bold text-amber-500">
-              {remaining.toLocaleString('fr')} FCFA
+            <span className="font-bold" style={{ color: statusCfg.color }}>
+              {Math.max(0, total - paid).toLocaleString('en')} FCFA
             </span>
           </div>
 
@@ -98,14 +110,16 @@ export default function FeeStatusWidget({
               <span className="text-surface-500">Total due</span>
             </div>
             <span className="font-bold text-surface-900 dark:text-surface-100">
-              {total.toLocaleString('fr')} FCFA
+              {total.toLocaleString('en')} FCFA
             </span>
           </div>
 
-          <div className="mt-2.5 p-2.5 bg-amber-500/10 border border-amber-500/15 rounded-md flex items-center gap-1.5 text-[11.5px] text-amber-600 dark:text-amber-500">
-            <Clock size={13} className="flex-shrink-0" />
-            Due by {dueDate}
-          </div>
+          {dueDate && status !== 'paid' && (
+            <div className="mt-2.5 p-2.5 bg-amber-500/10 border border-amber-500/15 rounded-md flex items-center gap-1.5 text-[11.5px] text-amber-600 dark:text-amber-500">
+              <Clock size={13} className="flex-shrink-0" />
+              Due by {dueDate}
+            </div>
+          )}
         </div>
       </div>
     </div>

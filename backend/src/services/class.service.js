@@ -113,6 +113,39 @@ class ClassService {
     await sql`DELETE FROM classes WHERE class_id = ${classId} AND school_id = ${schoolId}`;
     return { deleted: true, classId };
   }
+
+  /**
+   * Get all classes assigned to a specific teacher — combines both
+   * class_teacher (main teacher) and subject_teacher (subject taught) assignments.
+   */
+  async getTeacherClasses(schoolId, teacherId) {
+    const rows = await sql`
+      SELECT DISTINCT c.*,
+        u.first_name AS teacher_first_name,
+        u.last_name AS teacher_last_name,
+        u.email AS teacher_email,
+        ay.name AS academic_year_name,
+        l.name AS level_name,
+        s.name AS series_name,
+        (SELECT COUNT(*) FROM enrollments e WHERE e.class_id = c.class_id AND e.status = 'active')::int AS student_count
+      FROM classes c
+      LEFT JOIN users u ON c.class_teacher_id = u.user_id
+      LEFT JOIN academic_years ay ON c.academic_year_id = ay.academic_year_id
+      LEFT JOIN system_levels l ON c.level_id = l.level_id
+      LEFT JOIN system_series s ON c.series_id = s.series_id
+      WHERE c.school_id = ${schoolId}
+        AND (
+          c.class_teacher_id = ${teacherId}
+          OR
+          c.class_id IN (SELECT class_id FROM class_teachers WHERE teacher_id = ${teacherId})
+          OR
+          c.class_id IN (SELECT class_id FROM subject_teachers WHERE teacher_id = ${teacherId})
+        )
+      ORDER BY c.name ASC
+    `;
+
+    return rows.map(r => this.formatClass(r));
+  }
 }
 
 module.exports = new ClassService();

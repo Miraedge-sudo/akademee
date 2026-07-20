@@ -37,6 +37,7 @@
     "periods": "Periods",
     "sequences": "Sequences",
     "subjectAssignment": "Subject Assignment",
+    "teacherAssignment": "Teacher Assignments",
     "systemConfig": "System Config",
     "group": {
       "overview": "Overview",
@@ -114,6 +115,140 @@
     "high": "High",
     "unpublishTitle": "Unpublish",
     "publishTitle": "Publish"
+  },
+  "teacher": {
+    "greeting": {
+      "title": "Teacher Dashboard",
+      "greetingMorning": "Good morning",
+      "greetingAfternoon": "Good afternoon",
+      "greetingEvening": "Good evening",
+      "classesToday": "You have {count} class today",
+      "classesToday_plural": "You have {count} classes today",
+      "and": "and",
+      "pendingGrades": "{count} grade pending entry",
+      "pendingGrades_plural": "{count} grades pending entry",
+      "noPendingGrades": "no grades pending"
+    },
+    "statCards": {
+      "classesAssigned": "Classes assigned",
+      "totalStudents": "Total students",
+      "gradesToEnter": "Grades to enter",
+      "avgAttendanceRate": "Avg. attendance rate",
+      "urgent": "Urgent"
+    },
+    "assignedClasses": {
+      "title": "My Assigned Classrooms",
+      "mainTeacher": "Main Teacher",
+      "students": "Students",
+      "subjects": "Subjects",
+      "capacity": "Capacity",
+      "occupancy": "Occupancy",
+      "search": "Search classrooms...",
+      "details": "Details",
+      "attendance": "Attendance",
+      "viewAll": "View all",
+      "noClasses": "No classrooms assigned",
+      "noClassesDesc": "You haven't been assigned to any classrooms yet. Contact your school administrator to get assigned to classes.",
+      "noSearchResults": "No classrooms match your search",
+      "totalStudentsLabel": "Total students",
+      "subjectsTaught": "Subjects taught",
+      "asMainTeacher": "As main teacher",
+      "more": "more",
+      "class_one": "class",
+      "class_other": "classes"
+    },
+    "myClasses": {
+      "title": "My Classes",
+      "subtitle": "You are assigned to {count} class — {students} total students",
+      "subtitle_plural": "You are assigned to {count} classes — {students} total students",
+      "noClasses": "No classes assigned",
+      "noClassesDesc": "You haven't been assigned to any classes yet. Contact your school administrator.",
+      "refresh": "Refresh",
+      "search": "Search classes...",
+      "assignedClasses": "Assigned classes",
+      "totalStudents": "Total students",
+      "subjectsTaught": "Subjects taught",
+      "today": "Today",
+      "noSubjects": "No subjects assigned",
+      "students": "Students",
+      "enrolled": "Enrolled",
+      "avgGrade": "Avg. Grade",
+      "viewStudents": "View Students",
+      "takeAttendance": "Take Attendance",
+      "errorTitle": "Error loading classes",
+      "retry": "Retry",
+      "student_one": "student",
+      "student_other": "students",
+      "searchStudents": "Search students...",
+      "noSearchResults": "No students match your search",
+      "noStudentsInClass": "No students in this class"
+    },
+    "schedule": {
+      "title": "Today's schedule",
+      "fullTimetable": "Full timetable",
+      "noClasses": "No classes scheduled today."
+    },
+    "pendingTasks": {
+      "title": "Pending tasks",
+      "remaining": "remaining"
+    },
+    "performance": {
+      "title": "Class performance — Sequence 3",
+      "pass": "Pass",
+      "fail": "Fail",
+      "atRisk": "At risk",
+      "passed": "Passed",
+      "failed": "Failed",
+      "atRiskLabel": "At risk"
+    },
+    "topStudents": {
+      "title": "Top students",
+      "viewAll": "View all"
+    },
+    "attendanceIssues": {
+      "title": "Recent attendance issues",
+      "fullReport": "Full report",
+      "absent": "Absent",
+      "late": "Late",
+      "now": "Now"
+    },
+    "upcomingAssessments": {
+      "title": "Upcoming assessments"
+    },
+    "notifications": {
+      "title": "Notifications"
+    },
+    "gradeEntry": {
+      "title": "Grade Entry",
+      "subtitle": "Record marks for your students — select a class and subject to begin",
+      "selectClass": "Select a class...",
+      "selectSubject": "Select a subject...",
+      "searchStudents": "Search students...",
+      "students": "Students",
+      "subjects": "Subjects",
+      "gradesEntered": "Grades entered",
+      "score": "Score /20",
+      "status": "Status",
+      "updateGrade": "Update grade",
+      "newGrade": "New grade",
+      "noStudents": "No students enrolled in this class",
+      "noSearchResults": "No students match your search",
+      "selectHint": "Choose a class and subject from the dropdowns above to start entering grades.",
+      "saveAll": "Save All Grades",
+      "saving": "Saving...",
+      "savedSuccess": "Grades saved successfully!",
+      "saveError": "Please select a class and subject",
+      "scoreError": "Please enter at least one score",
+      "selectPeriod": "Select a period...",
+      "selectSequence": "Select a sequence...",
+      "currentPeriod": "Current",
+      "savingIn": "Grades will be saved in:",
+      "periodSelected": "Selected period",
+      "statusOpen": "Open",
+      "statusClosed": "Closed",
+      "statusLocked": "Locked",
+      "statusPending": "Pending"
+    }
   },
   "actions": {
     "save": "Save",

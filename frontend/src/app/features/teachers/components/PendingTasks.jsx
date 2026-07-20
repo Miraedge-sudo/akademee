@@ -1,6 +1,6 @@
-
 import { useState } from 'react';
 import { Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const INITIAL_TASKS = [
   { text: 'Enter Seq 3 grades — Form 4A Mathematics', priority: '#EF4444', done: false },
@@ -12,6 +12,7 @@ const INITIAL_TASKS = [
 ];
 
 export default function PendingTasks({ tasks: propTasks }) {
+  const { t } = useTranslation('common');
   const [tasks, setTasks] = useState(propTasks || INITIAL_TASKS);
 
   const toggle = (i) =>
@@ -24,10 +25,10 @@ export default function PendingTasks({ tasks: propTasks }) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5 text-[15px] font-bold text-surface-900 dark:text-surface-100">
           <span className="w-[3px] h-[18px] rounded bg-[#085041]" />
-          Pending tasks
+          {t('teacher.pendingTasks.title')}
         </div>
         <span className="text-[11.5px] font-semibold text-surface-400">
-          {remaining} remaining
+          {remaining} {t('teacher.pendingTasks.remaining')}
         </span>
       </div>
 

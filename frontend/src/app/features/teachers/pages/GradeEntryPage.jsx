@@ -12,9 +12,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useTheme } from "../../../core/hooks/useTheme";
+import { useTranslation } from "react-i18next";
 import { getEnrollments } from "../../../core/api/enrollmentService";
 import { getTeacherSubjects } from "../../../core/api/subjectService";
 import { getClassGrades, recordGrade, updateGrade } from "../../../core/api/gradeService";
+import periodService from "../../../core/api/periodService";
+import sequencesService from "../../../core/api/sequencesService";
 import {
   BookOpen,
   Users,
@@ -25,6 +28,9 @@ import {
   Search,
   GraduationCap,
   Bookmark,
+  CalendarDays,
+  Lock,
+  Clock,
 } from "lucide-react";
 
 // ── Score color helpers ──
@@ -47,6 +53,7 @@ function initials(name) {
 export default function GradeEntryPage() {
   const { user } = useAuth();
   const { primaryColor } = useTheme();
+  const { t } = useTranslation('common');
   const pc = primaryColor || "#085041";
 
   // ── State ──
@@ -64,10 +71,66 @@ export default function GradeEntryPage() {
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [search, setSearch] = useState("");
 
+  // ── Period / Sequence state ──
+  const [periods, setPeriods] = useState([]);
+  const [selectedPeriodId, setSelectedPeriodId] = useState("");
+  const [sequences, setSequences] = useState([]);
+  const [selectedSequenceId, setSelectedSequenceId] = useState("");
+  const [sequenceDateWarning, setSequenceDateWarning] = useState(null);
+  const [sequenceStatusWarning, setSequenceStatusWarning] = useState(null);
+
   // Scores keyed by studentId
   const [scores, setScores] = useState({});
 
-  // ── Load teacher's classes & subjects ──
+  // ── Check date / status warnings for selected sequence ──
+  useEffect(() => {
+    if (!selectedSequenceId) {
+      setSequenceDateWarning(null);
+      setSequenceStatusWarning(null);
+      return;
+    }
+    const seq = sequences.find((s) => s.id === selectedSequenceId);
+    if (!seq) return;
+
+    // Status check
+    if (seq.statut !== "OUVERTE") {
+      const statusLabels = {
+        EN_ATTENTE: "En attente",
+        OUVERTE: "Ouverte",
+        FERMEE: "Fermée",
+        VERROUILLEE: "Vérouillée",
+      };
+      setSequenceStatusWarning(
+        `⚠️ Cette séquence est « ${statusLabels[seq.statut] || seq.statut} ». Les notes ne peuvent être saisies que dans une séquence ouverte.`
+      );
+    } else {
+      setSequenceStatusWarning(null);
+    }
+
+    // Date check
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = seq.dateDebutSaisie ? new Date(seq.dateDebutSaisie) : null;
+    const end = seq.dateFinSaisie ? new Date(seq.dateFinSaisie) : null;
+
+    if (start && end) {
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      if (today < start) {
+        setSequenceDateWarning(
+          `📅 La saisie débutera le ${start.toLocaleDateString('fr-FR')}`
+        );
+      } else if (today > end) {
+        setSequenceDateWarning(
+          `⚠️ La période de saisie est terminée (fin le ${end.toLocaleDateString('fr-FR')})`
+        );
+      } else {
+        setSequenceDateWarning(null);
+      }
+    }
+  }, [selectedSequenceId, sequences]);
+
+  // ── Load teacher's classes & subjects + periods ──
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const loadInitial = useCallback(async () => {
     setLoading(true);
@@ -96,8 +159,18 @@ export default function GradeEntryPage() {
       });
       const classesList = Object.values(classMap);
 
+      // Load periods
+      const periodsData = await periodService.list().catch(() => []);
+
       setClasses(classesList);
       setSubjects(subjectsList);
+      setPeriods(periodsData);
+
+      // Auto-select the current/active period
+      const currentPeriod = periodsData.find((p) => p.isCurrent);
+      if (currentPeriod) {
+        setSelectedPeriodId(currentPeriod.id);
+      }
     } catch (err) {
       console.error("Failed to load data:", err);
       setError("Failed to load your classes and subjects");
@@ -106,6 +179,31 @@ export default function GradeEntryPage() {
   }, [user?.id]);
 
   useEffect(() => { loadInitial(); }, [loadInitial]);
+
+  // ── Load sequences when period changes ──
+  useEffect(() => {
+    if (!selectedPeriodId) {
+      setSequences([]);
+      setSelectedSequenceId("");
+      return;
+    }
+    async function load() {
+      try {
+        const seqData = await sequencesService.getByPeriodeId(selectedPeriodId);
+        setSequences(seqData);
+        // Auto-select the first open sequence, or the first sequence
+        const openSeq = seqData.find((s) => s.statut === "OUVERTE");
+        if (openSeq) {
+          setSelectedSequenceId(openSeq.id);
+        } else if (seqData.length > 0) {
+          setSelectedSequenceId(seqData[0].id);
+        }
+      } catch {
+        setSequences([]);
+      }
+    }
+    load();
+  }, [selectedPeriodId]);
 
   // ── When class changes, load students ──
   useEffect(() => {
@@ -128,19 +226,21 @@ export default function GradeEntryPage() {
 
         setStudents(studentList);
 
-        // Load existing grades for the selected class + subject
+        // Load existing grades for the selected class + subject (+ period)
         if (selectedSubjectId) {
           const gradeData = await getClassGrades(selectedClassId).catch(() => []);
           const grades = Array.isArray(gradeData) ? gradeData : gradeData?.grades || [];
           const gradeMap = {};
           grades.forEach((g) => {
-            if (String(g.subjectId) === String(selectedSubjectId)) {
+            const matchSubject = String(g.subjectId) === String(selectedSubjectId);
+            const matchPeriod = !selectedPeriodId || String(g.periodId) === String(selectedPeriodId);
+            if (matchSubject && matchPeriod) {
               gradeMap[g.studentId] = { id: g.id, score: Number(g.score), comment: g.comment };
             }
           });
           setExistingGrades(gradeMap);
 
-          // Pre-fill scores from existing grades
+          // Pre-fill scores from existing grades (filtered by period)
           const initScores = {};
           studentList.forEach((s) => {
             if (gradeMap[s.id]) initScores[s.id] = gradeMap[s.id].score;
@@ -155,7 +255,7 @@ export default function GradeEntryPage() {
       }
     }
     load();
-  }, [selectedClassId, selectedSubjectId]);
+  }, [selectedClassId, selectedSubjectId, selectedPeriodId]);
 
   // ── When class changes, filter available subjects ──
   const availableSubjects = selectedClassId
@@ -176,12 +276,12 @@ export default function GradeEntryPage() {
 
   // ── Save all grades ──
   const handleSaveAll = async () => {
-    if (!selectedSubjectId || !selectedClassId) {
-      setError("Please select a class and subject");
+    if (!selectedSubjectId || !selectedClassId || !selectedPeriodId || !selectedSequenceId) {
+      setError(t('teacher.gradeEntry.saveError'));
       return;
     }
     if (Object.keys(scores).length === 0) {
-      setError("Please enter at least one score");
+      setError(t('teacher.gradeEntry.scoreError'));
       return;
     }
 
@@ -201,6 +301,7 @@ export default function GradeEntryPage() {
           await recordGrade({
             studentId,
             subjectId: selectedSubjectId,
+            periodId: selectedPeriodId || undefined,
             score,
             comment: "",
           });
@@ -239,15 +340,15 @@ export default function GradeEntryPage() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3" />
         <div className="relative z-10">
           <h1 className="font-display text-[clamp(22px,3vw,30px)] font-bold text-white leading-tight mb-2">
-            Grade Entry
+            {t('teacher.gradeEntry.title')}
           </h1>
           <p className="text-white/70 text-sm">
-            Record marks for your students — select a class and subject to begin
+            {t('teacher.gradeEntry.subtitle')}
           </p>
         </div>
       </div>
 
-      {/* ── Selectors ── */}
+      {/* ── Selectors Row 1: Class · Subject · Search ── */}
       <div className="gr-fade grid grid-cols-1 sm:grid-cols-3 gap-3" style={{ animationDelay: "0.06s" }}>
         {/* Class selector */}
         <div className="relative">
@@ -257,7 +358,7 @@ export default function GradeEntryPage() {
             onChange={(e) => { setSelectedClassId(e.target.value); setSelectedSubjectId(""); }}
             className="w-full h-11 pl-10 pr-9 bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-sm text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-colors"
           >
-            <option value="">Select a class...</option>
+            <option value="">{t('teacher.gradeEntry.selectClass')}</option>
             {classes.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -274,7 +375,7 @@ export default function GradeEntryPage() {
             disabled={!selectedClassId}
             className="w-full h-11 pl-10 pr-9 bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-sm text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <option value="">Select a subject...</option>
+            <option value="">{t('teacher.gradeEntry.selectSubject')}</option>
             {availableSubjects.map((s) => (
               <option key={s.id || s.subjectId} value={s.id || s.subjectId}>
                 {s.name || s.subjectName}
@@ -291,20 +392,138 @@ export default function GradeEntryPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search students..."
+            placeholder={t('teacher.gradeEntry.searchStudents')}
             disabled={!selectedClassId}
             className="w-full h-11 pl-10 pr-4 bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-sm text-surface-800 dark:text-surface-100 placeholder:text-surface-400 focus:outline-none focus:border-primary-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           />
         </div>
       </div>
 
-      {/* ── Stats bar ── */}
-      {selectedClassId && selectedSubjectId && students.length > 0 && (
+      {/* ── Selectors Row 2: Period · Sequence ── */}
+      <div className="gr-fade grid grid-cols-1 sm:grid-cols-2 gap-3" style={{ animationDelay: "0.08s" }}>
+        {/* Period selector */}
+        <div className="relative">
+          <CalendarDays size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+          <select
+            value={selectedPeriodId}
+            onChange={(e) => { setSelectedPeriodId(e.target.value); setSelectedSubjectId(""); }}
+            className="w-full h-11 pl-10 pr-9 bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-sm text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-colors"
+          >
+            <option value="">{t('teacher.gradeEntry.selectPeriod')}</option>
+            {periods.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.isCurrent ? '📌 ' : ''}{p.name}
+                {p.startDate ? ` (${new Date(p.startDate).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })}` : ''}
+                {p.endDate ? ` - ${new Date(p.endDate).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })})` : ''}
+                {p.isCurrent ? ` — ${t('teacher.gradeEntry.currentPeriod')}` : ''}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+        </div>
+
+        {/* Sequence selector */}
+        <div className="relative">
+          <BookOpen size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+          <select
+            value={selectedSequenceId}
+            onChange={(e) => setSelectedSequenceId(e.target.value)}
+            disabled={!selectedPeriodId || sequences.length === 0}
+            className="w-full h-11 pl-10 pr-9 bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-sm text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <option value="">{t('teacher.gradeEntry.selectSequence')}</option>
+            {sequences.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.libelle}
+                {s.statut === 'OUVERTE' ? ' 🔓' : s.statut === 'FERMEE' ? ' 🔒' : s.statut === 'VERROUILLEE' ? ' 🔐' : ''}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+        </div>
+      </div>
+
+      {/* ── Current period/sequence info banner ── */}
+      {selectedPeriodId && selectedSequenceId && (
+        <div
+          className="gr-fade flex items-center gap-3 px-4 py-3 rounded-xl text-[13px] font-medium shadow-sm border"
+          style={{
+            background: 'rgba(8,80,65,0.05)',
+            borderColor: 'rgba(8,80,65,0.15)',
+            color: '#085041',
+            animationDelay: '0.085s',
+          }}
+        >
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(8,80,65,0.1)' }}>
+            <Bookmark size={16} />
+          </div>
+          <div className="flex-1">
+            <span className="font-semibold">
+              {t('teacher.gradeEntry.savingIn')}
+            </span>{' '}
+            <span style={{ opacity: 0.8 }}>
+              {periods.find((p) => p.id === selectedPeriodId)?.name || t('teacher.gradeEntry.periodSelected')}
+              {selectedSequenceId && sequences.find((s) => s.id === selectedSequenceId)
+                ? ` / ${sequences.find((s) => s.id === selectedSequenceId)?.libelle || ''}`
+                : ''}
+            </span>
+          </div>
+          {selectedSequenceId && (() => {
+            const seq = sequences.find((s) => s.id === selectedSequenceId);
+            if (!seq) return null;
+            const statusColors = {
+              OUVERTE: { bg: 'rgba(29,158,117,0.1)', text: '#1D9E75' },
+              FERMEE: { bg: 'rgba(239,68,68,0.1)', text: '#EF4444' },
+              VERROUILLEE: { bg: 'rgba(245,158,11,0.1)', text: '#F59E0B' },
+              EN_ATTENTE: { bg: 'rgba(156,163,175,0.1)', text: '#9CA3AF' },
+            };
+            const sc = statusColors[seq.statut] || statusColors.EN_ATTENTE;
+            return (
+              <span
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold"
+                style={{ background: sc.bg, color: sc.text }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: sc.text }} />
+                {seq.statut === 'OUVERTE' ? t('teacher.gradeEntry.statusOpen') : seq.statut === 'FERMEE' ? t('teacher.gradeEntry.statusClosed') : seq.statut === 'VERROUILLEE' ? t('teacher.gradeEntry.statusLocked') : t('teacher.gradeEntry.statusPending')}
+              </span>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* ── Sequence warnings ── */}
+      {(sequenceDateWarning || sequenceStatusWarning) && (
+        <div className="gr-fade space-y-2" style={{ animationDelay: "0.09s" }}>
+          {sequenceDateWarning && (
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-medium" style={{
+              background: sequenceDateWarning.includes('⚠️') ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)',
+              border: `1.5px solid ${sequenceDateWarning.includes('⚠️') ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.2)'}`,
+              color: sequenceDateWarning.includes('⚠️') ? '#EF4444' : '#3B82F6',
+            }}>
+              <Clock size={14} className="flex-shrink-0" />
+              <span>{sequenceDateWarning}</span>
+            </div>
+          )}
+          {sequenceStatusWarning && (
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-medium" style={{
+              background: 'rgba(245,158,11,0.06)',
+              border: '1.5px solid rgba(245,158,11,0.2)',
+              color: '#F59E0B',
+            }}>
+              <Lock size={14} className="flex-shrink-0" />
+              <span>{sequenceStatusWarning}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Stats bar (requires all 4 selections) ── */}
+      {selectedClassId && selectedSubjectId && selectedPeriodId && selectedSequenceId && students.length > 0 && (
         <div className="gr-fade grid grid-cols-3 gap-3" style={{ animationDelay: "0.1s" }}>
           {[
-            { icon: Users, value: students.length, label: "Students", color: "#3B82F6" },
-            { icon: Bookmark, value: availableSubjects.length, label: "Subjects", color: "#8B5CF6" },
-            { icon: CheckCircle2, value: Object.keys(scores).length, label: "Grades entered", color: "#1D9E75" },
+            { icon: Users, value: students.length, label: t('teacher.gradeEntry.students'), color: "#3B82F6" },
+            { icon: Bookmark, value: availableSubjects.length, label: t('teacher.gradeEntry.subjects'), color: "#8B5CF6" },
+            { icon: CheckCircle2, value: Object.keys(scores).length, label: t('teacher.gradeEntry.gradesEntered'), color: "#1D9E75" },
           ].map((stat, idx) => (
             <div
               key={idx}
@@ -329,21 +548,21 @@ export default function GradeEntryPage() {
         </div>
       )}
 
-      {/* ── Student grade grid ── */}
-      {selectedClassId && selectedSubjectId && (
+      {/* ── Student grade grid (requires all 4 selections) ── */}
+      {selectedClassId && selectedSubjectId && selectedPeriodId && selectedSequenceId && (
         <div className="gr-fade" style={{ animationDelay: "0.14s" }}>
           <div className="bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-2xl shadow-sm overflow-hidden">
             {/* Column headers */}
             <div className="hidden sm:flex items-center gap-3 px-5 py-3 bg-surface-50 dark:bg-surface-900/50 border-b border-surface-100 dark:border-surface-700">
               <div className="w-8" />
               <div className="flex-1 text-[11px] font-semibold tracking-wider uppercase text-surface-400">
-                Student
+                {t('teacher.gradeEntry.students')}
               </div>
               <div className="w-24 text-center text-[11px] font-semibold tracking-wider uppercase text-surface-400">
-                Score /20
+                {t('teacher.gradeEntry.score')}
               </div>
               <div className="w-16 text-center text-[11px] font-semibold tracking-wider uppercase text-surface-400">
-                Status
+                {t('teacher.gradeEntry.status')}
               </div>
             </div>
 
@@ -351,7 +570,7 @@ export default function GradeEntryPage() {
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <Users size={32} className="text-surface-200 dark:text-surface-600 mb-3" />
                 <p className="text-sm font-medium text-surface-400">
-                  {search ? "No students match your search" : "No students enrolled in this class"}
+                  {search ? t('teacher.gradeEntry.noSearchResults') : t('teacher.gradeEntry.noStudents')}
                 </p>
               </div>
             ) : (
@@ -384,7 +603,7 @@ export default function GradeEntryPage() {
                           {student.fullName}
                         </div>
                         <div className="text-[11px] text-surface-400">
-                          {existing ? "Update grade" : "New grade"}
+                          {existing ? t('teacher.gradeEntry.updateGrade') : t('teacher.gradeEntry.newGrade')}
                         </div>
                       </div>
 
@@ -434,7 +653,7 @@ export default function GradeEntryPage() {
               {success && (
                 <span className="text-[12px] font-medium text-teal-600 flex items-center gap-1">
                   <CheckCircle2 size={13} />
-                  Grades saved successfully!
+                  {t('teacher.gradeEntry.savedSuccess')}
                 </span>
               )}
             </div>
@@ -447,12 +666,12 @@ export default function GradeEntryPage() {
               {saving ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
+                  {t('teacher.gradeEntry.saving')}
                 </>
               ) : (
                 <>
                   <Save size={15} />
-                  Save All Grades
+                  {t('teacher.gradeEntry.saveAll')}
                 </>
               )}
             </button>
@@ -460,17 +679,30 @@ export default function GradeEntryPage() {
         </div>
       )}
 
-      {/* ── Empty state (no class selected) ── */}
-      {!selectedClassId && !loading && (
+      {/* ── Empty states ── */}
+      {!loading && !selectedClassId && (
         <div className="gr-fade flex flex-col items-center justify-center py-16 text-center" style={{ animationDelay: "0.12s" }}>
           <div className="w-20 h-20 rounded-full bg-surface-50 dark:bg-surface-800 flex items-center justify-center mb-5 border-2 border-dashed border-surface-200 dark:border-surface-600">
             <BookOpen size={32} className="text-surface-300 dark:text-surface-500" />
           </div>
           <h3 className="text-lg font-semibold text-surface-700 dark:text-surface-200 mb-1.5">
-            Select a class and subject
+            {t('teacher.gradeEntry.selectClass')}
           </h3>
           <p className="text-sm text-surface-400 max-w-sm">
-            Choose a class and subject from the dropdowns above to start entering grades.
+            {t('teacher.gradeEntry.selectHint')}
+          </p>
+        </div>
+      )}
+      {!loading && selectedClassId && selectedSubjectId && (!selectedPeriodId || !selectedSequenceId) && (
+        <div className="gr-fade flex flex-col items-center justify-center py-12 text-center" style={{ animationDelay: "0.12s" }}>
+          <div className="w-16 h-16 rounded-full bg-surface-50 dark:bg-surface-800 flex items-center justify-center mb-4 border-2 border-dashed border-surface-200 dark:border-surface-600">
+            <CalendarDays size={24} className="text-surface-300" />
+          </div>
+          <h3 className="text-base font-semibold text-surface-700 dark:text-surface-200 mb-1">
+            {t('teacher.gradeEntry.selectPeriod')}
+          </h3>
+          <p className="text-sm text-surface-400 max-w-sm">
+            Sélectionnez une période et une séquence pour commencer la saisie des notes.
           </p>
         </div>
       )}

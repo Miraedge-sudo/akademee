@@ -3,7 +3,8 @@
  */
 import { useEffect, useRef } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const SAMPLE_STUDENTS = [
   { name: 'Alice Mbarga', cls: 'Form 4A', avg: 17.4, avatarBg: '#E1F5EE', avatarText: '#085041' },
@@ -68,19 +69,22 @@ function StudentRow({ student, rank }) {
 }
 
 export default function TopStudents({ students = SAMPLE_STUDENTS }) {
+  const { t } = useTranslation('common');
+  const navigate = useNavigate();
+
   return (
     <div className="bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-2xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5 text-[15px] font-bold text-surface-900 dark:text-surface-100">
           <span className="w-[3px] h-[18px] rounded bg-[#085041]" />
-          Top students
+          {t('teacher.topStudents.title')}
         </div>
-        <Link
-          to="/dashboard/students"
+        <button
+          onClick={() => navigate('/dashboard/students')}
           className="text-[12.5px] font-semibold text-teal-700 dark:text-teal-400 flex items-center gap-1 hover:gap-2 transition-all"
         >
-          View all <ArrowRight size={13} />
-        </Link>
+          {t('teacher.topStudents.viewAll')} <ArrowRight size={13} />
+        </button>
       </div>
 
       <div className="flex flex-col">

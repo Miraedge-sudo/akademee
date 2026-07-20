@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../../../core/hooks/useTheme';
 import { useAuth } from '../../../core/hooks/useAuth';
 import { getDashboardStats } from '../../../core/api/dashboardService';
-import { getClasses } from '../../../core/api/classService';
-import { getAllClassTeacherAssignments, getTeacherSubjects } from '../../../core/api/subjectService';
+import { getTeacherClasses } from '../../../core/api/classService';
+import { getTeacherSubjects } from '../../../core/api/subjectService';
 import { getClassAttendanceAll } from '../../../core/api/attendanceService';
 import TeacherGreeting from '../components/TeacherGreeting';
 import TeacherStatCards from '../components/TeacherStatCards';
+import TeacherAssignedClasses from '../components/TeacherAssignedClasses';
 import TodaySchedule from '../components/TodaySchedule';
 import PendingTasks from '../components/PendingTasks';
 import ClassPerformanceChart from '../components/ClassPerformanceChart';
@@ -23,6 +24,10 @@ export default function TeacherDashboardPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // ── Store full class data for the assigned-classrooms section ──
+  const [teacherClasses, setTeacherClasses] = useState([]);
+  const [teacherSubjects, setTeacherSubjects] = useState([]);
+
   // ── Fetch real data ──
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const fetchData = useCallback(async () => {
@@ -30,42 +35,34 @@ export default function TeacherDashboardPage() {
     try {
       const teacherId = user?.id;
 
-      const [dashboardData, classData, assignmentData, subjectData] = await Promise.all([
+      const [dashboardData, classesData, subjectData] = await Promise.all([
         getDashboardStats().catch(() => null),
-        getClasses().catch(() => ({ classes: [] })),
         teacherId
-          ? getAllClassTeacherAssignments().catch(() => [])
+          ? getTeacherClasses(teacherId).catch(() => [])
           : Promise.resolve([]),
         teacherId
           ? getTeacherSubjects(teacherId).catch(() => [])
           : Promise.resolve([]),
       ]);
 
-      const allClasses = classData?.classes || classData || [];
-      const allAssignments = Array.isArray(assignmentData)
-        ? assignmentData
-        : (assignmentData?.data || []);
+      // Le backend nous retourne directement toutes les classes du professeur
+      const myClasses = Array.isArray(classesData) ? classesData : (classesData?.data || []);
       const teacherSubjectsList = Array.isArray(subjectData)
         ? subjectData
         : (subjectData?.data || []);
 
-      const teacherAssignmentClassIds = new Set(
-        allAssignments
-          .filter((a) => String(a.teacherId) === String(teacherId))
-          .map((a) => a.classId)
-      );
-      const teacherClasses = allClasses.filter((c) =>
-        teacherAssignmentClassIds.has(c.id)
-      );
+      // Store for the TeacherAssignedClasses section
+      setTeacherClasses(myClasses);
+      setTeacherSubjects(teacherSubjectsList);
 
-      const teacherStudents = teacherClasses.reduce(
+      const teacherStudents = myClasses.reduce(
         (sum, c) => sum + (c.studentCount || 0), 0
       );
 
       // Fetch recent attendance issues for teacher's classes
       let recentAttendanceIssues = [];
       try {
-        const attendancePromises = teacherClasses.slice(0, 3).map((cls) =>
+        const attendancePromises = myClasses.slice(0, 3).map((cls) =>
           getClassAttendanceAll(cls.id).catch(() => [])
         );
         const attendanceResults = await Promise.all(attendancePromises);
@@ -78,7 +75,7 @@ export default function TeacherDashboardPage() {
           .slice(0, 4)
           .map((a) => ({
             name: a.studentName || 'Student',
-            cls: a.className || teacherClasses.find(c => c.id === a.classId)?.name || '',
+            cls: a.className || myClasses.find(c => c.id === a.classId)?.name || '',
             time: new Date(a.date).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
             status: a.status,
             avatarBg: a.status === 'absent' ? '#FEE2E2' : '#FEF3C7',
@@ -87,9 +84,9 @@ export default function TeacherDashboardPage() {
       } catch { /* ignore attendance errors */ }
 
       setStats({
-        classes: teacherClasses.length || dashboardData?.totalClasses || 0,
+        classes: myClasses.length || dashboardData?.totalClasses || 0,
         students: teacherStudents || dashboardData?.totalStudents || 0,
-        pendingGrades: (teacherClasses.length * 5) || 0,
+        pendingGrades: (myClasses.length * 5) || 0,
         attendanceRate: dashboardData?.activeAcademicYear ? 85 : 0,
         attendanceIssues: recentAttendanceIssues,
       });
@@ -98,6 +95,8 @@ export default function TeacherDashboardPage() {
         classes: 0, students: 0, pendingGrades: 0, attendanceRate: 0,
         attendanceIssues: [],
       });
+      setTeacherClasses([]);
+      setTeacherSubjects([]);
     }
     setLoading(false);
   }, [user?.id]);
@@ -122,6 +121,19 @@ export default function TeacherDashboardPage() {
           />
 
           <TeacherStatCards stats={stats} />
+
+          {/* ── Assigned Classrooms Section ── */}
+          <TeacherAssignedClasses
+            teacherId={user?.id}
+            classes={teacherClasses}
+            subjects={teacherSubjects}
+            primaryColor={pc}
+            loading={false}
+            onTakeAttendance={(cls) => {
+              // Could open an attendance modal here in the future
+              console.log('Take attendance for', cls.name);
+            }}
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <TodaySchedule />

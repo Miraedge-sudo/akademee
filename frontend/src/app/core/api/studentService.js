@@ -21,6 +21,14 @@ export async function getStudentById(id) {
 }
 
 /**
+ * Récupère le profil de l'étudiant connecté
+ */
+export async function getStudentMe() {
+  const response = await api.get(API_ENDPOINTS.STUDENTS.GET("me"));
+  return response.data.data;
+}
+
+/**
  * Crée un nouvel étudiant
  * @param {object} studentData - Données de l'étudiant
  */
