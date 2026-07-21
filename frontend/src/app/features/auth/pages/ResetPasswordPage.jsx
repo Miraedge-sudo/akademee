@@ -12,6 +12,7 @@ export default function ResetPasswordPage() {
   const { t } = useTranslation("auth");
 
   const token = searchParams.get("token");
+  console.log('[ResetPasswordPage] Token from URL:', token);
 
   const [formData, setFormData] = useState({
     password: "",

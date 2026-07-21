@@ -67,7 +67,7 @@ function buildAdminVerificationUrl(token, subdomain) {
 function buildResetPasswordUrl(token) {
   const frontendUrl = domains.isProduction
     ? process.env.FRONTEND_URL_PRODUCTION || 'https://akademee.cm'
-    : process.env.FRONTEND_URL || 'http://localhost:3000';
+    : process.env.FRONTEND_URL || `http://localhost:${domains.frontendPort}`;
   return `${frontendUrl}/reset-password?token=${encodeURIComponent(token)}`;
 }
 

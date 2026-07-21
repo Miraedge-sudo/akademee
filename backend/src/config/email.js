@@ -20,7 +20,7 @@ const emailConfig = {
   },
   get from() { return process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@akademee.app'; },
   get verificationExpiresHours() { return parseInt(process.env.VERIFICATION_EXPIRES_HOURS || '48', 10); },
-  get resetExpiresHours() { return parseInt(process.env.RESET_EXPIRES_HOURS || '1', 10); },
+  get resetExpiresHours() { return parseInt(process.env.RESET_EXPIRES_HOURS || '24', 10); },
   get isConfigured() { return getIsConfigured(); },
 };
 

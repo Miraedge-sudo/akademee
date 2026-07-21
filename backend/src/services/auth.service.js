@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const sql = require('../config/database');
 const jwtConfig = require('../config/jwt');
+const emailConfig = require('../config/email');
 const SlugGenerator = require('../utils/slugGenerator');
 const { buildSchoolUrls } = require('../utils/domainHelper');
 
@@ -387,13 +388,15 @@ class AuthService {
     if (users.length === 0) return { sent: true };
 
     const user = users[0];
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const token = crypto.randomBytes(16).toString('hex');
+    const resetHours = emailConfig.resetExpiresHours || 24;
+
+    console.log('[AuthService.forgotPassword] Generated reset token for user', user.user_id, 'token:', token, 'expires in hours:', resetHours);
 
     await sql`
       UPDATE users
       SET reset_password_token = ${token},
-          reset_password_token_expires_at = ${expiresAt},
+          reset_password_token_expires_at = NOW() + (${resetHours} || ' hours')::interval,
           updated_at = NOW()
       WHERE user_id = ${user.user_id}
     `;
@@ -413,21 +416,33 @@ class AuthService {
    * Reset password — validate token and update password.
    */
   async resetPassword(token, newPassword) {
+    console.log('[AuthService.resetPassword] Received token:', token);
+
+    // Use the database clock for expiry checks to avoid app/DB clock skew issues.
     const users = await sql`
       SELECT user_id, school_id, email, reset_password_token_expires_at
       FROM users
       WHERE reset_password_token = ${token}
+        AND (reset_password_token_expires_at IS NULL OR reset_password_token_expires_at > NOW())
     `;
 
+    console.log('[AuthService.resetPassword] Matching users found:', users.length);
+
     if (users.length === 0) {
+      // Distinguish expired from missing for logging
+      const existing = await sql`
+        SELECT reset_password_token_expires_at
+        FROM users
+        WHERE reset_password_token = ${token}
+      `;
+      if (existing.length > 0) {
+        console.log('[AuthService.resetPassword] Token found but expired at:', existing[0].reset_password_token_expires_at, 'DB time:', new Date());
+        throw new Error('Reset token has expired');
+      }
       throw new Error('Invalid or expired reset token');
     }
 
     const user = users[0];
-
-    if (user.reset_password_token_expires_at && new Date(user.reset_password_token_expires_at) < new Date()) {
-      throw new Error('Reset token has expired');
-    }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
