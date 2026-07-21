@@ -19,6 +19,7 @@ const HUMAN_MESSAGES = {
   // ── Unique constraint violations ──
   DUPLICATE_ENTRY: 'This record already exists. Please use a different value.',
   FOREIGN_KEY_VIOLATION: 'The related record could not be found. Please check your selection.',
+  NOT_NULL_VIOLATION: 'A required value is missing. Please check your input and try again.',
 
   // ── Generic fallbacks by status code ──
   400: 'The request could not be processed. Please check the information provided and try again.',
@@ -85,6 +86,11 @@ function getHumanMessage(err, statusCode) {
   // Foreign key violations
   if (isForeignKeyError(err)) {
     return HUMAN_MESSAGES.FOREIGN_KEY_VIOLATION;
+  }
+
+  // NOT NULL violations
+  if (err.code === '23502') {
+    return HUMAN_MESSAGES.NOT_NULL_VIOLATION;
   }
 
   // For AppError and other known status codes, prefer the original message if it's

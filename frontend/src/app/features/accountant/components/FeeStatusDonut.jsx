@@ -102,7 +102,7 @@ export default function FeeStatusDonut({ data }) {
 
         {/* Legend */}
         <div className="flex flex-col gap-2.5 flex-1">
-          {data.map((d) => (
+          {chartData.map((d) => (
             <div key={d.label} className="flex items-center gap-2.5 text-[12.5px] text-surface-700 dark:text-surface-200">
               <div className="w-2.5 h-2.5 rounded-[3px] flex-shrink-0" style={{ background: d.color }} />
               <span className="flex-1">{d.label}</span>

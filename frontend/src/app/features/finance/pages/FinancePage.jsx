@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useTheme } from "../../../core/hooks/useTheme";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FiDollarSign,
   FiPlus,

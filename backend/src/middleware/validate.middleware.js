@@ -79,6 +79,7 @@ const validateMiddleware = (req, res, next) => {
         field: err.param || err.path,
         message: formatValidationMessage(err),
       })),
+      reqId: req.reqId,
     });
   }
 

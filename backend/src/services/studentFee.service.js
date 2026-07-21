@@ -21,6 +21,10 @@ class StudentFeeService {
   async assignFeesToStudent(schoolId, studentId, feeIds, academicYearId) {
     if (!feeIds || feeIds.length === 0) return [];
 
+    const yearFilter = academicYearId
+      ? sql`sf.academic_year_id = ${academicYearId}`
+      : sql`sf.academic_year_id IS NULL`;
+
     const rows = await sql`
       WITH valid_fees AS (
         SELECT fee_id, amount FROM fees
@@ -28,13 +32,13 @@ class StudentFeeService {
       ),
       new_rows AS (
         INSERT INTO student_fees (school_id, student_id, fee_id, amount_due, academic_year_id)
-        SELECT ${schoolId}, ${studentId}, vf.fee_id, vf.amount, ${academicYearId || null}
+        SELECT ${schoolId}, ${studentId}, vf.fee_id, COALESCE(vf.amount, 0), ${academicYearId || null}
         FROM valid_fees vf
         WHERE NOT EXISTS (
           SELECT 1 FROM student_fees sf
           WHERE sf.student_id = ${studentId}
             AND sf.fee_id = vf.fee_id
-            AND (sf.academic_year_id = ${academicYearId} OR (sf.academic_year_id IS NULL AND ${academicYearId} IS NULL))
+            AND ${yearFilter}
         )
         RETURNING *
       ),
@@ -42,7 +46,7 @@ class StudentFeeService {
         SELECT sf.* FROM student_fees sf
         WHERE sf.student_id = ${studentId}
           AND sf.fee_id IN (SELECT fee_id FROM valid_fees)
-          AND (sf.academic_year_id = ${academicYearId} OR (sf.academic_year_id IS NULL AND ${academicYearId} IS NULL))
+          AND ${yearFilter}
       )
       SELECT * FROM new_rows
       UNION ALL
@@ -54,9 +58,13 @@ class StudentFeeService {
   async assignFeesToClass(schoolId, classId, feeIds, academicYearId) {
     if (!feeIds || feeIds.length === 0) return [];
 
+    const yearFilter = academicYearId
+      ? sql`sf.academic_year_id = ${academicYearId}`
+      : sql`sf.academic_year_id IS NULL`;
+
     const rows = await sql`
       WITH class_students AS (
-        SELECT student_id FROM enrollments
+        SELECT DISTINCT student_id FROM enrollments
         WHERE class_id = ${classId} AND school_id = ${schoolId} AND status = 'active'
       ),
       valid_fees AS (
@@ -65,14 +73,14 @@ class StudentFeeService {
       ),
       new_rows AS (
         INSERT INTO student_fees (school_id, student_id, fee_id, amount_due, academic_year_id)
-        SELECT ${schoolId}, cs.student_id, vf.fee_id, vf.amount, ${academicYearId || null}
+        SELECT ${schoolId}, cs.student_id, vf.fee_id, COALESCE(vf.amount, 0), ${academicYearId || null}
         FROM class_students cs
         CROSS JOIN valid_fees vf
         WHERE NOT EXISTS (
           SELECT 1 FROM student_fees sf
           WHERE sf.student_id = cs.student_id
             AND sf.fee_id = vf.fee_id
-            AND (sf.academic_year_id = ${academicYearId} OR (sf.academic_year_id IS NULL AND ${academicYearId} IS NULL))
+            AND ${yearFilter}
         )
         RETURNING *
       ),
@@ -80,7 +88,7 @@ class StudentFeeService {
         SELECT sf.* FROM student_fees sf
         WHERE sf.student_id IN (SELECT student_id FROM class_students)
           AND sf.fee_id IN (SELECT fee_id FROM valid_fees)
-          AND (sf.academic_year_id = ${academicYearId} OR (sf.academic_year_id IS NULL AND ${academicYearId} IS NULL))
+          AND ${yearFilter}
       )
       SELECT * FROM new_rows
       UNION ALL
@@ -96,7 +104,7 @@ class StudentFeeService {
       JOIN fees f ON sf.fee_id = f.fee_id
       JOIN enrollments e ON sf.student_id = e.student_id AND e.class_id = ${classId} AND e.school_id = ${schoolId} AND e.status = 'active'
       WHERE sf.school_id = ${schoolId}
-        AND (sf.academic_year_id = ${academicYearId} OR (sf.academic_year_id IS NULL AND ${academicYearId} IS NULL))
+        ${academicYearId ? sql`AND sf.academic_year_id = ${academicYearId}` : sql`AND sf.academic_year_id IS NULL`}
       ORDER BY f.name ASC
     `;
     return rows.map(r => ({

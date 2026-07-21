@@ -13,4 +13,23 @@ const updateFeeValidator = [
   body('classId').optional().isInt(),
 ];
 
-module.exports = { createFeeValidator, updateFeeValidator };
+const assignFeesValidator = [
+  body('classId')
+    .trim()
+    .notEmpty()
+    .withMessage('Class ID is required'),
+  body('feeIds')
+    .isArray({ min: 1 })
+    .withMessage('At least one fee must be selected'),
+  body('feeIds.*')
+    .trim()
+    .notEmpty()
+    .withMessage('Fee ID cannot be empty'),
+  body('academicYearId')
+    .optional({ values: 'null' })
+    .trim()
+    .notEmpty()
+    .withMessage('Academic year ID cannot be empty'),
+];
+
+module.exports = { createFeeValidator, updateFeeValidator, assignFeesValidator };

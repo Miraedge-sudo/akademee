@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
 import { getSubdomain, buildSubdomainUrl } from "../../../core/utils/subdomainHelper";
 import LoginLeftPanel from "../../../components/features/LoginLeftPanel";
-import { ROLES } from "../../../core/constants/roles";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -41,16 +40,9 @@ export default function LoginPage() {
           window.location.hostname === "localhost" ||
           window.location.hostname === "127.0.0.1";
 
-        const userRoles = result?.user?.roles || [];
-        // Priority-based role resolution (same as RoleDashboardRouter)
-        const rolePriority = ['ADMIN', 'STUDENT', 'TEACHER', 'ACCOUNTANT', 'PARENT', 'SECRETARY'];
-        const role = rolePriority.find(r => userRoles.includes(r)) || result?.user?.role || 'ADMIN';
-        const dashboardPath =
-          role === ROLES.TEACHER ? "/dashboard/teacher-home" :
-          role === ROLES.STUDENT ? "/dashboard/student-home" :
-          role === ROLES.PARENT ? "/dashboard/parent-home" :
-          role === ROLES.ACCOUNTANT ? "/dashboard/accountant-home" :
-          "/dashboard";
+        // All roles redirect to /dashboard — RoleDashboardRouter handles
+        // the correct dashboard based on role priority (ADMIN > STUDENT > TEACHER > etc.)
+        const dashboardPath = "/dashboard";
 
         if (result.subdomain && isLocalhost) {
           const dashboardUrl = buildSubdomainUrl(result.subdomain, `${dashboardPath}?token=${result.token}`);
