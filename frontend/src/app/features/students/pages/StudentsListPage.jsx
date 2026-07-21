@@ -111,7 +111,7 @@ export default function StudentsListPage() {
         classId: enrollClassId,
         academicYearId: selectedYearId || undefined,
       });
-      toast.success(lang === "fr" ? "Élève inscrit avec succès ✨" : "Student enrolled successfully ✨");
+      toast.success(lang === "fr" ? "Élève inscrit avec succès" : "Student enrolled successfully");
       setEnrollModalOpen(false);
       setEnrollingStudent(null);
       loadStudents();

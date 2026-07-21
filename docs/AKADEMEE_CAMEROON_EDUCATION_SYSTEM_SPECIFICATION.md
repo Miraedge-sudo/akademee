@@ -73,11 +73,12 @@ Devenir le système de gestion scolaire de référence au Cameroun, couvrant les
 | **Calcul notes**            | Moyennes, classements                                                        | ✅                                        |
 | **Présences**               | CRUD, par étudiant/classe/date, statistiques                                 | ✅                                        |
 | **Statistiques présence**   | Par étudiant, classe, tendances mensuelles                                   | ✅                                        |
-| **Frais**                   | CRUD types de frais, montants par classe                                     | ✅                                        |
+| **Frais**                   | CRUD types de frais, montants par classe + due_date                          | ✅ **+ due_date**                         |
+| **Frais étudiants**         | Assignation frais à classe/élève, breakdown par élève, statut individuel     | ✅ **Nouveau**                            |
 | **Calcul frais**            | Statut étudiant, récapitulatif, recalcul global                              | ✅                                        |
 | **Paiements**               | CRUD, par étudiant, par école, génération rapports                           | ✅                                        |
 | **Rapports**                | Bulletins PDF, rapports de classe, performance étudiant, export              | ✅                                        |
-| **Dashboard**               | Stats, activités récentes, revenus                                           | ✅                                        |
+| **Dashboard**               | Stats, activités récentes, revenus, stats finance détaillées                   | ✅ **+ finance**                          |
 | **Notifications**           | Liste, marquer lu, compteur non-lus, suppression                             | ✅                                        |
 | **Annonces**                | CRUD, ciblage, publication                                                   | ✅                                        |
 | **Utilisateurs**            | Profil, mise à jour, changement mot de passe                                 | ✅                                        |
@@ -112,11 +113,109 @@ Devenir le système de gestion scolaire de référence au Cameroun, couvrant les
 | **Classes**               | ClassesChildrenSection, CreateClassPage, ClassDetailPage                                | ✅                |
 | **Notes**                 | GradesPage, ReportCardsPage                                                             | ✅                |
 | **Présence**              | AttendancePage                                                                          | ✅                |
-| **Finance**               | FinancePage                                                                             | ✅                |
+| **Finance (Admin)**       | FeesManagementPage (CRUD frais), FeesAssignmentPage (assignation classes), PaymentsPage (enregistrement) | ✅ **Nouveau**    |
+| **Finance (Dashboard)**   | FinancePage (page d'accueil)                                                              | ⚠️ **Coming soon** |
+| **Finance (Comptable)**   | AccountantDashboardPage + ReceiptsPage (reçus PDF)                                         | ✅ **Nouveau**    |
+| **Finance (Comptable)**   | MonthlyCollectionsChart, FeeCollectionByClass, OutstandingAlerts, FeeStatusDonut, RecentPayments | ✅ **Connecté API** |
+| **Finance (Étudiant)**    | MyFeesPage (breakdown par frais, échéances, barres de progression), StudentStatStrip      | ✅ **Amélioré**   |
 | **Settings**              | SettingsPage, WebsiteSettingsPage, AcademicYearsPage                                    | ✅                |
 | **Layout**                | AdminLayout, Sidebar                                                                    | ✅                |
 
-**Total : 20+ pages/composants frontend — la plupart fonctionnels.**
+**Total : 25+ pages/composants frontend — la plupart fonctionnels.**
+
+---
+
+## 🔄 Travail Récent — Juillet 2026
+
+### Module Finance — Audit & Améliorations
+
+#### ✅ Pages CRUD Frais (Admin)
+
+1. **FeesManagementPage** (`/dashboard/fees`) — CRUD complet des frais de scolarité
+   - Création, modification, suppression avec modales
+   - Assignation rapide à une classe
+   - Recherche et stats récapitulatives
+   - ✅ APIs réelles : `getFees`, `createFee`, `updateFee`, `deleteFee`, `assignFeesToClass`
+
+2. **FeesAssignmentPage** (`/dashboard/fees/assign`) — Assignation massive par classe/année
+   - Sélecteur année académique + classe
+   - Grille de tous les frais avec statut (Assigné/Non assigné)
+   - Badge Nouveau/Retiré quand la sélection change
+   - ✅ APIs réelles : `getAcademicYears`, `getClasses`, `getFees`, `getClassAssignedFees`, `assignFeesToClass`
+
+3. **PaymentsPage** (`/dashboard/payments`) — Enregistrement de paiement
+   - Recherche d'élève avec debounce
+   - Sélection du frais, montant, méthode de paiement (Cash, Bank Transfer, Mobile Money, Cheque, Card)
+   - Référence optionnelle, historique des derniers paiements
+   - ✅ APIs réelles : `getStudents`, `getFees`, `createPayment`, `getPayments`, `getStudentFeeSummary`
+
+#### ✅ Page Frais Étudiant (Améliorée)
+
+4. **MyFeesPage** (`/dashboard/my-fees`) — Vue complète des frais pour l'étudiant
+   - Anneau de statut global (FeeStatusWidget)
+   - **Nouveau : Cartes par frais** avec barres de progression individuelles animées
+   - **Nouveau : Statut individuel** (Payé/Partiel/Impayé) avec icônes colorées
+   - **Nouveau : Dates d'échéance** avec indicateur "En retard" si dépassé
+   - **Nouveau : Détail expansible** par frais (montant dû/payé/restant/taux + paiements liés)
+   - **Nouveau : Barre de statut empilée** (vert/jaune/rouge) pour tous les frais
+   - ✅ APIs réelles : `getStudentMe`, `getStudentFeeSummary`, `getStudentFeeBreakdown`
+
+#### ✅ Composants Comptable — Maintenant Connectés aux APIs Réelles
+
+Tous les composants du dashboard comptable utilisent désormais des **APIs réelles** via un endpoint unique `GET /api/dashboard/finance-stats` :
+
+| Composant | API | Données |
+|---|---|---|
+| **MonthlyCollectionsChart** | `getFinanceStats().monthlyCollections` (overall + byClass) | ✅ Données réelles (agrégation mensuelle par classe + overall) |
+| **FeeCollectionByClass** | `getFinanceStats().collectionByClass` | ✅ Données réelles (paiements aggrégés par classe) |
+| **OutstandingAlerts** | `getFinanceStats().outstandingAlerts` | ✅ Données réelles (étudiants avec balances impayées, classés par sévérité) |
+| **FeeStatusDonut** | `getFinanceStats().feeStatusOverview` | ✅ Données réelles (décompte par statut: paid/partial/unpaid) |
+| **RecentPayments** | `getPayments` via props | ✅ Données réelles |
+| **FinanceStatCards** | `stats` (via dashboardData + financeData combinés) | ✅ Données réelles |
+
+**Nouvel endpoint :** `GET /api/dashboard/finance-stats` retourne toutes les données nécessaires en une seule requête :
+- `monthlyCollections`: { overall: [{ month, total }], byClass: [{ month, className, total }] }
+- `collectionByClass`: [{ name, paid, total }]
+- `outstandingAlerts`: [{ name, className, amount, since, level (critical/high/medium/low) }]
+- `feeStatusOverview`: { paid, partial, unpaid }
+- `totalCollected`, `outstanding`, `collectionRate`
+
+#### ✅ Sidebar — Liens Finance Ajoutés
+
+Les liens vers les nouvelles pages finance ont été ajoutés dans la sidebar pour les rôles **ADMIN** et **ACCOUNTANT** :
+- `Frais` → `/dashboard/fees`
+- `Assignation frais` → `/dashboard/fees/assign`
+- `Paiements` → `/dashboard/payments`
+
+#### ✅ Page Reçus de Paiement (Comptable)
+
+5. **ReceiptsPage** (`/dashboard/receipts`) — Gestion et impression des reçus de paiement
+   - Liste complète des paiements avec recherche, filtres (statut, dates)
+   - Stats récapitulatives : total paiements, montant total, moyenne, aujourd'hui
+   - **Modal de reçu** professionnel : en-tête école, n° reçu, élève, méthode, statut, montant
+   - **Téléchargement PDF direct** via `jspdf` + `html2canvas` (bouton "PDF")
+   - **Impression** via `window.print()` avec CSS `@media print` (bouton "Print")
+   - Nom de frais (`feeName`) ajouté dans le reçu via jointure backend
+   - ✅ APIs réelles : `getPayments`, `getPaymentById`
+   - ✅ Nouvelles dépendances : `jspdf`, `html2canvas`
+   - ✅ Liens sidebar pour ADMIN et ACCOUNTANT
+
+#### ✅ Backend — Modifications et Ajouts
+
+| Endpoint | Méthode | Description |
+|---|---|---|
+| `/api/fee-calculations/student/:studentId/fees` | GET | Breakdown par frais avec statut individuel |
+| Migration 023 | — | Ajout colonne `due_date` à la table `fees` |
+| Modification `fee.service.js` | — | Support `due_date` dans create/update/format + `description` dans INSERT |
+| Modification `studentFee.service.js` | — | `due_date` dans formatStudentFee et SELECT query |
+| Modification `payment.service.js` | — | Ajout `fee_name` dans `getById` (LEFT JOIN fees + formatPayment) |
+| `GET /api/dashboard/finance-stats` | GET | Stats finance détaillées : monthlyCollections, collectionByClass, outstandingAlerts, feeStatusOverview |
+| Nouvelle méthode `getFinanceStats()` | — | dashboard.service.js — 5 requêtes SQL pour les composants comptable |
+
+#### ✅ Corrections
+
+- **[PaymentsPage]** Bugfix `React is not defined` — remplacement de `React.createElement(statusIcon, ...)` par `<statusIcon ... />` (JSX direct)
+- **[MonthlyByClass]** Bugfix tri alphabétique des mois → ordre chronologique ajoutant `month_num` + `year` dans SELECT, GROUP BY et ORDER BY
 
 ---
 
@@ -139,6 +238,42 @@ Devenir le système de gestion scolaire de référence au Cameroun, couvrant les
 2. **Mise à jour Services** - `academicYear.service.js` pour accepter array de systèmes, `period.service.js` pour filtrer par système
 3. **Génération Automatique Périodes** - Méthode pour créer périodes par défaut selon système sélectionné
 4. **API Endpoints** - POST `/academic-years` avec `educationalSystems` array, GET `/periods?educationalSystem=X`
+
+### 📋 Roadmap Finance
+
+**Phase 1 (Faite)**
+
+- [x] Page admin CRUD frais (FeesManagementPage)
+- [x] Page admin assignation frais (FeesAssignmentPage)
+- [x] Page comptable enregistrement paiement (PaymentsPage)
+- [x] Page comptable reçus PDF (ReceiptsPage) — avec téléchargement direct
+- [x] Page étudiant améliorée avec breakdown par frais (MyFeesPage)
+- [x] Endpoint backend breakdown par frais (getStudentFeeBreakdown)
+- [x] Colonne `due_date` dans la table `fees` (migration 023)
+- [x] `feeName` dans `getPaymentById` (jointure LEFT JOIN fees)
+- [x] Liens sidebar pour les pages finance (ADMIN + ACCOUNTANT)
+- [x] Clés i18n pour tout le module finance (fees.*, payments.*, student.fees.*, feesAssignment.*, receipts.*)
+- [x] Dépendances `jspdf` + `html2canvas` installées
+- [x] Bugfix `React.createElement` → JSX dans PaymentsPage
+
+**Phase 2 (À faire — Court terme)**
+
+- [x] Remplacer données statiques par APIs réelles dans les 4 composants comptable (via `GET /api/dashboard/finance-stats`) :
+  - `MonthlyCollectionsChart` ✅ monthlyCollections (overall + byClass)
+  - `FeeCollectionByClass` ✅ collectionByClass
+  - `OutstandingAlerts` ✅ outstandingAlerts (avec ranking par sévérité)
+  - `FeeStatusDonut` ✅ feeStatusOverview (paid/partial/unpaid)
+- [ ] Page d'accueil Finance (`/dashboard/finance`) avec vue d'ensemble
+- [ ] Exécuter la migration 023 en production
+
+**Phase 3 (Moyen terme)**
+
+- [ ] Intégration paiement mobile (MTN MoMo, Orange Money)
+- [ ] Portail parents : historique des paiements, reçus PDF
+- [ ] Rapports financiers avancés (journal de caisse, grand livre)
+- [ ] Notifications de rappel de paiement (WhatsApp, SMS, Email)
+
+---
 
 ### 📋 Roadmap Systèmes Éducatifs
 

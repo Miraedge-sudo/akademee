@@ -29,6 +29,23 @@ export async function getTodayPayments() {
 }
 
 /**
+ * Create a new payment (record a payment for a student)
+ * @param {object} data - { studentId, amount, method, feeId, academicYearId?, reference? }
+ */
+export async function createPayment(data) {
+  const response = await api.post(API_ENDPOINTS.PAYMENTS.CREATE, data);
+  return response.data.data;
+}
+
+/**
+ * Get a single payment by ID
+ */
+export async function getPaymentById(id) {
+  const response = await api.get(API_ENDPOINTS.PAYMENTS.GET(id));
+  return response.data.data;
+}
+
+/**
  * Generate a payment report
  */
 export async function generatePaymentReport(params = {}) {

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getSubdomain } from "../utils/subdomainHelper";
+import toast from "react-hot-toast";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:1000",
@@ -115,10 +116,23 @@ api.interceptors.response.use(
 
     // Don't retry if we've already tried refreshing for this request
     if (originalRequest._retry) {
-      // Refresh failed — force logout
+      // Refresh failed — force logout with a human-friendly message
       localStorage.removeItem("token");
       _accessToken = null;
-      window.location.href = "/login";
+
+      // Avoid stacking toasts if already on login page
+      if (!window.location.pathname.startsWith("/login")) {
+        toast.error(
+          "Your session has expired. Please log in again.",
+          { id: "session-expired", duration: 6000 }
+        );
+      }
+
+      // Brief delay so the toast is visible before redirect
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 800);
+
       return Promise.reject(error);
     }
 
@@ -132,10 +146,20 @@ api.interceptors.response.use(
         return api(originalRequest);
       }
     } catch {
-      // Refresh itself failed — force logout
+      // Refresh itself failed — force logout with a human-friendly message
       localStorage.removeItem("token");
       _accessToken = null;
-      window.location.href = "/login";
+
+      if (!window.location.pathname.startsWith("/login")) {
+        toast.error(
+          "Your session has expired. Please log in again.",
+          { id: "session-expired", duration: 6000 }
+        );
+      }
+
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 800);
     }
 
     return Promise.reject(error);

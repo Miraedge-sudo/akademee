@@ -284,10 +284,10 @@ function CreateYearModal({ open, onClose, onCreated }) {
                 }`}
               />
               {status === "past"
-                ? (isFr ? "⚠️ Impossible — année dans le passé" : "⚠️ Cannot create — year is in the past")
+                ? (isFr ? "Impossible — année dans le passé" : "Cannot create — year is in the past")
                 : status === "current"
-                  ? (isFr ? "✓ Année en cours — sera active immédiatement" : "✓ Current year — will be active immediately")
-                  : (isFr ? "→ Année future — sera en mode planification" : "→ Future year — will be in setup mode")}
+                  ? (isFr ? "Année en cours — sera active immédiatement" : "Current year — will be active immediately")
+                  : (isFr ? "Année future — sera en mode planification" : "Future year — will be in setup mode")}
             </div>
           )}
 

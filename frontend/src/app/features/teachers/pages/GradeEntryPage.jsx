@@ -101,7 +101,7 @@ export default function GradeEntryPage() {
         VERROUILLEE: "Vérouillée",
       };
       setSequenceStatusWarning(
-        `⚠️ Cette séquence est « ${statusLabels[seq.statut] || seq.statut} ». Les notes ne peuvent être saisies que dans une séquence ouverte.`
+        `Cette séquence est « ${statusLabels[seq.statut] || seq.statut} ». Les notes ne peuvent être saisies que dans une séquence ouverte.`
       );
     } else {
       setSequenceStatusWarning(null);
@@ -118,11 +118,11 @@ export default function GradeEntryPage() {
       end.setHours(23, 59, 59, 999);
       if (today < start) {
         setSequenceDateWarning(
-          `📅 La saisie débutera le ${start.toLocaleDateString('fr-FR')}`
+          `La saisie débutera le ${start.toLocaleDateString('fr-FR')}`
         );
       } else if (today > end) {
         setSequenceDateWarning(
-          `⚠️ La période de saisie est terminée (fin le ${end.toLocaleDateString('fr-FR')})`
+          `La période de saisie est terminée (fin le ${end.toLocaleDateString('fr-FR')})`
         );
       } else {
         setSequenceDateWarning(null);
@@ -377,8 +377,8 @@ export default function GradeEntryPage() {
           >
             <option value="">{t('teacher.gradeEntry.selectSubject')}</option>
             {availableSubjects.map((s) => (
-              <option key={s.id || s.subjectId} value={s.id || s.subjectId}>
-                {s.name || s.subjectName}
+              <option key={s.subjectId || s.id} value={s.subjectId || s.id}>
+                {s.subjectName || s.name}
               </option>
             ))}
           </select>
@@ -412,7 +412,7 @@ export default function GradeEntryPage() {
             <option value="">{t('teacher.gradeEntry.selectPeriod')}</option>
             {periods.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.isCurrent ? '📌 ' : ''}{p.name}
+                {p.isCurrent ? '★ ' : ''}{p.name}
                 {p.startDate ? ` (${new Date(p.startDate).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })}` : ''}
                 {p.endDate ? ` - ${new Date(p.endDate).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })})` : ''}
                 {p.isCurrent ? ` — ${t('teacher.gradeEntry.currentPeriod')}` : ''}
@@ -435,7 +435,7 @@ export default function GradeEntryPage() {
             {sequences.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.libelle}
-                {s.statut === 'OUVERTE' ? ' 🔓' : s.statut === 'FERMEE' ? ' 🔒' : s.statut === 'VERROUILLEE' ? ' 🔐' : ''}
+                {s.statut === 'OUVERTE' ? ' (Ouverte)' : s.statut === 'FERMEE' ? ' (Fermée)' : s.statut === 'VERROUILLEE' ? ' (Verrouillée)' : ''}
               </option>
             ))}
           </select>
@@ -496,9 +496,9 @@ export default function GradeEntryPage() {
         <div className="gr-fade space-y-2" style={{ animationDelay: "0.09s" }}>
           {sequenceDateWarning && (
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-medium" style={{
-              background: sequenceDateWarning.includes('⚠️') ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)',
-              border: `1.5px solid ${sequenceDateWarning.includes('⚠️') ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.2)'}`,
-              color: sequenceDateWarning.includes('⚠️') ? '#EF4444' : '#3B82F6',
+              background: sequenceDateWarning.startsWith('La période') ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)',
+              border: `1.5px solid ${sequenceDateWarning.startsWith('La période') ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.2)'}`,
+              color: sequenceDateWarning.startsWith('La période') ? '#EF4444' : '#3B82F6',
             }}>
               <Clock size={14} className="flex-shrink-0" />
               <span>{sequenceDateWarning}</span>

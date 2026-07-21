@@ -2500,7 +2500,7 @@ export default function OnboardingPage() {
               {t("steps.review.title", "Review")}
             </p>
             <h1 className="font-display text-[26px] font-medium text-surface-800 dark:text-surface-100 mb-1.5">
-              {t("review.heading", "Your site is ready 🎉")}
+              {t("review.heading", "Your site is ready")}
             </h1>
             <p className="text-[13.5px] text-surface-400 leading-relaxed mb-6">
               {t(

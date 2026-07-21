@@ -9,10 +9,14 @@ class GradeService {
       subjectId: row.subject_id,
       subjectName: row.subject_name,
       periodId: row.period_id,
+      periodName: row.period_name || null,
       score: Number(row.score),
+      previousScore: row.previous_score != null ? Number(row.previous_score) : null,
       coefficient: row.coefficient || 1,
       comment: row.comment,
       createdAt: row.created_at,
+      updatedAt: row.updated_at || null,
+      modified: row.previous_score != null,
     };
   }
 
@@ -23,14 +27,23 @@ class GradeService {
       VALUES (${schoolId}, ${studentId}, ${subjectId}, ${periodId || null}, ${score}, ${comment || null})
       RETURNING *
     `;
-    return this.formatGrade(rows[0]);
+    const created = this.formatGrade(rows[0]);
+    // Fetch period name if periodId is provided
+    if (rows[0].period_id) {
+      const periodRows = await sql`SELECT name FROM periods WHERE period_id = ${rows[0].period_id}`;
+      if (periodRows.length > 0) {
+        created.periodName = periodRows[0].name;
+      }
+    }
+    return created;
   }
 
   async getById(schoolId, gradeId) {
     const rows = await sql`
-      SELECT g.*, s.name AS subject_name
+      SELECT g.*, s.name AS subject_name, p.name AS period_name
       FROM grades g
       LEFT JOIN subjects s ON g.subject_id = s.subject_id
+      LEFT JOIN periods p ON g.period_id = p.period_id
       WHERE g.grade_id = ${gradeId} AND g.school_id = ${schoolId}
     `;
     if (rows.length === 0) throw new Error('Grade not found');
@@ -42,10 +55,11 @@ class GradeService {
     offset = Math.max(0, offset);
 
     const rows = await sql`
-      SELECT g.*, s.name AS subject_name
+      SELECT g.*, s.name AS subject_name, p.name AS period_name
       FROM grades g
       LEFT JOIN subjects s ON g.subject_id = s.subject_id
-      ${academicYearId ? sql`JOIN periods p ON g.period_id = p.period_id AND p.academic_year_id = ${academicYearId}` : sql``}
+      LEFT JOIN periods p ON g.period_id = p.period_id
+      ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
       WHERE g.school_id = ${schoolId}
         ${studentId ? sql`AND g.student_id = ${studentId}` : sql``}
         ${subjectId ? sql`AND g.subject_id = ${subjectId}` : sql``}
@@ -57,7 +71,8 @@ class GradeService {
     const countRows = await sql`
       SELECT COUNT(*)::int AS total
       FROM grades g
-      ${academicYearId ? sql`JOIN periods p ON g.period_id = p.period_id AND p.academic_year_id = ${academicYearId}` : sql``}
+      LEFT JOIN periods p ON g.period_id = p.period_id
+      ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
       WHERE g.school_id = ${schoolId}
         ${studentId ? sql`AND g.student_id = ${studentId}` : sql``}
         ${subjectId ? sql`AND g.subject_id = ${subjectId}` : sql``}
@@ -74,14 +89,15 @@ class GradeService {
 
   async listByClass(schoolId, classId, { academicYearId } = {}) {
     const rows = await sql`
-      SELECT g.*, s.name AS subject_name,
+      SELECT g.*, s.name AS subject_name, p.name AS period_name,
         CONCAT(u.first_name, ' ', u.last_name) AS student_name
       FROM grades g
       LEFT JOIN subjects s ON g.subject_id = s.subject_id
+      LEFT JOIN periods p ON g.period_id = p.period_id
       JOIN enrollments e ON g.student_id = e.student_id AND e.class_id = ${classId} AND e.status = 'active'
       LEFT JOIN students st ON g.student_id = st.student_id
       LEFT JOIN users u ON st.user_id = u.user_id
-      ${academicYearId ? sql`JOIN periods p ON g.period_id = p.period_id AND p.academic_year_id = ${academicYearId}` : sql``}
+      ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
       WHERE g.school_id = ${schoolId}
       ORDER BY g.created_at DESC
     `;
@@ -90,10 +106,11 @@ class GradeService {
 
   async listByStudent(schoolId, studentId, { academicYearId } = {}) {
     const rows = await sql`
-      SELECT g.*, s.name AS subject_name
+      SELECT g.*, s.name AS subject_name, p.name AS period_name
       FROM grades g
       LEFT JOIN subjects s ON g.subject_id = s.subject_id
-      ${academicYearId ? sql`JOIN periods p ON g.period_id = p.period_id AND p.academic_year_id = ${academicYearId}` : sql``}
+      LEFT JOIN periods p ON g.period_id = p.period_id
+      ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
       WHERE g.school_id = ${schoolId} AND g.student_id = ${studentId}
       ORDER BY g.created_at DESC
     `;
@@ -101,11 +118,18 @@ class GradeService {
   }
 
   async update(schoolId, gradeId, data) {
-    await this.getById(schoolId, gradeId);
+    const existing = await this.getById(schoolId, gradeId);
     const { score, comment } = data;
+
+    // If the score is being changed, store the previous score
+    const newScore = score ?? existing.score;
+    const previousScore = newScore !== existing.score ? existing.score : null;
+
     const rows = await sql`
       UPDATE grades SET
-        score = COALESCE(${score ?? null}, score),
+        score = ${newScore},
+        previous_score = ${previousScore},
+        updated_at = NOW(),
         comment = COALESCE(${comment || null}, comment)
       WHERE grade_id = ${gradeId} AND school_id = ${schoolId}
       RETURNING *

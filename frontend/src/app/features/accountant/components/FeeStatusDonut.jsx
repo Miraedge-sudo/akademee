@@ -1,10 +1,24 @@
-import { useEffect, useRef } from 'react';
+import { useMemo } from 'react';
 
 const DONUT_DATA = [
   { label: 'Fully paid', value: 148, color: '#1D9E75' },
   { label: 'Partial',    value: 82,  color: '#F59E0B' },
   { label: 'Unpaid',     value: 47,  color: '#EF4444' },
 ];
+
+function normalizeData(data) {
+  // Backend format: { paid: number, partial: number, unpaid: number }
+  if (data && typeof data === 'object' && !Array.isArray(data)) {
+    return [
+      { label: 'Fully paid', value: Number(data.paid) || 0, color: '#1D9E75' },
+      { label: 'Partial',    value: Number(data.partial) || 0, color: '#F59E0B' },
+      { label: 'Unpaid',     value: Number(data.unpaid) || 0, color: '#EF4444' },
+    ];
+  }
+  // Already in array format (static fallback or legacy)
+  if (Array.isArray(data) && data.length > 0) return data;
+  return DONUT_DATA;
+}
 
 function buildArcs(data) {
   const total = data.reduce((s, d) => s + d.value, 0);
@@ -25,8 +39,9 @@ function buildArcs(data) {
   return { arcs, total };
 }
 
-export default function FeeStatusDonut({ data = DONUT_DATA }) {
-  const { arcs, total } = buildArcs(data);
+export default function FeeStatusDonut({ data }) {
+  const chartData = useMemo(() => normalizeData(data), [data]);
+  const { arcs, total } = buildArcs(chartData);
 
   return (
     <div className="bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-2xl p-5 shadow-sm">
@@ -87,7 +102,7 @@ export default function FeeStatusDonut({ data = DONUT_DATA }) {
 
         {/* Legend */}
         <div className="flex flex-col gap-2.5 flex-1">
-          {data.map((d) => (
+          {chartData.map((d) => (
             <div key={d.label} className="flex items-center gap-2.5 text-[12.5px] text-surface-700 dark:text-surface-200">
               <div className="w-2.5 h-2.5 rounded-[3px] flex-shrink-0" style={{ background: d.color }} />
               <span className="flex-1">{d.label}</span>

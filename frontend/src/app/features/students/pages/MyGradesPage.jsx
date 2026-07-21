@@ -28,6 +28,7 @@ import {
   BarChart3,
   Medal,
   ClipboardList,
+  RotateCcw,
 } from 'lucide-react';
 
 function scoreColor(score) {
@@ -232,16 +233,34 @@ export default function MyGradesPage() {
                   <div className="px-5 py-2 space-y-1">
                     {grades.map((g, idx) => {
                       const sc = g.score || 0;
+                      const prevSc = g.previousScore;
                       const color = scoreColor(sc);
+                      const periodLabel = g.periodName
+                        ? g.periodName
+                        : g.periodId
+                          ? (isFr ? 'Période' : 'Period') + ` #${idx + 1}`
+                          : `#${idx + 1}`;
                       return (
                         <div
                           key={g.id || idx}
-                          className="flex items-center gap-3 py-1.5"
+                          className="flex items-center gap-3 py-1.5 group hover:bg-surface-50 dark:hover:bg-surface-800/50 rounded-lg px-1 -mx-1 transition-colors"
                         >
-                          <div className="flex-1 text-[12px] text-surface-500">
-                            {g.periodName || g.periodId || `#${idx + 1}`}
+                          {/* Period / Sequence badge */}
+                          <div className="flex-1 flex items-center gap-2 min-w-0">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 truncate max-w-[180px]">
+                              {periodLabel}
+                            </span>
                           </div>
-                          <div className="flex items-center gap-2">
+
+                          {/* Score */}
+                          <div className="flex items-center gap-1.5">
+                            {/* Show previous score if modified */}
+                            {prevSc != null && (
+                              <span className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full">
+                                <RotateCcw size={10} />
+                                <span className="line-through opacity-60">{prevSc.toFixed(1)}</span>
+                              </span>
+                            )}
                             <span className="text-[15px] font-extrabold tabular-nums" style={{ color }}>
                               {sc.toFixed(1)}
                             </span>

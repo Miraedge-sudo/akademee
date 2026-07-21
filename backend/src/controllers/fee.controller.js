@@ -1,3 +1,4 @@
+const logger = require('../utils/logger');
 const response = require('../utils/response');
 const feeService = require('../services/fee.service');
 const studentFeeService = require('../services/studentFee.service');
@@ -5,9 +6,9 @@ const studentFeeService = require('../services/studentFee.service');
 class FeeController {
   async createFeeStructure(req, res, next) {
     try {
-      const { name, amount, classId, description } = req.body;
+      const { name, amount, classId, description, dueDate } = req.body;
       const { schoolId } = req;
-      const result = await feeService.create(schoolId, { name, amount, classId, description });
+      const result = await feeService.create(schoolId, { name, amount, classId, description, dueDate });
       response.success(res, 'Fee structure created', result, 201);
     } catch (error) {
       next(error);
@@ -72,12 +73,42 @@ class FeeController {
     try {
       const { classId, feeIds, academicYearId } = req.body;
       const schoolId = req.schoolId || req.user?.schoolId;
+
       if (!classId || !feeIds || !Array.isArray(feeIds)) {
         return response.error(res, 'classId and feeIds array are required', null, 400);
       }
-      const result = await studentFeeService.assignFeesToClass(schoolId, classId, feeIds, academicYearId);
+
+      if (!schoolId) {
+        return response.error(res, 'School ID not found. Authentication required.', null, 401);
+      }
+
+      // Trim UUIDs to avoid whitespace issues
+      // Trim UUIDs to avoid whitespace issues
+      const cleanClassId = typeof classId === 'string' ? classId.trim() : classId;
+      const cleanFeeIds = feeIds.map((id) => (typeof id === 'string' ? id.trim() : id));
+      const cleanAcademicYearId =
+        academicYearId && typeof academicYearId === 'string' ? academicYearId.trim() : null;
+
+      const result = await studentFeeService.assignFeesToClass(
+        schoolId,
+        cleanClassId,
+        cleanFeeIds,
+        cleanAcademicYearId
+      );
+
       response.success(res, 'Fees assigned to class', result, 201);
     } catch (error) {
+      // Log full error details for debugging
+      logger.error('assignFeesToClass failed', {
+        error: error.message,
+        stack: error.stack,
+        code: error.code,
+        detail: error.detail,
+        constraint: error.constraint,
+        body: req.body,
+        reqId: req.reqId,
+        schoolId: req.schoolId || req.user?.schoolId,
+      });
       next(error);
     }
   }

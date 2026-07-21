@@ -17,6 +17,8 @@ import {
   FiUser,
   FiHome,
   FiLoader,
+  FiAlertCircle,
+  FiAlertTriangle,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { getClassById, updateClass, deleteClass } from "../../../core/api/classService";
@@ -147,6 +149,7 @@ export default function ClassDetailPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
   const [removeSubjectConfirm, setRemoveSubjectConfirm] = useState({ open: false, assignmentId: null, subjectName: "" });
+  const [removeTeacherConfirm, setRemoveTeacherConfirm] = useState({ open: false, teacherId: null, teacherName: "" });
 
   // ── Edit form state ──
   const [editForm, setEditForm] = useState({ name: "", levelId: "", seriesId: "", capacity: 40, classTeacherId: "" });
@@ -365,7 +368,7 @@ export default function ClassDetailPage() {
       }
 
       await Promise.all(promises);
-      toast.success(isFr ? "Matières assignées avec succès ✨" : "Subjects assigned ✨");
+      toast.success(isFr ? "Matières assignées avec succès" : "Subjects assigned");
       setSelectedTeacher(null);
       window.location.reload();
     } catch (err) {
@@ -417,7 +420,7 @@ export default function ClassDetailPage() {
       }));
 
       await bulkAssignSubjects(id, subjects);
-      toast.success(isFr ? "Matières ajoutées avec succès ✨" : "Subjects added ✨");
+      toast.success(isFr ? "Matières ajoutées avec succès" : "Subjects added");
       setShowAddSubjectModal(false);
       setSelectedSubjectsForAdd(new Set());
       setSubjectCoefficients({});
@@ -454,7 +457,7 @@ export default function ClassDetailPage() {
     setSavingCoeff(true);
     try {
       await bulkAssignSubjects(id, [{ subjectId: assignment.subjectId, coefficient: coeff }]);
-      toast.success(isFr ? "Coefficient mis à jour ✨" : "Coefficient updated ✨");
+      toast.success(isFr ? "Coefficient mis à jour" : "Coefficient updated");
       setClassSubjectAssignments((prev) =>
         prev.map((a) => (a.id === editCoeffAssignmentId ? { ...a, coefficient: coeff } : a))
       );
@@ -497,6 +500,36 @@ export default function ClassDetailPage() {
     setRemoveSubjectConfirm({ open: false, assignmentId: null, subjectName: "" });
   };
 
+  // ── Remove teacher from class ──
+  const handleRemoveTeacherClick = (teacherId, teacherName) => {
+    setRemoveTeacherConfirm({ open: true, teacherId, teacherName });
+  };
+
+  const handleConfirmRemoveTeacher = async () => {
+    const { teacherId } = removeTeacherConfirm;
+    if (!teacherId) return;
+    try {
+      await removeClassTeacher(id, teacherId);
+      toast.success(isFr ? "Enseignant retiré de la classe" : "Teacher removed from class");
+      // Remove from local state immediately
+      setCls((prev) => ({
+        ...prev,
+        assignedTeachers: (prev.assignedTeachers || []).filter((t) => t.id !== teacherId),
+        classTeacherId: prev.classTeacherId === teacherId ? null : prev.classTeacherId,
+      }));
+      setClassTeacherAssignments((prev) => prev.filter((a) => a.teacherId !== teacherId));
+      setTeacherSubjectsMap((prev) => {
+        const next = { ...prev };
+        delete next[teacherId];
+        return next;
+      });
+    } catch (err) {
+      const msg = err?.response?.data?.message || (isFr ? "Erreur lors du retrait" : "Error removing teacher");
+      toast.error(msg);
+    }
+    setRemoveTeacherConfirm({ open: false, teacherId: null, teacherName: "" });
+  };
+
   // ── Loading ──
   if (loading) {
     return (
@@ -510,7 +543,7 @@ export default function ClassDetailPage() {
   if (error === "NOT_FOUND" || !cls) {
     return (
       <div className="text-center py-20">
-        <div className="text-4xl mb-3">😕</div>
+        <FiAlertCircle className="w-12 h-12 mx-auto text-surface-400 mb-3" />
         <h3 className="font-display text-xl font-bold text-surface-800 dark:text-surface-100 mb-2">
           {isFr ? "Classe introuvable" : "Class not found"}
         </h3>
@@ -524,7 +557,7 @@ export default function ClassDetailPage() {
   if (error) {
     return (
       <div className="text-center py-20">
-        <div className="text-4xl mb-3">⚠️</div>
+        <FiAlertTriangle className="w-12 h-12 mx-auto text-yellow-500 mb-3" />
         <h3 className="font-display text-xl font-bold text-surface-800 dark:text-surface-100 mb-2">
           {isFr ? "Erreur de chargement" : "Error loading class"}
         </h3>
@@ -536,7 +569,7 @@ export default function ClassDetailPage() {
   }
 
   const lvlColor = getLevelColor(cls.name);
-  const enrolled = students.length;
+  const enrolled = cls.studentCount ?? students.length;
   const capacity = cls.capacity || 40;
   const pct = capacity > 0 ? Math.min(Math.round((enrolled / capacity) * 100), 100) : 0;
   const isFull = pct >= 90;
@@ -730,10 +763,14 @@ export default function ClassDetailPage() {
                     <label className={labelClass}>{isFr ? "Professeur titulaire" : "Class teacher"}</label>
                     <p className="text-sm font-semibold text-surface-800 dark:text-surface-100">
                       {(() => {
+                        // First check class_teachers (teacher assignments table)
                         const main = assignedTeachers.find((t) => t.isMain) || assignedTeachers[0];
-                        return main
-                          ? `${main.firstName || ""} ${main.lastName || ""}`.trim()
-                          : isFr ? "Non assigné" : "Not assigned";
+                        if (main) return `${main.firstName || ""} ${main.lastName || ""}`.trim();
+                        // Fallback: check legacy class_teacher_id field on classes table
+                        if (cls.classTeacherId) {
+                          return cls.teacherName || `${cls.teacherFirstName || ""} ${cls.teacherLastName || ""}`.trim() || (isFr ? "Assigné" : "Assigned");
+                        }
+                        return isFr ? "Non assigné" : "Not assigned";
                       })()}
                     </p>
                   </div>
@@ -881,6 +918,16 @@ export default function ClassDetailPage() {
                             {isFr ? "Titulaire" : "Class teacher"}
                           </span>
                         )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveTeacherClick(t.id, `${t.firstName} ${t.lastName}`);
+                          }}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition-all flex-shrink-0"
+                          title={isFr ? "Retirer cet enseignant" : "Remove teacher"}
+                        >
+                          <FiTrash2 className="w-3.5 h-3.5" />
+                        </button>
                         <FiChevronRight className="w-4 h-4 text-surface-300 flex-shrink-0" />
                       </button>
                     );
@@ -1440,6 +1487,20 @@ export default function ClassDetailPage() {
         message={isFr
           ? `Voulez-vous retirer "${removeSubjectConfirm.subjectName}" de cette classe ?`
           : `Remove "${removeSubjectConfirm.subjectName}" from this class?`}
+        confirmLabel={isFr ? "Retirer" : "Remove"}
+        cancelLabel={isFr ? "Annuler" : "Cancel"}
+      />
+
+      {/* ── Confirm Remove Teacher Dialog ── */}
+      <ConfirmDialog
+        isOpen={removeTeacherConfirm.open}
+        onClose={() => setRemoveTeacherConfirm({ open: false, teacherId: null, teacherName: "" })}
+        onConfirm={handleConfirmRemoveTeacher}
+        variant="warning"
+        title={isFr ? "Retirer l'enseignant" : "Remove teacher"}
+        message={isFr
+          ? `Voulez-vous retirer "${removeTeacherConfirm.teacherName}" de ${cls?.name} ? Il ne pourra plus voir cette classe ni ses matières.`
+          : `Remove "${removeTeacherConfirm.teacherName}" from ${cls?.name}? They will no longer have access to this class or its subjects.`}
         confirmLabel={isFr ? "Retirer" : "Remove"}
         cancelLabel={isFr ? "Annuler" : "Cancel"}
       />

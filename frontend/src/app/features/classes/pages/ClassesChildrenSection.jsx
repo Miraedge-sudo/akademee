@@ -205,7 +205,7 @@ function LevelGroup({ levelKey, meta, classes, collapsed, onToggle, pc, lang }) 
           {classes.map((cls) => {
             const lvlColor = getLevelColor(cls.name);
             const pct = cls.capacity > 0
-              ? Math.min(Math.round(((cls.studentsCount || 0) / cls.capacity) * 100), 100)
+              ? Math.min(Math.round(((cls.studentCount || 0) / cls.capacity) * 100), 100)
               : 0;
             const isFull = pct >= 90;
 
@@ -249,7 +249,7 @@ function LevelGroup({ levelKey, meta, classes, collapsed, onToggle, pc, lang }) 
                         : undefined
                     }
                   >
-                    {cls.studentsCount || 0} / {cls.capacity || "—"}
+                    {cls.studentCount || 0} / {cls.capacity || "—"}
                   </span>
                 </div>
 

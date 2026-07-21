@@ -7,7 +7,7 @@ const roleMiddleware = require('../middleware/role.middleware');
 const tenantMiddleware = require('../middleware/tenant.middleware');
 const validateMiddleware = require('../middleware/validate.middleware');
 const auditMiddleware = require('../middleware/audit.middleware');
-const { createFeeValidator, updateFeeValidator } = require('../validators/fee.validator');
+const { createFeeValidator, updateFeeValidator, assignFeesValidator } = require('../validators/fee.validator');
 const { standardLimiter } = require('../middleware/rateLimiter.middleware');
 
 const router = express.Router();
@@ -50,6 +50,8 @@ router.post(
   '/fees/assign',
   authMiddleware,
   roleMiddleware(['admin']),
+  assignFeesValidator,
+  validateMiddleware,
   standardLimiter,
   auditMiddleware('ASSIGN', 'student_fees'),
   feeController.assignFeesToClass

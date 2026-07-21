@@ -104,6 +104,15 @@ function hexToRgb(hex) {
     : "8,80,65";
 }
 
+// ── Get role config with ADMIN color overridden by school primaryColor ──
+function getRoleConfig(role, pc) {
+  const config = ROLES_CONFIG[role];
+  if (role === "ADMIN" && pc) {
+    return { ...config, color: pc };
+  }
+  return config;
+}
+
 const SELECT_ARROW =
   'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'8\' viewBox=\'0 0 12 8\'%3E%3Cpath d=\'M1 1l5 5 5-5\' stroke=\'%239BA59C\' stroke-width=\'1.5\' fill=\'none\' stroke-linecap=\'round\'/%3E%3C/svg%3E';
 
@@ -121,11 +130,10 @@ function FieldInput({ label, required, error, hint, className = "", ...props }) 
       )}
       <input
         id={id}
-        className={`w-full h-[46px] px-3.5 border-[1.5px] border-surface-200 dark:border-surface-600 
+        className={`primary-focus-ring w-full h-[46px] px-3.5 border-[1.5px] border-surface-200 dark:border-surface-600 
           rounded-[10px] font-sans text-sm text-surface-800 dark:text-surface-100 
           bg-white dark:bg-surface-800 outline-none transition-all duration-200 
           placeholder:text-surface-300 dark:placeholder:text-surface-500
-          focus:border-primary-600 focus:shadow-[0_0_0_4px_rgba(8,80,65,0.09)]
           ${error ? "!border-red-500 !shadow-[0_0_0_4px_rgba(239,68,68,0.07)]" : ""}
           ${className}`}
         {...props}
@@ -149,11 +157,10 @@ function SelectField({ label, required, error, hint, children, className = "", v
         <select
           value={value}
           onChange={onChange}
-          className={`w-full h-[46px] px-3.5 pr-9 border-[1.5px] border-surface-200 dark:border-surface-600 
+          className={`primary-focus-ring w-full h-[46px] px-3.5 pr-9 border-[1.5px] border-surface-200 dark:border-surface-600 
             rounded-[10px] font-sans text-sm text-surface-800 dark:text-surface-100 
             bg-white dark:bg-surface-800 outline-none transition-all duration-200
             appearance-none cursor-pointer
-            focus:border-primary-600 focus:shadow-[0_0_0_4px_rgba(8,80,65,0.09)]
             ${error ? "!border-red-500" : ""}
             ${className}`}
           style={{ backgroundImage: `url("${SELECT_ARROW}")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", ...style }}
@@ -197,8 +204,8 @@ function ChecklistItem({ label, done, optional }) {
         style={
           done
             ? {
-                backgroundColor: "var(--chk-color, #085041)",
-                borderColor: "var(--chk-color, #085041)",
+                backgroundColor: "var(--primary-color, #085041)",
+                borderColor: "var(--primary-color, #085041)",
               }
             : {
                 backgroundColor: "#EEF0EC",
@@ -579,7 +586,7 @@ export default function CreateUserPage() {
     }
   }, [errors]);
 
-  const roleConfig = ROLES_CONFIG[selectedRole];
+  const roleConfig = getRoleConfig(selectedRole, pc);
 
   // ── Preview computed ──
   const previewName = useMemo(() => {
@@ -659,7 +666,7 @@ export default function CreateUserPage() {
         }
 
         await updateUser(editId, updatePayload);
-        toast.success(isFr ? "Utilisateur mis à jour ✨" : "User updated ✨");
+        toast.success(isFr ? "Utilisateur mis à jour" : "User updated");
         navigate("/dashboard/users");
         return;
       }
@@ -969,7 +976,7 @@ export default function CreateUserPage() {
     : "";
 
   const inputClass =
-    "w-full h-[46px] px-3.5 border-[1.5px] border-surface-200 dark:border-surface-600 rounded-[10px] font-sans text-sm text-surface-800 dark:text-surface-100 bg-white dark:bg-surface-800 outline-none transition-all duration-200 placeholder:text-surface-300 dark:placeholder:text-surface-500 focus:border-primary-600 focus:shadow-[0_0_0_4px_rgba(8,80,65,0.09)]";
+    "primary-focus-ring w-full h-[46px] px-3.5 border-[1.5px] border-surface-200 dark:border-surface-600 rounded-[10px] font-sans text-sm text-surface-800 dark:text-surface-100 bg-white dark:bg-surface-800 outline-none transition-all duration-200 placeholder:text-surface-300 dark:placeholder:text-surface-500";
 
   return (
     <div className="max-w-[1060px] mx-auto pb-20">
@@ -1114,19 +1121,22 @@ export default function CreateUserPage() {
             )}
             {!isEditing && (
               <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 mb-7">
-                {Object.entries(ROLES_CONFIG).map(([role, config]) => (
-                  <RoleCard
-                    key={role}
-                    role={role}
-                    config={config}
-                    selected={selectedRole === role}
-                    onClick={() => {
-                      setSelectedRole(role);
-                      setSelectedSubjects(new Set());
-                      setSelectedClasses(new Set());
-                    }}
-                  />
-                ))}
+                {Object.entries(ROLES_CONFIG).map(([role, baseConfig]) => {
+                  const config = getRoleConfig(role, pc);
+                  return (
+                    <RoleCard
+                      key={role}
+                      role={role}
+                      config={config}
+                      selected={selectedRole === role}
+                      onClick={() => {
+                        setSelectedRole(role);
+                        setSelectedSubjects(new Set());
+                        setSelectedClasses(new Set());
+                      }}
+                    />
+                  );
+                })}
               </div>
             )}
 

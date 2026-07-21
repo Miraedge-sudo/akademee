@@ -239,6 +239,7 @@ export const API_ENDPOINTS = {
     STATS: "/api/dashboard/stats",
     RECENT_ACTIVITIES: "/api/dashboard/activities",
     REVENUE: "/api/dashboard/revenue",
+    FINANCE_STATS: "/api/dashboard/finance-stats",
   },
 
   // Levels & Series

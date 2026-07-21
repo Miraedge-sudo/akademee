@@ -158,6 +158,151 @@ class DashboardService {
     }));
   }
 
+  async getFinanceStats(schoolId) {
+    // If no academicYearId provided, use the active academic year
+    const [activeYear] = await sql`
+      SELECT academic_year_id FROM academic_years 
+      WHERE school_id = ${schoolId} AND is_current = true
+      LIMIT 1
+    `;
+    const academicYearId = activeYear?.academic_year_id || null;
+
+    // 1. Monthly collections (last 7 months aggregated by month)
+    const monthlyData = await sql`
+      SELECT
+        TO_CHAR(DATE_TRUNC('month', p.created_at), 'Mon') AS month_label,
+        EXTRACT(MONTH FROM p.created_at)::int AS month_num,
+        EXTRACT(YEAR FROM p.created_at)::int AS year,
+        COALESCE(SUM(p.amount), 0)::numeric AS total
+      FROM payments p
+      WHERE p.school_id = ${schoolId}
+        AND p.status = 'completed'
+        AND p.created_at >= NOW() - INTERVAL '7 months'
+        ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
+      GROUP BY DATE_TRUNC('month', p.created_at), EXTRACT(MONTH FROM p.created_at), EXTRACT(YEAR FROM p.created_at)
+      ORDER BY year ASC, month_num ASC
+    `;
+
+    const monthlyTotal = Number(monthlyData.reduce((s, r) => s + Number(r.total), 0));
+
+    // 2. Monthly collections by class (for the class filter in the chart)
+    const monthlyByClass = await sql`
+      SELECT
+        TO_CHAR(DATE_TRUNC('month', p.created_at), 'Mon') AS month_label,
+        EXTRACT(MONTH FROM p.created_at)::int AS month_num,
+        EXTRACT(YEAR FROM p.created_at)::int AS year,
+        COALESCE(c.name, 'Unassigned') AS class_name,
+        COALESCE(SUM(p.amount), 0)::numeric AS total
+      FROM payments p
+      LEFT JOIN enrollments e ON p.student_id = e.student_id AND e.status = 'active'
+      LEFT JOIN classes c ON e.class_id = c.class_id
+      WHERE p.school_id = ${schoolId}
+        AND p.status = 'completed'
+        AND p.created_at >= NOW() - INTERVAL '7 months'
+        ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
+      GROUP BY DATE_TRUNC('month', p.created_at), EXTRACT(MONTH FROM p.created_at), EXTRACT(YEAR FROM p.created_at), c.name
+      ORDER BY year ASC, month_num ASC, class_name ASC
+    `;
+
+    // 3. Collection by class (aggregated totals per class)
+    const collectionByClass = await sql`
+      SELECT
+        c.class_id,
+        c.name AS class_name,
+        COALESCE(SUM(sf.amount_due), 0)::numeric AS total_fees,
+        COALESCE(SUM(p.amount), 0)::numeric AS total_paid
+      FROM classes c
+      LEFT JOIN enrollments e ON c.class_id = e.class_id AND e.status = 'active'
+      LEFT JOIN student_fees sf ON e.student_id = sf.student_id
+      LEFT JOIN payments p ON e.student_id = p.student_id AND p.status = 'completed'
+        ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
+      WHERE c.school_id = ${schoolId}
+      GROUP BY c.class_id, c.name
+      HAVING COALESCE(SUM(sf.amount_due), 0) > 0
+      ORDER BY c.name ASC
+    `;
+
+    // 4. Outstanding alerts — students with highest unpaid balances
+    const outstandingAlerts = await sql`
+      SELECT DISTINCT ON (st.student_id)
+        st.student_id,
+        CONCAT(u.first_name, ' ', u.last_name) AS student_name,
+        COALESCE(c.name, 'N/A') AS class_name,
+        COALESCE(SUM(sf.amount_due) OVER (PARTITION BY st.student_id), 0)::numeric AS total_due,
+        COALESCE(SUM(p.amount) OVER (PARTITION BY st.student_id), 0)::numeric AS total_paid,
+        (COALESCE(SUM(sf.amount_due) OVER (PARTITION BY st.student_id), 0) - COALESCE(SUM(p.amount) OVER (PARTITION BY st.student_id), 0))::numeric AS balance,
+        GREATEST(MAX(p.created_at) OVER (PARTITION BY st.student_id), st.created_at) AS last_activity
+      FROM students st
+      LEFT JOIN users u ON st.user_id = u.user_id
+      LEFT JOIN enrollments e ON st.student_id = e.student_id AND e.status = 'active'
+      LEFT JOIN classes c ON e.class_id = c.class_id
+      LEFT JOIN student_fees sf ON st.student_id = sf.student_id
+      LEFT JOIN payments p ON st.student_id = p.student_id AND p.status = 'completed'
+      WHERE st.school_id = ${schoolId}
+        AND st.status = 'active'
+      ORDER BY st.student_id
+    `;
+
+    // Process outstanding alerts: filter to those with balance > 0 and rank by severity
+    const defaults = outstandingAlerts
+      .filter(r => Number(r.balance) > 0)
+      .sort((a, b) => Number(b.balance) - Number(a.balance))
+      .slice(0, 10)
+      .map(r => {
+        const balance = Number(r.balance);
+        let level;
+        if (balance >= 80000) level = 'critical';
+        else if (balance >= 50000) level = 'high';
+        else if (balance >= 30000) level = 'medium';
+        else level = 'low';
+
+        return {
+          name: r.student_name,
+          className: r.class_name,
+          amount: balance,
+          since: r.last_activity ? new Date(r.last_activity).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—',
+          level,
+        };
+      });
+
+    // 5. Fee status overview (counts by student fee_status)
+    const [feeStatusCounts] = await sql`
+      SELECT
+        COALESCE(SUM(CASE WHEN fee_status = 'paid' THEN 1 ELSE 0 END), 0)::int AS paid,
+        COALESCE(SUM(CASE WHEN fee_status = 'partial' THEN 1 ELSE 0 END), 0)::int AS partial,
+        COALESCE(SUM(CASE WHEN fee_status IN ('pending', 'unpaid') THEN 1 ELSE 0 END), 0)::int AS unpaid
+      FROM students
+      WHERE school_id = ${schoolId} AND status = 'active'
+    `;
+
+    const totalCollected = monthlyTotal;
+    const totalOutstanding = defaults.reduce((s, d) => s + d.amount, 0);
+    const collectionRate = totalCollected > 0
+      ? Math.round((totalCollected / (totalCollected + totalOutstanding)) * 100)
+      : 0;
+
+    return {
+      monthlyCollections: {
+        overall: monthlyData.map(r => ({ month: r.month_label, total: Number(r.total) })),
+        byClass: monthlyByClass.map(r => ({ month: r.month_label, className: r.class_name, total: Number(r.total) })),
+      },
+      collectionByClass: collectionByClass.map(r => ({
+        name: r.class_name,
+        paid: Number(r.total_paid),
+        total: Number(r.total_fees),
+      })),
+      outstandingAlerts: defaults,
+      feeStatusOverview: {
+        paid: Number(feeStatusCounts.paid),
+        partial: Number(feeStatusCounts.partial),
+        unpaid: Number(feeStatusCounts.unpaid),
+      },
+      totalCollected,
+      outstanding: totalOutstanding,
+      collectionRate,
+    };
+  }
+
   async getRevenueData(schoolId, { months = 6, academicYearId } = {}) {
     // If no academicYearId provided, use the active academic year
     if (!academicYearId) {

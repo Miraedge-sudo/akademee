@@ -37,7 +37,7 @@ import {
   FiLoader,
 } from "react-icons/fi";
 
-// ── Role config ──
+// ── Role config (base colors — ADMIN is overridden at render time with school primaryColor)
 const ROLE_META = {
   ADMIN: { icon: FiShield, color: "#085041", bg: "#E1F5EE", label: "Admin", labelFr: "Admin" },
   TEACHER: { icon: FiBookOpen, color: "#3B82F6", bg: "#EFF6FF", label: "Teacher", labelFr: "Enseignant" },
@@ -46,6 +46,14 @@ const ROLE_META = {
   SECRETARY: { icon: FiClipboard, color: "#EC4899", bg: "#FDF2F8", label: "Secretary", labelFr: "Secrétaire" },
   PARENT: { icon: FiHeart, color: "#14B8A6", bg: "#F0FDFA", label: "Parent", labelFr: "Parent" },
 };
+
+function getRoleMeta(role, pc) {
+  const meta = ROLE_META[role] || ROLE_META.ADMIN;
+  if (role === "ADMIN" && pc) {
+    return { ...meta, color: pc };
+  }
+  return meta;
+}
 
 const ROLES = ["ADMIN", "TEACHER", "STUDENT", "ACCOUNTANT", "SECRETARY"];
 
@@ -259,18 +267,16 @@ export default function UsersListPage() {
     const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return r ? `${parseInt(r[1], 16)},${parseInt(r[2], 16)},${parseInt(r[3], 16)}` : "8,80,65";
   };
+  const pcRgb = htr(pc);
 
-  // ── Role helper ──
-  const roleClass = (role) => {
-    const m = {
-      ADMIN: "bg-[rgba(8,80,65,0.09)] text-[#085041] border-[rgba(8,80,65,0.18)]",
-      TEACHER: "bg-[rgba(59,130,246,0.09)] text-[#3B82F6] border-[rgba(59,130,246,0.2)]",
-      STUDENT: "bg-[rgba(139,92,246,0.09)] text-[#8B5CF6] border-[rgba(139,92,246,0.2)]",
-      ACCOUNTANT: "bg-[rgba(245,158,11,0.09)] text-[#F59E0B] border-[rgba(245,158,11,0.2)]",
-      SECRETARY: "bg-[rgba(236,72,153,0.09)] text-[#EC4899] border-[rgba(236,72,153,0.2)]",
-      PARENT: "bg-[rgba(20,184,166,0.09)] text-[#14B8A6] border-[rgba(20,184,166,0.2)]",
+  // ── Role helper — returns inline style + remaining class for the role badge ──
+  const roleStyle = (role) => {
+    const meta = getRoleMeta(role, pc);
+    return {
+      background: `${meta.color}17`,
+      color: meta.color,
+      borderColor: `${meta.color}2E`,
     };
-    return m[role] || m.ADMIN;
   };
 
   // ── KPI Chip ──
@@ -278,8 +284,9 @@ export default function UsersListPage() {
     <button
       onClick={onClick}
       className={`relative overflow-hidden rounded-xl border-2 p-3.5 sm:p-4 shadow-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md text-left ${
-        active ? "border-[#085041] bg-white" : "border-surface-100 dark:border-surface-700 bg-white dark:bg-surface-800"
+        active ? "bg-white" : "border-surface-100 dark:border-surface-700 bg-white dark:bg-surface-800"
       }`}
+      style={active ? { borderColor: pc } : undefined}
     >
       <div className="absolute top-0 left-[-100%] w-[40%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
       <div className="flex items-center justify-between mb-2">
@@ -312,8 +319,9 @@ export default function UsersListPage() {
               <th className="w-10 px-3 py-2.5">
                 <div
                   className={`w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${
-                    allPageSelected ? "bg-[#085041] border-[#085041]" : "border-surface-200 dark:border-surface-500"
+                    allPageSelected ? "" : "border-surface-200 dark:border-surface-500"
                   }`}
+                  style={allPageSelected ? { backgroundColor: pc, borderColor: pc } : undefined}
                   onClick={toggleSelectAll}
                 >
                   {allPageSelected && (
@@ -352,21 +360,25 @@ export default function UsersListPage() {
           </thead>
           <tbody>
             {paginated.map((u) => {
-              const meta = ROLE_META[u.role] || ROLE_META.ADMIN;
+              const meta = getRoleMeta(u.role, pc);
               const initials = (u.firstName[0] + u.lastName[0]).toUpperCase();
               const isChecked = selectedIds.has(u.id);
               const Icon = meta.icon;
               return (<tr
                     key={u.id}
-                    className="group border-t border-surface-50 dark:border-surface-700/50 hover:bg-[rgba(8,80,65,0.025)] dark:hover:bg-surface-700/30 transition-colors"
+                    className="group border-t border-surface-50 dark:border-surface-700/50 transition-colors"
+                    style={{ '--hover-rgb': pcRgb }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = `rgba(${pcRgb},0.025)`}
+                    onMouseLeave={(e) => e.currentTarget.style.background = ''}
                   >
                   <td className="px-3 py-3">
                     <div
                       className={`w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${
                         isChecked
-                          ? "bg-[#085041] border-[#085041] scale-110"
+                          ? "scale-110"
                           : "border-surface-200 dark:border-surface-500"
                       }`}
+                      style={isChecked ? { backgroundColor: pc, borderColor: pc } : undefined}
                       onClick={() => toggleSelect(u.id)}
                     >
                       {isChecked && (
@@ -400,7 +412,8 @@ export default function UsersListPage() {
                   </td>
                   <td className="px-3 py-3">
                     <span
-                      className={`inline-flex items-center gap-1.5 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border ${roleClass(u.role)}`}
+                      className="inline-flex items-center gap-1.5 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border"
+                      style={roleStyle(u.role)}
                     >
                       <Icon className="w-3 h-3" strokeWidth={2.5} />
                       {u.role}
@@ -465,7 +478,7 @@ export default function UsersListPage() {
                           className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-110 hover:border-teal-200 hover:bg-teal-50 hover:shadow-sm transition-all"
                           title={isFr ? "Modifier" : "Edit"}
                         >
-                          <FiEdit2 className="w-3 h-3" style={{ color: "#085041" }} />
+                          <FiEdit2 className="w-3 h-3" style={{ color: pc }} />
                         </button>
                       )}
                       <button
@@ -532,9 +545,10 @@ export default function UsersListPage() {
                 onClick={() => changePage(i + 1)}
                 className={`w-8 h-8 rounded-md border flex items-center justify-center text-[13px] font-semibold transition-all hover:scale-105 ${
                   page === i + 1
-                    ? "bg-[#085041] border-[#085041] text-white"
+                    ? "text-white"
                     : "border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-500 dark:text-surface-400 hover:border-surface-200 hover:shadow-sm"
                 }`}
+                style={page === i + 1 ? { backgroundColor: pc, borderColor: pc } : undefined}
               >
                 {i + 1}
               </button>
@@ -556,7 +570,7 @@ export default function UsersListPage() {
   const renderCardsView = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 animate-fadeIn">
       {paginated.map((u) => {
-        const meta = ROLE_META[u.role] || ROLE_META.ADMIN;
+        const meta = getRoleMeta(u.role, pc);
         const initials = (u.firstName[0] + u.lastName[0]).toUpperCase();
         const Icon = meta.icon;
         return (
@@ -589,7 +603,8 @@ export default function UsersListPage() {
             </div>
             <div className="text-xs text-surface-400 mb-3 truncate">{u.email}</div>
             <span
-              className={`inline-flex items-center gap-1.5 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border mb-3 ${roleClass(u.role)}`}
+              className="inline-flex items-center gap-1.5 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border mb-3"
+              style={roleStyle(u.role)}
             >
               <Icon className="w-3 h-3" strokeWidth={2.5} />
               {u.role}
@@ -631,16 +646,16 @@ export default function UsersListPage() {
             className="w-8 h-8 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center text-[13px] font-semibold text-surface-500 hover:scale-105 transition-all disabled:opacity-40 disabled:cursor-default"
           >
             <FiChevronLeft className="w-3.5 h-3.5" />
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => (
+          </button>          {Array.from({ length: totalPages }, (_, i) => (
             <button
               key={i}
               onClick={() => changePage(i + 1)}
               className={`w-8 h-8 rounded-md border flex items-center justify-center text-[13px] font-semibold transition-all hover:scale-105 ${
                 page === i + 1
-                  ? "bg-[#085041] border-[#085041] text-white"
+                  ? "text-white"
                   : "border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-500 hover:border-surface-200"
               }`}
+              style={page === i + 1 ? { backgroundColor: pc, borderColor: pc } : undefined}
             >
               {i + 1}
             </button>
@@ -697,7 +712,7 @@ export default function UsersListPage() {
       {/* ── KPI chips ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 mb-5">
         <KpiChip role="all" label={isFr ? "Tous" : "All users"} count={counts.all} icon={FiUser} bgColor="#F7F8F6" textColor="#5C665E" active={roleFilter === "all"} onClick={() => handleRoleFilter("all")} />
-        <KpiChip role="ADMIN" label={isFr ? "Admins" : "Admins"} count={counts.ADMIN} icon={FiShield} bgColor="#E1F5EE" textColor="#085041" active={roleFilter === "ADMIN"} onClick={() => handleRoleFilter("ADMIN")} />
+        <KpiChip role="ADMIN" label={isFr ? "Admins" : "Admins"} count={counts.ADMIN} icon={FiShield} bgColor="#E1F5EE" textColor={pc} active={roleFilter === "ADMIN"} onClick={() => handleRoleFilter("ADMIN")} />
         <KpiChip role="TEACHER" label={isFr ? "Enseignants" : "Teachers"} count={counts.TEACHER} icon={FiBookOpen} bgColor="rgba(59,130,246,0.08)" textColor="#3B82F6" active={roleFilter === "TEACHER"} onClick={() => handleRoleFilter("TEACHER")} />
         <KpiChip role="STUDENT" label={isFr ? "Élèves" : "Students"} count={counts.STUDENT} icon={FiAward} bgColor="rgba(139,92,246,0.08)" textColor="#8B5CF6" active={roleFilter === "STUDENT"} onClick={() => handleRoleFilter("STUDENT")} />
         <KpiChip role="ACCOUNTANT" label={isFr ? "Comptables" : "Accountants"} count={counts.ACCOUNTANT} icon={FiDollarSign} bgColor="rgba(245,158,11,0.08)" textColor="#F59E0B" active={roleFilter === "ACCOUNTANT"} onClick={() => handleRoleFilter("ACCOUNTANT")} />
@@ -738,9 +753,10 @@ export default function UsersListPage() {
               onClick={() => handleRoleFilter(role)}
               className={`px-3 py-1.5 rounded-md text-[12.5px] font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all ${
                 roleFilter === role
-                  ? "bg-[#085041] text-white shadow-md scale-[1.02]"
+                  ? "text-white shadow-md scale-[1.02]"
                   : "text-surface-500 hover:bg-surface-50 dark:hover:bg-surface-700"
               }`}
+              style={roleFilter === role ? { backgroundColor: pc } : undefined}
             >
               {label}
               <span
@@ -770,17 +786,15 @@ export default function UsersListPage() {
           <div className="flex gap-0.5 bg-white dark:bg-surface-800 border border-surface-100 dark:border-surface-600 rounded-md p-0.5 shadow-sm">
             <button
               onClick={() => setView("table")}
-              className={`w-8 h-8 rounded flex items-center justify-center transition-all ${
-                view === "table" ? "bg-[#085041]" : "bg-transparent"
-              }`}
+              className="w-8 h-8 rounded flex items-center justify-center transition-all"
+              style={view === "table" ? { backgroundColor: pc } : { backgroundColor: "transparent" }}
             >
               <FiList className={`w-3.5 h-3.5 ${view === "table" ? "text-white" : "text-surface-400"}`} strokeWidth={2} />
             </button>
             <button
               onClick={() => setView("cards")}
-              className={`w-8 h-8 rounded flex items-center justify-center transition-all ${
-                view === "cards" ? "bg-[#085041]" : "bg-transparent"
-              }`}
+              className="w-8 h-8 rounded flex items-center justify-center transition-all"
+              style={view === "cards" ? { backgroundColor: pc } : { backgroundColor: "transparent" }}
             >
               <FiGrid className={`w-3.5 h-3.5 ${view === "cards" ? "text-white" : "text-surface-400"}`} strokeWidth={2} />
             </button>

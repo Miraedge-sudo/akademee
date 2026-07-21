@@ -34,6 +34,16 @@ class DashboardController {
       next(error);
     }
   }
+
+  async getFinanceStats(req, res, next) {
+    try {
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const stats = await dashboardService.getFinanceStats(schoolId);
+      response.success(res, 'Finance stats retrieved', stats);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new DashboardController();

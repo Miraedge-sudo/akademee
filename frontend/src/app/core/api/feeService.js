@@ -34,6 +34,38 @@ export async function getFinanceReports(params = {}) {
 }
 
 /**
+ * Create a new fee structure
+ */
+export async function createFee(data) {
+  const response = await api.post(API_ENDPOINTS.FINANCE.FEES, data);
+  return response.data.data;
+}
+
+/**
+ * Update a fee structure
+ */
+export async function updateFee(id, data) {
+  const response = await api.put(API_ENDPOINTS.FINANCE.FEE(id), data);
+  return response.data.data;
+}
+
+/**
+ * Delete a fee structure
+ */
+export async function deleteFee(id) {
+  const response = await api.delete(API_ENDPOINTS.FINANCE.FEE(id));
+  return response.data.data;
+}
+
+/**
+ * Assign fees to a class
+ */
+export async function assignFeesToClass(data) {
+  const response = await api.post(API_ENDPOINTS.FINANCE.ASSIGN_FEES, data);
+  return response.data.data;
+}
+
+/**
  * Get fee calculation student summary
  */
 export async function getStudentFeeSummary(studentId) {

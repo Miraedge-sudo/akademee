@@ -25,3 +25,12 @@ export async function getRevenueData(params = {}) {
   const response = await api.get(API_ENDPOINTS.DASHBOARD.REVENUE, { params });
   return response.data.data;
 }
+
+/**
+ * Récupère les statistiques finance détaillées (monthly collections,
+ * collection by class, outstanding alerts, fee status overview)
+ */
+export async function getFinanceStats() {
+  const response = await api.get(API_ENDPOINTS.DASHBOARD.FINANCE_STATS);
+  return response.data.data;
+}
