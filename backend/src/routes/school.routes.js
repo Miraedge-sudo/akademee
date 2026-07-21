@@ -15,6 +15,7 @@ const {
   updateSchoolValidator,
   registerSchoolValidator,
   checkSubdomainValidator,
+  resendVerificationRequestValidator,
   getSchoolValidator,
 } = require('../validators/school.validator');
 const { saveOnboardingValidator } = require('../validators/onboarding.validator');
@@ -26,6 +27,14 @@ const registerLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: { success: false, message: 'Too many registration attempts. Try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const verificationRequestLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 5,
+  message: { success: false, message: 'Too many verification email requests. Try again tomorrow.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -52,6 +61,13 @@ router.get('/templates', schoolController.getTemplates);
 
 /** Verify school email via token link (sent over SMTP after registration) */
 router.get('/verify-email', onboardingController.verifyEmail);
+router.post(
+  '/resend-verification-request',
+  verificationRequestLimiter,
+  resendVerificationRequestValidator,
+  validateMiddleware,
+  schoolController.resendVerificationRequest
+);
 
 // ── Protected onboarding routes (tenant-scoped by JWT schoolId) ──
 

@@ -90,16 +90,16 @@ export default function RegisterPage() {
       if (response.data.success) {
         const { data } = response.data;
 
-        // Cookies are set by the backend — no manual token storage needed
-
         // Save subdomain for subdomain routing
-        const schoolSubdomain = data?.school?.subdomain || formData.subdomain;
+        const schoolSubdomain = data?.subdomain || formData.subdomain;
         if (schoolSubdomain) {
           saveSubdomain(schoolSubdomain);
         }
 
-        // Redirect to onboarding
-        window.location.href = "/onboarding";
+        // Redirect to verification pending page with school info and verification URLs for dev fallback
+        const schoolVerifyUrl = data?.schoolVerificationUrl ? encodeURIComponent(data.schoolVerificationUrl) : '';
+        const adminVerifyUrl = data?.adminVerificationUrl ? encodeURIComponent(data.adminVerificationUrl) : '';
+        window.location.href = `/verify-email?subdomain=${encodeURIComponent(schoolSubdomain)}&schoolName=${encodeURIComponent(data?.schoolName || '')}&schoolVerifyUrl=${schoolVerifyUrl}&adminVerifyUrl=${adminVerifyUrl}`;
       }
     } catch (err) {
       setError(

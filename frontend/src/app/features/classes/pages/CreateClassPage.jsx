@@ -141,11 +141,16 @@ export default function CreateClassPage() {
         classTeacherId: form.classTeacherId || null,
       };
 
+      // Convert empty strings to null for optional fields
+      if (payload.levelId === "") payload.levelId = null;
+      if (payload.seriesId === "") payload.seriesId = null;
+      if (payload.classTeacherId === "") payload.classTeacherId = null;
+
       if (isEditing) {
         await updateClass(id, payload);
         toast.success(isFr ? "Classe modifiée !" : "Class updated!");
       } else {
-        await createClass({ ...payload, studentsCount: 0 });
+        await createClass(payload);
         toast.success(isFr ? "Classe créée !" : "Class created!");
       }
       navigate("/dashboard/classes");

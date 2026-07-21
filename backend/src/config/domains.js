@@ -18,7 +18,7 @@ const domains = {
   prodTenantDomain: process.env.TENANT_PROD_DOMAIN || 'akademee.com',
 
   /** Frontend port in development */
-  frontendPort: process.env.FRONTEND_PORT || '3000',
+  frontendPort: process.env.FRONTEND_PORT || '3001',
 
   /** Backend API base URL */
   apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:5000',

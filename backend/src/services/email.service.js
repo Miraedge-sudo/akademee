@@ -2,9 +2,27 @@
  * Email Service — sends school verification emails via SMTP (Nodemailer).
  */
 
+const fs = require('fs');
+const path = require('path');
 const nodemailer = require('nodemailer');
 const emailConfig = require('../config/email');
 const domains = require('../config/domains');
+
+const BRAND_LOGO_PATH = path.resolve(__dirname, '../../../frontend/src/assets/Logo.png');
+
+function getBrandAttachments() {
+  if (!fs.existsSync(BRAND_LOGO_PATH)) {
+    return [];
+  }
+
+  return [
+    {
+      filename: 'akademee-logo.png',
+      path: BRAND_LOGO_PATH,
+      cid: 'akademee-logo',
+    },
+  ];
+}
 
 function getTransporter() {
   if (!emailConfig.isConfigured) {
@@ -18,12 +36,32 @@ function getTransporter() {
   });
 }
 
-function buildVerificationUrl(token, subdomain) {
+function buildSchoolVerificationUrl(token, subdomain) {
   const protocol = domains.getProtocol();
   const domain = domains.getActiveTenantDomain();
-  const port = domains.isProduction ? '' : `:${domains.frontendPort}`;
-  const base = `${protocol}://${subdomain}.${domain}${port}`;
-  return `${base}/verify-email?token=${encodeURIComponent(token)}`;
+
+  if (domains.isProduction) {
+    const base = `${protocol}://${subdomain}.${domain}`;
+    return `${base}/verify-email?type=school&token=${encodeURIComponent(token)}`;
+  } else {
+    // In development, use main domain with subdomain as query param for better compatibility
+    const frontendUrl = process.env.FRONTEND_URL || `http://localhost:${domains.frontendPort}`;
+    return `${frontendUrl}/verify-email?type=school&token=${encodeURIComponent(token)}&subdomain=${encodeURIComponent(subdomain)}`;
+  }
+}
+
+function buildAdminVerificationUrl(token, subdomain) {
+  const protocol = domains.getProtocol();
+  const domain = domains.getActiveTenantDomain();
+
+  if (domains.isProduction) {
+    const base = `${protocol}://${subdomain}.${domain}`;
+    return `${base}/verify-email?type=admin&token=${encodeURIComponent(token)}`;
+  } else {
+    // In development, use main domain with subdomain as query param for better compatibility
+    const frontendUrl = process.env.FRONTEND_URL || `http://localhost:${domains.frontendPort}`;
+    return `${frontendUrl}/verify-email?type=admin&token=${encodeURIComponent(token)}&subdomain=${encodeURIComponent(subdomain)}`;
+  }
 }
 
 function buildResetPasswordUrl(token) {
@@ -34,10 +72,14 @@ function buildResetPasswordUrl(token) {
 }
 
 function brandTemplate(bodyHtml) {
+  const logoMarkup = fs.existsSync(BRAND_LOGO_PATH)
+    ? '<img src="cid:akademee-logo" alt="Akademee" style="height:52px" />'
+    : '<div style="font-size:28px;font-weight:700;color:#085041">Akademee</div>';
+
   return `
     <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#2a3029">
       <div style="text-align:center;padding:32px 0 16px">
-        <img src="https://res.cloudinary.com/drpzwluhj/image/upload/v1/akademee_logo" alt="Akademee" style="height:40px" />
+        ${logoMarkup}
       </div>
       ${bodyHtml}
       <hr style="border:none;border-top:1px solid #e2e8e4;margin:32px 0 16px" />
@@ -52,9 +94,11 @@ class EmailService {
   /**
    * Send verification email to school contact and admin after registration.
    */
-  async sendSchoolVerificationEmail({ schoolName, subdomain, recipients, token }) {
-    const verifyUrl = buildVerificationUrl(token, subdomain);
-    const recipientList = [...new Set(recipients.filter(Boolean))];
+  async sendSchoolVerificationEmail({ schoolName, subdomain, email, token }) {
+    const verifyUrl = buildSchoolVerificationUrl(token, subdomain);
+    const recipientList = [email].filter(Boolean);
+
+    console.log('[EmailService] School verification URL:', verifyUrl, 'token:', token);
 
     if (!emailConfig.isConfigured) {
       console.warn('[EmailService] SMTP not configured — verification URL (dev only):', verifyUrl);
@@ -66,7 +110,7 @@ class EmailService {
       <h2 style="color:#085041">Verify your Akademee campus</h2>
       <p>Hello,</p>
       <p>Thank you for registering <strong>${schoolName}</strong> on Akademee.</p>
-      <p>Please confirm your school email to activate login and publish your campus website:</p>
+      <p>Please confirm your school email to unlock onboarding for your campus:</p>
       <p style="margin:28px 0">
         <a href="${verifyUrl}" style="background:#085041;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">
           Verify school email
@@ -80,13 +124,55 @@ class EmailService {
       await transport.sendMail({
         from: emailConfig.from,
         to: recipientList.join(', '),
-        subject: `Verify ${schoolName} on Akademee`,
+        subject: `Verify your school email for ${schoolName}`,
         html: brandTemplate(bodyHtml),
         text: `Verify ${schoolName}: ${verifyUrl}`,
+        attachments: getBrandAttachments(),
       });
       return { sent: true, verifyUrl: null };
     } catch (error) {
       console.error('[EmailService] Failed to send verification email:', error.message);
+      return { sent: false, verifyUrl, reason: error.message };
+    }
+  }
+
+  async sendAdminVerificationEmail({ schoolName, subdomain, email, firstName, token }) {
+    const verifyUrl = buildAdminVerificationUrl(token, subdomain);
+
+    console.log('[EmailService] Admin verification URL:', verifyUrl, 'token:', token);
+
+    if (!emailConfig.isConfigured) {
+      console.warn('[EmailService] SMTP not configured — admin verification URL (dev only):', verifyUrl);
+      return { sent: false, verifyUrl, reason: 'SMTP not configured' };
+    }
+
+    const transport = getTransporter();
+    const bodyHtml = `
+      <h2 style="color:#085041">Verify your administrator email</h2>
+      <p>Hello ${firstName || 'there'},</p>
+      <p>Your administrator account for <strong>${schoolName}</strong> has been created on Akademee.</p>
+      <p>Please confirm your admin email before you can sign in and access the dashboard:</p>
+      <p style="margin:28px 0">
+        <a href="${verifyUrl}" style="background:#085041;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">
+          Verify admin email
+        </a>
+      </p>
+      <p style="font-size:13px;color:#6e7a70">Or copy this link: ${verifyUrl}</p>
+      <p style="font-size:13px;color:#6e7a70">This link expires in ${emailConfig.verificationExpiresHours} hours.</p>
+    `;
+
+    try {
+      await transport.sendMail({
+        from: emailConfig.from,
+        to: email,
+        subject: `Verify your admin email for ${schoolName}`,
+        html: brandTemplate(bodyHtml),
+        text: `Verify your admin email for ${schoolName}: ${verifyUrl}`,
+        attachments: getBrandAttachments(),
+      });
+      return { sent: true, verifyUrl: null };
+    } catch (error) {
+      console.error('[EmailService] Failed to send admin verification email:', error.message);
       return { sent: false, verifyUrl, reason: error.message };
     }
   }
@@ -124,6 +210,7 @@ class EmailService {
         subject: `Reset your ${schoolName} password`,
         html: brandTemplate(bodyHtml),
         text: `Reset your password: ${resetUrl}`,
+        attachments: getBrandAttachments(),
       });
       return { sent: true };
     } catch (error) {
@@ -224,6 +311,7 @@ class EmailService {
         subject: `You're invited to join ${schoolName} on Akademee`,
         html: brandTemplate(bodyHtml),
         text: `You're invited to join ${schoolName} on Akademee. Accept your invitation: ${inviteUrl}`,
+        attachments: getBrandAttachments(),
       });
       return { sent: true };
     } catch (error) {
@@ -235,7 +323,7 @@ class EmailService {
   /**
    * Send welcome email for manually created users
    */
-  async sendWelcomeEmail({ email, loginEmail, firstName, lastName, password, role, schoolName, loginUrl, phone, className, guardianName, guardianPhone, feeAmount, gender, dob, nationality }) {
+  async sendWelcomeEmail({ email, loginEmail, firstName, lastName, password, role, schoolName, loginUrl, phone, className, guardianName, guardianPhone, feeAmount, gender, dob, nationality, educationalSystem }) {
     if (!emailConfig.isConfigured) {
       console.warn('[EmailService] SMTP not configured — welcome email not sent');
       return { sent: false, reason: 'SMTP not configured' };
@@ -251,6 +339,7 @@ class EmailService {
     if (gender) additionalDetails += `<li><strong>Gender:</strong> ${gender}</li>`;
     if (dob) additionalDetails += `<li><strong>Date of Birth:</strong> ${dob}</li>`;
     if (nationality) additionalDetails += `<li><strong>Nationality:</strong> ${nationality}</li>`;
+    if (educationalSystem) additionalDetails += `<li><strong>Educational System:</strong> ${educationalSystem}</li>`;
     if (className) additionalDetails += `<li><strong>Class:</strong> ${className}</li>`;
     if (guardianName) additionalDetails += `<li><strong>Guardian Name:</strong> ${guardianName}</li>`;
     if (guardianPhone) additionalDetails += `<li><strong>Guardian Phone:</strong> ${guardianPhone}</li>`;
@@ -309,6 +398,7 @@ class EmailService {
         subject: `Welcome to ${schoolName} on Akademee`,
         html: brandTemplate(bodyHtml),
         text: `Welcome to ${schoolName} on Akademee. Your account has been created. Name: ${fullName}, Email: ${email}, Password: ${password}, Role: ${role}. Log in: ${loginUrl}`,
+        attachments: getBrandAttachments(),
       });
       return { sent: true };
     } catch (error) {
