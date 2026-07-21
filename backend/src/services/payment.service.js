@@ -18,13 +18,38 @@ class PaymentService {
     };
   }
 
+  /**
+   * Check if a duplicate payment exists (same student + fee + amount on the same day)
+   */
+  async checkDuplicate(schoolId, studentId, feeId, amount) {
+    const today = new Date().toISOString().split('T')[0];
+    const rows = await sql`
+      SELECT COUNT(*)::int AS count
+      FROM payments
+      WHERE school_id = ${schoolId}
+        AND student_id = ${studentId}
+        AND fee_id = ${feeId}
+        AND amount = ${amount}
+        AND status = 'completed'
+        AND created_at::date = ${today}::date
+    `;
+    return rows[0].count > 0;
+  }
+
   async create(schoolId, data) {
     const { studentId, amount, method, feeId, academicYearId, reference } = data;
+
+    // Prevent duplicate payment: same student + same fee + same amount on the same day
+    const isDuplicate = await this.checkDuplicate(schoolId, studentId, feeId, amount);
+    if (isDuplicate) {
+      throw new Error('DUPLICATE_PAYMENT');
+    }
+
     const receiptNumber = reference || `RCP-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
     const rows = await sql`
-      INSERT INTO payments (school_id, student_id, academic_year_id, amount, method, status, receipt_number)
-      VALUES (${schoolId}, ${studentId}, ${academicYearId || null}, ${amount}, ${method || 'cash'}, 'completed', ${receiptNumber})
+      INSERT INTO payments (school_id, student_id, fee_id, academic_year_id, amount, method, status, receipt_number)
+      VALUES (${schoolId}, ${studentId}, ${feeId || null}, ${academicYearId || null}, ${amount}, ${method || 'cash'}, 'completed', ${receiptNumber})
       RETURNING *
     `;
     return this.formatPayment(rows[0]);

@@ -217,6 +217,40 @@ Les liens vers les nouvelles pages finance ont été ajoutés dans la sidebar po
 - **[PaymentsPage]** Bugfix `React is not defined` — remplacement de `React.createElement(statusIcon, ...)` par `<statusIcon ... />` (JSX direct)
 - **[MonthlyByClass]** Bugfix tri alphabétique des mois → ordre chronologique ajoutant `month_num` + `year` dans SELECT, GROUP BY et ORDER BY
 
+### 🔧 Fix Système de Paiement — Juillet 2026
+
+#### Problèmes Résolus
+
+**1. Paiement enregistré mais statut restait "unpaid"**
+- **Cause :** `payment.controller.js` appelait seulement `paymentService.create()` qui insérait dans `payments`. Les tables `student_fees.amount_paid` et `students.fee_status` n'étaient jamais mises à jour.
+- **Fix :** `payment.controller.js` appelle maintenant `studentFeeService.updatePayment()` pour créditer le `student_fees` concerné, puis `calculateStudentFeeStatus()` et met à jour `students.fee_status`.
+
+**2. Total payé toujours à 0 sur la page "Mes Frais" étudiant**
+- **Cause :** `calculateStudentFeeStatus()` lisait les frais via la jointure `fees → class_subjects → enrollments`, mais les frais sont assignés directement via `student_fees` (par `assignFeesToClass`/`assignFeesToStudent`), sans passer par `class_subjects`.
+- **Fix :** `feeCalculation.service.js` lit maintenant `totalFees` et `totalPaid` depuis la table `student_fees` (la vraie source de vérité). `updateAllStudentStatuses()` et `getStudentFeeSummary()` ont été mis à jour de la même façon.
+
+**3. Doublon de paiement possible**
+- **Cause :** Aucune vérification n'empêchait un comptable d'enregistrer deux fois le même paiement.
+- **Fix :** Nouvelle méthode `checkDuplicate()` dans `payment.service.js` qui vérifie si un paiement complété existe déjà avec le même `studentId + feeId + amount` le même jour. Erreur HTTP 409 si détecté.
+
+**4. Colonne `fee_id` manquante dans `payments`**
+- **Cause :** La table `payments` a été créée dans la migration 006 sans colonne `fee_id`. Le `INSERT` dans `payment.service.js` ne stockait pas non plus le `feeId`.
+- **Fix :** Migration `033_add_fee_id_to_payments.js` ajoutant `fee_id UUID REFERENCES fees(fee_id)` et un index. Correction du `INSERT` pour inclure `fee_id`.
+
+**5. Paiements existants non synchronisés**
+- **Cause :** Les paiements enregistrés avant les correctifs ont `student_fees.amount_paid = 0`.
+- **Fix :** Script de backfill `scripts/backfill-payments.js` avec mode dry-run (prévisualisation) et mode live. Agrège tous les paiements complétés par `(school, student, fee)` et met à jour `student_fees.amount_paid` + `students.fee_status`.
+
+#### Fichiers Modifiés
+
+| Fichier | Modification |
+|---|---|
+| `backend/src/controllers/payment.controller.js` | Ajout appel à `studentFeeService.updatePayment()` + `calculateStudentFeeStatus()` + UPDATE `students.fee_status` après création paiement |
+| `backend/src/services/payment.service.js` | Ajout `checkDuplicate()`, INSERT inclut maintenant `fee_id` |
+| `backend/src/services/feeCalculation.service.js` | `calculateStudentFeeStatus()` lit depuis `student_fees`, `updateAllStudentStatuses()` et `getStudentFeeSummary()` mis à jour |
+| `backend/src/database/migrations/033_add_fee_id_to_payments.js` | Nouvelle migration ajoutant `fee_id` et index à `payments` |
+| `backend/scripts/backfill-payments.js` | Nouveau script de backfill avec dry-run et live modes |
+
 ---
 
 ## 🔄 Travail Récent sur les Systèmes Éducatifs (Juillet 2026)
