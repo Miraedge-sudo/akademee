@@ -1,14 +1,41 @@
+const sql = require('../config/database');
 const response = require('../utils/response');
 const paymentService = require('../services/payment.service');
+const studentFeeService = require('../services/studentFee.service');
+const feeCalculationService = require('../services/feeCalculation.service');
 
 class PaymentController {
   async initiatePayment(req, res, next) {
     try {
       const { studentId, amount, method, feeId, academicYearId, reference } = req.body;
       const { schoolId } = req;
-      const result = await paymentService.create(schoolId, { studentId, amount, method, feeId, academicYearId, reference });
-      response.success(res, 'Payment initiated', result, 201);
+      const isFr = (req.headers['accept-language'] || 'fr').startsWith('fr');
+
+      // 1. Create the payment (with built-in duplicate check)
+      const payment = await paymentService.create(schoolId, { studentId, amount, method, feeId, academicYearId, reference });
+
+      // 2. Update student_fees table — add the paid amount to the specific fee assignment
+      const updatedFee = await studentFeeService.updatePayment(schoolId, studentId, feeId, amount, academicYearId);
+      if (!updatedFee) {
+        console.warn(`[PAYMENT] No student_fees record for student=${studentId}, fee=${feeId}. Payment ${payment.id} recorded.`);
+      }
+
+      // 3. Recalculate and persist the student's overall fee_status on the students table
+      const feeStatus = await feeCalculationService.calculateStudentFeeStatus(schoolId, studentId);
+      await sql`
+        UPDATE students
+        SET fee_status = ${feeStatus.status}
+        WHERE student_id = ${studentId} AND school_id = ${schoolId}
+      `;
+
+      response.success(res, 'Payment initiated', payment, 201);
     } catch (error) {
+      if (error.message === 'DUPLICATE_PAYMENT') {
+        const msg = isFr
+          ? 'Un paiement identique a déjà été effectué aujourd\'hui pour cet élève.'
+          : 'An identical payment has already been made today for this student.';
+        return response.error(res, msg, null, 409);
+      }
       next(error);
     }
   }

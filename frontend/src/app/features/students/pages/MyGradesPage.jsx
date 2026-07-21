@@ -11,11 +11,11 @@
  * Route: /dashboard/my-grades
  */
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../core/hooks/useAuth';
 import { useTheme } from '../../../core/hooks/useTheme';
 import { useTranslation } from 'react-i18next';
-import { getStudentMe } from '../../../core/api/studentService';
+import { getStudentMe, getStudentById } from '../../../core/api/studentService';
 import { getStudentAverages, getClassRankings } from '../../../core/api/gradeCalculationService';
 import { getStudentGrades } from '../../../core/api/gradeService';
 import SubjectGrades from '../components/SubjectGrades';
@@ -43,6 +43,7 @@ export default function MyGradesPage() {
   const { primaryColor } = useTheme();
   const { t, i18n } = useTranslation('common');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const pc = primaryColor || '#085041';
   const isFr = i18n.language === 'fr';
 
@@ -57,7 +58,14 @@ export default function MyGradesPage() {
     async function load() {
       setLoading(true);
       try {
-        const profile = await getStudentMe();
+        // Support ?studentId= for parent viewing
+        const urlStudentId = searchParams.get('studentId');
+        let profile;
+        if (urlStudentId) {
+          profile = await getStudentById(urlStudentId);
+        } else {
+          profile = await getStudentMe();
+        }
         setStudent(profile);
         const studentId = profile.id;
         const classId = profile.classId;

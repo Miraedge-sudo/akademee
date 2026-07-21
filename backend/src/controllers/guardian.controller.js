@@ -76,6 +76,20 @@ class GuardianController {
       next(error);
     }
   }
+
+  async getMyChildren(req, res, next) {
+    try {
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const userEmail = req.user?.email;
+      if (!userEmail) {
+        return response.error(res, 'User email not found', null, 400);
+      }
+      const children = await guardianService.getMyChildren(schoolId, userEmail);
+      response.success(res, 'Children retrieved', children);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new GuardianController();

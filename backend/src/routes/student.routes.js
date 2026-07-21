@@ -35,7 +35,7 @@ router.get(
 
 router.get(
   '/:id',
-  roleMiddleware(['admin', 'teacher', 'accountant']),
+  roleMiddleware(['admin', 'teacher', 'accountant', 'parent']),
   uuidParam,
   validateMiddleware,
   studentController.getStudent

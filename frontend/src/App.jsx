@@ -65,6 +65,7 @@ const StudentDashboardPage = lazy(() => import("./app/features/students/pages/St
 const MyGradesPage = lazy(() => import("./app/features/students/pages/MyGradesPage"));
 const MyAttendancePage = lazy(() => import("./app/features/students/pages/MyAttendancePage"));
 const MyFeesPage = lazy(() => import("./app/features/students/pages/MyFeesPage"));
+const ParentDashboardPage = lazy(() => import("./app/features/parent/pages/ParentDashboardPage"));
 
 // ── Lazy helpers ──
 const page = (Component) => (
@@ -287,7 +288,7 @@ function App() {
               path="parent-home"
               element={
                 <RoleRoute allowedRoles={["PARENT"]}>
-                  {dashboardPage(StudentDashboardPage)}
+                  {dashboardPage(ParentDashboardPage)}
                 </RoleRoute>
               }
             />
