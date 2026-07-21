@@ -23,6 +23,24 @@ export default function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace />;
   }
 
+  // Check school email verification (if required and not verified)
+  const schoolVerificationRequired = user?.schoolVerificationRequired ?? false;
+  const schoolEmailVerified = user?.schoolEmailVerified ?? true;
+  if (schoolVerificationRequired && !schoolEmailVerified && location.pathname !== "/verify-email") {
+    const subdomain = user?.subdomain || "";
+    return <Navigate to={`/verify-email?subdomain=${encodeURIComponent(subdomain)}`} replace />;
+  }
+
+  // Check admin email verification (if required and not verified).
+  // Allow onboarding routes so school verification can flow directly into onboarding.
+  const userVerificationRequired = user?.userVerificationRequired ?? false;
+  const userEmailVerified = user?.userEmailVerified ?? true;
+  const isOnboardingRoute = location.pathname === "/onboarding" || location.pathname.startsWith("/onboarding/");
+  if (userVerificationRequired && !userEmailVerified && location.pathname !== "/verify-email" && !isOnboardingRoute) {
+    const subdomain = user?.subdomain || "";
+    return <Navigate to={`/verify-email?subdomain=${encodeURIComponent(subdomain)}`} replace />;
+  }
+
   // Redirect to onboarding if not completed (except if already on /onboarding)
   if (!onboardingCompleted && location.pathname !== "/onboarding") {
     return <Navigate to="/onboarding" replace />;

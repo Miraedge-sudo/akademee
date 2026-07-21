@@ -1111,8 +1111,11 @@ export default function OnboardingPage() {
         );
         updateSelectedSystems(normalizedSystemCodes);
         toast.success("Website published! 🎉");
+        const websiteUrl =
+          response.data?.urls?.websiteUrl ||
+          (user?.subdomain ? `/site?subdomain=${user.subdomain}` : "/site");
         setTimeout(() => {
-          window.location.href = "/onboarding/academic-year";
+          window.location.href = websiteUrl;
         }, 800);
       } else {
         const msg = response.message || "Error saving configuration";

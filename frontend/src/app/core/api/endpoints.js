@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
     ME: "/api/auth/me",
     EXCHANGE: "/api/auth/exchange",
     REFRESH: "/api/auth/refresh",
+    VERIFY_EMAIL: "/api/auth/verify-email",
   },
 
   // Schools
@@ -19,6 +20,7 @@ export const API_ENDPOINTS = {
     TEMPLATES: "/api/schools/templates",
     VERIFY_EMAIL: "/api/schools/verify-email",
     RESEND_VERIFICATION: "/api/schools/resend-verification",
+    RESEND_VERIFICATION_REQUEST: "/api/schools/resend-verification-request",
     ONBOARDING: "/api/schools/onboarding",
     ONBOARDING_MEDIA: "/api/schools/onboarding/media",
     LIST: "/api/schools",

@@ -29,6 +29,7 @@ const verifySchoolLimiter = rateLimit({
 
 router.post('/login', loginLimiter, loginValidator, validateMiddleware, authController.login);
 router.post('/verify-school', verifySchoolLimiter, verifySchoolValidator, validateMiddleware, authController.verifySchool);
+router.get('/verify-email', authController.verifyAdminEmail);
 
 const forgotPasswordLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

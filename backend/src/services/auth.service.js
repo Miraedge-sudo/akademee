@@ -61,6 +61,10 @@ class AuthService {
         subdomain: school.subdomain,
         schoolName: school.name,
         roles: roleCodes,
+        userEmailVerified: user.email_verified ?? true,
+        schoolEmailVerified: school.email_verified ?? true,
+        userVerificationRequired: user.require_email_verification ?? false,
+        schoolVerificationRequired: school.require_email_verification ?? false,
         onboardingCompleted: school.onboarding_completed ?? false,
         school: {
           id: school.school_id,
@@ -83,7 +87,7 @@ class AuthService {
     if (decoded.type !== 'refresh') throw new Error('Invalid refresh token');
 
     const users = await sql`
-      SELECT user_id, school_id, email, first_name, last_name, is_active
+      SELECT user_id, school_id, email, first_name, last_name, is_active, email_verified, require_email_verification
       FROM users WHERE user_id = ${decoded.userId} AND school_id = ${decoded.schoolId}
     `;
     if (users.length === 0 || !users[0].is_active) throw new Error('User not found');
@@ -91,7 +95,7 @@ class AuthService {
     const user = users[0];
 
     const schools = await sql`
-      SELECT s.school_id, s.name, s.subdomain, s.is_active, s.onboarding_completed, wt.template_code
+      SELECT s.school_id, s.name, s.subdomain, s.is_active, s.email_verified, s.require_email_verification, s.onboarding_completed, wt.template_code
       FROM schools s
       LEFT JOIN website_templates wt ON s.website_template_id = wt.template_id
       WHERE s.school_id = ${user.school_id}
@@ -99,6 +103,14 @@ class AuthService {
     if (schools.length === 0) throw new Error('School not found');
 
     const school = schools[0];
+
+    if (school.require_email_verification && !school.email_verified) {
+      throw new Error('School email is not verified');
+    }
+
+    if (user.require_email_verification && !user.email_verified) {
+      throw new Error('Admin email is not verified');
+    }
 
     const roleRows = await sql`
       SELECT r.role_code FROM user_roles ur
@@ -122,6 +134,8 @@ class AuthService {
         subdomain: school.subdomain,
         schoolName: school.name,
         roles: roleCodes,
+        userEmailVerified: user.email_verified ?? true,
+        schoolEmailVerified: school.email_verified ?? true,
         onboardingCompleted: school.onboarding_completed ?? false,
       },
     };
@@ -133,7 +147,7 @@ class AuthService {
     const normalizedSubdomain = SlugGenerator.sanitize(subdomain);
 
     const schools = await sql`
-      SELECT school_id, name, subdomain, is_active, email_verified
+      SELECT school_id, name, subdomain, is_active, email_verified, require_email_verification
       FROM schools
       WHERE subdomain = ${normalizedSubdomain}
     `;
@@ -149,7 +163,7 @@ class AuthService {
     }
 
     const users = await sql`
-      SELECT user_id, school_id, email, login_email, first_name, last_name, password_hash, is_active, phone
+      SELECT user_id, school_id, email, login_email, first_name, last_name, password_hash, is_active, phone, email_verified, require_email_verification
       FROM users
       WHERE (login_email = ${email} OR email = ${email}) AND school_id = ${school.school_id}
     `;
@@ -169,6 +183,14 @@ class AuthService {
       throw new Error('Invalid email or password');
     }
 
+    if (school.require_email_verification && !school.email_verified) {
+      throw new Error('School email is not verified');
+    }
+
+    if (user.require_email_verification && !user.email_verified) {
+      throw new Error('Admin email is not verified');
+    }
+
     const roles = await sql`
       SELECT r.role_code, r.role_name
       FROM user_roles ur
@@ -183,7 +205,7 @@ class AuthService {
     `;
 
     const schoolWithTemplate = await sql`
-      SELECT s.school_id, s.name, s.subdomain, s.is_active, s.onboarding_completed,
+      SELECT s.school_id, s.name, s.subdomain, s.is_active, s.email_verified, s.require_email_verification, s.onboarding_completed,
              s.educational_systems, s.primary_color, s.logo_url, s.hero_image_url,
              wt.template_code
       FROM schools s
@@ -221,7 +243,7 @@ class AuthService {
    */
   async getCurrentUser(userId, schoolId) {
     const users = await sql`
-      SELECT user_id, email, first_name, last_name, school_id, is_active, phone, avatar_url, gender, date_of_birth, nationality
+      SELECT user_id, email, first_name, last_name, school_id, is_active, phone, avatar_url, gender, date_of_birth, nationality, email_verified, require_email_verification
       FROM users
       WHERE user_id = ${userId} AND school_id = ${schoolId}
     `;
@@ -240,7 +262,7 @@ class AuthService {
     `;
 
     const schools = await sql`
-      SELECT school_id, name, subdomain, email_verified, onboarding_completed,
+      SELECT school_id, name, subdomain, email_verified, require_email_verification, onboarding_completed,
              educational_systems, primary_color, logo_url, hero_image_url,
              hero_image_url_2, tagline, city, region,
              exam_type, exam_pass_rate, ranking, ranking_city,
@@ -282,7 +304,65 @@ class AuthService {
       schoolName: school?.name || null,
       subdomain: school?.subdomain || null,
       emailVerified: school?.email_verified ?? false,
+      userEmailVerified: user.email_verified ?? true,
+      schoolEmailVerified: school?.email_verified ?? false,
+      userVerificationRequired: user.require_email_verification ?? false,
+      schoolVerificationRequired: school?.require_email_verification ?? false,
       onboardingCompleted: school?.onboarding_completed ?? false,
+    };
+  }
+
+  async verifyAdminEmail(token) {
+    console.log('[AuthService] Verifying admin email with token:', token);
+
+    const users = await sql`
+      SELECT u.user_id, u.first_name, u.last_name, u.email, u.school_id, u.verification_token_expires_at, u.email_verified,
+             s.name AS school_name, s.subdomain, s.email_verified AS school_email_verified
+      FROM users u
+      INNER JOIN schools s ON s.school_id = u.school_id
+      WHERE u.verification_token = ${token}
+    `;
+
+    console.log('[AuthService] Admin verification query found', users.length, 'user(s)');
+
+    if (users.length === 0) {
+      throw new Error('Invalid or expired verification link');
+    }
+
+    const user = users[0];
+    const urls = buildSchoolUrls(user.subdomain);
+
+    if (user.email_verified) {
+      return {
+        alreadyVerified: true,
+        verificationType: 'admin',
+        schoolName: user.school_name,
+        subdomain: user.subdomain,
+        loginUrl: urls.loginUrl,
+        schoolEmailVerified: user.school_email_verified,
+      };
+    }
+
+    if (user.verification_token_expires_at && new Date(user.verification_token_expires_at) < new Date()) {
+      throw new Error('Verification link has expired. Please request a new one.');
+    }
+
+    await sql`
+      UPDATE users
+      SET email_verified = true,
+          verification_token = NULL,
+          verification_token_expires_at = NULL,
+          updated_at = NOW()
+      WHERE user_id = ${user.user_id}
+    `;
+
+    return {
+      alreadyVerified: false,
+      verificationType: 'admin',
+      schoolName: user.school_name,
+      subdomain: user.subdomain,
+      loginUrl: urls.loginUrl,
+      schoolEmailVerified: user.school_email_verified,
     };
   }
 
