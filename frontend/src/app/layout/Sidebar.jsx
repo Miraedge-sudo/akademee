@@ -639,6 +639,22 @@ const BASE_NAV_CONFIG = {
       ],
     },
   ],
+  PARENT: [
+    {
+      group: "overview",
+      items: [
+        { key: "parentHome", path: "/dashboard/parent-home", icon: "grid" },
+      ],
+    },
+    {
+      group: "children",
+      items: [
+        { key: "myGrades", path: "/dashboard/my-grades", icon: "barchart" },
+        { key: "myFees", path: "/dashboard/my-fees", icon: "dollar" },
+        { key: "myAttendance", path: "/dashboard/my-attendance", icon: "calendar" },
+      ],
+    },
+  ],
 };
 
 // ── Get filtered nav config based on educational systems ──

@@ -14,6 +14,12 @@ const router = express.Router();
 
 router.use(authMiddleware, tenantMiddleware);
 
+router.get(
+  '/me/children',
+  roleMiddleware(['parent', 'admin', 'teacher']),
+  guardianController.getMyChildren
+);
+
 router.post(
   '/',
   roleMiddleware(['admin', 'teacher']),

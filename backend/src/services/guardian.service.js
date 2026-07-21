@@ -126,6 +126,51 @@ class GuardianService {
     await sql`DELETE FROM guardians WHERE guardian_id = ${guardianId} AND school_id = ${schoolId}`;
     return { deleted: true, guardianId };
   }
+
+  /**
+   * Get the children (students) for a parent user.
+   * A parent is linked to students via the guardians table.
+   * This looks up guardians where email matches the current user's email,
+   * then returns the associated students with their class info.
+   */
+  async getMyChildren(schoolId, userEmail) {
+    const rows = await sql`
+      SELECT
+        st.student_id,
+        CONCAT(u.first_name, ' ', u.last_name) AS full_name,
+        u.first_name,
+        u.last_name,
+        st.student_number,
+        st.photo_url,
+        st.fee_status,
+        st.class_label,
+        c.class_id,
+        c.name AS class_name,
+        g.relationship AS parent_relationship
+      FROM guardians g
+      JOIN students st ON g.student_id = st.student_id
+      JOIN users u ON st.user_id = u.user_id
+      LEFT JOIN enrollments e ON e.student_id = st.student_id AND e.school_id = ${schoolId} AND e.status = 'active'
+      LEFT JOIN classes c ON e.class_id = c.class_id
+      WHERE g.school_id = ${schoolId}
+        AND LOWER(g.email) = LOWER(${userEmail})
+        AND st.status = 'active'
+      ORDER BY u.first_name ASC
+    `;
+    return rows.map(r => ({
+      id: r.student_id,
+      firstName: r.first_name,
+      lastName: r.last_name,
+      fullName: r.full_name,
+      studentNumber: r.student_number,
+      photoUrl: r.photo_url,
+      feeStatus: r.fee_status || 'pending',
+      classLabel: r.class_label,
+      classId: r.class_id,
+      className: r.class_name,
+      relationship: r.parent_relationship,
+    }));
+  }
 }
 
 module.exports = new GuardianService();
