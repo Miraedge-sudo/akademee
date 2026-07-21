@@ -120,6 +120,21 @@ class OnboardingService {
    * Persist onboarding wizard data for one school — never crosses tenant boundaries.
    */
   async saveOnboarding(schoolId, payload) {
+    const schools = await sql`
+      SELECT school_id, email_verified, require_email_verification
+      FROM schools
+      WHERE school_id = ${schoolId}
+    `;
+
+    if (schools.length === 0) {
+      throw new Error("School not found");
+    }
+
+    const school = schools[0];
+    if (school.require_email_verification && !school.email_verified) {
+      throw new Error("School email is not verified");
+    }
+
     const {
       schoolName,
       tagline,
@@ -162,7 +177,7 @@ class OnboardingService {
         templates[0]?.template_code || resolvedTemplateCode;
     }
 
-    const schools = await sql`
+    const updatedSchools = await sql`
       UPDATE schools SET
         name = COALESCE(${schoolName || null}, name),
         tagline = COALESCE(${tagline ?? null}, tagline),
@@ -192,15 +207,15 @@ class OnboardingService {
       RETURNING school_id, name, subdomain, website_published, onboarding_completed
     `;
 
-    if (schools.length === 0) {
+    if (updatedSchools.length === 0) {
       throw new Error("School not found");
     }
 
-    const school = schools[0];
-    const urls = buildSchoolUrls(school.subdomain, resolvedTemplateCode);
+    const updatedSchool = updatedSchools[0];
+    const urls = buildSchoolUrls(updatedSchool.subdomain, resolvedTemplateCode);
 
     return {
-      ...school,
+      ...updatedSchool,
       templateCode: resolvedTemplateCode,
       urls,
     };
@@ -224,11 +239,15 @@ class OnboardingService {
    * Verify school email token — activates the school for login.
    */
   async verifySchoolEmail(token) {
+    console.log('[OnboardingService] Verifying school email with token:', token);
+
     const schools = await sql`
       SELECT school_id, name, subdomain, verification_token_expires_at, email_verified
       FROM schools
       WHERE verification_token = ${token}
     `;
+
+    console.log('[OnboardingService] School verification query found', schools.length, 'school(s)');
 
     if (schools.length === 0) {
       throw new Error("Invalid or expired verification link");
@@ -241,6 +260,7 @@ class OnboardingService {
     if (school.email_verified) {
       return {
         alreadyVerified: true,
+        schoolId: school.school_id,
         subdomain: school.subdomain,
         schoolName: school.name,
         onboardingUrl: urls.onboardingUrl,
@@ -267,6 +287,7 @@ class OnboardingService {
 
     return {
       alreadyVerified: false,
+      schoolId: school.school_id,
       subdomain: school.subdomain,
       schoolName: school.name,
       onboardingUrl: urls.onboardingUrl,
@@ -274,7 +295,7 @@ class OnboardingService {
   }
 
   createVerificationToken() {
-    return crypto.randomBytes(32).toString("hex");
+    return crypto.randomBytes(16).toString("hex");
   }
 
   verificationExpiryDate(hours = 48) {

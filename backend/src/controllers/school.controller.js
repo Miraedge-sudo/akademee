@@ -115,6 +115,16 @@ class SchoolController {
     }
   }
 
+  async resendVerificationRequest(req, res, next) {
+    try {
+      const { subdomain } = req.body;
+      const result = await schoolService.resendVerificationBySubdomain(subdomain);
+      response.success(res, 'If a matching school exists, verification emails have been sent.', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   /** Resend SMTP verification email for the authenticated school */
   async resendVerification(req, res, next) {
     try {
