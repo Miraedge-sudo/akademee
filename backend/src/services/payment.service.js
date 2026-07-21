@@ -13,6 +13,7 @@ class PaymentService {
       status: row.status,
       reference: row.receipt_number,
       feeId: row.fee_id,
+      feeName: row.fee_name || null,
       createdAt: row.created_at,
     };
   }
@@ -31,10 +32,11 @@ class PaymentService {
 
   async getById(schoolId, paymentId) {
     const rows = await sql`
-      SELECT p.*, CONCAT(u.first_name, ' ', u.last_name) AS student_name
+      SELECT p.*, CONCAT(u.first_name, ' ', u.last_name) AS student_name, f.name AS fee_name
       FROM payments p
       LEFT JOIN students st ON p.student_id = st.student_id
       LEFT JOIN users u ON st.user_id = u.user_id
+      LEFT JOIN fees f ON p.fee_id = f.fee_id
       WHERE p.payment_id = ${paymentId} AND p.school_id = ${schoolId}
     `;
     if (rows.length === 0) throw new Error('Payment not found');

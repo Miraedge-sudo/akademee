@@ -9,15 +9,16 @@ class FeeService {
       amount: Number(row.amount),
       description: row.description,
       classId: row.class_id,
+      dueDate: row.due_date || null,
       createdAt: row.created_at,
     };
   }
 
   async create(schoolId, data) {
-    const { name, amount, classId, description } = data;
+    const { name, amount, classId, description, dueDate } = data;
     const rows = await sql`
-      INSERT INTO fees (school_id, name, amount, class_id)
-      VALUES (${schoolId}, ${name}, ${amount}, ${classId || null})
+      INSERT INTO fees (school_id, name, amount, class_id, description, due_date)
+      VALUES (${schoolId}, ${name}, ${amount}, ${classId || null}, ${description || null}, ${dueDate || null})
       RETURNING *
     `;
     return this.formatFee(rows[0]);
@@ -54,12 +55,14 @@ class FeeService {
 
   async update(schoolId, feeId, data) {
     await this.getById(schoolId, feeId);
-    const { name, amount, classId, description } = data;
+    const { name, amount, classId, description, dueDate } = data;
     const rows = await sql`
       UPDATE fees SET
         name = COALESCE(${name || null}, name),
         amount = COALESCE(${amount ?? null}, amount),
-        class_id = COALESCE(${classId || null}, class_id)
+        class_id = COALESCE(${classId || null}, class_id),
+        description = COALESCE(${description || null}, description),
+        due_date = COALESCE(${dueDate || null}, due_date)
       WHERE fee_id = ${feeId} AND school_id = ${schoolId}
       RETURNING *
     `;

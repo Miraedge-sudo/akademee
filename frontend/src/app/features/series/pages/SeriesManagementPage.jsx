@@ -46,7 +46,7 @@ export default function SeriesManagementPage() {
       setSeries((prev) => [...prev, saved]);
       setNewName("");
       toast.success(isFr ? "Série ajoutée" : "Series added");
-    } catch { toast.error(isFr ? "Erreur" : "Error"); }
+    } catch { toast.error(isFr ? "Erreur lors de l'ajout de la série" : "Failed to add series"); }
   };
 
   const handleEdit = async (id) => {
@@ -57,7 +57,7 @@ export default function SeriesManagementPage() {
       setEditingId(null);
       setEditName("");
       toast.success(isFr ? "Série modifiée" : "Series updated");
-    } catch { toast.error(isFr ? "Erreur" : "Error"); }
+    } catch { toast.error(isFr ? "Erreur lors de la modification de la série" : "Failed to update series"); }
   };
 
   const handleDelete = async (id) => {
@@ -65,7 +65,7 @@ export default function SeriesManagementPage() {
       await seriesService.delete(id);
       setSeries((prev) => prev.filter((s) => s.id !== id));
       toast.success(isFr ? "Série supprimée" : "Series deleted");
-    } catch { toast.error(isFr ? "Erreur" : "Error"); }
+    } catch { toast.error(isFr ? "Erreur lors de la suppression de la série" : "Failed to delete series"); }
   };
 
   return (

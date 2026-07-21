@@ -50,7 +50,7 @@ export default function LevelsListPage() {
       setLevels((prev) => [...prev, saved].sort((a, b) => (a.order || 0) - (b.order || 0)));
       setNewName("");
       toast.success(isFr ? "Niveau ajouté" : "Level added");
-    } catch { toast.error(isFr ? "Erreur" : "Error"); }
+    } catch { toast.error(isFr ? "Erreur lors de l'ajout du niveau" : "Failed to add level"); }
   };
 
   const handleEdit = async (id) => {
@@ -63,7 +63,7 @@ export default function LevelsListPage() {
       setEditingId(null);
       setEditName("");
       toast.success(isFr ? "Niveau modifié" : "Level updated");
-    } catch { toast.error(isFr ? "Erreur" : "Error"); }
+    } catch { toast.error(isFr ? "Erreur lors de la modification du niveau" : "Failed to update level"); }
   };
 
   const handleDelete = async (id) => {
@@ -71,7 +71,7 @@ export default function LevelsListPage() {
       await levelService.delete(id);
       setLevels((prev) => prev.filter((l) => l.id !== id));
       toast.success(isFr ? "Niveau supprimé" : "Level deleted");
-    } catch { toast.error(isFr ? "Erreur" : "Error"); }
+    } catch { toast.error(isFr ? "Erreur lors de la suppression du niveau" : "Failed to delete level"); }
   };
 
   const swapOrder = async (idx1, idx2) => {

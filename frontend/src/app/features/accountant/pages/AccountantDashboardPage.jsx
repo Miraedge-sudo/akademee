@@ -11,7 +11,7 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../../../core/hooks/useTheme';
 import { useAuth } from '../../../core/hooks/useAuth';
-import { getDashboardStats } from '../../../core/api/dashboardService';
+import { getDashboardStats, getFinanceStats } from '../../../core/api/dashboardService';
 import { getPayments, getTodayPayments } from '../../../core/api/paymentService';
 import AccountantGreeting    from '../components/AccountantGreeting';
 import FinanceStatCards      from '../components/FinanceStatCards';
@@ -27,6 +27,7 @@ export default function AccountantDashboardPage() {
   const pc = primaryColor || '#085041';
 
   const [stats, setStats] = useState(null);
+  const [financeStats, setFinanceStats] = useState(null);
   const [recentPayments, setRecentPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,29 +36,30 @@ export default function AccountantDashboardPage() {
 
     async function fetchData() {
       try {
-        const [dashboardData, paymentsData, todayPaymentsData] = await Promise.all([
+        const [dashboardData, financeData, paymentsData, todayPaymentsData] = await Promise.all([
           getDashboardStats().catch(() => null),
+          getFinanceStats().catch(() => null),
           getPayments({ limit: 10 }).catch(() => ({ payments: [] })),
           getTodayPayments().catch(() => ({ payments: [] })),
         ]);
 
         if (!mounted) return;
 
-        // Calculate finance stats from real data
-        const totalCollected = dashboardData?.totalRevenue || 0;
+        // Finance stats from the dedicated API
+        if (financeData) {
+          setFinanceStats(financeData);
+        }
+
+        const totalCollected = (financeData?.totalCollected ?? dashboardData?.totalRevenue) || 0;
+        const outstanding = financeData?.outstanding ?? 0;
+        const collectionRate = financeData?.collectionRate ?? 0;
+
         const paymentsList = Array.isArray(paymentsData)
           ? paymentsData
           : (paymentsData?.payments || []);
         const todayPaymentsList = Array.isArray(todayPaymentsData)
           ? todayPaymentsData
           : (todayPaymentsData?.payments || []);
-
-        // Outstanding fees: estimate from total assigned fees - collected
-        // For now, use a reasonable estimate based on total revenue
-        const outstanding = Math.round(totalCollected * 0.35);
-        const collectionRate = totalCollected > 0
-          ? Math.round((totalCollected / (totalCollected + outstanding)) * 100)
-          : 0;
 
         setStats({
           totalCollected,
@@ -100,9 +102,9 @@ export default function AccountantDashboardPage() {
     return () => { mounted = false; };
   }, []);
 
-  const unpaidCount = stats?.totalStudents
-    ? Math.round(stats.totalStudents * 0.3)
-    : 0;
+  const unpaidCount = financeStats?.feeStatusOverview
+    ? financeStats.feeStatusOverview.unpaid
+    : (stats?.totalStudents ? Math.round(stats.totalStudents * 0.3) : 0);
   const monthRevenue = stats?.totalCollected
     ? Math.round(stats.totalCollected / 6)
     : 0;
@@ -124,16 +126,27 @@ export default function AccountantDashboardPage() {
           <FinanceStatCards stats={stats} />
 
           <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">
-            <MonthlyCollectionsChart />
-            <FeeCollectionByClass />
+            <MonthlyCollectionsChart
+              data={financeStats?.monthlyCollections}
+              totalCollected={financeStats?.totalCollected}
+              outstanding={financeStats?.outstanding}
+              collectionRate={financeStats?.collectionRate}
+            />
+            <FeeCollectionByClass
+              classes={financeStats?.collectionByClass}
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">
-            <OutstandingAlerts />
+            <OutstandingAlerts
+              defaulters={financeStats?.outstandingAlerts}
+            />
 
             <div className="flex flex-col gap-4">
               <RecentPayments payments={recentPayments} />
-              <FeeStatusDonut />
+              <FeeStatusDonut
+                data={financeStats?.feeStatusOverview}
+              />
             </div>
           </div>
         </>

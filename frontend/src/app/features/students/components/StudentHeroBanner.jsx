@@ -3,6 +3,22 @@
  */
 import { useEffect, useRef } from 'react';
 
+// ── Lighten a hex color by a percentage (0–1) ──
+function lighten(hex, amount) {
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '#085041');
+  if (!r) return '#085041';
+  const mix = (c) => Math.min(255, Math.round(parseInt(c, 16) + (255 - parseInt(c, 16)) * amount));
+  return `#${[1,2,3].map(i => mix(r[i]).toString(16).padStart(2, '0')).join('')}`;
+}
+
+// ── Darken a hex color by a percentage (0–1) ──
+function darken(hex, amount) {
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '#085041');
+  if (!r) return '#085041';
+  const mix = (c) => Math.max(0, Math.round(parseInt(c, 16) * (1 - amount)));
+  return `#${[1,2,3].map(i => mix(r[i]).toString(16).padStart(2, '0')).join('')}`;
+}
+
 export default function StudentHeroBanner({
   name = 'Student',
   className = '',
@@ -11,6 +27,7 @@ export default function StudentHeroBanner({
   rank = '-',
   totalStudents = 0,
   annualAvg = 0,
+  primaryColor = '#085041',
 }) {
   const arcRef = useRef(null);
   const pct = annualAvg > 0 ? annualAvg / 20 : 0;
@@ -31,16 +48,18 @@ export default function StudentHeroBanner({
       <style>{`
         @keyframes studentGradientShift { 0% { background-position: 0% 50% } 50% { background-position: 100% 50% } 100% { background-position: 0% 50% } }
         @keyframes studentDrawLine { from { stroke-dashoffset: var(--full) } to { stroke-dashoffset: var(--target) } }
-        .student-hero-bg {
-          background: linear-gradient(135deg, var(--teal-900, #085041) 0%, #0F6E56 50%, var(--teal-600, #1D9E75) 100%);
-          background-size: 200% 200%;
-          animation: studentGradientShift 8s ease infinite, fadeUp .6s cubic-bezier(.16,1,.3,1) both;
-        }
         .student-hero-pattern {
           background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
       `}</style>
-      <div className="student-hero-bg rounded-2xl p-7 lg:p-8 mb-6 relative overflow-hidden">
+      <div
+        className="rounded-2xl p-7 lg:p-8 mb-6 relative overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, ${darken(primaryColor, 0.15)} 0%, ${primaryColor} 50%, ${lighten(primaryColor, 0.2)} 100%)`,
+          backgroundSize: '200% 200%',
+          animation: 'studentGradientShift 8s ease infinite, fadeUp 0.6s cubic-bezier(.16,1,.3,1) both',
+        }}
+      >
         <div className="student-hero-pattern absolute inset-0 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">

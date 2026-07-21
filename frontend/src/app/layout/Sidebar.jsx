@@ -546,6 +546,26 @@ const BASE_NAV_CONFIG = {
       group: "finance",
       items: [
         {
+          key: "fees",
+          path: "/dashboard/fees",
+          icon: "dollar",
+        },
+        {
+          key: "feesAssign",
+          path: "/dashboard/fees/assign",
+          icon: "layers",
+        },
+        {
+          key: "payments",
+          path: "/dashboard/payments",
+          icon: "dollar",
+        },
+        {
+          key: "receipts",
+          path: "/dashboard/receipts",
+          icon: "file",
+        },
+        {
           key: "finance",
           path: "/dashboard/finance",
           icon: "dollar",
@@ -612,7 +632,9 @@ const BASE_NAV_CONFIG = {
       group: "finance",
       items: [
         { key: "payments", path: "/dashboard/payments", icon: "dollar" },
+        { key: "receipts", path: "/dashboard/receipts", icon: "file" },
         { key: "fees", path: "/dashboard/fees", icon: "dollar" },
+        { key: "feesAssign", path: "/dashboard/fees/assign", icon: "layers" },
         { key: "financeReports", path: "/dashboard/finance/reports", icon: "barchart" },
       ],
     },

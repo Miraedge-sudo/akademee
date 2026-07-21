@@ -66,12 +66,13 @@ export default function StudentStatStrip({
   totalAbsences = 0,
   totalDue = 0,
   totalPaid = 0,
+  primaryColor = '#085041',
 }) {
   const rateColor = attendanceRate >= 75 ? '#3B82F6' : attendanceRate >= 50 ? '#F59E0B' : '#EF4444';
 
   const cards = [
     {
-      icon: BarChart2, iconBg: 'rgba(8,80,65,.08)', iconColor: '#085041',
+      icon: BarChart2, iconBg: `${primaryColor}14`, iconColor: primaryColor,
       value: annualAvg, isDecimal: true, suffix: '/20',
       label: 'Annual average',
       subtext: annualAvg >= 12 ? 'Good standing' : annualAvg >= 10 ? 'Average' : 'Needs improvement',

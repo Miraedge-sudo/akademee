@@ -16,11 +16,34 @@ const SAMPLE_DEFAULTERS = [
   { name: 'Chris Bilong',      cls: 'Form 1A',   amount: 20000, since: 'Jan 2025', level: 'low',      avatarBg: '#F5F3FF', avatarText: '#8B5CF6' },
 ];
 
+const AVATAR_PALETTE = [
+  { bg: '#FEE2E2', text: '#EF4444' },
+  { bg: '#FEF3C7', text: '#F59E0B' },
+  { bg: '#EFF6FF', text: '#3B82F6' },
+  { bg: '#F5F3FF', text: '#8B5CF6' },
+  { bg: '#E1F5EE', text: '#085041' },
+  { bg: '#FCE7F3', text: '#EC4899' },
+];
+
 function initials(name) {
   return name.split(' ').map((w) => w[0]).join('');
 }
 
-export default function OutstandingAlerts({ defaulters = SAMPLE_DEFAULTERS }) {
+function normalizeDefaulter(d, idx) {
+  const av = AVATAR_PALETTE[idx % AVATAR_PALETTE.length];
+  return {
+    name: d.name,
+    cls: d.cls || d.className || '',
+    amount: d.amount,
+    since: d.since || '',
+    level: d.level || 'medium',
+    avatarBg: d.avatarBg || av.bg,
+    avatarText: d.avatarText || av.text,
+  };
+}
+
+export default function OutstandingAlerts({ defaulters: rawDefaulters }) {
+  const defaulters = (rawDefaulters || SAMPLE_DEFAULTERS).map((d, i) => normalizeDefaulter(d, i));
   return (
     <div className="bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-2xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-5">

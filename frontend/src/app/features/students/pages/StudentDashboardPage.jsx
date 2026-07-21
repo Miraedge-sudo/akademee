@@ -8,6 +8,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../core/hooks/useAuth';
+import { useTheme } from '../../../core/hooks/useTheme';
 import { getStudentMe } from '../../../core/api/studentService';
 import { getStudentAverages, getClassRankings } from '../../../core/api/gradeCalculationService';
 import { getAttendanceStats } from '../../../core/api/attendanceService';
@@ -24,6 +25,8 @@ import FeeStatusWidget from '../components/FeeStatusWidget';
 
 export default function StudentDashboardPage() {
   const { user } = useAuth();
+  const { primaryColor } = useTheme();
+  const pc = primaryColor || '#085041';
 
   // ── Data state ──
   const [loading, setLoading] = useState(true);
@@ -149,6 +152,7 @@ export default function StudentDashboardPage() {
         rank={rank}
         totalStudents={totalStudents}
         annualAvg={annualAvg}
+        primaryColor={pc}
       />
 
       {/* ── 2. Stat Strip ────────────────────────────────── */}
@@ -160,6 +164,7 @@ export default function StudentDashboardPage() {
         totalAbsences={totalAbsences}
         totalDue={totalDue}
         totalPaid={totalPaid}
+        primaryColor={pc}
       />
 
       {/* ── 3. Row: Subject Grades + Sequence Chart ──────── */}

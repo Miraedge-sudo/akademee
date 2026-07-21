@@ -392,8 +392,8 @@ export default function TeacherClassAssignmentPage() {
         setAssignments((prev) => [...prev, saved]);
         toast.success(
           isFr
-            ? "Enseignant assigné à la classe ✨"
-            : "Teacher assigned to class ✨"
+            ? "Enseignant assigné à la classe"
+            : "Teacher assigned to class"
         );
       }
     } catch (err) {
@@ -459,8 +459,8 @@ export default function TeacherClassAssignmentPage() {
 
       toast.success(
         isFr
-          ? `${selectedTeacher.firstName} est maintenant professeur principal ✨`
-          : `${selectedTeacher.firstName} is now the main teacher ✨`
+          ? `${selectedTeacher.firstName} est maintenant professeur principal`
+          : `${selectedTeacher.firstName} is now the main teacher`
       );
     } catch (err) {
       const msg =

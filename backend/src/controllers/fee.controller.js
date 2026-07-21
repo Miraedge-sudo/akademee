@@ -5,9 +5,9 @@ const studentFeeService = require('../services/studentFee.service');
 class FeeController {
   async createFeeStructure(req, res, next) {
     try {
-      const { name, amount, classId, description } = req.body;
+      const { name, amount, classId, description, dueDate } = req.body;
       const { schoolId } = req;
-      const result = await feeService.create(schoolId, { name, amount, classId, description });
+      const result = await feeService.create(schoolId, { name, amount, classId, description, dueDate });
       response.success(res, 'Fee structure created', result, 201);
     } catch (error) {
       next(error);

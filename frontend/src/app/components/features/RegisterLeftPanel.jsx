@@ -1,32 +1,32 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { FiBarChart2, FiEdit3, FiCheckCircle, FiDollarSign, FiCrosshair } from "react-icons/fi";
 
 const SLIDES = [
   {
     key: "dashboard",
     label: "Vue d'ensemble",
-    emoji: "📊",
     titleKey: "panel.slideDashboardTitle",
     descKey: "panel.slideDashboardDesc",
   },
   {
     key: "grades",
     label: "Notes & bulletins",
-    emoji: "📝",
+    iconName: "edit",
     titleKey: "panel.slideGradesTitle",
     descKey: "panel.slideGradesDesc",
   },
   {
     key: "attendance",
     label: "Présence",
-    emoji: "✅",
+    iconName: "check",
     titleKey: "panel.slideAttendanceTitle",
     descKey: "panel.slideAttendanceDesc",
   },
   {
     key: "finance",
     label: "Frais scolaires",
-    emoji: "💰",
+    iconName: "dollar",
     titleKey: "panel.slideFinanceTitle",
     descKey: "panel.slideFinanceDesc",
   },
@@ -154,8 +154,11 @@ export default function RegisterLeftPanel() {
                   {SLIDES.map((s) => (
                     <div key={s.key} className="w-full flex-shrink-0 p-5 min-h-[180px] flex items-start gap-4">
                       {/* Emoji/icon */}
-                      <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center flex-shrink-0 text-2xl">
-                        {s.emoji}
+                      <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center flex-shrink-0">
+                        {s.key === "dashboard" && <FiBarChart2 className="w-6 h-6 text-teal-700" />}
+                        {s.key === "grades" && <FiEdit3 className="w-6 h-6 text-teal-700" />}
+                        {s.key === "attendance" && <FiCheckCircle className="w-6 h-6 text-teal-700" />}
+                        {s.key === "finance" && <FiDollarSign className="w-6 h-6 text-teal-700" />}
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -273,7 +276,7 @@ export default function RegisterLeftPanel() {
             {/* Floating badges */}
             <div className="absolute -top-3 -right-3 bg-white rounded-xl px-3 py-2 shadow-[0_12px_24px_-10px_rgba(0,0,0,0.3)] flex items-center gap-2.5">
               <div className="w-6 h-6 rounded-md bg-gradient-to-br from-amber-200 to-amber-400 flex items-center justify-center text-[11px]">
-                🎯
+                <FiCrosshair className="w-3.5 h-3.5 text-amber-600" />
               </div>
               <div>
                 <b className="block text-[12px] text-teal-900 font-bold">

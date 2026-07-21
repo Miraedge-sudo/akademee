@@ -9,6 +9,8 @@ router.use(authMiddleware);
 router.post('/recalculate', roleMiddleware(['admin']), feeCalculationController.updateAllStatuses);
 router.get('/student/:studentId', feeCalculationController.getStudentFeeStatus);
 router.get('/student/:studentId/summary', feeCalculationController.getStudentFeeSummary);
+router.get('/student/:studentId/fees', feeCalculationController.getStudentFeeBreakdown);
+router.get('/class/:classId/assigned-fees', feeCalculationController.getClassAssignedFees);
 
 /**
  * @openapi

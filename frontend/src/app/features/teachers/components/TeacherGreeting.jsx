@@ -37,7 +37,7 @@ export default function TeacherGreeting({ teacher, classesToday = 0, pendingGrad
         </p>
         <h1 className="font-display text-[clamp(22px,3vw,30px)] font-bold text-surface-900 dark:text-surface-50 leading-tight">
           {t(`teacher.greeting.${greetingKey}`)},{' '}
-          <span style={{ color: pc }}>{teacher?.firstName ? `${teacher.firstName}` : 'Teacher'}</span> 👋
+          <span style={{ color: pc }}>{teacher?.firstName ? `${teacher.firstName}` : 'Teacher'}</span>
         </h1>
         <p className="text-sm text-surface-400 mt-1">
           {t('teacher.greeting.classesToday', { count: classesToday })}

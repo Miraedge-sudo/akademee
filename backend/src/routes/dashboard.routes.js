@@ -10,6 +10,8 @@ router.get('/activities', authMiddleware, dashboardController.getRecentActivitie
 
 router.get('/revenue', authMiddleware, dashboardController.getRevenueData);
 
+router.get('/finance-stats', authMiddleware, dashboardController.getFinanceStats);
+
 /**
  * @openapi
  * /api/dashboard/stats:

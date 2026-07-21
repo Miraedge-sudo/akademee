@@ -31,6 +31,10 @@ const GradesPage = lazy(() => import("./app/features/grades/pages/GradesPage"));
 const ReportCardsPage = lazy(() => import("./app/features/grades/pages/ReportCardsPage"));
 const AttendancePage = lazy(() => import("./app/features/attendance/pages/AttendancePage"));
 const FinancePage = lazy(() => import("./app/features/finance/pages/FinancePage"));
+const FeesManagementPage = lazy(() => import("./app/features/finance/pages/FeesManagementPage"));
+const FeesAssignmentPage = lazy(() => import("./app/features/finance/pages/FeesAssignmentPage"));
+const PaymentsPage = lazy(() => import("./app/features/finance/pages/PaymentsPage"));
+const ReceiptsPage = lazy(() => import("./app/features/finance/pages/ReceiptsPage"));
 const SettingsPage = lazy(() => import("./app/features/settings/pages/SettingsPage"));
 const WebsiteSettingsPage = lazy(() => import("./app/features/settings/pages/WebsiteSettingsPage"));
 const AcademicYearsPage = lazy(() => import("./app/features/settings/pages/AcademicYearsPage"));
@@ -227,6 +231,10 @@ function App() {
 
             {/* Finance */}
             <Route path="finance" element={dashboardPage(FinancePage)} />
+            <Route path="fees" element={dashboardPage(FeesManagementPage)} />
+            <Route path="fees/assign" element={dashboardPage(FeesAssignmentPage)} />
+            <Route path="payments" element={dashboardPage(PaymentsPage)} />
+            <Route path="receipts" element={dashboardPage(ReceiptsPage)} />
 
             {/* University-specific routes */}
             <Route path="programs/licence" element={dashboardPage(ProgramsSection)} />

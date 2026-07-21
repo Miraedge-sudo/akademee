@@ -183,8 +183,8 @@ export default function AcademicYearSetup({ onComplete, onBack }) {
             {/* Hint */}
             <p className="text-xs text-surface-400 leading-relaxed bg-surface-50 dark:bg-surface-900 p-3 rounded-lg">
               {lang === "fr"
-                ? "💡 Vous pourrez configurer les trimestres, périodes et systèmes éducatifs plus tard dans Paramètres → Années scolaires."
-                : "💡 You can configure terms, periods and educational systems later in Settings → Academic Years."}
+                ? "Vous pourrez configurer les trimestres, périodes et systèmes éducatifs plus tard dans Paramètres → Années scolaires."
+                : "You can configure terms, periods and educational systems later in Settings → Academic Years."}
             </p>
           </div>
 

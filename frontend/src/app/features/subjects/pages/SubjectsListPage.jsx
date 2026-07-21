@@ -206,10 +206,10 @@ export default function SubjectsListPage() {
       };
       if (editingSubject) {
         await updateSubject(editingSubject.id, payload);
-        toast.success(isFr ? "Matière mise à jour ✨" : "Subject updated ✨");
+        toast.success(isFr ? "Matière mise à jour" : "Subject updated");
       } else {
         await createSubject(payload);
-        toast.success(isFr ? "Matière créée ✨" : "Subject created ✨");
+        toast.success(isFr ? "Matière créée" : "Subject created");
       }
       closeForm();
       loadSubjects();

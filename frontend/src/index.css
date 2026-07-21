@@ -102,6 +102,20 @@
   
 }
 
+/* ── Primary color focus ring (dynamic via --primary-rgb) ── */
+.primary-focus-ring {
+  --focus-rgb: var(--primary-rgb, 8,80,65);
+}
+
+.primary-focus-ring:focus {
+  box-shadow: 0 0 0 4px rgba(var(--focus-rgb), 0.09) !important;
+  border-color: var(--primary-color, #085041) !important;
+}
+
+.dark .primary-focus-ring:focus {
+  box-shadow: 0 0 0 4px rgba(var(--focus-rgb), 0.15) !important;
+}
+
 /* ── Animations ── */
 @layer utilities {
   /* Fade In */
