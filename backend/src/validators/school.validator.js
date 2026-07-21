@@ -90,6 +90,18 @@ const checkSubdomainValidator = [
     .withMessage('Subdomain may only contain lowercase letters, numbers, and hyphens'),
 ];
 
+const resendVerificationRequestValidator = [
+  body('subdomain')
+    .trim()
+    .notEmpty()
+    .withMessage('Subdomain is required')
+    .isLength({ min: 3, max: 63 })
+    .withMessage('Subdomain must be between 3 and 63 characters')
+    .customSanitizer((value) => value.toLowerCase())
+    .matches(SUBDOMAIN_PATTERN)
+    .withMessage('Subdomain may only contain lowercase letters, numbers, and hyphens'),
+];
+
 const createSchoolValidator = [
   body('name').trim().notEmpty().withMessage('School name is required'),
   body('email').isEmail().normalizeEmail(),
@@ -121,6 +133,7 @@ const getSchoolValidator = [
 module.exports = {
   registerSchoolValidator,
   checkSubdomainValidator,
+  resendVerificationRequestValidator,
   createSchoolValidator,
   updateSchoolValidator,
   getSchoolValidator,

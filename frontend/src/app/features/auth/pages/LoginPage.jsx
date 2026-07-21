@@ -53,8 +53,29 @@ export default function LoginPage() {
       } else {
         setError(result.message);
       }
-    } catch {
-      setError(t("login.genericError", "Something went wrong. Please try again."));
+    } catch (err) {
+      const errorMessage = err?.response?.data?.message || err?.message || t("login.genericError", "Something went wrong. Please try again.");
+      if (errorMessage.includes("verify your school email")) {
+        setError(
+          <span>
+            {errorMessage}{" "}
+            <Link to={`/verify-email?subdomain=${encodeURIComponent(formData.subdomain)}`} className="text-teal-600 hover:underline font-medium">
+              Resend verification
+            </Link>
+          </span>
+        );
+      } else if (errorMessage.includes("verify your admin email")) {
+        setError(
+          <span>
+            {errorMessage}{" "}
+            <Link to={`/verify-email?subdomain=${encodeURIComponent(formData.subdomain)}`} className="text-teal-600 hover:underline font-medium">
+              Resend verification
+            </Link>
+          </span>
+        );
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

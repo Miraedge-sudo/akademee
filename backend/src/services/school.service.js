@@ -7,7 +7,6 @@ const sql = require('../config/database');
 const bcrypt = require('bcrypt');
 const SlugGenerator = require('../utils/slugGenerator');
 const { buildSchoolUrls } = require('../utils/domainHelper');
-const authService = require('./auth.service');
 const emailService = require('./email.service');
 const onboardingService = require('./onboarding.service');
 const emailConfig = require('../config/email');
@@ -68,22 +67,26 @@ class SchoolService {
     `;
 
     const templateId = templates[0]?.template_id || null;
-    const resolvedTemplateCode = templates[0]?.template_code || 'modern';
+    const resolvedTemplateCode = templates[0]?.template_code || 'bold';
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const schoolVerificationToken = onboardingService.createVerificationToken();
+    const schoolVerificationExpires = onboardingService.verificationExpiryDate(emailConfig.verificationExpiresHours);
+    const adminVerificationToken = onboardingService.createVerificationToken();
+    const adminVerificationExpires = onboardingService.verificationExpiryDate(emailConfig.verificationExpiresHours);
 
     const result = await sql.begin(async (tx) => {
       const schools = await tx`
         INSERT INTO schools (
           name, email, phone, city, region, subdomain, tagline,
           website_template_id, subscription_plan, subscription_status, is_active,
-          email_verified, created_at
+          email_verified, require_email_verification, verification_token, verification_token_expires_at, created_at
         )
         VALUES (
           ${schoolName}, ${email}, ${phone || null}, ${city}, ${region || null}, ${normalizedSubdomain},
           ${`Welcome to ${schoolName}`},
           ${templateId}, ${planId}, 'trial', true,
-           false, NOW()
+          false, true, ${schoolVerificationToken}, ${schoolVerificationExpires}, NOW()
         )
         RETURNING school_id, name, email, subdomain
       `;
@@ -91,8 +94,14 @@ class SchoolService {
       const school = schools[0];
 
       const users = await tx`
-        INSERT INTO users (school_id, first_name, last_name, email, login_email, password_hash, phone, is_active, created_at)
-        VALUES (${school.school_id}, ${firstName}, ${lastName}, ${adminEmail}, ${adminEmail}, ${passwordHash}, ${phone || null}, true, NOW())
+        INSERT INTO users (
+          school_id, first_name, last_name, email, login_email, password_hash, phone, is_active,
+          email_verified, require_email_verification, verification_token, verification_token_expires_at, created_at
+        )
+        VALUES (
+          ${school.school_id}, ${firstName}, ${lastName}, ${adminEmail}, ${adminEmail}, ${passwordHash}, ${phone || null}, true,
+          false, true, ${adminVerificationToken}, ${adminVerificationExpires}, NOW()
+        )
         RETURNING user_id, first_name, last_name, email, login_email, school_id
       `;
 
@@ -108,19 +117,24 @@ class SchoolService {
         `;
       }
 
-      const assignedRoles = adminRole ? [{ role_code: adminRole.role_code }] : [];
-
-      return { school, user, assignedRoles };
+      return { school, user };
     });
 
-    const { school, user, assignedRoles } = result;
-    const schoolForSession = {
-      ...school,
-      template_code: resolvedTemplateCode,
-    };
-
-    const session = await authService.createAuthSession(user, schoolForSession, assignedRoles);
+    const { school, user } = result;
     const urls = buildSchoolUrls(school.subdomain, resolvedTemplateCode);
+    const schoolEmailResult = await emailService.sendSchoolVerificationEmail({
+      schoolName: school.name,
+      subdomain: school.subdomain,
+      email: school.email,
+      token: schoolVerificationToken,
+    });
+    const adminEmailResult = await emailService.sendAdminVerificationEmail({
+      schoolName: school.name,
+      subdomain: school.subdomain,
+      email: user.email,
+      firstName: user.first_name,
+      token: adminVerificationToken,
+    });
 
     return {
       school: {
@@ -141,10 +155,13 @@ class SchoolService {
       adminEmail: user.email,
       adminName: `${user.first_name} ${user.last_name}`,
       planId,
-      emailVerified: false,
-      token: session.token,
-      refreshToken: session.refreshToken,
-      user: session.user,
+      verificationRequired: true,
+      schoolEmailVerified: false,
+      adminEmailVerified: false,
+      schoolVerificationSent: schoolEmailResult.sent,
+      adminVerificationSent: adminEmailResult.sent,
+      schoolVerificationUrl: schoolEmailResult.verifyUrl || null,
+      adminVerificationUrl: adminEmailResult.verifyUrl || null,
       urls,
     };
   }
@@ -152,19 +169,9 @@ class SchoolService {
   /**
    * Resend verification email for the authenticated school.
    */
-  async resendVerificationEmail(schoolId) {
-    const schools = await sql`
-      SELECT school_id, name, email, subdomain, email_verified
-      FROM schools WHERE school_id = ${schoolId}
-    `;
-
-    if (schools.length === 0) {
-      throw new Error('School not found');
-    }
-
-    const school = schools[0];
-    if (school.email_verified) {
-      return { sent: false, alreadyVerified: true };
+  async resendSchoolVerification(school) {
+    if (!school.require_email_verification || school.email_verified) {
+      return { sent: false, alreadyVerified: true, verifyUrl: null };
     }
 
     const token = onboardingService.createVerificationToken();
@@ -175,26 +182,129 @@ class SchoolService {
       SET verification_token = ${token},
           verification_token_expires_at = ${expires},
           updated_at = NOW()
-      WHERE school_id = ${schoolId}
+      WHERE school_id = ${school.school_id}
     `;
-
-    const admins = await sql`
-      SELECT email FROM users u
-      INNER JOIN user_roles ur ON u.user_id = ur.user_id
-      INNER JOIN roles r ON ur.role_id = r.role_id
-      WHERE u.school_id = ${schoolId} AND r.role_code = 'ADMIN'
-    `;
-
-    const recipients = [school.email, ...admins.map((a) => a.email)];
 
     const result = await emailService.sendSchoolVerificationEmail({
       schoolName: school.name,
       subdomain: school.subdomain,
-      recipients,
+      email: school.email,
       token,
     });
 
-    return { sent: result.sent, alreadyVerified: false };
+    return { sent: result.sent, alreadyVerified: false, verifyUrl: result.verifyUrl || null };
+  }
+
+  async resendAdminVerifications(school) {
+    const admins = await sql`
+      SELECT DISTINCT u.user_id, u.first_name, u.email, u.email_verified, u.require_email_verification
+      FROM users u
+      INNER JOIN user_roles ur ON u.user_id = ur.user_id
+      INNER JOIN roles r ON ur.role_id = r.role_id
+      WHERE u.school_id = ${school.school_id} AND r.role_code = 'ADMIN'
+    `;
+
+    let sentCount = 0;
+    let pendingCount = 0;
+    const verifyUrls = [];
+
+    for (const admin of admins) {
+      if (!admin.require_email_verification || admin.email_verified) {
+        continue;
+      }
+
+      pendingCount += 1;
+
+      const token = onboardingService.createVerificationToken();
+      const expires = onboardingService.verificationExpiryDate(emailConfig.verificationExpiresHours);
+
+      await sql`
+        UPDATE users
+        SET verification_token = ${token},
+            verification_token_expires_at = ${expires},
+            updated_at = NOW()
+        WHERE user_id = ${admin.user_id}
+      `;
+
+      const result = await emailService.sendAdminVerificationEmail({
+        schoolName: school.name,
+        subdomain: school.subdomain,
+        email: admin.email,
+        firstName: admin.first_name,
+        token,
+      });
+
+      if (result.sent) {
+        sentCount += 1;
+      }
+
+      if (result.verifyUrl) {
+        verifyUrls.push(result.verifyUrl);
+      }
+    }
+
+    return {
+      sent: sentCount > 0,
+      alreadyVerified: pendingCount === 0,
+      sentCount,
+      pendingCount,
+      verifyUrls,
+    };
+  }
+
+  async resendVerificationEmail(schoolId) {
+    const schools = await sql`
+      SELECT school_id, name, email, subdomain, email_verified, require_email_verification
+      FROM schools WHERE school_id = ${schoolId}
+    `;
+
+    if (schools.length === 0) {
+      throw new Error('School not found');
+    }
+
+    const school = schools[0];
+    const schoolResult = await this.resendSchoolVerification(school);
+    const adminResult = await this.resendAdminVerifications(school);
+
+    return {
+      sent: schoolResult.sent || adminResult.sent,
+      schoolAlreadyVerified: schoolResult.alreadyVerified,
+      adminAlreadyVerified: adminResult.alreadyVerified,
+      schoolVerificationSent: schoolResult.sent,
+      adminVerificationSent: adminResult.sent,
+      adminPendingCount: adminResult.pendingCount,
+      schoolVerificationUrl: schoolResult.verifyUrl,
+      adminVerificationUrls: adminResult.verifyUrls,
+    };
+  }
+
+  async resendVerificationBySubdomain(subdomain) {
+    const normalizedSubdomain = this.normalizeSubdomain(subdomain);
+
+    if (!normalizedSubdomain) {
+      return { sent: false };
+    }
+
+    const schools = await sql`
+      SELECT school_id, name, email, subdomain, email_verified, require_email_verification
+      FROM schools WHERE subdomain = ${normalizedSubdomain}
+    `;
+
+    if (schools.length === 0) {
+      return { sent: false };
+    }
+
+    const school = schools[0];
+    const schoolResult = await this.resendSchoolVerification(school);
+    const adminResult = await this.resendAdminVerifications(school);
+
+    return {
+      sent: schoolResult.sent || adminResult.sent,
+      schoolVerificationSent: schoolResult.sent,
+      adminVerificationSent: adminResult.sent,
+      schoolVerificationUrl: schoolResult.verifyUrl || null,
+      adminVerificationUrls: adminResult.verifyUrls || [],
+    };
   }
 
   /**
