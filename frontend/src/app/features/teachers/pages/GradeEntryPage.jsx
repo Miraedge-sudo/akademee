@@ -15,6 +15,7 @@ import { useTheme } from "../../../core/hooks/useTheme";
 import { useTranslation } from "react-i18next";
 import { getEnrollments } from "../../../core/api/enrollmentService";
 import { getTeacherSubjects } from "../../../core/api/subjectService";
+import { getTeacherClasses } from "../../../core/api/classService";
 import { getClassGrades, recordGrade, updateGrade } from "../../../core/api/gradeService";
 import periodService from "../../../core/api/periodService";
 import sequencesService from "../../../core/api/sequencesService";
@@ -138,33 +139,24 @@ export default function GradeEntryPage() {
       const teacherId = user?.id;
       if (!teacherId) return;
 
-      // Get teacher's subject assignments to determine their classes
-      const subjectData = await getTeacherSubjects(teacherId).catch(() => []);
-      const subjectsList = Array.isArray(subjectData) ? subjectData : subjectData?.data || [];
+      // Load teacher's assigned classes + subjects + periods in parallel
+      const [classesData, subjectData, periodsData] = await Promise.all([
+        getTeacherClasses(teacherId).catch(() => []),
+        getTeacherSubjects(teacherId).catch(() => []),
+        periodService.list().catch(() => []),
+      ]);
 
-      // Get all classes to resolve class names
-      const { getClasses } = await import("../../../core/api/classService");
-      const allClassesData = await getClasses({ limit: 200 }).catch(() => ({ classes: [] }));
-      const allClasses = allClassesData?.classes || [];
-      const classLookup = {};
-      allClasses.forEach((c) => { classLookup[c.id] = c.name; });
-
-      // Extract unique classes from subject assignments
-      const classMap = {};
-      subjectsList.forEach((s) => {
-        const cid = s.classId;
-        if (cid && !classMap[cid]) {
-          classMap[cid] = { id: cid, name: classLookup[cid] || s.className || cid.slice(0, 8) };
-        }
-      });
-      const classesList = Object.values(classMap);
-
-      // Load periods
-      const periodsData = await periodService.list().catch(() => []);
+      const classesList = Array.isArray(classesData) ? classesData : (classesData?.data || []);
+      const subjectsList = Array.isArray(subjectData) ? subjectData : (subjectData?.data || []);
 
       setClasses(classesList);
       setSubjects(subjectsList);
       setPeriods(periodsData);
+
+      // Auto-select the class if only one is assigned
+      if (classesList.length === 1) {
+        setSelectedClassId(classesList[0].id);
+      }
 
       // Auto-select the current/active period
       const currentPeriod = periodsData.find((p) => p.isCurrent);
