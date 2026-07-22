@@ -54,6 +54,7 @@ const seriesRoutes = require('./routes/series.routes');
 const inviteRoutes = require('./routes/invite.routes');
 const v1PeriodRoutes = require('./routes/v1/period.routes');
 const v1SequenceRoutes = require('./routes/v1/sequence.routes');
+const v1GradingRoutes = require('./routes/v1/gradingSystem.routes');
 
 const app = express();
 
@@ -125,6 +126,7 @@ app.use('/api/series', seriesRoutes);
 app.use('/api/invites', inviteRoutes);
 app.use('/api/v1/periodes', v1PeriodRoutes);
 app.use('/api/v1/sequences', v1SequenceRoutes);
+app.use('/api/v1', v1GradingRoutes);
 
 // API documentation
 app.use('/api-docs', swaggerRoutes);
