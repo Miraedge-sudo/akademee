@@ -10,6 +10,8 @@ class GradeService {
       subjectName: row.subject_name,
       periodId: row.period_id,
       periodName: row.period_name || null,
+      sequenceId: row.sequence_id || null,
+      sequenceName: row.sequence_name || null,
       score: Number(row.score),
       previousScore: row.previous_score != null ? Number(row.previous_score) : null,
       coefficient: row.coefficient || 1,
@@ -21,10 +23,10 @@ class GradeService {
   }
 
   async create(schoolId, data) {
-    const { studentId, subjectId, periodId, score, comment } = data;
+    const { studentId, subjectId, periodId, sequenceId, score, comment } = data;
     const rows = await sql`
-      INSERT INTO grades (school_id, student_id, subject_id, period_id, score, comment)
-      VALUES (${schoolId}, ${studentId}, ${subjectId}, ${periodId || null}, ${score}, ${comment || null})
+      INSERT INTO grades (school_id, student_id, subject_id, period_id, sequence_id, score, comment)
+      VALUES (${schoolId}, ${studentId}, ${subjectId}, ${periodId || null}, ${sequenceId || null}, ${score}, ${comment || null})
       RETURNING *
     `;
     const created = this.formatGrade(rows[0]);
@@ -35,15 +37,23 @@ class GradeService {
         created.periodName = periodRows[0].name;
       }
     }
+    // Fetch sequence name if sequenceId is provided
+    if (rows[0].sequence_id) {
+      const seqRows = await sql`SELECT label FROM sequences WHERE sequence_id = ${rows[0].sequence_id}`;
+      if (seqRows.length > 0) {
+        created.sequenceName = seqRows[0].label;
+      }
+    }
     return created;
   }
 
   async getById(schoolId, gradeId) {
     const rows = await sql`
-      SELECT g.*, s.name AS subject_name, p.name AS period_name
+      SELECT g.*, s.name AS subject_name, p.name AS period_name, seq.label AS sequence_name
       FROM grades g
       LEFT JOIN subjects s ON g.subject_id = s.subject_id
       LEFT JOIN periods p ON g.period_id = p.period_id
+      LEFT JOIN sequences seq ON g.sequence_id = seq.sequence_id
       WHERE g.grade_id = ${gradeId} AND g.school_id = ${schoolId}
     `;
     if (rows.length === 0) throw new Error('Grade not found');
@@ -55,10 +65,11 @@ class GradeService {
     offset = Math.max(0, offset);
 
     const rows = await sql`
-      SELECT g.*, s.name AS subject_name, p.name AS period_name
+      SELECT g.*, s.name AS subject_name, p.name AS period_name, seq.label AS sequence_name
       FROM grades g
       LEFT JOIN subjects s ON g.subject_id = s.subject_id
       LEFT JOIN periods p ON g.period_id = p.period_id
+      LEFT JOIN sequences seq ON g.sequence_id = seq.sequence_id
       ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
       WHERE g.school_id = ${schoolId}
         ${studentId ? sql`AND g.student_id = ${studentId}` : sql``}
@@ -89,11 +100,12 @@ class GradeService {
 
   async listByClass(schoolId, classId, { academicYearId } = {}) {
     const rows = await sql`
-      SELECT g.*, s.name AS subject_name, p.name AS period_name,
+      SELECT g.*, s.name AS subject_name, p.name AS period_name, seq.label AS sequence_name,
         CONCAT(u.first_name, ' ', u.last_name) AS student_name
       FROM grades g
       LEFT JOIN subjects s ON g.subject_id = s.subject_id
       LEFT JOIN periods p ON g.period_id = p.period_id
+      LEFT JOIN sequences seq ON g.sequence_id = seq.sequence_id
       JOIN enrollments e ON g.student_id = e.student_id AND e.class_id = ${classId} AND e.status = 'active'
       LEFT JOIN students st ON g.student_id = st.student_id
       LEFT JOIN users u ON st.user_id = u.user_id
@@ -106,10 +118,11 @@ class GradeService {
 
   async listByStudent(schoolId, studentId, { academicYearId } = {}) {
     const rows = await sql`
-      SELECT g.*, s.name AS subject_name, p.name AS period_name
+      SELECT g.*, s.name AS subject_name, p.name AS period_name, seq.label AS sequence_name
       FROM grades g
       LEFT JOIN subjects s ON g.subject_id = s.subject_id
       LEFT JOIN periods p ON g.period_id = p.period_id
+      LEFT JOIN sequences seq ON g.sequence_id = seq.sequence_id
       ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
       WHERE g.school_id = ${schoolId} AND g.student_id = ${studentId}
       ORDER BY g.created_at DESC

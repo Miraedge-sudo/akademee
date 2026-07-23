@@ -29,6 +29,8 @@ const SubjectsListPage = lazy(() => import("./app/features/subjects/pages/Subjec
 const ClassSubjectsPage = lazy(() => import("./app/features/subjects/pages/ClassSubjectsPage"));
 const GradesPage = lazy(() => import("./app/features/grades/pages/GradesPage"));
 const ReportCardsPage = lazy(() => import("./app/features/grades/pages/ReportCardsPage"));
+const GradingConfigPage = lazy(() => import("./app/features/grades/pages/GradingConfigPage"));
+const SubjectOfferingsPage = lazy(() => import("./app/features/grades/pages/SubjectOfferingsPage"));
 const AttendancePage = lazy(() => import("./app/features/attendance/pages/AttendancePage"));
 const FinancePage = lazy(() => import("./app/features/finance/pages/FinancePage"));
 const FeesManagementPage = lazy(() => import("./app/features/finance/pages/FeesManagementPage"));
@@ -65,6 +67,7 @@ const StudentDashboardPage = lazy(() => import("./app/features/students/pages/St
 const MyGradesPage = lazy(() => import("./app/features/students/pages/MyGradesPage"));
 const MyAttendancePage = lazy(() => import("./app/features/students/pages/MyAttendancePage"));
 const MyFeesPage = lazy(() => import("./app/features/students/pages/MyFeesPage"));
+const MyReportCardsPage = lazy(() => import("./app/features/students/pages/MyReportCardsPage"));
 const ParentDashboardPage = lazy(() => import("./app/features/parent/pages/ParentDashboardPage"));
 
 // ── Lazy helpers ──
@@ -228,6 +231,8 @@ function App() {
             <Route path="grades/anglophone" element={dashboardPage(GradesPage)} />
             <Route path="grades/francophone" element={dashboardPage(GradesPage)} />
             <Route path="report-cards" element={dashboardPage(ReportCardsPage)} />
+            <Route path="grading-config" element={dashboardPage(GradingConfigPage)} />
+            <Route path="subject-offerings" element={dashboardPage(SubjectOfferingsPage)} />
             <Route path="attendance" element={dashboardPage(AttendancePage)} />
 
             {/* Finance */}
@@ -315,6 +320,7 @@ function App() {
             <Route path="my-grades" element={dashboardPage(MyGradesPage)} />
             <Route path="my-attendance" element={dashboardPage(MyAttendancePage)} />
             <Route path="my-fees" element={dashboardPage(MyFeesPage)} />
+            <Route path="my-report-cards" element={dashboardPage(MyReportCardsPage)} />
           </Route>
 
           {/* Academic year selection standalone */}

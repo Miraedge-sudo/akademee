@@ -150,51 +150,16 @@ export default function ReportCardsPage() {
   const [genPeriodId, setGenPeriodId] = useState("");
   const [genSequenceId, setGenSequenceId] = useState("");
   const [genSequences, setGenSequences] = useState([]);
-  const [genEduSystem, setGenEduSystem] = useState("");
   const [genClassId, setGenClassId] = useState("");
   const [genBatchPeriodId, setGenBatchPeriodId] = useState("");
   const [genBatchSequenceId, setGenBatchSequenceId] = useState("");
   const [genBatchSequences, setGenBatchSequences] = useState([]);
-  const [genBatchEduSystem, setGenBatchEduSystem] = useState("");
 
   // ── Education system for selected class/student ──
   const selectedClass = classes.find(c => c.id === genClassId);
   const selectedStudentClass = genStudentId
     ? classes.find(c => c.id === students.find(s => (s.id === genStudentId))?.classId)
     : null;
-
-  // ── Mapping onboarding system names → DB codes ──
-  const ONBOARDING_TO_DB_CODE = {
-    'francophone_general': 'FR_GEN',
-    'anglophone_general': 'ANG_GEN',
-    'francophone_technical': 'FR_TECH',
-    'anglophone_technical': 'ANG_TECH',
-    'university': 'UNIV',
-  };
-
-  // ── Education systems available for the school ──
-  // Filters by the school's selected systems from onboarding
-  const schoolEduSystems = (() => {
-    // Get the school's onboarding system names
-    const schoolSystems = user?.school?.educationalSystems || [];
-    const allowedCodes = new Set(
-      schoolSystems
-        .map(s => ONBOARDING_TO_DB_CODE[s] || null)
-        .filter(Boolean)
-    );
-
-    // Build list from ALL education systems, filtered by allowed codes
-    const allSystems = educationSystems.map(sys => ({
-      code: sys.code,
-      name: sys.name_en || sys.name_fr || sys.code,
-    })).filter(sys => sys.code);
-
-    if (allowedCodes.size > 0) {
-      return allSystems.filter(sys => allowedCodes.has(sys.code));
-    }
-    // Fallback: if no school systems found, return empty so admin knows to configure
-    return [];
-  })();
   const [generating, setGenerating] = useState(false);
 
   // ── Revise modal ──
@@ -260,21 +225,29 @@ export default function ReportCardsPage() {
     }
   }, [genStudentOpen]);
 
-  // ── Load all sequences when student modal opens ──
+  // ── Load sequences when a period is selected in student modal ──
   useEffect(() => {
-    if (!genStudentOpen) return;
-    sequencesService.list()
+    if (!genPeriodId) {
+      setGenSequences([]);
+      setGenSequenceId("");
+      return;
+    }
+    sequencesService.getByPeriodeId(genPeriodId)
       .then(setGenSequences)
       .catch(() => setGenSequences([]));
-  }, [genStudentOpen]);
+  }, [genPeriodId]);
 
-  // ── Load all sequences when batch modal opens ──
+  // ── Load sequences when a period is selected in batch modal ──
   useEffect(() => {
-    if (!genBatchOpen) return;
-    sequencesService.list()
+    if (!genBatchPeriodId) {
+      setGenBatchSequences([]);
+      setGenBatchSequenceId("");
+      return;
+    }
+    sequencesService.getByPeriodeId(genBatchPeriodId)
       .then(setGenBatchSequences)
       .catch(() => setGenBatchSequences([]));
-  }, [genBatchOpen]);
+  }, [genBatchPeriodId]);
 
   // ── Stats ──
   const totalCards = reportCards.length;
@@ -285,12 +258,8 @@ export default function ReportCardsPage() {
   // ── Generate individual (uses sequence ID as periodStructureId) ──
   const handleGenerateStudent = async () => {
     const periodId = genSequenceId || genPeriodId;
-    if (!genEduSystem) {
-      toast.error(isFr ? "Sélectionnez d'abord un système éducatif" : "First select an education system");
-      return;
-    }
     if (!genStudentId || !periodId) {
-      toast.error(isFr ? "Sélectionnez un étudiant et une période ou séquence" : "Select a student and a period or sequence");
+      toast.error(isFr ? "Sélectionnez un étudiant, une période et une séquence" : "Select a student, period and sequence");
       return;
     }
     setGenerating(true);
@@ -315,12 +284,8 @@ export default function ReportCardsPage() {
   // ── Generate batch (uses sequence ID as periodStructureId) ──
   const handleGenerateBatch = async () => {
     const periodId = genBatchSequenceId || genBatchPeriodId;
-    if (!genBatchEduSystem) {
-      toast.error(isFr ? "Sélectionnez d'abord un système éducatif" : "First select an education system");
-      return;
-    }
     if (!genClassId || !periodId) {
-      toast.error(isFr ? "Sélectionnez une classe et une période ou séquence" : "Select a class and a period or sequence");
+      toast.error(isFr ? "Sélectionnez une classe, une période et une séquence" : "Select a class, period and sequence");
       return;
     }
     setGenerating(true);
@@ -801,7 +766,6 @@ export default function ReportCardsPage() {
                   </select>
                   <FiChevronDown size={12} className="text-surface-400 flex-shrink-0" />
                 </div>
-              </div>
               {/* Education system filter */}
               <div className="relative group">
                 {filterEduSystem && (
@@ -1104,57 +1068,18 @@ export default function ReportCardsPage() {
       {/* ════════════════════════════════════════════ */}
       <ModalBackdrop
         open={genStudentOpen}
-        onClose={() => { setGenStudentOpen(false); setGenStudentId(""); setGenPeriodId(""); setGenSequenceId(""); setGenSequences([]); setGenEduSystem(""); }}
+        onClose={() => { setGenStudentOpen(false); setGenStudentId(""); setGenPeriodId(""); setGenSequenceId(""); setGenSequences([]); }}
         title={isFr ? "Générer un bulletin" : "Generate Report Card"}
         subtitle={isFr ? "Suivez les étapes pour générer le bulletin d'un élève" : "Follow the steps to generate a student report card"}
       >
         <div className="space-y-5">
-          {/* ── Step 1: Education System Selection ── */}
-          <div className={`p-4 rounded-xl border-[1.5px] transition-all ${
-            genEduSystem ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-900/15' : 'border-surface-100 dark:border-surface-700'
-          }`}>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ background: genEduSystem ? 'var(--primary-color, #085041)' : '#9CA3AF' }}>
-                {genEduSystem ? <FiCheckCircle size={12} /> : '1'}
-              </div>
-              <span className="text-[13px] font-bold text-surface-800 dark:text-surface-100">
-                {isFr ? "Système éducatif" : "Education system"}
-              </span>
-              {genEduSystem && (
-                <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" style={{
-                  background: getEduSystemColor(genEduSystem),
-                  color: "#fff",
-                  opacity: 0.9,
-                }}>
-                  {genEduSystem}
-                </span>
-              )}
-            </div>
-            <div className="relative">
-              <FiBookmark size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
-              <select
-                value={genEduSystem}
-                onChange={(e) => setGenEduSystem(e.target.value)}
-                className="w-full h-11 pl-10 pr-9 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-[13px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all hover:border-surface-300 dark:hover:border-surface-600"
-              >
-                <option value="">{isFr ? "Choisir le système..." : "Select system..."}</option>
-                {schoolEduSystems.map((sys) => (
-                  <option key={sys.code} value={sys.code}>
-                    {sys.name}
-                  </option>
-                ))}
-              </select>
-              <FiChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* ── Step 2: Student Selection ── */}
+          {/* ── Step 1: Student Selection ── */}
           <div className={`p-4 rounded-xl border-[1.5px] transition-all ${
             genStudentId ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-900/15' : 'border-surface-100 dark:border-surface-700'
           }`}>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ background: genStudentId ? 'var(--primary-color, #085041)' : '#9CA3AF' }}>
-                {genStudentId ? <FiCheckCircle size={12} /> : '2'}
+                {genStudentId ? <FiCheckCircle size={12} /> : '1'}
               </div>
               <span className="text-[13px] font-bold text-surface-800 dark:text-surface-100">
                 {isFr ? "Choisir un élève" : "Select a student"}
@@ -1165,16 +1090,12 @@ export default function ReportCardsPage() {
               <select
                 value={genStudentId}
                 onChange={(e) => setGenStudentId(e.target.value)}
-                className="w-full h-11 pl-10 pr-9 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-[13px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all hover:border-surface-300 dark:hover:border-surface-600"
+                className="w-full h-11 pl-10 pr-9 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-[13px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all                     hover:border-surface-300 dark:hover:border-surface-600"
               >
                 <option value="">{isFr ? "Sélectionnez un élève..." : "Select a student..."}</option>
                 {students.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.fullName || s.first_name + " " + s.last_name || s.name}
-                    {(() => {
-                      const sc = classes.find(c => c.id === s.classId);
-                      return sc?.educationSystemCode ? ` (${sc.educationSystemCode})` : '';
-                    })()}
                   </option>
                 ))}
               </select>
@@ -1182,16 +1103,36 @@ export default function ReportCardsPage() {
             </div>
           </div>
 
-          {/* ── Step 3: Sequence / Period ── */}
+          {/* ── Education system badge (if student selected) ── */}
+          {genStudentId && selectedStudentClass?.educationSystemCode && (
+            <div className="flex items-center gap-2 p-3 rounded-xl border" style={{
+              background: "rgba(var(--primary-rgb, 8,80,65), 0.06)",
+              borderColor: "rgba(var(--primary-rgb, 8,80,65), 0.15)",
+            }}>
+              <FiBookmark size={14} className="text-primary-600 dark:text-primary-400 flex-shrink-0" />
+              <span className="text-[12px] font-semibold text-primary-700 dark:text-primary-300">
+                {isFr ? "Système éducatif" : "Education system"}: {selectedStudentClass.educationSystemName || selectedStudentClass.educationSystemCode}
+              </span>
+              <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" style={{
+                background: getEduSystemColor(selectedStudentClass.educationSystemCode),
+                color: "#fff",
+                opacity: 0.9,
+              }}>
+                {selectedStudentClass.educationSystemCode}
+              </span>
+            </div>
+          )}
+
+          {/* ── Step 2: Period & Sequence (side by side) ── */}
           <div className={`p-4 rounded-xl border-[1.5px] transition-all ${
-            (genPeriodId || genSequenceId) ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-900/15' : 'border-surface-100 dark:border-surface-700'
+            genPeriodId ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-900/15' : 'border-surface-100 dark:border-surface-700'
           }`}>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ background: (genPeriodId || genSequenceId) ? 'var(--primary-color, #085041)' : '#9CA3AF' }}>
-                {(genPeriodId || genSequenceId) ? <FiCheckCircle size={12} /> : '3'}
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ background: genPeriodId ? 'var(--primary-color, #085041)' : '#9CA3AF' }}>
+                {genPeriodId ? <FiCheckCircle size={12} /> : '2'}
               </div>
               <span className="text-[13px] font-bold text-surface-800 dark:text-surface-100">
-                {isFr ? "Séquence / Période" : "Sequence / Period"}
+                {isFr ? "Période & Séquence" : "Period & Sequence"}
               </span>
               {genSequenceId && genSequences.find(s => s.id === genSequenceId) && (
                 <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{
@@ -1207,53 +1148,53 @@ export default function ReportCardsPage() {
               )}
             </div>
 
-            {/* Helper text */}
-            <p className="text-[11px] text-surface-400 mb-3 leading-relaxed">
-              {isFr
-                ? "Choisissez une séquence pour un bulletin séquentiel, ou une période pour un bulletin de trimestre."
-                : "Choose a sequence for a sequential report card, or a period for a term report card."}
-            </p>
-
-            {/* Sequence + Period side by side */}
+            {/* Period + Sequence side by side */}
             <div className="grid grid-cols-2 gap-3">
-              {/* Sequence (primary) */}
+              {/* Period */}
               <div>
                 <label className="block text-[11px] font-semibold text-surface-500 dark:text-surface-400 mb-1.5">
-                  {isFr ? "Séquence" : "Sequence"}
-                </label>
-                <div className="relative">
-                  <FiLayers size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
-                  <select
-                    value={genSequenceId}
-                    onChange={(e) => { setGenSequenceId(e.target.value); setGenPeriodId(""); }}
-                    className="w-full h-10 pl-9 pr-8 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg text-[12px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all hover:border-surface-300 dark:hover:border-surface-600"
-                  >
-                    <option value="">{isFr ? "Choisir..." : "Choose..."}</option>
-                    {genSequences.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.libelle || s.label || (isFr ? `Séquence ${s.ordre}` : `Sequence ${s.ordre}`)}
-                      </option>
-                    ))}
-                  </select>
-                  <FiChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Period (optional) */}
-              <div>
-                <label className="block text-[11px] font-semibold text-surface-500 dark:text-surface-400 mb-1.5">
-                  {isFr ? "Période / Trimestre (optionnel)" : "Period / Term (optional)"}
+                  {isFr ? "Période / Trimestre *" : "Period / Term *"}
                 </label>
                 <div className="relative">
                   <FiCalendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
                   <select
                     value={genPeriodId}
                     onChange={(e) => { setGenPeriodId(e.target.value); setGenSequenceId(""); }}
-                    className="w-full h-10 pl-9 pr-8 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg text-[12px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all hover:border-surface-300 dark:hover:border-surface-600"
+                    className="w-full h-10 pl-9 pr-8 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg text-[12px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all                     hover:border-surface-300 dark:hover:border-surface-600"
                   >
                     <option value="">{isFr ? "Choisir..." : "Choose..."}</option>
                     {periods.map((p) => (
                       <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  <FiChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Sequence */}
+              <div>
+                <label className="block text-[11px] font-semibold text-surface-500 dark:text-surface-400 mb-1.5">
+                  {isFr ? "Séquence *" : "Sequence *"}
+                </label>
+                <div className="relative">
+                  <FiLayers size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+                  <select
+                    value={genSequenceId}
+                    onChange={(e) => setGenSequenceId(e.target.value)}
+                    disabled={!genPeriodId || genSequences.length === 0}
+                    className="w-full h-10 pl-9 pr-8 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg text-[12px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all                     hover:border-surface-300 dark:hover:border-surface-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {!genPeriodId
+                        ? (isFr ? "D'abord la période" : "Select period first")
+                        : genSequences.length === 0
+                          ? (isFr ? "Aucune séquence" : "No sequences")
+                          : (isFr ? "Choisir..." : "Choose...")}
+                    </option>
+                    {genSequences.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.libelle}
+                      </option>
                     ))}
                   </select>
                   <FiChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
@@ -1274,32 +1215,17 @@ export default function ReportCardsPage() {
             )}
           </div>
 
-          {/* ── Template preview ── */}
-          {genEduSystem && genStudentId && genPeriodId && (
-            <div className="p-3 rounded-xl border border-primary-200 dark:border-primary-800 bg-primary-50/30 dark:bg-primary-900/10">
-              <div className="flex items-center gap-2">
-                <FiFileText size={14} className="text-primary-500" />
-                <span className="text-[12px] font-semibold text-primary-700 dark:text-primary-300">
-                  {isFr
-                    ? `Template bulletin : ${genEduSystem}`
-                    : `Report card template: ${genEduSystem}`
-                  }
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* ── Actions ── */}
           <div className="flex items-center justify-end gap-2 pt-1">
             <button
-              onClick={() => { setGenStudentOpen(false); setGenStudentId(""); setGenPeriodId(""); setGenSequenceId(""); setGenSequences([]); setGenEduSystem(""); }}
+              onClick={() => { setGenStudentOpen(false); setGenStudentId(""); setGenPeriodId(""); setGenSequenceId(""); setGenSequences([]); }}
               className="h-9 px-4 rounded-xl text-[12px] font-semibold text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
             >
               {isFr ? "Annuler" : "Cancel"}
             </button>
             <button
               onClick={handleGenerateStudent}
-              disabled={generating || !genStudentId || !(genSequenceId || genPeriodId)}
+              disabled={generating || !genStudentId || !genPeriodId || !genSequenceId}
               className="h-10 px-5 rounded-xl text-[12px] font-semibold text-white transition-all hover:scale-105 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-1.5"
               style={{ background: pc }}
             >
@@ -1324,58 +1250,18 @@ export default function ReportCardsPage() {
       {/* ════════════════════════════════════════════ */}
       <ModalBackdrop
         open={genBatchOpen}
-        onClose={() => { setGenBatchOpen(false); setGenClassId(""); setGenBatchPeriodId(""); setGenBatchSequenceId(""); setGenBatchSequences([]); setGenBatchEduSystem(""); }}
+        onClose={() => { setGenBatchOpen(false); setGenClassId(""); setGenBatchPeriodId(""); setGenBatchSequenceId(""); setGenBatchSequences([]); }}
         title={isFr ? "Génération par classe" : "Batch Generation"}
         subtitle={isFr ? "Générer des bulletins pour tous les élèves d'une classe" : "Generate report cards for every student in a class"}
-        width="max-w-xl"
       >
         <div className="space-y-5">
-          {/* ── Step 1: Education System Selection ── */}
-          <div className={`p-4 rounded-xl border-[1.5px] transition-all ${
-            genBatchEduSystem ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-900/15' : 'border-surface-100 dark:border-surface-700'
-          }`}>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ background: genBatchEduSystem ? 'var(--primary-color, #085041)' : '#9CA3AF' }}>
-                {genBatchEduSystem ? <FiCheckCircle size={12} /> : '1'}
-              </div>
-              <span className="text-[13px] font-bold text-surface-800 dark:text-surface-100">
-                {isFr ? "Système éducatif" : "Education system"}
-              </span>
-              {genBatchEduSystem && (
-                <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" style={{
-                  background: getEduSystemColor(genBatchEduSystem),
-                  color: "#fff",
-                  opacity: 0.9,
-                }}>
-                  {genBatchEduSystem}
-                </span>
-              )}
-            </div>
-            <div className="relative">
-              <FiBookmark size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
-              <select
-                value={genBatchEduSystem}
-                onChange={(e) => setGenBatchEduSystem(e.target.value)}
-                className="w-full h-11 pl-10 pr-9 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-[13px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all hover:border-surface-300 dark:hover:border-surface-600"
-              >
-                <option value="">{isFr ? "Choisir le système..." : "Select system..."}</option>
-                {schoolEduSystems.map((sys) => (
-                  <option key={sys.code} value={sys.code}>
-                    {sys.name}
-                  </option>
-                ))}
-              </select>
-              <FiChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* ── Step 2: Class Selection ── */}
+          {/* ── Step 1: Class Selection ── */}
           <div className={`p-4 rounded-xl border-[1.5px] transition-all ${
             genClassId ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-900/15' : 'border-surface-100 dark:border-surface-700'
           }`}>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ background: genClassId ? 'var(--primary-color, #085041)' : '#9CA3AF' }}>
-                {genClassId ? <FiCheckCircle size={12} /> : '2'}
+                {genClassId ? <FiCheckCircle size={12} /> : '1'}
               </div>
               <span className="text-[13px] font-bold text-surface-800 dark:text-surface-100">
                 {isFr ? "Choisir une classe" : "Select a class"}
@@ -1386,38 +1272,27 @@ export default function ReportCardsPage() {
               <select
                 value={genClassId}
                 onChange={(e) => setGenClassId(e.target.value)}
-                className="w-full h-11 pl-10 pr-9 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-[13px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all hover:border-surface-300 dark:hover:border-surface-600"
+                className="w-full h-11 pl-10 pr-9 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-[13px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all                     hover:border-surface-300 dark:hover:border-surface-600"
               >
                 <option value="">{isFr ? "Sélectionnez une classe..." : "Select a class..."}</option>
                 {classes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}{c.educationSystemCode ? ` (${c.educationSystemCode})` : ''}
-                  </option>
+                  <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
               <FiChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
             </div>
-            {/* ── Info: class system vs chosen system ── */}
-            {genClassId && selectedClass?.educationSystemCode && (
-              <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-900">
-                <FiBookmark size={12} className="text-surface-400" />
-                <span className="text-[11px] text-surface-500">
-                  {isFr ? "Système de la classe" : "Class system"}: <strong>{selectedClass.educationSystemName || selectedClass.educationSystemCode}</strong>
-                </span>
-              </div>
-            )}
           </div>
 
-          {/* ── Step 3: Sequence / Period ── */}
+          {/* ── Step 2: Period & Sequence ── */}
           <div className={`p-4 rounded-xl border-[1.5px] transition-all ${
-            (genBatchPeriodId || genBatchSequenceId) ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-900/15' : 'border-surface-100 dark:border-surface-700'
+            genBatchPeriodId ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-900/15' : 'border-surface-100 dark:border-surface-700'
           }`}>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ background: (genBatchPeriodId || genBatchSequenceId) ? 'var(--primary-color, #085041)' : '#9CA3AF' }}>
-                {(genBatchPeriodId || genBatchSequenceId) ? <FiCheckCircle size={12} /> : '3'}
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ background: genBatchPeriodId ? 'var(--primary-color, #085041)' : '#9CA3AF' }}>
+                {genBatchPeriodId ? <FiCheckCircle size={12} /> : '2'}
               </div>
               <span className="text-[13px] font-bold text-surface-800 dark:text-surface-100">
-                {isFr ? "Séquence / Période" : "Sequence / Period"}
+                {isFr ? "Période & Séquence" : "Period & Sequence"}
               </span>
               {genBatchSequenceId && genBatchSequences.find(s => s.id === genBatchSequenceId) && (
                 <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{
@@ -1433,57 +1308,49 @@ export default function ReportCardsPage() {
               )}
             </div>
 
-            {/* Helper text */}
-            <p className="text-[11px] text-surface-400 mb-3 leading-relaxed">
-              {isFr
-                ? "Choisissez une séquence pour un bulletin séquentiel, ou une période pour un bulletin de trimestre."
-                : "Choose a sequence for a sequential report card, or a period for a term report card."}
-            </p>
-
             <div className="grid grid-cols-2 gap-3">
-              {/* Sequence (primary) */}
               <div>
                 <label className="block text-[11px] font-semibold text-surface-500 dark:text-surface-400 mb-1.5">
-                  {isFr ? "Séquence" : "Sequence"}
-                </label>
-                <div className="relative">
-                  <FiLayers size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
-                  <select
-                    value={genBatchSequenceId}
-                    onChange={(e) => { setGenBatchSequenceId(e.target.value); setGenBatchPeriodId(""); }}
-                    disabled={genBatchSequences.length === 0}
-                    className="w-full h-10 pl-9 pr-8 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg text-[12px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all hover:border-surface-300 dark:hover:border-surface-600 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <option value="">
-                      {genBatchSequences.length === 0
-                        ? (isFr ? "Aucune séquence" : "No sequences")
-                        : (isFr ? "Choisir une séquence..." : "Select a sequence...")}
-                    </option>
-                    {genBatchSequences.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.libelle || s.label || (isFr ? `Séquence ${s.ordre}` : `Sequence ${s.ordre}`)}
-                      </option>
-                    ))}
-                  </select>
-                  <FiChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Period (optional) */}
-              <div>
-                <label className="block text-[11px] font-semibold text-surface-500 dark:text-surface-400 mb-1.5">
-                  {isFr ? "Période / Trimestre (optionnel)" : "Period / Term (optional)"}
+                  {isFr ? "Période / Trimestre *" : "Period / Term *"}
                 </label>
                 <div className="relative">
                   <FiCalendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
                   <select
                     value={genBatchPeriodId}
                     onChange={(e) => { setGenBatchPeriodId(e.target.value); setGenBatchSequenceId(""); }}
-                    className="w-full h-10 pl-9 pr-8 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg text-[12px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all hover:border-surface-300 dark:hover:border-surface-600"
+                    className="w-full h-10 pl-9 pr-8 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg text-[12px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all                     hover:border-surface-300 dark:hover:border-surface-600"
                   >
                     <option value="">{isFr ? "Choisir..." : "Choose..."}</option>
                     {periods.map((p) => (
                       <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  <FiChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-surface-500 dark:text-surface-400 mb-1.5">
+                  {isFr ? "Séquence *" : "Sequence *"}
+                </label>
+                <div className="relative">
+                  <FiLayers size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+                  <select
+                    value={genBatchSequenceId}
+                    onChange={(e) => setGenBatchSequenceId(e.target.value)}
+                    disabled={!genBatchPeriodId || genBatchSequences.length === 0}
+                    className="w-full h-10 pl-9 pr-8 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg text-[12px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all                     hover:border-surface-300 dark:hover:border-surface-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {!genBatchPeriodId
+                        ? (isFr ? "D'abord la période" : "Select period first")
+                        : genBatchSequences.length === 0
+                          ? (isFr ? "Aucune séquence" : "No sequences")
+                          : (isFr ? "Choisir..." : "Choose...")}
+                    </option>
+                    {genBatchSequences.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.libelle}
+                      </option>
                     ))}
                   </select>
                   <FiChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
@@ -1504,6 +1371,26 @@ export default function ReportCardsPage() {
             )}
           </div>
 
+          {/* ── Education system badge ── */}
+          {genClassId && selectedClass?.educationSystemCode && (
+            <div className="flex items-center gap-2 p-3 rounded-xl border" style={{
+              background: "rgba(var(--primary-rgb, 8,80,65), 0.06)",
+              borderColor: "rgba(var(--primary-rgb, 8,80,65), 0.15)",
+            }}>
+              <FiBookmark size={14} className="text-primary-600 dark:text-primary-400 flex-shrink-0" />
+              <span className="text-[12px] font-semibold text-primary-700 dark:text-primary-300">
+                {isFr ? "Système éducatif" : "Education system"}: {selectedClass.educationSystemName || selectedClass.educationSystemCode}
+              </span>
+              <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" style={{
+                background: getEduSystemColor(selectedClass.educationSystemCode),
+                color: "#fff",
+                opacity: 0.9,
+              }}>
+                {selectedClass.educationSystemCode}
+              </span>
+            </div>
+          )}
+
           {/* ── Info banner ── */}
           {genClassId && genBatchPeriodId && (
             <div className="flex items-start gap-2.5 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
@@ -1516,32 +1403,17 @@ export default function ReportCardsPage() {
             </div>
           )}
 
-          {/* ── Template preview ── */}
-          {genBatchEduSystem && genClassId && genBatchPeriodId && (
-            <div className="p-3 rounded-xl border border-primary-200 dark:border-primary-800 bg-primary-50/30 dark:bg-primary-900/10">
-              <div className="flex items-center gap-2">
-                <FiFileText size={14} className="text-primary-500" />
-                <span className="text-[12px] font-semibold text-primary-700 dark:text-primary-300">
-                  {isFr
-                    ? `Template : ${genBatchEduSystem}`
-                    : `Template: ${genBatchEduSystem}`
-                  }
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* ── Actions ── */}
           <div className="flex items-center justify-end gap-2 pt-1">
             <button
-              onClick={() => { setGenBatchOpen(false); setGenClassId(""); setGenBatchPeriodId(""); setGenBatchSequenceId(""); setGenBatchSequences([]); setGenBatchEduSystem(""); }}
+              onClick={() => { setGenBatchOpen(false); setGenClassId(""); setGenBatchPeriodId(""); setGenBatchSequenceId(""); setGenBatchSequences([]); }}
               className="h-9 px-4 rounded-xl text-[12px] font-semibold text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
             >
               {isFr ? "Annuler" : "Cancel"}
             </button>
             <button
               onClick={handleGenerateBatch}
-              disabled={generating || !genClassId || !(genBatchSequenceId || genBatchPeriodId)}
+              disabled={generating || !genClassId || !genBatchPeriodId || !genBatchSequenceId}
               className="h-10 px-5 rounded-xl text-[12px] font-semibold text-white transition-all hover:scale-105 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-1.5"
               style={{ background: pc }}
             >

@@ -6,9 +6,9 @@ const gradeCalculationService = require('../services/gradeCalculation.service');
 class GradeController {
   async recordGrade(req, res, next) {
     try {
-      const { studentId, subjectId, periodId, score, comment } = req.body;
+      const { studentId, subjectId, periodId, sequenceId, score, comment } = req.body;
       const { schoolId } = req;
-      const result = await gradeService.create(schoolId, { studentId, subjectId, periodId, score, comment });
+      const result = await gradeService.create(schoolId, { studentId, subjectId, periodId, sequenceId, score, comment });
       response.success(res, 'Grade recorded', result, 201);
     } catch (error) {
       next(error);

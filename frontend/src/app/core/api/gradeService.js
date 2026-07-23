@@ -45,7 +45,7 @@ export async function getPeriodGrades(periodId, classId) {
 
 /**
  * Record a single grade
- * @param {object} data - { studentId, subjectId, periodId?, score, comment? }
+ * @param {object} data - { studentId, subjectId, periodId?, sequenceId?, score, comment? }
  */
 export async function recordGrade(data) {
   const response = await api.post(API_ENDPOINTS.GRADES.CREATE, data);

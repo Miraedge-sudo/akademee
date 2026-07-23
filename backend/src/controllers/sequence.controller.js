@@ -19,6 +19,13 @@ class SequenceController {
     }
   }
 
+  async listBySchool(req, res, next) {
+    try {
+      const result = await sequenceService.listBySchool(req.schoolId || req.user.schoolId);
+      response.success(res, 'Sequences retrieved', result);
+    } catch (error) { next(error); }
+  }
+
   async listByPeriode(req, res, next) {
     try {
       const result = await sequenceService.listByPeriode(req.schoolId || req.user.schoolId, req.params.periodeId);

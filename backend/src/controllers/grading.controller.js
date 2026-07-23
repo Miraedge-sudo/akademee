@@ -336,6 +336,28 @@ class GradingController {
       next(err);
     }
   }
+
+  async unlockReportCard(req, res, next) {
+    try {
+      const actorId = req.user?.userId;
+      const { id } = req.params;
+      const data = await gradingService.unlockReportCard(id, actorId);
+      response.success(res, 'Report card unlocked', data);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteReportCard(req, res, next) {
+    try {
+      const actorId = req.user?.userId;
+      const { id } = req.params;
+      const data = await gradingService.deleteReportCard(id, actorId);
+      response.success(res, 'Report card deleted', data);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new GradingController();

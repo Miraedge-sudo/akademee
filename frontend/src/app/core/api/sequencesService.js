@@ -37,6 +37,16 @@ function extractEntity(data) {
 
 export const sequencesService = {
   /**
+   * GET /api/v1/sequences
+   * Liste toutes les séquences de l'école
+   */
+  list: async () => {
+    const response = await api.get(API_ENDPOINTS.V1.SEQUENCES);
+    const list = extractList(response.data);
+    return list.map(normalizeSequence).sort((a, b) => a.ordre - b.ordre);
+  },
+
+  /**
    * GET /api/v1/sequences/periode/{periodeId}
    * Liste les séquences d'une période, triées par date de début
    */

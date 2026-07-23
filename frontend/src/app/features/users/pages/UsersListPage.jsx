@@ -83,13 +83,14 @@ export default function UsersListPage() {
         getStudents({ limit: 500 }).catch(() => ({ students: [] })),
       ]);
       const list = userData?.users || [];
-      // Build a map of userId -> className for students
+      // Build a map of userId -> { studentId, className } for students
       const studentMap = {};
       const studentList = Array.isArray(studentData) ? studentData : (studentData?.students || []);
       studentList.forEach((s) => {
-        if (s.className) {
-          studentMap[s.userId] = s.className;
-        }
+        studentMap[s.userId] = {
+          studentId: s.id,
+          className: s.className || "",
+        };
       });
       const mapped = list.map((u) => ({
         id: u.id,
@@ -103,7 +104,8 @@ export default function UsersListPage() {
         status: u.isActive !== false ? "active" : "inactive",
         lastLogin: u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : "—",
         phone: u.phone || "—",
-        class: studentMap[u.id] || "",
+        class: studentMap[u.id]?.className || "",
+        studentId: studentMap[u.id]?.studentId || null,
       }));
       console.log(`[UsersListPage] Loaded ${mapped.length} users (${mapped.filter((u) => u.role === "TEACHER").length} teachers)`);
       setUsers(mapped);
@@ -447,9 +449,15 @@ export default function UsersListPage() {
                   <td className="px-3 py-3 text-right">
                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        onClick={() => navigate(`/dashboard/users/new?edit=${u.id}&role=${u.role}`)}
+                        onClick={() => {
+                          if (u.role === "STUDENT") {
+                            navigate(`/dashboard/students/${u.studentId || u.id}`);
+                          } else {
+                            navigate(`/dashboard/users/new?edit=${u.id}&role=${u.role}`);
+                          }
+                        }}
                         className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-110 hover:border-surface-200 hover:shadow-sm transition-all"
-                        title={isFr ? "Voir" : "View"}
+                        title={isFr ? (u.role === "STUDENT" ? "Voir la fiche" : "Voir") : (u.role === "STUDENT" ? "View profile" : "View")}
                       >
                         <FiEye className="w-3 h-3 text-surface-400" />
                       </button>
@@ -465,11 +473,11 @@ export default function UsersListPage() {
                       )}
                       {u.role === "STUDENT" && (
                         <button
-                          onClick={() => navigate(`/dashboard/users/new?edit=${u.id}&role=${u.role}`)}
+                          onClick={() => navigate(`/dashboard/students/${u.studentId || u.id}`)}
                           className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-110 hover:border-purple-200 hover:bg-purple-50 hover:shadow-sm transition-all"
                           title={isFr ? "Voir la fiche" : "View profile"}
                         >
-                          <FiAward className="w-3 h-3" style={{ color: "#8B5CF6" }} />
+                          <FiEye className="w-3 h-3" style={{ color: "#8B5CF6" }} />
                         </button>
                       )}
                       {u.role !== "TEACHER" && u.role !== "STUDENT" && (

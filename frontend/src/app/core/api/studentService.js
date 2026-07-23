@@ -29,6 +29,15 @@ export async function getStudentMe() {
 }
 
 /**
+ * Récupère un étudiant par son user_id
+ * @param {string} userId - ID de l'utilisateur
+ */
+export async function getStudentByUserId(userId) {
+  const response = await api.get(`/api/students/by-user/${userId}`);
+  return response.data.data;
+}
+
+/**
  * Crée un nouvel étudiant
  * @param {object} studentData - Données de l'étudiant
  */

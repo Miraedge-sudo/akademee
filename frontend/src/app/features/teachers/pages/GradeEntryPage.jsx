@@ -33,6 +33,7 @@ import {
   Lock,
   Clock,
 } from "lucide-react";
+import GradeEntrySkeleton from "../../../components/ui/GradeEntrySkeleton";
 
 // ── Score color helpers ──
 function scoreColor(score, max = 20) {
@@ -294,6 +295,7 @@ export default function GradeEntryPage() {
             studentId,
             subjectId: selectedSubjectId,
             periodId: selectedPeriodId || undefined,
+            sequenceId: selectedSequenceId || undefined,
             score,
             comment: "",
           });
@@ -313,6 +315,10 @@ export default function GradeEntryPage() {
   const filteredStudents = students.filter((s) =>
     s.fullName?.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return <GradeEntrySkeleton />;
+  }
 
   return (
     <div className="space-y-5">

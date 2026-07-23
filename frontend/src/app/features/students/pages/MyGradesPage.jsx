@@ -243,11 +243,13 @@ export default function MyGradesPage() {
                       const sc = g.score || 0;
                       const prevSc = g.previousScore;
                       const color = scoreColor(sc);
-                      const periodLabel = g.periodName
-                        ? g.periodName
-                        : g.periodId
-                          ? (isFr ? 'Période' : 'Period') + ` #${idx + 1}`
-                          : `#${idx + 1}`;
+                      const periodLabel = g.sequenceName
+                        ? g.sequenceName
+                        : g.periodName
+                          ? g.periodName
+                          : g.periodId
+                            ? (isFr ? 'Période' : 'Period') + ` #${idx + 1}`
+                            : `#${idx + 1}`;
                       return (
                         <div
                           key={g.id || idx}

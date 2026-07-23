@@ -21,6 +21,7 @@
     "grades": "Grade Reports",
     "gradeReports": "Grade Reports",
     "reportCards": "Report Cards",
+    "subjectOfferings": "Subject Offerings",
     "attendance": "Attendance",
     "finance": "Finance",
     "myClasses": "My Classes",
@@ -28,6 +29,7 @@
     "myGrades": "My Grades",
     "myAttendance": "My Attendance",
     "myFees": "My Fees",
+    "myReportCards": "My Report Cards",
     "settings": "Settings",
     "menu": "Menu",
     "users": "Users",
@@ -43,6 +45,7 @@
     "payments": "Payments",
     "receipts": "Receipts",
     "systemConfig": "System Config",
+    "gradingConfig": "Grading Config",
     "group": {
       "overview": "Overview",
       "academic": "Academic",

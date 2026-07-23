@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { getStudentById } from "../../../core/api/studentService";
 import AddStudentDrawer from "../components/AddStudentDrawer";
-import { FiUser, FiUsers } from "react-icons/fi";
+import { FiUser, FiUsers, FiDollarSign, FiMapPin, FiBook, FiCalendar, FiPhone, FiMail, FiCheckCircle, FiXCircle, FiClock } from "react-icons/fi";
 import {
   Button,
   Card,
@@ -99,9 +99,19 @@ export default function StudentProfilePage() {
   // ── Success state ──
   const initials = ((student.firstName?.[0] || "") + (student.lastName?.[0] || "")).toUpperCase();
   const fullName = `${student.firstName || ""} ${student.lastName || ""}`.trim();
+  const isFr = lang === "fr";
+
+  const feeBadgeColor = student.feeStatus === "paid" ? "bg-green-100 text-green-700" :
+    student.feeStatus === "partial" ? "bg-yellow-100 text-yellow-700" :
+    "bg-red-100 text-red-700";
+
+  const feeBadgeLabel = student.feeStatus === "paid" ? (isFr ? "Payé" : "Paid") :
+    student.feeStatus === "partial" ? (isFr ? "Partiel" : "Partial") :
+    student.feeStatus === "pending" ? (isFr ? "En attente" : "Pending") :
+    (student.feeStatus || "—");
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto pb-10">
       {/* Header avec retour */}
       <PageHeader
         icon={initials || <FiUser className="w-6 h-6" />}
@@ -117,7 +127,7 @@ export default function StudentProfilePage() {
       {/* Info card + Edit button */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column — Student identity */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-4">
           <Card>
             <div className="text-center">
               {/* Avatar */}
@@ -130,14 +140,20 @@ export default function StudentProfilePage() {
               <p className="text-sm text-surface-400 mt-1">
                 {student.studentNumber || `#${student.id?.slice(0, 8)}`}
               </p>
-              <div className="mt-3">
+              <div className="mt-3 flex items-center justify-center gap-2">
                 <Badge status={student.status === "active" ? "active" : "inactive"} size="md">
                   {student.status === "active"
-                    ? lang === "fr" ? "Actif" : "Active"
+                    ? isFr ? "Actif" : "Active"
                     : student.status === "inactive"
-                      ? lang === "fr" ? "Inactif" : "Inactive"
+                      ? isFr ? "Inactif" : "Inactive"
                       : student.status || "—"}
                 </Badge>
+                {student.feeStatus && (
+                  <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${feeBadgeColor}`}>
+                    <FiDollarSign className="w-3 h-3" />
+                    {feeBadgeLabel}
+                  </span>
+                )}
               </div>
 
               <div className="mt-5 pt-5 border-t border-surface-100 dark:border-surface-700">
@@ -146,7 +162,7 @@ export default function StudentProfilePage() {
                   onClick={() => setDrawerOpen(true)}
                   fullWidth
                 >
-                  {lang === "fr" ? "Modifier le profil" : "Edit Profile"}
+                  {isFr ? "Modifier le profil" : "Edit Profile"}
                 </Button>
                 <Button
                   variant="secondary"
@@ -154,45 +170,82 @@ export default function StudentProfilePage() {
                   fullWidth
                   className="mt-2"
                 >
-                  {lang === "fr" ? "← Retour à la liste" : "← Back to list"}
+                  {isFr ? "← Retour à la liste" : "← Back to list"}
                 </Button>
               </div>
             </div>
           </Card>
 
-          {/* Status card */}
-          <Card className="mt-4">
-            <div className="space-y-3">
+          {/* Quick Info */}
+          <Card>
+            <div className="space-y-3.5">
+              <h3 className="text-xs font-bold text-surface-500 uppercase tracking-wider">
+                {isFr ? "Informations personnelles" : "Personal Info"}
+              </h3>
               <div className="flex justify-between items-center">
-                <span className="text-xs text-surface-500">{lang === "fr" ? "Statut" : "Status"}</span>
+                <span className="text-xs text-surface-400">{isFr ? "Statut" : "Status"}</span>
                 <Badge status={student.status === "active" ? "active" : "inactive"}>
                   {student.status === "active"
-                    ? lang === "fr" ? "Actif" : "Active"
+                    ? isFr ? "Actif" : "Active"
                     : student.status || "—"}
                 </Badge>
               </div>
               {student.gender && (
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-surface-500">{lang === "fr" ? "Genre" : "Gender"}</span>
-                  <span className="text-sm text-surface-700 dark:text-surface-200">
+                  <span className="text-xs text-surface-400">{isFr ? "Genre" : "Gender"}</span>
+                  <span className="text-sm text-surface-700 dark:text-surface-200 font-medium">
                     {student.gender === "male"
-                      ? lang === "fr" ? "Masculin" : "Male"
+                      ? isFr ? "Masculin" : "Male"
                       : student.gender === "female"
-                        ? lang === "fr" ? "Féminin" : "Female"
+                        ? isFr ? "Féminin" : "Female"
                         : student.gender}
                   </span>
                 </div>
               )}
               {student.dateOfBirth && (
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-surface-500">{lang === "fr" ? "Né(e) le" : "DOB"}</span>
-                  <span className="text-sm text-surface-700 dark:text-surface-200">
+                  <span className="text-xs text-surface-400">{isFr ? "Né(e) le" : "Date of birth"}</span>
+                  <span className="text-sm text-surface-700 dark:text-surface-200 font-medium">
                     {new Date(student.dateOfBirth).toLocaleDateString(
-                      lang === "fr" ? "fr-FR" : "en-US"
+                      isFr ? "fr-FR" : "en-US"
                     )}
                   </span>
                 </div>
               )}
+              {student.nationality && (
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-surface-400">{isFr ? "Nationalité" : "Nationality"}</span>
+                  <span className="text-sm text-surface-700 dark:text-surface-200 font-medium">
+                    {student.nationality}
+                  </span>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Financial Status Card */}
+          <Card>
+            <div className="space-y-3.5">
+              <h3 className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-1.5">
+                <FiDollarSign className="w-3 h-3" />
+                {isFr ? "Situation financière" : "Financial Status"}
+              </h3>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-surface-400">{isFr ? "Statut des frais" : "Fee Status"}</span>
+                <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${feeBadgeColor}`}>
+                  {feeBadgeLabel}
+                </span>
+              </div>
+              <div className="pt-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate(`/dashboard/students/${student.id}/fees`)}
+                  fullWidth
+                  size="sm"
+                >
+                  {isFr ? "Voir les détails" : "View details"}
+                </Button>
+              </div>
             </div>
           </Card>
         </div>
@@ -200,50 +253,89 @@ export default function StudentProfilePage() {
         {/* Right column — Details */}
         <div className="lg:col-span-2 space-y-4">
           {/* Contact info */}
-          <Card title={lang === "fr" ? "Contact" : "Contact Information"}>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-surface-50 dark:border-surface-800">
-                <span className="text-sm text-surface-500">Email</span>
-                <span className="text-sm text-surface-700 dark:text-surface-200">
-                  {student.email || "—"}
-                </span>
+          <Card title={isFr ? "Contact" : "Contact Information"}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-surface-50 dark:bg-surface-800/50">
+                <FiMail className="w-4 h-4 text-surface-400 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-surface-400">{isFr ? "Email" : "Email"}</p>
+                  <p className="text-sm font-medium text-surface-700 dark:text-surface-200 break-all">
+                    {student.email || "—"}
+                  </p>
+                </div>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-surface-50 dark:border-surface-800">
-                <span className="text-sm text-surface-500">{lang === "fr" ? "Téléphone" : "Phone"}</span>
-                <span className="text-sm text-surface-700 dark:text-surface-200">
-                  {student.phone || "—"}
-                </span>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-surface-50 dark:bg-surface-800/50">
+                <FiPhone className="w-4 h-4 text-surface-400 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-surface-400">{isFr ? "Téléphone" : "Phone"}</p>
+                  <p className="text-sm font-medium text-surface-700 dark:text-surface-200">
+                    {student.phone || "—"}
+                  </p>
+                </div>
               </div>
             </div>
           </Card>
 
           {/* Academic info */}
-          <Card title={lang === "fr" ? "Informations académiques" : "Academic Information"}>
+          <Card title={isFr ? "Informations académiques" : "Academic Information"}>
             <div className="space-y-3">
               <div className="flex justify-between items-center py-2 border-b border-surface-50 dark:border-surface-800">
-                <span className="text-sm text-surface-500">{lang === "fr" ? "Classe" : "Class"}</span>
-                <span className="text-sm font-medium text-surface-700 dark:text-surface-200">
+                <span className="text-sm text-surface-500 flex items-center gap-2">
+                  <FiBook className="w-3.5 h-3.5 text-surface-400" />
+                  {isFr ? "Classe" : "Class"}
+                </span>
+                <span className="text-sm font-bold text-surface-700 dark:text-surface-200">
                   {student.className || "—"}
                 </span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-surface-50 dark:border-surface-800">
-                <span className="text-sm text-surface-500">{lang === "fr" ? "Date d'inscription" : "Enrollment Date"}</span>
-                <span className="text-sm text-surface-700 dark:text-surface-200">
+                <span className="text-sm text-surface-500 flex items-center gap-2">
+                  <FiMapPin className="w-3.5 h-3.5 text-surface-400" />
+                  {isFr ? "Numéro étudiant" : "Student Number"}
+                </span>
+                <span className="text-sm font-medium text-surface-700 dark:text-surface-200">
+                  {student.studentNumber || "—"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-surface-50 dark:border-surface-800">
+                <span className="text-sm text-surface-500 flex items-center gap-2">
+                  <FiBook className="w-3.5 h-3.5 text-surface-400" />
+                  {isFr ? "Système éducatif" : "Educational System"}
+                </span>
+                <span className="text-sm font-medium text-surface-700 dark:text-surface-200">
+                  {student.educationalSystem || "—"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-surface-50 dark:border-surface-800">
+                <span className="text-sm text-surface-500 flex items-center gap-2">
+                  <FiCalendar className="w-3.5 h-3.5 text-surface-400" />
+                  {isFr ? "Date d'inscription" : "Enrollment Date"}
+                </span>
+                <span className="text-sm font-medium text-surface-700 dark:text-surface-200">
                   {student.createdAt
                     ? new Date(student.createdAt).toLocaleDateString(
-                        lang === "fr" ? "fr-FR" : "en-US"
+                        isFr ? "fr-FR" : "en-US"
                       )
                     : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-surface-50 dark:border-surface-800">
+                <span className="text-sm text-surface-500 flex items-center gap-2">
+                  <FiClock className="w-3.5 h-3.5 text-surface-400" />
+                  {isFr ? "Redoublant" : "Repeater"}
+                </span>
+                <span className="text-sm font-medium text-surface-700 dark:text-surface-200">
+                  {isFr ? "Non" : "No"}
                 </span>
               </div>
             </div>
           </Card>
 
-          {/* Coming soon — Tabs for related data */}
+          {/* Notes, Présences, Frais tabs placeholder */}
           <Card>
             <div className="py-4 text-center">
               <p className="text-sm text-surface-400">
-                {lang === "fr"
+                {isFr
                   ? "Les sections Notes, Présences et Frais seront disponibles après la configuration complète"
                   : "Grades, Attendance and Fees sections will be available after full setup"}
               </p>

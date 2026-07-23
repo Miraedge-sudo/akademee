@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Bulletin Designs — Système de gestion scolaire</title>
+<style>
+  :root{
+    --paper:#FBFAF6;
+    --ink:#1c1c1a;
+    --ink-soft:#4a4a45;
+    --rule:#1c1c1a;
+    --rule-soft:#c9c6ba;
+    --chrome-bg:#14171c;
+    --chrome-panel:#1c2028;
+    --chrome-text:#e7e5df;
+    --chrome-muted:#8b8f98;
+    --green:#1B6B3C;
+    --gold:#B8860B;
+    --red:#9B2C2C;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:#0e1013;
+    font-family:"Segoe UI",Arial,sans-serif;
+    padding:28px 16px 60px;
+  }
+  .app{max-width:960px;margin:0 auto;}
+
+  /* ===== Toolbar (app chrome — deliberately distinct from the paper facsimile) ===== */
+  .toolbar{
+    background:var(--chrome-bg);
+    border:1px solid #2a2e36;
+    border-radius:10px;
+    padding:16px 18px;
+    margin-bottom:22px;
+  }
+  .toolbar-title{
+    color:var(--chrome-text);
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    margin:0 0 12px;
+    font-weight:600;
+    opacity:.75;
+  }
+  .toolbar-row{display:flex;flex-wrap:wrap;gap:10px;}
+  .field{display:flex;flex-direction:column;gap:5px;min-width:170px;flex:1;}
+  .field label{font-size:11px;color:var(--chrome-muted);text-transform:uppercase;letter-spacing:.05em;}
+  .field select{
+    background:var(--chrome-panel);
+    color:var(--chrome-text);
+    border:1px solid #333844;
+    border-radius:6px;
+    padding:8px 10px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  .field select:focus{outline:2px solid #4a5568;outline-offset:1px;}
+  .system-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;}
+  .sys-tab{
+    border:1px solid #333844;
+    background:var(--chrome-panel);
+    color:var(--chrome-muted);
+    font-size:11.5px;
+    padding:7px 11px;
+    border-radius:20px;
+    cursor:pointer;
+    font-family:inherit;
+    transition:all .12s;
+  }
+  .sys-tab.active{
+    color:#0e1013;
+    border-color:transparent;
+    font-weight:600;
+  }
+  .note{
+    color:var(--chrome-muted);
+    font-size:11.5px;
+    margin-top:12px;
+    line-height:1.5;
+    border-top:1px solid #262a32;
+    padding-top:10px;
+  }
+
+  /* ===== Paper facsimile ===== */
+  .paper-wrap{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:2px;
+    box-shadow:0 10px 40px rgba(0,0,0,.45);
+    position:relative;
+    overflow:hidden;
+    font-family:Georgia,"Times New Roman",serif;
+  }
+  .paper-wrap::before{
+    content:attr(data-watermark);
+    position:absolute;
+    top:52%;left:50%;
+    transform:translate(-50%,-50%) rotate(-28deg);
+    font-size:64px;
+    font-weight:700;
+    color:rgba(20,20,20,.045);
+    white-space:nowrap;
+    pointer-events:none;
+    letter-spacing:.05em;
+  }
+  .sheet{position:relative;padding:34px 40px 30px;}
+
+  .letterhead{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    border-bottom:2px solid var(--rule);
+    padding-bottom:14px;
+    margin-bottom:16px;
+  }
+  .seal{
+    width:56px;height:56px;border-radius:50%;
+    border:2px solid var(--rule);
+    display:flex;align-items:center;justify-content:center;
+    flex:0 0 auto;
+    font-size:10px;font-weight:700;letter-spacing:.03em;
+    text-align:center;line-height:1.15;
+  }
+  .letterhead-text{flex:1;text-align:center;}
+  .country-line{font-size:12.5px;font-weight:700;letter-spacing:.02em;}
+  .motto-line{font-size:10.5px;font-style:italic;color:var(--ink-soft);margin-top:1px;}
+  .ministry-line{font-size:11.5px;margin-top:6px;font-weight:600;}
+  .accent-tag{
+    flex:0 0 auto;
+    font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    padding:5px 9px;border-radius:3px;color:#fff;white-space:nowrap;
+  }
+
+  .doc-title{
+    text-align:center;
+    font-size:16px;
+    font-weight:700;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    margin:14px 0 4px;
+  }
+  .doc-subtitle{text-align:center;font-size:11.5px;color:var(--ink-soft);margin-bottom:16px;}
+
+  .id-block{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:4px 26px;
+    font-size:12px;
+    border:1px solid var(--rule-soft);
+    padding:12px 16px;
+    margin-bottom:18px;
+    background:rgba(0,0,0,.015);
+  }
+  .id-row{display:flex;justify-content:space-between;border-bottom:1px dotted var(--rule-soft);padding:3px 0;}
+  .id-row b{font-weight:400;color:var(--ink-soft);}
+  .id-row span{font-weight:600;}
+
+  table.grades{
+    width:100%;
+    border-collapse:collapse;
+    font-size:11.5px;
+    margin-bottom:14px;
+  }
+  table.grades caption{
+    text-align:left;font-size:11px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.04em;
+    padding:6px 0;border-bottom:1px solid var(--rule);
+  }
+  table.grades th, table.grades td{
+    border:1px solid var(--rule-soft);
+    padding:6px 7px;
+    text-align:center;
+  }
+  table.grades thead th{
+    background:rgba(0,0,0,.05);
+    font-weight:700;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+  }
+  table.grades td.subject{text-align:left;font-weight:600;}
+  table.grades td.remark{text-align:left;font-style:italic;color:var(--ink-soft);font-size:11px;}
+  table.grades tfoot td{font-weight:700;background:rgba(0,0,0,.04);}
+  table.grades tr.na td{color:var(--ink-soft);font-style:italic;}
+
+  .summary-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin:16px 0;
+  }
+  .summary-card{
+    border:1px solid var(--rule);
+    padding:9px 10px;
+    text-align:center;
+  }
+  .summary-card .label{font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);}
+  .summary-card .value{font-size:17px;font-weight:700;margin-top:3px;}
+
+  .remarks-band{
+    display:flex;justify-content:space-between;gap:20px;
+    font-size:11.5px;margin:14px 0;padding:10px 0;
+    border-top:1px solid var(--rule-soft);border-bottom:1px solid var(--rule-soft);
+  }
+  .remarks-band div b{display:block;font-size:9.5px;text-transform:uppercase;color:var(--ink-soft);font-weight:400;letter-spacing:.04em;margin-bottom:2px;}
+
+  .decision-band{
+    text-align:center;
+    font-size:12.5px;
+    font-weight:700;
+    padding:9px;
+    margin:14px 0;
+    border:1.5px solid var(--rule);
+  }
+
+  .signatures{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+    margin-top:34px;
+    font-size:11px;
+    text-align:center;
+    color:var(--ink-soft);
+  }
+  .signatures .line{border-top:1px solid var(--rule);margin-top:38px;padding-top:5px;}
+
+  .doc-footer{
+    display:flex;justify-content:space-between;
+    font-size:9.5px;color:var(--ink-soft);
+    margin-top:22px;border-top:1px solid var(--rule-soft);padding-top:8px;
+  }
+
+  @media (max-width:640px){
+    .id-block{grid-template-columns:1fr;}
+    .summary-grid{grid-template-columns:repeat(2,1fr);}
+    .signatures{grid-template-columns:1fr;gap:26px;}
+    .sheet{padding:22px 16px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="toolbar">
+    <p class="toolbar-title">Aperçu bulletin — configuration</p>
+    <div class="system-tabs" id="sysTabs"></div>
+    <div class="toolbar-row" style="margin-top:14px;">
+      <div class="field">
+        <label for="periodType">Type de bulletin</label>
+        <select id="periodType"></select>
+      </div>
+      <div class="field">
+        <label for="periodIndex">Période</label>
+        <select id="periodIndex"></select>
+      </div>
+    </div>
+    <p class="note" id="adaptNote"></p>
+  </div>
+
+  <div class="paper-wrap" id="paperWrap">
+    <div class="sheet" id="sheet"></div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — one entry per educational system.
+   Everything the renderer needs (labels, columns, subjects,
+   mock scores) lives here as data, mirroring the config-driven
+   philosophy of the backend grading spec: no per-system branch
+   logic hardcoded into the render function itself.
+   ============================================================ */
+
+const SYSTEMS = {
+  ANG_GEN: {
+    label: "Anglophone General",
+    accent: "#1B4F72",
+    lang: "en",
+    ministry: "MINISTRY OF SECONDARY EDUCATION — MINESEC",
+    schoolName: "GOVERNMENT BILINGUAL HIGH SCHOOL, DOUALA",
+    className: "FORM 4",
+    mode: "ca_exam",
+    periodModel: "sequence_term",
+    periodLabels: {
+      SEQUENTIEL: { doc:"SEQUENTIAL REPORT CARD", unit:"Sequence", count:6 },
+      TRIMESTRIEL:{ doc:"TERM REPORT CARD", unit:"Term", count:3 },
+      ANNUEL:     { doc:"ANNUAL REPORT CARD", unit:"Academic Year", count:1 }
+    },
+    subjects: [
+      { name:"English Language", coef:4 },
+      { name:"Literature in English", coef:2 },
+      { name:"Mathematics", coef:5 },
+      { name:"Physics", coef:3 },
+      { name:"Chemistry", coef:3 },
+      { name:"Biology", coef:3 },
+      { name:"History", coef:2 },
+      { name:"Geography", coef:2 },
+      { name:"Information & Comm. Technology", coef:2 }
+    ]
+  },
+  FR_GEN: {
+    label: "Francophone Général",
+    accent: "#1B6B3C",
+    lang: "fr",
+    ministry: "MINISTÈRE DES ENSEIGNEMENTS SECONDAIRES — MINESEC",
+    schoolName: "LYCÉE BILINGUE DE YAOUNDÉ",
+    className: "3ème",
+    mode: "moyenne_unique",
+    periodModel: "sequence_trimestre",
+    periodLabels: {
+      SEQUENTIEL: { doc:"BULLETIN DE SÉQUENCE", unit:"Séquence", count:6 },
+      TRIMESTRIEL:{ doc:"BULLETIN TRIMESTRIEL", unit:"Trimestre", count:3 },
+      ANNUEL:     { doc:"BULLETIN ANNUEL", unit:"Année Scolaire", count:1 }
+    },
+    subjects: [
+      { name:"Français", coef:4 },
+      { name:"Anglais", coef:3 },
+      { name:"Mathématiques", coef:5 },
+      { name:"Physique - Chimie", coef:3 },
+      { name:"Sciences de la Vie et de la Terre", coef:3 },
+      { name:"Histoire - Géographie", coef:2 },
+      { name:"Éducation Civique et Morale", coef:1 },
+      { name:"E.P.S.", coef:2 }
+    ]
+  },
+  ANG_TECH: {
+    label: "Anglophone Technical",
+    accent: "#B5651D",
+    lang: "en",
+    ministry: "MINISTRY OF SECONDARY EDUCATION — TECHNICAL & VOCATIONAL",
+    schoolName: "GOVERNMENT TECHNICAL HIGH SCHOOL, BAMENDA",
+    className: "FORM 4 — ELECTRICAL",
+    mode: "theory_practical",
+    periodModel: "sequence_term",
+    periodLabels: {
+      SEQUENTIEL: { doc:"SEQUENTIAL REPORT CARD (TECHNICAL)", unit:"Sequence", count:6 },
+      TRIMESTRIEL:{ doc:"TERM REPORT CARD (TECHNICAL)", unit:"Term", count:3 },
+      ANNUEL:     { doc:"ANNUAL REPORT CARD (TECHNICAL)", unit:"Academic Year", count:1 }
+    },
+    subjects: [
+      { name:"Mathematics", coef:4, split:false },
+      { name:"English Language", coef:3, split:false },
+      { name:"Technical Drawing", coef:4, split:true },
+      { name:"Electrical Installation", coef:6, split:true },
+      { name:"Workshop Practice", coef:6, split:true },
+      { name:"Applied Sciences", coef:3, split:false }
+    ]
+  },
+  FR_TECH: {
+    label: "Francophone Technique",
+    accent: "#8B6914",
+    lang: "fr",
+    ministry: "MINISTÈRE DES ENSEIGNEMENTS SECONDAIRES — ENS. TECHNIQUE",
+    schoolName: "LYCÉE TECHNIQUE DE DOUALA-BASSA",
+    className: "3ème TECHNIQUE — ÉLECTROTECHNIQUE",
+    mode: "theorie_pratique",
+    periodModel: "sequence_trimestre",
+    periodLabels: {
+      SEQUENTIEL: { doc:"BULLETIN DE SÉQUENCE (TECHNIQUE)", unit:"Séquence", count:6 },
+      TRIMESTRIEL:{ doc:"BULLETIN TRIMESTRIEL (TECHNIQUE)", unit:"Trimestre", count:3 },
+      ANNUEL:     { doc:"BULLETIN ANNUEL (TECHNIQUE)", unit:"Année Scolaire", count:1 }
+    },
+    subjects: [
+      { name:"Mathématiques", coef:4, split:false },
+      { name:"Français", coef:3, split:false },
+      { name:"Dessin Technique", coef:4, split:true },
+      { name:"Installation Électrique", coef:6, split:true },
+      { name:"Travaux Pratiques d'Atelier", coef:6, split:true },
+      { name:"Sciences Appliquées", coef:3, split:false }
+    ]
+  },
+  UNIV: {
+    label: "Université (LMD)",
+    accent: "#5B2C6F",
+    lang: "fr",
+    ministry: "MINISTÈRE DE L'ENSEIGNEMENT SUPÉRIEUR — MINESUP",
+    schoolName: "UNIVERSITÉ DE DOUALA — FACULTÉ DES SCIENCES",
+    className: "LICENCE 2 — INFORMATIQUE",
+    mode: "ue_credits",
+    periodModel: "semester_only",
+    periodLabels: {
+      SEQUENTIEL: { doc:"RELEVÉ DE CONTRÔLE CONTINU", unit:"Contrôle continu (mi-semestre)", count:2 },
+      TRIMESTRIEL:{ doc:"RELEVÉ DE NOTES — SEMESTRE", unit:"Semestre", count:2 },
+      ANNUEL:     { doc:"BILAN ANNUEL LMD", unit:"Année Universitaire", count:1 }
+    },
+    subjects: [
+      { name:"Algorithmique & Structures de Données", coef:1, credits:5 },
+      { name:"Bases de Données", coef:1, credits:4 },
+      { name:"Réseaux Informatiques", coef:1, credits:4 },
+      { name:"Anglais Technique", coef:1, credits:2 },
+      { name:"Analyse Mathématique", coef:1, credits:3 },
+      { name:"Méthodologie de la Recherche", coef:1, credits:2 }
+    ]
+  }
+};
+
+const PERIOD_TYPES = ["SEQUENTIEL","TRIMESTRIEL","ANNUEL"];
+
+/* Deterministic mock score generator — stable per subject/period so the
+   preview doesn't jitter, but varies enough to look like real data. */
+function mockScore(seed, min, max){
+  let x = Math.sin(seed * 999) * 10000;
+  x = x - Math.floor(x);
+  return Math.round((min + x * (max - min)) * 10) / 10;
+}
+
+function round1(n){ return Math.round(n * 10) / 10; }
+
+/* Builds one subject's per-sequence average for a given system/subject/seqIndex */
+function subjectSeqAverage(sys, subj, subjIdx, seqIdx){
+  const seed = subjIdx * 37 + seqIdx * 13 + 1;
+  if(sys.mode === "ca_exam" || sys.mode === "moyenne_unique"){
+    const ca = mockScore(seed, 8, 18);
+    const exam = mockScore(seed + 0.5, 7, 18);
+    return round1(ca * 0.3 + exam * 0.7);
+  }
+  if(sys.mode === "theory_practical" || sys.mode === "theorie_pratique"){
+    if(subj.split){
+      const th = mockScore(seed, 8, 17);
+      const pr = mockScore(seed + 0.5, 9, 19);
+      return round1(th * 0.4 + pr * 0.6);
+    }
+    const ca = mockScore(seed, 8, 18);
+    const exam = mockScore(seed + 0.5, 7, 18);
+    return round1(ca * 0.3 + exam * 0.7);
+  }
+  if(sys.mode === "ue_credits"){
+    const cc = mockScore(seed, 7, 17);
+    const exam = mockScore(seed + 0.5, 6, 18);
+    return round1(cc * 0.4 + exam * 0.6);
+  }
+  return null;
+}
+
+/* Aggregates several sequence averages into the parent period average */
+function aggregate(values){
+  const v = values.filter(x => x !== null && x !== undefined);
+  if(v.length === 0) return null;
+  return round1(v.reduce((a,b)=>a+b,0) / v.length);
+}
+
+/* ============================================================
+   RENDERER
+   ============================================================ */
+
+function computeReportData(sysKey, periodType, periodIndex){
+  const sys = SYSTEMS[sysKey];
+  const rows = sys.subjects.map((subj, i) => {
+    let raw = {}, average = null, subAverages = [];
+
+    if(periodType === "SEQUENTIEL"){
+      average = subjectSeqAverage(sys, subj, i, periodIndex);
+      if(sys.mode === "ca_exam" || sys.mode === "moyenne_unique"){
+        const seed = i*37 + periodIndex*13 + 1;
+        raw = { ca: mockScore(seed,8,18), exam: mockScore(seed+0.5,7,18) };
+      } else if(sys.mode === "theory_practical" || sys.mode === "theorie_pratique"){
+        const seed = i*37 + periodIndex*13 + 1;
+        if(subj.split) raw = { theory: mockScore(seed,8,17), practical: mockScore(seed+0.5,9,19) };
+        else raw = { ca: mockScore(seed,8,18), exam: mockScore(seed+0.5,7,18) };
+      } else if(sys.mode === "ue_credits"){
+        const seed = i*37 + periodIndex*13 + 1;
+        raw = { cc: mockScore(seed,7,17), exam: mockScore(seed+0.5,6,18) };
+      }
+    } else if(periodType === "TRIMESTRIEL"){
+      if(sys.periodModel === "sequence_term" || sys.periodModel === "sequence_trimestre"){
+        const seqA = periodIndex*2, seqB = periodIndex*2+1;
+        const a = subjectSeqAverage(sys, subj, i, seqA);
+        const b = subjectSeqAverage(sys, subj, i, seqB);
+        subAverages = [a,b];
+        average = aggregate([a,b]);
+      } else {
+        average = subjectSeqAverage(sys, subj, i, periodIndex);
+      }
+    } else if(periodType === "ANNUEL"){
+      if(sys.periodModel === "sequence_term" || sys.periodModel === "sequence_trimestre"){
+        const termAvgs = [0,1,2].map(t => {
+          const a = subjectSeqAverage(sys, subj, i, t*2);
+          const b = subjectSeqAverage(sys, subj, i, t*2+1);
+          return aggregate([a,b]);
+        });
+        subAverages = termAvgs;
+        average = aggregate(termAvgs);
+      } else {
+        const sems = [0,1].map(s => subjectSeqAverage(sys, subj, i, s));
+        subAverages = sems;
+        average = aggregate(sems);
+      }
+    }
+
+    const weighted = average !== null ? round1(average * subj.coef) : null;
+    return { subj, average, weighted, raw, subAverages };
+  });
+
+  const validRows = rows.filter(r => r.average !== null);
+  const sumCoef = validRows.reduce((a,r)=>a+r.subj.coef,0);
+  const sumWeighted = validRows.reduce((a,r)=>a+r.weighted,0);
+  const generalAverage = sumCoef > 0 ? round1(sumWeighted / sumCoef) : null;
+
+  const classSize = 42;
+  const classAverage = round1(generalAverage ? generalAverage - 1.4 + (periodIndex%3) : 0);
+  const rank = generalAverage ? Math.max(1, Math.round(6 + (14 - generalAverage))) : null;
+
+  let mention = "—";
+  if(generalAverage !== null){
+    if(generalAverage >= 16) mention = sys.lang === "fr" ? "Félicitations" : "Excellent";
+    else if(generalAverage >= 14) mention = sys.lang === "fr" ? "Encouragements" : "Very Good";
+    else if(generalAverage >= 12) mention = sys.lang === "fr" ? "Tableau d'Honneur" : "Good";
+    else if(generalAverage >= 10) mention = sys.lang === "fr" ? "Passable" : "Satisfactory";
+    else if(generalAverage >= 8) mention = sys.lang === "fr" ? "Avertissement" : "Warning";
+    else mention = sys.lang === "fr" ? "Blâme" : "Poor";
+  }
+
+  return { sys, rows, generalAverage, classSize, classAverage, rank, mention };
+}
+
+function tableHead(sys, periodType){
+  const fr = sys.lang === "fr";
+  if(sys.mode === "ue_credits"){
+    return `<tr>
+      <th style="text-align:left;">${fr?"Unité d'Enseignement":"Course Unit"}</th>
+      <th>${fr?"Crédits":"Credits"}</th>
+      <th>${fr?"CC (40%)":"CA (40%)"}</th>
+      <th>${fr?"Examen (60%)":"Exam (60%)"}</th>
+      <th>${fr?"Note /20":"Grade /20"}</th>
+      <th>${fr?"Résultat":"Result"}</th>
+    </tr>`;
+  }
+  const splitMode = sys.mode === "theory_practical" || sys.mode === "theorie_pratique";
+  const c1 = splitMode ? (fr?"Théorie":"Theory") : (fr?"C.C. (30%)":"CA (30%)");
+  const c2 = splitMode ? (fr?"Pratique":"Practical") : (fr?"Examen (70%)":"Exam (70%)");
+
+  if(periodType === "SEQUENTIEL"){
+    return `<tr>
+      <th style="text-align:left;">${fr?"Matière":"Subject"}</th>
+      <th>${c1}</th><th>${c2}</th>
+      <th>${fr?"Moy./20":"Avg./20"}</th>
+      <th>${fr?"Coef.":"Coef."}</th>
+      <th>${fr?"Moy.×Coef.":"Total Pts"}</th>
+      <th>${fr?"Rang":"Rank"}</th>
+      <th style="text-align:left;">${fr?"Appréciation":"Remark"}</th>
+    </tr>`;
+  }
+  if(periodType === "TRIMESTRIEL"){
+    return `<tr>
+      <th style="text-align:left;">${fr?"Matière":"Subject"}</th>
+      <th>${fr?"Séq.1":"Seq.1"}</th><th>${fr?"Séq.2":"Seq.2"}</th>
+      <th>${fr?"Moy. Trim./20":"Term Avg./20"}</th>
+      <th>${fr?"Coef.":"Coef."}</th>
+      <th>${fr?"Total Pts":"Total Pts"}</th>
+      <th>${fr?"Rang":"Rank"}</th>
+    </tr>`;
+  }
+  return `<tr>
+    <th style="text-align:left;">${fr?"Matière":"Subject"}</th>
+    <th>${fr?"Trim.1":"Term 1"}</th><th>${fr?"Trim.2":"Term 2"}</th><th>${fr?"Trim.3":"Term 3"}</th>
+    <th>${fr?"Moy. Ann./20":"Annual Avg./20"}</th>
+    <th>${fr?"Coef.":"Coef."}</th>
+    <th>${fr?"Total Pts":"Total Pts"}</th>
+    <th>${fr?"Rang":"Rank"}</th>
+  </tr>`;
+}
+
+function tableRow(sys, periodType, r, idx){
+  const fr = sys.lang === "fr";
+  const na = r.average === null;
+  const avgCell = na ? `<span title="${fr?'Aucune note saisie':'No grade entered'}">—</span>` : r.average.toFixed(1);
+  const rankCell = na ? "—" : (idx % 5) + 1;
+  const remarks = fr
+    ? ["Excellent trimestre","Peut mieux faire","Travail satisfaisant","Efforts à poursuivre","Bon ensemble"]
+    : ["Excellent effort","Can do better","Satisfactory work","Needs more effort","Good overall"];
+
+  if(sys.mode === "ue_credits"){
+    const validated = !na && r.average >= 10;
+    return `<tr class="${na?'na':''}">
+      <td class="subject">${r.subj.name}</td>
+      <td>${r.subj.credits}</td>
+      <td>${na?"—":r.raw.cc.toFixed(1)}</td>
+      <td>${na?"—":r.raw.exam.toFixed(1)}</td>
+      <td><b>${avgCell}</b></td>
+      <td style="color:${na?'inherit':(validated?'#1B6B3C':'#9B2C2C')};font-weight:600;">
+        ${na?"—":(validated?(fr?"Validé":"Passed"):(fr?"Non validé":"Failed"))}
+      </td>
+    </tr>`;
+  }
+
+  const splitMode = sys.mode === "theory_practical" || sys.mode === "theorie_pratique";
+
+  if(periodType === "SEQUENTIEL"){
+    const c1 = na ? "—" : (splitMode ? r.raw.theory.toFixed(1) : r.raw.ca.toFixed(1));
+    const c2 = na ? "—" : (splitMode ? r.raw.practical.toFixed(1) : r.raw.exam.toFixed(1));
+    return `<tr class="${na?'na':''}">
+      <td class="subject">${r.subj.name}</td>
+      <td>${c1}</td><td>${c2}</td>
+      <td><b>${avgCell}</b></td>
+      <td>${r.subj.coef}</td>
+      <td>${na?"—":r.weighted.toFixed(1)}</td>
+      <td>${rankCell}</td>
+      <td class="remark">${na?"":remarks[idx % remarks.length]}</td>
+    </tr>`;
+  }
+  if(periodType === "TRIMESTRIEL"){
+    const [a,b] = r.subAverages;
+    return `<tr class="${na?'na':''}">
+      <td class="subject">${r.subj.name}</td>
+      <td>${a==null?"—":a.toFixed(1)}</td>
+      <td>${b==null?"—":b.toFixed(1)}</td>
+      <td><b>${avgCell}</b></td>
+      <td>${r.subj.coef}</td>
+      <td>${na?"—":r.weighted.toFixed(1)}</td>
+      <td>${rankCell}</td>
+    </tr>`;
+  }
+  const [t1,t2,t3] = r.subAverages;
+  return `<tr class="${na?'na':''}">
+    <td class="subject">${r.subj.name}</td>
+    <td>${t1==null?"—":t1.toFixed(1)}</td>
+    <td>${t2==null?"—":t2.toFixed(1)}</td>
+    <td>${t3==null?"—":t3.toFixed(1)}</td>
+    <td><b>${avgCell}</b></td>
+    <td>${r.subj.coef}</td>
+    <td>${na?"—":r.weighted.toFixed(1)}</td>
+    <td>${rankCell}</td>
+  </tr>`;
+}
+
+function render(){
+  const sysKey = state.sysKey;
+  const periodType = state.periodType;
+  const periodIndex = state.periodIndex;
+  const sys = SYSTEMS[sysKey];
+  const fr = sys.lang === "fr";
+  const plabel = sys.periodLabels[periodType];
+  const data = computeReportData(sysKey, periodType, periodIndex);
+
+  document.getElementById("paperWrap").setAttribute("data-watermark", sys.schoolName.split(",")[0].split("—")[0].trim());
+
+  const isUniv = sysKey === "UNIV";
+  const periodNoun = isUniv
+    ? (periodType==="ANNUEL" ? (fr?"Année":"Year") : (fr?"N°":"No."))
+    : (fr?`${plabel.unit} n°`:`${plabel.unit} No.`);
+
+  const sheet = document.getElementById("sheet");
+  sheet.innerHTML = `
+    <div class="letterhead">
+      <div class="seal">R.C.<br>${fr?"RÉP. DU<br>CAMEROUN":"REP. OF<br>CAMEROON"}</div>
+      <div class="letterhead-text">
+        <div class="country-line">${fr?"RÉPUBLIQUE DU CAMEROUN":"REPUBLIC OF CAMEROON"}</div>
+        <div class="motto-line">${fr?"Paix – Travail – Patrie":"Peace – Work – Fatherland"}</div>
+        <div class="ministry-line">${sys.ministry}</div>
+      </div>
+      <div class="accent-tag" style="background:${sys.accent};">${sys.label}</div>
+    </div>
+
+    <div class="doc-title">${plabel.doc}</div>
+    <div class="doc-subtitle">${sys.schoolName} — ${sys.className} — ${fr?"Année Scolaire":"Academic Year"} 2025/2026
+      ${plabel.count > 1 ? ` — ${periodNoun} ${periodIndex+1}/${plabel.count}` : ""}
+    </div>
+
+    <div class="id-block">
+      <div class="id-row"><b>${fr?(isUniv?"Nom & Prénom":"Nom de l'élève"):"Student's name"}</b><span>${isUniv?"NGONO Marie-Claire":"FOTSO Jean-Baptiste"}</span></div>
+      <div class="id-row"><b>${fr?"Matricule":"Registration No."}</b><span>${isUniv?"UD-INF-24-0187":"GBHS-2024-0356"}</span></div>
+      <div class="id-row"><b>${fr?(isUniv?"Filière":"Classe"):"Class"}</b><span>${sys.className}</span></div>
+      <div class="id-row"><b>${fr?"Sexe":"Sex"}</b><span>${isUniv?"F":"M"}</span></div>
+      <div class="id-row"><b>${fr?"Né(e) le":"Date of birth"}</b><span>14/03/2008</span></div>
+      <div class="id-row"><b>${fr?"Redoublant(e)":"Repeater"}</b><span>${fr?"Non":"No"}</span></div>
+    </div>
+
+    <table class="grades">
+      <caption>${fr?"Résultats par":"Results by"} ${isUniv?(fr?"unité d'enseignement":"course unit"):(fr?"matière":"subject")}</caption>
+      <thead>${tableHead(sys, periodType)}</thead>
+      <tbody>
+        ${data.rows.map((r,i)=>tableRow(sys, periodType, r, i)).join("")}
+      </tbody>
+    </table>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="label">${fr?"Moyenne générale":"Overall average"}</div>
+        <div class="value">${data.generalAverage===null?"—":data.generalAverage.toFixed(2)}/20</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">${fr?"Rang":"Rank"}</div>
+        <div class="value">${data.rank===null?"—":`${data.rank}/${data.classSize}`}</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">${fr?"Moyenne de la classe":"Class average"}</div>
+        <div class="value">${data.generalAverage===null?"—":data.classAverage.toFixed(2)}/20</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">${fr?"Mention":"Remark"}</div>
+        <div class="value" style="font-size:13px;">${data.mention}</div>
+      </div>
+    </div>
+
+    <div class="remarks-band">
+      <div><b>${fr?"Conduite":"Conduct"}</b>${fr?"Bonne":"Good"}</div>
+      <div><b>${fr?"Absences justifiées":"Justified absences"}</b>2h</div>
+      <div><b>${fr?"Absences injustifiées":"Unjustified absences"}</b>0h</div>
+      <div><b>${fr?"Retards":"Late arrivals"}</b>1</div>
+    </div>
+
+    ${periodType === "ANNUEL" ? `
+    <div class="decision-band">
+      ${isUniv
+        ? (fr?"DÉCISION : ANNÉE VALIDÉE — PASSAGE EN L3 — 30/30 CRÉDITS ACQUIS":"DECISION: YEAR VALIDATED — PROMOTED TO L3 — 30/30 CREDITS EARNED")
+        : (fr?"DÉCISION DU CONSEIL DE CLASSE : ADMIS(E) EN CLASSE SUPÉRIEURE":"CLASS COUNCIL DECISION: PROMOTED TO THE NEXT CLASS")}
+    </div>` : ""}
+
+    <div class="signatures">
+      <div class="line">${fr?"Professeur Principal":"Class Master"}</div>
+      <div class="line">${fr?"Parent / Tuteur":"Parent / Guardian"}</div>
+      <div class="line">${fr?(isUniv?"Le Doyen":"Le Chef d'Établissement"):(isUniv?"Dean":"Principal")}</div>
+    </div>
+
+    <div class="doc-footer">
+      <span>${fr?"Édité le":"Issued on"} 22/07/2026</span>
+      <span>${fr?"Document généré automatiquement — cachet et signature requis pour validité":"System-generated document — stamp and signature required for validity"}</span>
+    </div>
+  `;
+}
+
+/* ============================================================
+   STATE + UI WIRING
+   ============================================================ */
+
+const state = { sysKey:"FR_GEN", periodType:"SEQUENTIEL", periodIndex:0 };
+
+function buildTabs(){
+  const wrap = document.getElementById("sysTabs");
+  wrap.innerHTML = Object.entries(SYSTEMS).map(([key,s])=>
+    `<button class="sys-tab" data-key="${key}">${s.label}</button>`
+  ).join("");
+  wrap.querySelectorAll(".sys-tab").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.sysKey = btn.getAttribute("data-key");
+      state.periodIndex = 0;
+      syncUI();
+      render();
+    });
+  });
+}
+
+function buildPeriodTypeSelect(){
+  const sel = document.getElementById("periodType");
+  sel.innerHTML = PERIOD_TYPES.map(pt=>{
+    const lbl = { SEQUENTIEL:"Séquentiel", TRIMESTRIEL:"Trimestriel", ANNUEL:"Annuel" }[pt];
+    return `<option value="${pt}">${lbl}</option>`;
+  }).join("");
+  sel.addEventListener("change", ()=>{
+    state.periodType = sel.value;
+    state.periodIndex = 0;
+    syncUI();
+    render();
+  });
+}
+
+function buildPeriodIndexSelect(){
+  const sel = document.getElementById("periodIndex");
+  const sys = SYSTEMS[state.sysKey];
+  const plabel = sys.periodLabels[state.periodType];
+  const count = plabel.count;
+  const opts = [];
+  for(let i=0;i<count;i++){
+    opts.push(`<option value="${i}">${plabel.unit} ${i+1}${count>1?` / ${count}`:""}</option>`);
+  }
+  sel.innerHTML = opts.join("");
+  sel.value = state.periodIndex;
+  sel.onchange = ()=>{ state.periodIndex = parseInt(sel.value,10); render(); };
+}
+
+function syncUI(){
+  document.querySelectorAll(".sys-tab").forEach(btn=>{
+    const active = btn.getAttribute("data-key") === state.sysKey;
+    btn.classList.toggle("active", active);
+    btn.style.background = active ? SYSTEMS[state.sysKey].accent : "";
+  });
+  document.getElementById("periodType").value = state.periodType;
+  buildPeriodIndexSelect();
+
+  const note = document.getElementById("adaptNote");
+  if(state.sysKey === "UNIV"){
+    note.textContent = "L'université fonctionne par semestre, sans séquence ni trimestre. Les trois onglets sont adaptés : Séquentiel → contrôle continu de mi-semestre, Trimestriel → relevé de fin de semestre, Annuel → bilan LMD avec crédits ECTS.";
+  } else {
+    note.textContent = "";
+  }
+}
+
+buildTabs();
+buildPeriodTypeSelect();
+syncUI();
+render();
+</script>
+</body>
+</html>

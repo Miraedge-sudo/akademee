@@ -21,6 +21,9 @@ class ClassService {
       seriesName: row.series_name,
       capacity: row.capacity,
       studentCount: row.student_count || 0,
+      educationSystemId: row.education_system_id,
+      educationSystemCode: row.education_system_code,
+      educationSystemName: row.education_system_name,
     };
   }
 
@@ -43,12 +46,15 @@ class ClassService {
         ay.name AS academic_year_name,
         l.name AS level_name,
         s.name AS series_name,
+        es.code AS education_system_code,
+        es.name_en || ' / ' || es.name_fr AS education_system_name,
         (SELECT COUNT(*) FROM enrollments e WHERE e.class_id = c.class_id AND e.status = 'active')::int AS student_count
       FROM classes c
       LEFT JOIN users u ON c.class_teacher_id = u.user_id
       LEFT JOIN academic_years ay ON c.academic_year_id = ay.academic_year_id
       LEFT JOIN system_levels l ON c.level_id = l.level_id
       LEFT JOIN system_series s ON c.series_id = s.series_id
+      LEFT JOIN education_systems es ON c.education_system_id = es.education_system_id
       WHERE c.class_id = ${classId} AND c.school_id = ${schoolId}
     `;
     if (rows.length === 0) throw new Error('Class not found');
@@ -66,12 +72,15 @@ class ClassService {
         ay.name AS academic_year_name,
         l.name AS level_name,
         s.name AS series_name,
+        es.code AS education_system_code,
+        es.name_en || ' / ' || es.name_fr AS education_system_name,
         (SELECT COUNT(*) FROM enrollments e WHERE e.class_id = c.class_id AND e.status = 'active')::int AS student_count
       FROM classes c
       LEFT JOIN users u ON c.class_teacher_id = u.user_id
       LEFT JOIN academic_years ay ON c.academic_year_id = ay.academic_year_id
       LEFT JOIN system_levels l ON c.level_id = l.level_id
       LEFT JOIN system_series s ON c.series_id = s.series_id
+      LEFT JOIN education_systems es ON c.education_system_id = es.education_system_id
       WHERE c.school_id = ${schoolId}
         ${academicYearId ? sql`AND c.academic_year_id = ${academicYearId}` : sql``}
       ORDER BY c.name ASC
@@ -127,12 +136,15 @@ class ClassService {
         ay.name AS academic_year_name,
         l.name AS level_name,
         s.name AS series_name,
+        es.code AS education_system_code,
+        es.name_en || ' / ' || es.name_fr AS education_system_name,
         (SELECT COUNT(*) FROM enrollments e WHERE e.class_id = c.class_id AND e.status = 'active')::int AS student_count
       FROM classes c
       LEFT JOIN users u ON c.class_teacher_id = u.user_id
       LEFT JOIN academic_years ay ON c.academic_year_id = ay.academic_year_id
       LEFT JOIN system_levels l ON c.level_id = l.level_id
       LEFT JOIN system_series s ON c.series_id = s.series_id
+      LEFT JOIN education_systems es ON c.education_system_id = es.education_system_id
       WHERE c.school_id = ${schoolId}
         AND (
           c.class_teacher_id = ${teacherId}

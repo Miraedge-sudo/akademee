@@ -40,6 +40,19 @@ class StudentController {
     }
   }
 
+  async getStudentByUserId(req, res, next) {
+    try {
+      const { userId } = req.params;
+      const student = await studentService.getStudentByUserId(req.schoolId, userId);
+      response.success(res, 'Student found by user ID', student);
+    } catch (error) {
+      if (error.message === 'Student not found') {
+        return response.error(res, 'Student not found for this user', null, 404);
+      }
+      next(error);
+    }
+  }
+
   async getAllStudents(req, res, next) {
     try {
       const { limit = 50, offset = 0, search, status, className } = req.query;

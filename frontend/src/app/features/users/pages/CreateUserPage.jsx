@@ -32,7 +32,7 @@ import {
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { createUser, getUserById, updateUser } from "../../../core/api/userManagementService";
-import { createStudent } from "../../../core/api/studentService";
+import { createStudent, getStudentByUserId, updateStudent } from "../../../core/api/studentService";
 import { getClasses } from "../../../core/api/classService";
 import { getSubjects } from "../../../core/api/subjectService";
 
@@ -552,11 +552,35 @@ export default function CreateUserPage() {
       setEditId(editParam);
       setMode("create"); // keep "create" as the form mode, but we change behavior
       setLoadingUser(true);
+
+      // ── STUDENT editing is handled via the student profile page ──
+      const roleCode = roleParam?.toUpperCase();
+      if (roleCode === 'STUDENT') {
+        getStudentByUserId(editParam)
+          .then((studentData) => {
+            if (studentData?.id) {
+              navigate(`/dashboard/students/${studentData.id}`, { replace: true });
+            } else {
+              // No student record found, fall back to students list
+              navigate('/dashboard/students', { replace: true });
+            }
+          })
+          .catch(() => {
+            navigate('/dashboard/students', { replace: true });
+          })
+          .finally(() => setLoadingUser(false));
+        return;
+      }
+
       getUserById(editParam)
-        .then((user) => {
+        .then(async (user) => {
           if (!user) return;
-          const roleCode = user.roles?.[0]?.code || user.role || "TEACHER";
-          setSelectedRole(roleCode);
+          const rc = user.roles?.[0]?.code || user.role || "TEACHER";
+          setSelectedRole(rc);
+
+          // For other roles that have student-like data
+          let studentData = null;
+
           setFormData((prev) => ({
             ...prev,
             firstName: user.firstName || "",
@@ -564,6 +588,10 @@ export default function CreateUserPage() {
             email: user.email || "",
             phone: user.phone || "",
             gender: user.gender || "",
+            dob: user.dateOfBirth ? user.dateOfBirth.split('T')[0] : (studentData?.dateOfBirth ? studentData.dateOfBirth.split('T')[0] : ""),
+            studentClass: studentData?.classId || "",
+            nationality: studentData?.nationality || "",
+            educationalSystem: studentData?.educationalSystem || "",
           }));
         })
         .catch((err) => {
@@ -572,7 +600,7 @@ export default function CreateUserPage() {
         })
         .finally(() => setLoadingUser(false));
     }
-  }, [searchParams]);
+  }, [searchParams, navigate, isFr]);
 
   // ── Helpers ──
   const updateField = useCallback((field, value) => {
@@ -666,6 +694,26 @@ export default function CreateUserPage() {
         }
 
         await updateUser(editId, updatePayload);
+
+        // For STUDENT users, also sync the students table
+        if (selectedRole === 'STUDENT') {
+          try {
+            const studentData = await getStudentByUserId(editId);
+            if (studentData) {
+              await updateStudent(studentData.id, {
+                firstName: formData.firstName.trim(),
+                lastName: formData.lastName.trim(),
+                email: formData.email.trim(),
+                phone: formData.phone?.trim() || undefined,
+                gender: formData.gender || null,
+                dateOfBirth: formData.dob || null,
+                className: formData.studentClass ? (allClasses.find(c => c.id === formData.studentClass)?.name || null) : null,
+                classId: formData.studentClass || null,
+              });
+            }
+          } catch { /* student record might not exist — that's OK */ }
+        }
+
         toast.success(isFr ? "Utilisateur mis à jour" : "User updated");
         navigate("/dashboard/users");
         return;

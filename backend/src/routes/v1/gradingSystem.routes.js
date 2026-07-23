@@ -81,5 +81,7 @@ router.get('/report-cards/:id/payload', authMiddleware, roleMiddleware(['admin',
 router.post('/report-cards/:id/publish', authMiddleware, roleMiddleware(['admin']), gradingController.publishReportCard);
 router.post('/report-cards/:id/revise', authMiddleware, roleMiddleware(['admin']), gradingController.reviseReportCard);
 router.post('/report-cards/:id/lock', authMiddleware, roleMiddleware(['admin']), gradingController.lockReportCard);
+router.post('/report-cards/:id/unlock', authMiddleware, roleMiddleware(['admin']), gradingController.unlockReportCard);
+router.delete('/report-cards/:id', authMiddleware, roleMiddleware(['admin']), gradingController.deleteReportCard);
 
 module.exports = router;
