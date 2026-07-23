@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@rollup/pluginutils": "^5.4.0",
     "@tailwindcss/vite": "^4.3.2",
+    "acorn": "^8.17.0",
+    "acorn-jsx": "^5.3.2",
     "axios": "^1.18.1",
     "html2canvas": "^1.4.1",
     "i18next": "^26.3.1",
@@ -23,7 +26,8 @@
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^17.0.8",
     "react-icons": "^5.7.0",
-    "react-router-dom": "^7.17.0"
+    "react-router-dom": "^7.17.0",
+    "recharts": "^3.10.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

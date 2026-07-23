@@ -149,8 +149,10 @@ class StudentFeeService {
         amount_paid = amount_paid + ${amount},
         status = CASE WHEN (amount_paid + ${amount}) >= amount_due THEN 'paid' ELSE 'partial' END,
         updated_at = NOW()
-      WHERE student_id = ${studentId} AND fee_id = ${feeId}
-        AND academic_year_id = ${academicYearId || null} AND school_id = ${schoolId}
+      WHERE student_id = ${studentId}
+        AND ${feeId ? sql`fee_id = ${feeId}` : sql`fee_id IS NULL`}
+        AND ${academicYearId ? sql`academic_year_id = ${academicYearId}` : sql`academic_year_id IS NULL`}
+        AND school_id = ${schoolId}
       RETURNING *
     `;
     return rows.length > 0 ? this.formatStudentFee(rows[0]) : null;

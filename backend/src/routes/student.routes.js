@@ -19,6 +19,12 @@ router.use(authMiddleware, tenantMiddleware);
 
 router.get('/me', studentController.getMyProfile);
 
+router.get(
+  '/by-user/:userId',
+  roleMiddleware(['admin', 'teacher', 'accountant']),
+  studentController.getStudentByUserId
+);
+
 router.post(
   '/',
   roleMiddleware(['admin', 'teacher']),

@@ -39,6 +39,21 @@ class SequenceService {
     return this.formatSequence(rows[0]);
   }
 
+  async listBySchool(schoolId) {
+    const rows = await sql`
+      SELECT s.*, p.label_en AS period_name_en, p.label_fr AS period_name_fr
+      FROM sequences s
+      JOIN periods p ON s.period_id = p.period_id
+      WHERE s.school_id = ${schoolId}
+      ORDER BY s.sort_order ASC, s.date_debut ASC
+    `;
+    return rows.map(r => ({
+      ...this.formatSequence(r),
+      periodNameEn: r.period_name_en,
+      periodNameFr: r.period_name_fr,
+    }));
+  }
+
   async listByPeriode(schoolId, periodeId) {
     const rows = await sql`
       SELECT * FROM sequences WHERE school_id = ${schoolId} AND period_id = ${periodeId}

@@ -21,6 +21,7 @@
     "grades": "Bulletins",
     "gradeReports": "Relevés de notes",
     "reportCards": "Bulletins scolaires",
+    "subjectOfferings": "Offres de matières",
     "attendance": "Présences",
     "finance": "Finance",
     "myClasses": "Mes Classes",
@@ -28,6 +29,7 @@
     "myGrades": "Mes Notes",
     "myAttendance": "Mes Présences",
     "myFees": "Mes Frais",
+    "myReportCards": "Mes Bulletins",
     "settings": "Paramètres",
     "menu": "Menu",
     "users": "Utilisateurs",
@@ -43,6 +45,7 @@
     "payments": "Paiements",
     "receipts": "Reçus",
     "systemConfig": "Configuration",
+    "gradingConfig": "Config Notation",
     "group": {
       "overview": "Aperçu",
       "academic": "Académique",

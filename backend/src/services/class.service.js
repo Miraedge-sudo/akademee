@@ -21,14 +21,17 @@ class ClassService {
       seriesName: row.series_name,
       capacity: row.capacity,
       studentCount: row.student_count || 0,
+      educationSystemId: row.education_system_id,
+      educationSystemCode: row.education_system_code,
+      educationSystemName: row.education_system_name,
     };
   }
 
   async create(schoolId, data) {
-    const { name, classTeacherId, academicYearId, capacity, levelId, seriesId } = data;
+    const { name, classTeacherId, academicYearId, capacity, levelId, seriesId, educationSystemId } = data;
     const rows = await sql`
-      INSERT INTO classes (school_id, name, class_teacher_id, academic_year_id, capacity, level_id, series_id)
-      VALUES (${schoolId}, ${name}, ${classTeacherId || null}, ${academicYearId || null}, ${capacity || null}, ${levelId || null}, ${seriesId || null})
+      INSERT INTO classes (school_id, name, class_teacher_id, academic_year_id, capacity, level_id, series_id, education_system_id)
+      VALUES (${schoolId}, ${name}, ${classTeacherId || null}, ${academicYearId || null}, ${capacity || null}, ${levelId || null}, ${seriesId || null}, ${educationSystemId || null})
       RETURNING *
     `;
     return this.formatClass(rows[0]);
@@ -43,12 +46,15 @@ class ClassService {
         ay.name AS academic_year_name,
         l.name AS level_name,
         s.name AS series_name,
+        es.code AS education_system_code,
+        es.name_en || ' / ' || es.name_fr AS education_system_name,
         (SELECT COUNT(*) FROM enrollments e WHERE e.class_id = c.class_id AND e.status = 'active')::int AS student_count
       FROM classes c
       LEFT JOIN users u ON c.class_teacher_id = u.user_id
       LEFT JOIN academic_years ay ON c.academic_year_id = ay.academic_year_id
       LEFT JOIN system_levels l ON c.level_id = l.level_id
       LEFT JOIN system_series s ON c.series_id = s.series_id
+      LEFT JOIN education_systems es ON c.education_system_id = es.education_system_id
       WHERE c.class_id = ${classId} AND c.school_id = ${schoolId}
     `;
     if (rows.length === 0) throw new Error('Class not found');
@@ -66,12 +72,15 @@ class ClassService {
         ay.name AS academic_year_name,
         l.name AS level_name,
         s.name AS series_name,
+        es.code AS education_system_code,
+        es.name_en || ' / ' || es.name_fr AS education_system_name,
         (SELECT COUNT(*) FROM enrollments e WHERE e.class_id = c.class_id AND e.status = 'active')::int AS student_count
       FROM classes c
       LEFT JOIN users u ON c.class_teacher_id = u.user_id
       LEFT JOIN academic_years ay ON c.academic_year_id = ay.academic_year_id
       LEFT JOIN system_levels l ON c.level_id = l.level_id
       LEFT JOIN system_series s ON c.series_id = s.series_id
+      LEFT JOIN education_systems es ON c.education_system_id = es.education_system_id
       WHERE c.school_id = ${schoolId}
         ${academicYearId ? sql`AND c.academic_year_id = ${academicYearId}` : sql``}
       ORDER BY c.name ASC
@@ -93,7 +102,7 @@ class ClassService {
 
   async update(schoolId, classId, data) {
     await this.getById(schoolId, classId);
-    const { name, classTeacherId, academicYearId, capacity, levelId, seriesId } = data;
+    const { name, classTeacherId, academicYearId, capacity, levelId, seriesId, educationSystemId } = data;
     const rows = await sql`
       UPDATE classes SET
         name = COALESCE(${name || null}, name),
@@ -101,7 +110,8 @@ class ClassService {
         academic_year_id = COALESCE(${academicYearId || null}, academic_year_id),
         capacity = COALESCE(${capacity ?? null}, capacity),
         level_id = COALESCE(${levelId || null}, level_id),
-        series_id = COALESCE(${seriesId || null}, series_id)
+        series_id = COALESCE(${seriesId || null}, series_id),
+        education_system_id = COALESCE(${educationSystemId || null}, education_system_id)
       WHERE class_id = ${classId} AND school_id = ${schoolId}
       RETURNING *
     `;
@@ -127,12 +137,15 @@ class ClassService {
         ay.name AS academic_year_name,
         l.name AS level_name,
         s.name AS series_name,
+        es.code AS education_system_code,
+        es.name_en || ' / ' || es.name_fr AS education_system_name,
         (SELECT COUNT(*) FROM enrollments e WHERE e.class_id = c.class_id AND e.status = 'active')::int AS student_count
       FROM classes c
       LEFT JOIN users u ON c.class_teacher_id = u.user_id
       LEFT JOIN academic_years ay ON c.academic_year_id = ay.academic_year_id
       LEFT JOIN system_levels l ON c.level_id = l.level_id
       LEFT JOIN system_series s ON c.series_id = s.series_id
+      LEFT JOIN education_systems es ON c.education_system_id = es.education_system_id
       WHERE c.school_id = ${schoolId}
         AND (
           c.class_teacher_id = ${teacherId}

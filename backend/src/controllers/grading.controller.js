@@ -277,7 +277,7 @@ class GradingController {
     try {
       const actorId = req.user?.userId;
       const { classLevelId, periodStructureId } = req.body;
-      const data = await gradingService.generateBatch(classLevelId, periodStructureId, actorId);
+      const data = await gradingService.generateBatch(classLevelId, periodStructureId, actorId, req.body);
       response.success(res, 'Batch report cards generated', data);
     } catch (err) {
       next(err);
@@ -332,6 +332,28 @@ class GradingController {
       const { id } = req.params;
       const data = await gradingService.lockReportCard(id, actorId);
       response.success(res, 'Report card locked', data);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async unlockReportCard(req, res, next) {
+    try {
+      const actorId = req.user?.userId;
+      const { id } = req.params;
+      const data = await gradingService.unlockReportCard(id, actorId);
+      response.success(res, 'Report card unlocked', data);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteReportCard(req, res, next) {
+    try {
+      const actorId = req.user?.userId;
+      const { id } = req.params;
+      const data = await gradingService.deleteReportCard(id, actorId);
+      response.success(res, 'Report card deleted', data);
     } catch (err) {
       next(err);
     }

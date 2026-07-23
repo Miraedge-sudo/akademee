@@ -743,7 +743,7 @@ export default function AcademicYearsPage() {
       <div
         className="relative overflow-hidden px-6 sm:px-10 py-8 sm:py-10"
         style={{
-          background: `linear-gradient(135deg, ${pc} 0%, #0a6650 70%, #085041 100%)`,
+          background: `linear-gradient(135deg, ${pc} 0%, ${pc}dd 70%, ${pc}aa 100%)`,
         }}
       >
         {/* Subtle floating orb decorations */}

@@ -269,6 +269,33 @@ export const API_ENDPOINTS = {
     SEQUENCE_LOCK: (id) => `/api/v1/sequences/${id}/lock`,
     SEQUENCE_UNLOCK: (id) => `/api/v1/sequences/${id}/unlock`,
   },
-};
 
+  // Report Cards v1 (Grading System)
+  REPORT_CARDS_V1: {
+    LIST: "/api/v1/report-cards",
+    CREATE: "/api/v1/report-cards",
+    BATCH: "/api/v1/report-cards/batch",
+    PAYLOAD: (id) => `/api/v1/report-cards/${id}/payload`,
+    PUBLISH: (id) => `/api/v1/report-cards/${id}/publish`,
+    REVISE: (id) => `/api/v1/report-cards/${id}/revise`,
+    LOCK: (id) => `/api/v1/report-cards/${id}/lock`,
+    UNLOCK: (id) => `/api/v1/report-cards/${id}/unlock`,
+    DELETE: (id) => `/api/v1/report-cards/${id}`,
+  },
+
+  // Grading System v1
+  GRADING_V1: {
+    EDUCATION_SYSTEMS: "/api/v1/education-systems",
+    GRADING_SCALES: "/api/v1/grading-scales",
+    GRADING_SCALE_VERSIONS: (scaleId) => `/api/v1/grading-scales/${scaleId}/versions`,
+    MENTION_THRESHOLD_SETS: "/api/v1/mention-threshold-sets",
+    MENTION_THRESHOLDS: (setId) => `/api/v1/mention-threshold-sets/${setId}/thresholds`,
+    SUBJECT_OFFERINGS: "/api/v1/subject-offerings",
+    ASSESSMENT_COMPONENTS: (offeringId) => `/api/v1/subject-offerings/${offeringId}/assessment-components`,
+    CREATE_ASSESSMENT_COMPONENT: "/api/v1/assessment-components",
+    CALC_SUBJECT_AVG: "/api/v1/calculations/subject-average",
+    CALC_PERIOD_AVG: "/api/v1/calculations/period-average",
+    CALC_COHORT_RANKS: "/api/v1/calculations/cohort-ranks",
+  },
+};
 export default API_ENDPOINTS;

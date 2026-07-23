@@ -7,6 +7,7 @@ const auditMiddleware = require('../../middleware/audit.middleware');
 const router = express.Router();
 router.use(authMiddleware);
 
+router.get('/', sequenceController.listBySchool);
 router.get('/periode/:periodeId', sequenceController.listByPeriode);
 router.post('/', roleMiddleware(['admin']), auditMiddleware('CREATE', 'sequences'), sequenceController.create);
 router.get('/:id', sequenceController.getById);

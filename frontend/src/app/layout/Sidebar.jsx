@@ -539,6 +539,8 @@ const BASE_NAV_CONFIG = {
       items: [
         { key: "gradeReports", path: "/dashboard/grades", icon: "barchart" },
         { key: "reportCards", path: "/dashboard/report-cards", icon: "file" },
+        { key: "subjectOfferings", path: "/dashboard/subject-offerings", icon: "book" },
+        { key: "gradingConfig", path: "/dashboard/grading-config", icon: "wrench" },
         { key: "attendance", path: "/dashboard/attendance", icon: "calendar" },
       ],
     },
@@ -620,6 +622,11 @@ const BASE_NAV_CONFIG = {
           icon: "calendar",
         },
         { key: "myFees", path: "/dashboard/my-fees", icon: "dollar" },
+        {
+          key: "myReportCards",
+          path: "/dashboard/my-report-cards",
+          icon: "file",
+        },
       ],
     },
   ],
@@ -652,6 +659,11 @@ const BASE_NAV_CONFIG = {
         { key: "myGrades", path: "/dashboard/my-grades", icon: "barchart" },
         { key: "myFees", path: "/dashboard/my-fees", icon: "dollar" },
         { key: "myAttendance", path: "/dashboard/my-attendance", icon: "calendar" },
+        {
+          key: "myReportCards",
+          path: "/dashboard/my-report-cards",
+          icon: "file",
+        },
       ],
     },
   ],
