@@ -6,7 +6,7 @@ import { getStudents, deleteStudent } from "../../../core/api/studentService";
 import { getClasses } from "../../../core/api/classService";
 import { createEnrollment } from "../../../core/api/enrollmentService";
 import { YearContext } from "../../../core/context/YearContext";
-import AddStudentDrawer from "../components/AddStudentDrawer";
+import UserEditDrawer from "../../../components/ui/UserEditDrawer";
 import { FiUsers, FiCheckCircle } from "react-icons/fi";
 import {
   Button,
@@ -53,14 +53,16 @@ export default function StudentsListPage() {
       setLoading(true);
       setError(null);
       const data = await getStudents({ ...filter, limit: 500 });
-      const list = Array.isArray(data) ? data : data?.students || data?.rows || [];
+      const list = Array.isArray(data)
+        ? data
+        : data?.students || data?.rows || [];
       setStudents(list);
     } catch (err) {
       console.error("Failed to load students:", err);
       setError(
         lang === "fr"
           ? "Erreur lors du chargement des élèves"
-          : "Failed to load students"
+          : "Failed to load students",
       );
     } finally {
       setLoading(false);
@@ -111,12 +113,18 @@ export default function StudentsListPage() {
         classId: enrollClassId,
         academicYearId: selectedYearId || undefined,
       });
-      toast.success(lang === "fr" ? "Élève inscrit avec succès" : "Student enrolled successfully");
+      toast.success(
+        lang === "fr"
+          ? "Élève inscrit avec succès"
+          : "Student enrolled successfully",
+      );
       setEnrollModalOpen(false);
       setEnrollingStudent(null);
       loadStudents();
     } catch (err) {
-      const msg = err?.response?.data?.message || (lang === "fr" ? "Erreur d'inscription" : "Enrollment failed");
+      const msg =
+        err?.response?.data?.message ||
+        (lang === "fr" ? "Erreur d'inscription" : "Enrollment failed");
       toast.error(msg);
     }
     setEnrolling(false);
@@ -158,7 +166,9 @@ export default function StudentsListPage() {
       render: (_, row) => (
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 text-sm font-semibold flex-shrink-0">
-            {((row.firstName?.[0] || "") + (row.lastName?.[0] || "")).toUpperCase() || "?"}
+            {(
+              (row.firstName?.[0] || "") + (row.lastName?.[0] || "")
+            ).toUpperCase() || "?"}
           </div>
           <div>
             <div className="font-medium text-surface-800 dark:text-surface-100">
@@ -189,9 +199,13 @@ export default function StudentsListPage() {
       render: (val) => (
         <span className="text-sm text-surface-500 dark:text-surface-400">
           {val === "male"
-            ? lang === "fr" ? "M" : "M"
+            ? lang === "fr"
+              ? "M"
+              : "M"
             : val === "female"
-              ? lang === "fr" ? "F" : "F"
+              ? lang === "fr"
+                ? "F"
+                : "F"
               : "—"}
         </span>
       ),
@@ -203,9 +217,13 @@ export default function StudentsListPage() {
       render: (val) => (
         <Badge status={val === "active" ? "active" : "inactive"}>
           {val === "active"
-            ? lang === "fr" ? "Actif" : "Active"
+            ? lang === "fr"
+              ? "Actif"
+              : "Active"
             : val === "inactive"
-              ? lang === "fr" ? "Inactif" : "Inactive"
+              ? lang === "fr"
+                ? "Inactif"
+                : "Inactive"
               : val || "—"}
         </Badge>
       ),
@@ -215,7 +233,10 @@ export default function StudentsListPage() {
       label: "",
       width: 140,
       render: (_, row) => (
-        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-center gap-1"
+          onClick={(e) => e.stopPropagation()}
+        >
           {!row.classId && row.status === "active" && (
             <Button
               variant="primary"
@@ -227,11 +248,7 @@ export default function StudentsListPage() {
               {lang === "fr" ? "Inscrire" : "Enroll"}
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => openEditDrawer(row)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => openEditDrawer(row)}>
             {lang === "fr" ? "Modifier" : "Edit"}
           </Button>
           <Button
@@ -254,7 +271,11 @@ export default function StudentsListPage() {
         <PageHeader
           icon={<FiUsers className="w-6 h-6" />}
           title={lang === "fr" ? "Élèves" : "Students"}
-          subtitle={lang === "fr" ? "Gérer les élèves inscrits" : "Manage enrolled students"}
+          subtitle={
+            lang === "fr"
+              ? "Gérer les élèves inscrits"
+              : "Manage enrolled students"
+          }
         />
         <Card>
           <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -308,14 +329,10 @@ export default function StudentsListPage() {
             data={students}
             searchable
             searchPlaceholder={
-              lang === "fr"
-                ? "Rechercher un élève..."
-                : "Search students..."
+              lang === "fr" ? "Rechercher un élève..." : "Search students..."
             }
             emptyMessage={
-              lang === "fr"
-                ? "Aucun élève trouvé"
-                : "No students found"
+              lang === "fr" ? "Aucun élève trouvé" : "No students found"
             }
             onRowClick={(row) => navigate(`/dashboard/students/${row.id}`)}
             headerExtra={
@@ -328,14 +345,15 @@ export default function StudentsListPage() {
       </Card>
 
       {/* Create / Edit Drawer */}
-      <AddStudentDrawer
+      <UserEditDrawer
         isOpen={drawerOpen}
         onClose={() => {
           setDrawerOpen(false);
           setEditingStudent(null);
         }}
         onSuccess={handleDrawerSuccess}
-        student={editingStudent}
+        user={editingStudent}
+        role="STUDENT"
       />
 
       {/* Enroll Modal */}
@@ -377,7 +395,9 @@ export default function StudentsListPage() {
             </div>
           ) : classes.length === 0 ? (
             <p className="text-sm text-surface-400 italic">
-              {lang === "fr" ? "Aucune classe disponible. Créez d'abord des classes." : "No classes available. Create classes first."}
+              {lang === "fr"
+                ? "Aucune classe disponible. Créez d'abord des classes."
+                : "No classes available. Create classes first."}
             </p>
           ) : (
             <select
@@ -385,7 +405,11 @@ export default function StudentsListPage() {
               onChange={(e) => setEnrollClassId(e.target.value)}
               className="w-full h-11 px-3.5 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-sm outline-none focus:border-primary-500"
             >
-              <option value="">{lang === "fr" ? "-- Choisir une classe --" : "-- Select a class --"}</option>
+              <option value="">
+                {lang === "fr"
+                  ? "-- Choisir une classe --"
+                  : "-- Select a class --"}
+              </option>
               {classes.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
