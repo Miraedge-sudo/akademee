@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../core/hooks/useTheme";
+import { useAuth } from "../../../core/hooks/useAuth";
 import {
   FiCheck,
   FiChevronLeft,
@@ -12,6 +13,7 @@ import {
 import toast from "react-hot-toast";
 import { getClassById, createClass, updateClass } from "../../../core/api/classService";
 import { getUsers } from "../../../core/api/userManagementService";
+import { listEducationSystems } from "../../../core/api/gradingService";
 import levelService from "../../../core/api/levelService";
 import seriesService from "../../../core/api/seriesService";
 
@@ -20,6 +22,7 @@ export default function CreateClassPage() {
   const { t, i18n } = useTranslation("common");
   const navigate = useNavigate();
   const { primaryColor } = useTheme();
+  const { user } = useAuth();
   const isFr = i18n.language === "fr";
   const pc = primaryColor || "#085041";
   const isEditing = !!id;
@@ -29,6 +32,19 @@ export default function CreateClassPage() {
   const [levels, setLevels] = useState([]);
   const [series, setSeries] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const [educationSystems, setEducationSystems] = useState([]);
+
+  // ── Education systems available for the school ──
+  const schoolEduSystems = useMemo(() => {
+    const schoolSystems = user?.school?.educationalSystems || [];
+    const allowedCodes = new Set(
+      schoolSystems
+        .map(s => ONBOARDING_TO_DB_CODE[s] || null)
+        .filter(Boolean)
+    );
+    if (allowedCodes.size === 0) return educationSystems; // fallback: show all
+    return educationSystems.filter(sys => allowedCodes.has(sys.code));
+  }, [educationSystems, user]);
 
   const [form, setForm] = useState({
     name: "",
@@ -36,6 +52,7 @@ export default function CreateClassPage() {
     seriesId: "",
     capacity: 40,
     classTeacherId: "",
+    educationSystemId: "",
   });
 
   const nameEdited = useRef(false);
@@ -54,7 +71,15 @@ export default function CreateClassPage() {
         setSeries(seriesData);
 
         try {
-          const teachersData = await getUsers({ role: "TEACHER" });
+          const          teachersData = await getUsers({ role: "TEACHER" });
+        
+        // Load education systems
+        try {
+          const systems = await listEducationSystems();
+          setEducationSystems(Array.isArray(systems) ? systems : []);
+        } catch {
+          setEducationSystems([]);
+        }
           setTeachers(Array.isArray(teachersData) ? teachersData : (teachersData?.users || []));
         } catch (err) {
           console.warn("Could not load teachers:", err);
@@ -67,6 +92,7 @@ export default function CreateClassPage() {
             seriesId: cls.seriesId?.toString() || "",
             capacity: cls.capacity || 40,
             classTeacherId: cls.classTeacherId?.toString() || "",
+            educationSystemId: cls.educationSystemId || "",
           });
           nameEdited.current = true;
         }
@@ -139,12 +165,14 @@ export default function CreateClassPage() {
         seriesId: form.seriesId || null,
         capacity: form.capacity,
         classTeacherId: form.classTeacherId || null,
+        educationSystemId: form.educationSystemId || null,
       };
 
       // Convert empty strings to null for optional fields
       if (payload.levelId === "") payload.levelId = null;
       if (payload.seriesId === "") payload.seriesId = null;
       if (payload.classTeacherId === "") payload.classTeacherId = null;
+      if (payload.educationSystemId === "") payload.educationSystemId = null;
 
       if (isEditing) {
         await updateClass(id, payload);
@@ -292,6 +320,33 @@ export default function CreateClassPage() {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* ── Education System ── */}
+          <div>
+            <label className={labelClass}>
+              {isFr ? "Système éducatif" : "Education system"}
+              <span className="text-surface-300 font-normal ml-1">({isFr ? "optionnel" : "optional"})</span>
+            </label>
+            <select
+              value={form.educationSystemId}
+              onChange={(e) => updateField("educationSystemId", e.target.value)}
+              className={inputClass}
+            >
+              <option value="">
+                {isFr ? "Sélectionner un système" : "Select a system"}
+              </option>
+              {schoolEduSystems.map((sys) => (
+                <option key={sys.education_system_id} value={sys.education_system_id}>
+                  {isFr ? sys.name_fr : sys.name_en} ({sys.code})
+                </option>
+              ))}
+            </select>
+            <p className={hintClass}>
+              {isFr
+                ? "Détermine le format du bulletin de notes pour cette classe"
+                : "Determines the report card format for this class"}
+            </p>
           </div>
 
           {/* Class Teacher */}

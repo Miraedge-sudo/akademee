@@ -28,10 +28,10 @@ class ClassService {
   }
 
   async create(schoolId, data) {
-    const { name, classTeacherId, academicYearId, capacity, levelId, seriesId } = data;
+    const { name, classTeacherId, academicYearId, capacity, levelId, seriesId, educationSystemId } = data;
     const rows = await sql`
-      INSERT INTO classes (school_id, name, class_teacher_id, academic_year_id, capacity, level_id, series_id)
-      VALUES (${schoolId}, ${name}, ${classTeacherId || null}, ${academicYearId || null}, ${capacity || null}, ${levelId || null}, ${seriesId || null})
+      INSERT INTO classes (school_id, name, class_teacher_id, academic_year_id, capacity, level_id, series_id, education_system_id)
+      VALUES (${schoolId}, ${name}, ${classTeacherId || null}, ${academicYearId || null}, ${capacity || null}, ${levelId || null}, ${seriesId || null}, ${educationSystemId || null})
       RETURNING *
     `;
     return this.formatClass(rows[0]);
@@ -102,7 +102,7 @@ class ClassService {
 
   async update(schoolId, classId, data) {
     await this.getById(schoolId, classId);
-    const { name, classTeacherId, academicYearId, capacity, levelId, seriesId } = data;
+    const { name, classTeacherId, academicYearId, capacity, levelId, seriesId, educationSystemId } = data;
     const rows = await sql`
       UPDATE classes SET
         name = COALESCE(${name || null}, name),
@@ -110,7 +110,8 @@ class ClassService {
         academic_year_id = COALESCE(${academicYearId || null}, academic_year_id),
         capacity = COALESCE(${capacity ?? null}, capacity),
         level_id = COALESCE(${levelId || null}, level_id),
-        series_id = COALESCE(${seriesId || null}, series_id)
+        series_id = COALESCE(${seriesId || null}, series_id),
+        education_system_id = COALESCE(${educationSystemId || null}, education_system_id)
       WHERE class_id = ${classId} AND school_id = ${schoolId}
       RETURNING *
     `;

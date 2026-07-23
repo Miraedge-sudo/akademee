@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../core/hooks/useTheme";
+import { useAuth } from "../../../core/hooks/useAuth";
 import {
   FiCheck,
   FiChevronLeft,
@@ -34,9 +35,19 @@ import {
   getTeacherSubjects,
 } from "../../../core/api/subjectService";
 import { getClassSubjectsByClass, removeSubjectFromClass, bulkAssignSubjects } from "../../../core/api/classSubjectService";
+import { listEducationSystems } from "../../../core/api/gradingService";
 import levelService from "../../../core/api/levelService";
 import seriesService from "../../../core/api/seriesService";
 import ConfirmDialog from "../../../components/ui/ConfirmDialog";
+
+// ── Mapping school onboarding system names → DB codes ──
+const ONBOARDING_TO_DB_CODE = {
+  'francophone_general': 'FR_GEN',
+  'anglophone_general': 'ANG_GEN',
+  'francophone_technical': 'FR_TECH',
+  'anglophone_technical': 'ANG_TECH',
+  'university': 'UNIV',
+};
 
 // ── Static levels & series (will move to backend later) ──
 const EDUCATION_LEVELS = [
@@ -110,6 +121,7 @@ export default function ClassDetailPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("common");
   const { primaryColor } = useTheme();
+  const { user } = useAuth();
   const isFr = i18n.language === "fr";
   const pc = primaryColor || "#085041";
 
@@ -126,6 +138,19 @@ export default function ClassDetailPage() {
   const [assignModal, setAssignModal] = useState(false);
   const [subjects, setSubjects] = useState([]);
   const [classTeacherAssignments, setClassTeacherAssignments] = useState([]);
+  const [educationSystems, setEducationSystems] = useState([]);
+
+  // ── Education systems available for the school ──
+  const schoolEduSystems = useMemo(() => {
+    const schoolSystems = user?.school?.educationalSystems || [];
+    const allowedCodes = new Set(
+      schoolSystems
+        .map(s => ONBOARDING_TO_DB_CODE[s] || null)
+        .filter(Boolean)
+    );
+    if (allowedCodes.size === 0) return educationSystems;
+    return educationSystems.filter(sys => allowedCodes.has(sys.code));
+  }, [educationSystems, user]);
 
   // ── Class-subject assignment state (Subjects tab) ──
   const [classSubjectAssignments, setClassSubjectAssignments] = useState([]);
@@ -152,7 +177,7 @@ export default function ClassDetailPage() {
   const [removeTeacherConfirm, setRemoveTeacherConfirm] = useState({ open: false, teacherId: null, teacherName: "" });
 
   // ── Edit form state ──
-  const [editForm, setEditForm] = useState({ name: "", levelId: "", seriesId: "", capacity: 40, classTeacherId: "" });
+  const [editForm, setEditForm] = useState({ name: "", levelId: "", seriesId: "", capacity: 40, classTeacherId: "", educationSystemId: "" });
   const [isEditing, setIsEditing] = useState(false);
 
   // ── Load data from real API ──
@@ -161,14 +186,16 @@ export default function ClassDetailPage() {
       setLoading(true);
       setError(null);
       try {
-        const [classData, studentsData, teachersData, assignmentsData, subjectsData, classSubjectData] = await Promise.all([
+        const [classData, studentsData, teachersData, assignmentsData, subjectsData, classSubjectData, eduSystems] = await Promise.all([
           getClassById(id),
           getStudents(),
           getAvailableTeachers(),
           getClassTeachers(id),
           getSubjects().catch(() => []),
           getClassSubjectsByClass(id).catch(() => []),
+          listEducationSystems().catch(() => []),
         ]);
+        setEducationSystems(Array.isArray(eduSystems) ? eduSystems : []);
 
         if (!classData) { setError("NOT_FOUND"); setLoading(false); return; }
 
@@ -253,6 +280,7 @@ export default function ClassDetailPage() {
           seriesId: classData.seriesId?.toString() || "",
           capacity: classData.capacity || 40,
           classTeacherId: classData.classTeacherId?.toString() || mainTeacher?.id?.toString() || "",
+          educationSystemId: classData.educationSystemId || "",
         });
       } catch (err) {
         console.error("Error:", err);
@@ -278,6 +306,7 @@ export default function ClassDetailPage() {
         seriesId: editForm.seriesId || null,
         capacity: editForm.capacity,
         classTeacherId: editForm.classTeacherId || null,
+        educationSystemId: editForm.educationSystemId || null,
       };
       const updated = await updateClass(id, payload);
       setCls((prev) => ({ ...prev, ...updated }));
@@ -807,6 +836,33 @@ export default function ClassDetailPage() {
                       </select>
                     </div>
                   </div>
+                  {/* Education System */}
+                  <div>
+                    <label className={labelClass}>
+                      {isFr ? "Système éducatif" : "Education system"}
+                      <span className="text-surface-300 font-normal ml-1">({isFr ? "optionnel" : "optional"})</span>
+                    </label>
+                    <select
+                      value={editForm.educationSystemId}
+                      onChange={(e) => setEditForm((f) => ({ ...f, educationSystemId: e.target.value }))}
+                      className={inputClass}
+                    >
+                      <option value="">
+                        {isFr ? "Sélectionner un système" : "Select a system"}
+                      </option>
+                      {schoolEduSystems.map((sys) => (
+                        <option key={sys.education_system_id} value={sys.education_system_id}>
+                          {isFr ? sys.name_fr : sys.name_en} ({sys.code})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[11px] text-surface-400 mt-1">
+                      {isFr
+                        ? "Détermine le format du bulletin pour cette classe"
+                        : "Determines the report card format for this class"}
+                    </p>
+                  </div>
+
                   {/* Class Teacher */}
                   <div>
                     <label className={labelClass}>
@@ -830,7 +886,7 @@ export default function ClassDetailPage() {
                     </select>
                   </div>
                   <div className="flex gap-3 pt-2">
-                    <button onClick={() => { setIsEditing(false); setEditForm({ name: cls.name, levelId: cls.levelId?.toString() || "", seriesId: cls.seriesId?.toString() || "", capacity: cls.capacity || 40, classTeacherId: cls.classTeacherId?.toString() || "" }); }}
+                    <button onClick={() => { setIsEditing(false); setEditForm({ name: cls.name, levelId: cls.levelId?.toString() || "", seriesId: cls.seriesId?.toString() || "", capacity: cls.capacity || 40, classTeacherId: cls.classTeacherId?.toString() || "", educationSystemId: cls.educationSystemId || "" }); }}
                       className="h-10 px-4 rounded-lg border border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5">
                       <FiX className="w-3.5 h-3.5" /> {isFr ? "Annuler" : "Cancel"}
                     </button>

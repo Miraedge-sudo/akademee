@@ -7,6 +7,7 @@ import { getAllClassTeacherAssignments, assignClassTeacher, removeClassTeacher }
 import { getUsers, deleteUser } from "../../../core/api/userManagementService";
 import { getStudents } from "../../../core/api/studentService";
 import toast from "react-hot-toast";
+import UserEditDrawer from "../../../components/ui/UserEditDrawer";
 import {
   FiPlus,
   FiUser,
@@ -73,6 +74,9 @@ export default function UsersListPage() {
   const [view, setView] = useState("table");
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [editUser, setEditUser] = useState(null);
+  const [editRole, setEditRole] = useState(null);
 
   // ── Load users from real API ──
   const loadUsers = useCallback(async () => {
@@ -262,6 +266,20 @@ export default function UsersListPage() {
 
   const changePage = (p) => {
     if (p >= 1 && p <= totalPages) setPage(p);
+  };
+
+  // ── Open edit drawer for a user ──
+  const openEditDrawer = (u) => {
+    setEditUser(u);
+    setEditRole(u.role);
+    setEditDrawerOpen(true);
+  };
+
+  const closeEditDrawer = () => {
+    setEditDrawerOpen(false);
+    setEditUser(null);
+    setEditRole(null);
+    loadUsers();
   };
 
   // ── hexToRgb ──
@@ -471,24 +489,15 @@ export default function UsersListPage() {
                           <FiBookOpen className="w-3 h-3" style={{ color: "#3B82F6" }} />
                         </button>
                       )}
-                      {u.role === "STUDENT" && (
-                        <button
-                          onClick={() => navigate(`/dashboard/students/${u.studentId || u.id}`)}
-                          className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-110 hover:border-purple-200 hover:bg-purple-50 hover:shadow-sm transition-all"
-                          title={isFr ? "Voir la fiche" : "View profile"}
-                        >
-                          <FiEye className="w-3 h-3" style={{ color: "#8B5CF6" }} />
-                        </button>
-                      )}
-                      {u.role !== "TEACHER" && u.role !== "STUDENT" && (
-                        <button
-                          onClick={() => navigate(`/dashboard/users/new?edit=${u.id}&role=${u.role}`)}
-                          className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-110 hover:border-teal-200 hover:bg-teal-50 hover:shadow-sm transition-all"
-                          title={isFr ? "Modifier" : "Edit"}
-                        >
-                          <FiEdit2 className="w-3 h-3" style={{ color: pc }} />
-                        </button>
-                      )}
+
+                      {/* Edit button — opens UserEditDrawer for ALL roles */}
+                      <button
+                        onClick={() => openEditDrawer(u)}
+                        className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-110 hover:border-purple-200 hover:bg-purple-50 hover:shadow-sm transition-all"
+                        title={isFr ? "Modifier" : "Edit"}
+                      >
+                        <FiEdit2 className="w-3 h-3" style={{ color: u.role === "STUDENT" ? "#8B5CF6" : pc }} />
+                      </button>
                       <button
                         onClick={() => setDeleteTarget(u)}
                         className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-110 hover:border-red-200 hover:bg-red-50 hover:shadow-sm transition-all"
@@ -976,6 +985,15 @@ export default function UsersListPage() {
           <FiX className="w-3.5 h-3.5" />
         </button>
       </div>
+
+      {/* User Edit Drawer */}
+      <UserEditDrawer
+        isOpen={editDrawerOpen}
+        onClose={closeEditDrawer}
+        onSuccess={closeEditDrawer}
+        user={editUser}
+        role={editRole}
+      />
     </div>
   );
 }

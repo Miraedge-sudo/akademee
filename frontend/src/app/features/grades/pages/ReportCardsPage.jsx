@@ -298,6 +298,7 @@ export default function ReportCardsPage() {
       const result = await generateReportCard({
         studentId: genStudentId,
         periodStructureId: periodId,
+        educationSystemCode: genEduSystem,
       });
       toast.success(isFr ? "Bulletin généré !" : "Report card generated!");
       setGenStudentOpen(false);
@@ -328,6 +329,7 @@ export default function ReportCardsPage() {
       const result = await generateBatchReportCards({
         classLevelId: genClassId,
         periodStructureId: periodId,
+        educationSystemCode: genBatchEduSystem,
       });
       const successCount = result.filter((r) => r.success).length;
       toast.success(

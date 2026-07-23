@@ -277,7 +277,7 @@ class GradingController {
     try {
       const actorId = req.user?.userId;
       const { classLevelId, periodStructureId } = req.body;
-      const data = await gradingService.generateBatch(classLevelId, periodStructureId, actorId);
+      const data = await gradingService.generateBatch(classLevelId, periodStructureId, actorId, req.body);
       response.success(res, 'Batch report cards generated', data);
     } catch (err) {
       next(err);

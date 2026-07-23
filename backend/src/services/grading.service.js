@@ -657,17 +657,21 @@ class GradingService {
     const generalAverage = periodResult.average;
     const mention = this.deriveMention(generalAverage, thresholds);
 
+    const eduSystemCode = options.educationSystemCode || null;
+
     const report = await sql`
       INSERT INTO report_cards (
         student_id, period_structure_id, sequence_id, status, general_average,
         class_rank, partial_ranking, class_size, class_average,
         mention, grading_scale_version_id, threshold_set_id, report_card_config_id,
+        education_system_code,
         computed_at
       ) VALUES (
         ${studentId}, ${actualPeriodStructureId}, ${originalSequenceId}, 'DRAFT', ${generalAverage},
         ${studentRank?.classRank || null}, ${studentRank?.partialClassRanking || false},
         ${cohortRanks.classSize}, ${cohortRanks.classAverage},
         ${mention}, ${scaleId}, ${thresholdSetId}, ${config.report_card_config_id},
+        ${eduSystemCode},
         now()
       )
       RETURNING *
@@ -720,6 +724,7 @@ class GradingService {
   async _getReportCardPayloadInternal(reportCardId, language = 'EN') {
     const reportRows = await sql`
       SELECT rc.*,
+             rc.education_system_code AS stored_education_system_code,
              s.student_id,
              CONCAT(u.first_name, ' ', u.last_name) AS student_name,
              s.gender,
@@ -928,6 +933,9 @@ class GradingService {
       }
     }
 
+    // Use the stored education_system_code if available, otherwise fall back to the class-linked one
+    const effectiveEduCode = report.stored_education_system_code || report.education_system_code || 'FR_GEN';
+
     const payload = {
       report_card_id: report.report_card_id,
       status: report.status,
@@ -950,11 +958,11 @@ class GradingService {
         sequence_status: report.sequence_status || null,
       },
       class_level: {
-        education_system: report.education_system_code,
+        education_system: effectiveEduCode,
         education_system_label: report.education_system_label,
         class_name: report.class_name,
       },
-      education_system_config: this._getEducationSystemDisplayConfig(report.education_system_code),
+      education_system_config: this._getEducationSystemDisplayConfig(effectiveEduCode),
       school_info: schoolInfo,
       subjects,
       summary: {
@@ -1010,13 +1018,15 @@ class GradingService {
         student_id, period_structure_id, sequence_id, status, version, general_average,
         class_rank, partial_ranking, class_size, class_average,
         mention, grading_scale_version_id, threshold_set_id, report_card_config_id,
+        education_system_code,
         computed_at
       ) VALUES (
         ${existing[0].student_id}, ${existing[0].period_structure_id}, ${existing[0].sequence_id || null}, 'DRAFT', ${newVersion},
         ${existing[0].general_average}, ${existing[0].class_rank}, ${existing[0].partial_ranking},
         ${existing[0].class_size}, ${existing[0].class_average}, ${existing[0].mention},
         ${existing[0].grading_scale_version_id}, ${existing[0].threshold_set_id},
-        ${existing[0].report_card_config_id}, now()
+        ${existing[0].report_card_config_id}, ${existing[0].education_system_code || null},
+        now()
       )
       RETURNING *
     `;
@@ -1086,7 +1096,7 @@ class GradingService {
     return rows;
   }
 
-  async generateBatch(classLevelId, periodStructureId, actorId) {
+  async generateBatch(classLevelId, periodStructureId, actorId, options = {}) {
     const students = await sql`
       SELECT e.student_id
       FROM enrollments e
@@ -1098,7 +1108,7 @@ class GradingService {
     const results = [];
     for (const s of students) {
       try {
-        const generated = await this.generateReportCard(s.student_id, periodStructureId, actorId);
+        const generated = await this.generateReportCard(s.student_id, periodStructureId, actorId, options);
         results.push({ studentId: s.student_id, reportCardId: generated.reportCard.report_card_id, success: true });
       } catch (err) {
         results.push({ studentId: s.student_id, success: false, error: err.message });

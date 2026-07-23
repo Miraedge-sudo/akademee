@@ -121,49 +121,57 @@ const SELECT_ARROW =
 function FieldInput({ label, required, error, hint, className = "", ...props }) {
   const id = props.id || props.name;
   return (
-    <div>
+    <div className="w-full">
       {label && (
-        <label htmlFor={id} className="block text-[12.5px] font-bold text-surface-600 dark:text-surface-300 mb-1.5">
+        <label htmlFor={id} className="block text-[13px] font-semibold text-surface-700 dark:text-surface-200 mb-1.5">
           {label}
-          {required && <span className="text-primary-600 ml-0.5">*</span>}
+          {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
       )}
       <input
         id={id}
-        className={`primary-focus-ring w-full h-[46px] px-3.5 border-[1.5px] border-surface-200 dark:border-surface-600 
-          rounded-[10px] font-sans text-sm text-surface-800 dark:text-surface-100 
-          bg-white dark:bg-surface-800 outline-none transition-all duration-200 
-          placeholder:text-surface-300 dark:placeholder:text-surface-500
-          ${error ? "!border-red-500 !shadow-[0_0_0_4px_rgba(239,68,68,0.07)]" : ""}
+        className={`w-full h-[44px] px-4 rounded-lg border text-sm transition-all duration-200
+          outline-none
+          ${error
+            ? "border-red-400 bg-red-50/50 dark:bg-red-900/10 text-red-900 dark:text-red-100 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+            : "border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 hover:border-surface-300 dark:hover:border-surface-500"
+          }
+          placeholder:text-surface-400 dark:placeholder:text-surface-500
           ${className}`}
         {...props}
       />
-      {hint && !error && <p className="text-xs text-surface-400 mt-1">{hint}</p>}
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+      {hint && !error && <p className="text-[12px] text-surface-400 mt-1.5 leading-relaxed">{hint}</p>}
+      {error && <p className="text-[12px] text-red-500 mt-1.5 font-medium">{error}</p>}
     </div>
   );
 }
 
 function SelectField({ label, required, error, hint, children, className = "", value, onChange, placeholder, style, ...props }) {
   return (
-    <div>
+    <div className="w-full">
       {label && (
-        <label className="block text-[12.5px] font-bold text-surface-600 dark:text-surface-300 mb-1.5">
+        <label className="block text-[13px] font-semibold text-surface-700 dark:text-surface-200 mb-1.5">
           {label}
-          {required && <span className="text-primary-600 ml-0.5">*</span>}
+          {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
       )}
       <div className="relative">
         <select
           value={value}
           onChange={onChange}
-          className={`primary-focus-ring w-full h-[46px] px-3.5 pr-9 border-[1.5px] border-surface-200 dark:border-surface-600 
-            rounded-[10px] font-sans text-sm text-surface-800 dark:text-surface-100 
-            bg-white dark:bg-surface-800 outline-none transition-all duration-200
-            appearance-none cursor-pointer
-            ${error ? "!border-red-500" : ""}
+          className={`w-full h-[44px] px-4 pr-10 rounded-lg text-sm transition-all duration-200
+            outline-none appearance-none cursor-pointer
+            ${error
+              ? "border-red-400 bg-red-50/50 dark:bg-red-900/10 text-red-900 dark:text-red-100 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+              : "border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 hover:border-surface-300 dark:hover:border-surface-500"
+            }
             ${className}`}
-          style={{ backgroundImage: `url("${SELECT_ARROW}")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", ...style }}
+          style={{
+            backgroundImage: `url("${SELECT_ARROW}")`,
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "right 14px center",
+            ...style,
+          }}
           {...props}
         >
           {placeholder && (
@@ -171,26 +179,32 @@ function SelectField({ label, required, error, hint, children, className = "", v
           )}
           {children}
         </select>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5">
+          <svg className="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
       </div>
-      {hint && !error && <p className="text-xs text-surface-400 mt-1">{hint}</p>}
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+      {hint && !error && <p className="text-[12px] text-surface-400 mt-1.5 leading-relaxed">{hint}</p>}
+      {error && <p className="text-[12px] text-red-500 mt-1.5 font-medium">{error}</p>}
     </div>
   );
 }
 
-function SectionTitle({ children }) {
+function SectionTitle({ children, icon }) {
   return (
-    <div className="flex items-center gap-2 mb-[18px]">
-      <span className="text-[11px] font-bold tracking-[1.8px] uppercase text-surface-400 flex-shrink-0">
+    <div className="flex items-center gap-3 mb-5">
+      {icon && <span className="text-surface-400 flex-shrink-0">{icon}</span>}
+      <span className="text-[11px] font-bold tracking-[1.8px] uppercase text-surface-500 dark:text-surface-400 flex-shrink-0">
         {children}
       </span>
-      <div className="flex-1 h-px bg-surface-100 dark:bg-surface-700" />
+      <div className="flex-1 h-px bg-gradient-to-r from-surface-200/60 to-surface-100/0 dark:from-surface-700/60 dark:to-surface-800/0" />
     </div>
   );
 }
 
 function SectionDivider() {
-  return <div className="h-px bg-surface-50 dark:bg-surface-700/50 my-[22px]" />;
+  return <div className="h-px bg-gradient-to-r from-surface-100/0 via-surface-200/50 to-surface-100/0 dark:from-surface-800/0 dark:via-surface-700/50 dark:to-surface-800/0 my-6" />;
 }
 
 // ── Checklist item ──
@@ -398,21 +412,27 @@ function RoleCard({ role, config, selected, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`relative p-3 rounded-[10px] border-2 cursor-pointer text-center transition-all 
-        duration-200 overflow-hidden bg-white dark:bg-surface-800
-        ${selected ? "shadow-md -translate-y-0.5" : "hover:border-surface-300 hover:-translate-y-0.5 hover:shadow-sm"}`}
+      className={`relative p-3 rounded-xl border-2 cursor-pointer text-center transition-all 
+        duration-200 bg-white dark:bg-surface-800
+        ${selected
+          ? "shadow-lg -translate-y-0.5 ring-2 ring-offset-2"
+          : "hover:border-surface-300 dark:hover:border-surface-500 hover:-translate-y-0.5 hover:shadow-md"
+        }`}
       style={{
         borderColor: selected ? config.color : undefined,
         background: selected ? `rgba(${hexToRgb(config.color)},0.04)` : undefined,
+        '--tw-ring-color': selected ? config.color : undefined,
       }}
     >
       {/* Check mark */}
       <div
-        className={`absolute top-2 right-2 w-[18px] h-[18px] rounded-full flex items-center justify-center transition-all duration-200`}
-        style={selected ? { backgroundColor: config.color, borderColor: config.color } : { border: "2px solid #D8DBD5" }}
+        className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${
+          selected ? "scale-100" : "scale-90"
+        }`}
+        style={selected ? { backgroundColor: config.color } : { border: "2px solid #D8DBD5", backgroundColor: "transparent" }}
       >
         {selected && (
-          <svg viewBox="0 0 12 12" className="w-[9px] h-[9px] stroke-white stroke-[2.5] fill-none stroke-linecap-round">
+          <svg viewBox="0 0 12 12" className="w-3 h-3 stroke-white stroke-[2.5] fill-none stroke-linecap-round">
             <polyline points="2 6 5 9 10 3" />
           </svg>
         )}
@@ -420,17 +440,20 @@ function RoleCard({ role, config, selected, onClick }) {
 
       {/* Icon */}
       <div
-        className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center mx-auto mb-2"
-        style={{ background: config.bg }}
+        className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2.5 transition-transform duration-200"
+        style={{
+          background: selected ? config.bg : "#F7F8F6",
+          transform: selected ? "scale(1.05)" : "scale(1)",
+        }}
       >
-        <Icon className="w-[17px] h-[17px]" style={{ color: config.color, strokeWidth: 2 }} />
+        <Icon className="w-[18px] h-[18px]" style={{ color: config.color, strokeWidth: 2 }} />
       </div>
 
       {/* Label */}
-      <div className="text-[12.5px] font-bold text-surface-800 dark:text-surface-100 mb-0.5">
+      <div className="text-[13px] font-bold text-surface-800 dark:text-surface-100 mb-1">
         {config.label}
       </div>
-      <div className="text-[10.5px] text-surface-400 leading-[1.4]">
+      <div className="text-[11px] text-surface-400 leading-relaxed px-1">
         {config.desc}
       </div>
     </button>
@@ -730,6 +753,7 @@ export default function CreateUserPage() {
           password: formData.password,
           phone: formData.phone?.trim() || undefined,
           gender: formData.gender || 'male',
+          dateOfBirth: formData.dob || null,
           classId: formData.studentClass || null,
           className: selectedClass?.name || formData.studentClass || null,
           status: 'active',
@@ -1024,7 +1048,7 @@ export default function CreateUserPage() {
     : "";
 
   const inputClass =
-    "primary-focus-ring w-full h-[46px] px-3.5 border-[1.5px] border-surface-200 dark:border-surface-600 rounded-[10px] font-sans text-sm text-surface-800 dark:text-surface-100 bg-white dark:bg-surface-800 outline-none transition-all duration-200 placeholder:text-surface-300 dark:placeholder:text-surface-500";
+    "w-full h-[44px] px-4 border rounded-lg text-sm transition-all duration-200 outline-none border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 hover:border-surface-300 dark:hover:border-surface-500 placeholder:text-surface-400 dark:placeholder:text-surface-500";
 
   return (
     <div className="max-w-[1060px] mx-auto pb-20">
@@ -1130,45 +1154,45 @@ export default function CreateUserPage() {
       {/* ── Two-column Layout ── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-[22px] items-start">
         {/* ── Left: Form ── */}
-        <div>            {!isEditing && (
-              <div className="flex gap-0 bg-surface-50 dark:bg-surface-800 rounded-[10px] p-1 border border-surface-100 dark:border-surface-700 mb-6">
+        <div className="min-w-0">            {!isEditing && (
+              <div className="flex flex-col sm:flex-row gap-0 bg-surface-50 dark:bg-surface-800/50 rounded-xl p-1 border border-surface-100 dark:border-surface-700 mb-6">
                 <button
                   type="button"
                   onClick={() => setMode("create")}
-                  className={`flex-1 py-2 px-3 rounded-[8px] text-sm font-semibold cursor-pointer border-none
-                    transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 py-2.5 px-3 rounded-lg text-sm font-semibold cursor-pointer border-none
+                    transition-all duration-200 flex items-center justify-center gap-2 ${
                     mode === "create"
                       ? "bg-white dark:bg-surface-700 text-surface-800 dark:text-surface-100 shadow-sm"
-                      : "bg-transparent text-surface-400 hover:text-surface-600"
+                      : "bg-transparent text-surface-400 hover:text-surface-600 dark:hover:text-surface-300"
                   }`}
                 >
-                  <FiUserPlus className="w-3.5 h-3.5" />
+                  <FiUserPlus className="w-4 h-4" />
                   {isFr ? "Créer manuellement" : "Create manually"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode("invite")}
-                  className={`flex-1 py-2 px-3 rounded-[8px] text-sm font-semibold cursor-pointer border-none
-                    transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 py-2.5 px-3 rounded-lg text-sm font-semibold cursor-pointer border-none
+                    transition-all duration-200 flex items-center justify-center gap-2 ${
                     mode === "invite"
                       ? "bg-white dark:bg-surface-700 text-surface-800 dark:text-surface-100 shadow-sm"
-                      : "bg-transparent text-surface-400 hover:text-surface-600"
+                      : "bg-transparent text-surface-400 hover:text-surface-600 dark:hover:text-surface-300"
                   }`}
                 >
-                  <FiMail className="w-3.5 h-3.5" />
+                  <FiMail className="w-4 h-4" />
                   {isFr ? "Inviter par email" : "Invite by email"}
                 </button>
               </div>
             )}
 
           {/* ── Shared card (role selector + form content) ── */}
-          <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm p-6 sm:p-7">
+          <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] p-5 sm:p-7">
             {/* Role selector — visible in BOTH modes (as in original HTML design) */}
             {!isEditing && (
               <SectionTitle>{isFr ? "Sélectionner le rôle" : "Select role"}</SectionTitle>
             )}
             {!isEditing && (
-              <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 mb-7">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-2.5 mb-8">
                 {Object.entries(ROLES_CONFIG).map(([role, baseConfig]) => {
                   const config = getRoleConfig(role, pc);
                   return (
@@ -1447,7 +1471,7 @@ export default function CreateUserPage() {
         <div className="hidden lg:block">
           <div className="lg:sticky lg:top-24">
             {/* Preview Card */}
-            <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm p-5">
+            <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] p-5">
               <p className="text-[10px] font-bold tracking-[1.5px] uppercase text-surface-400 mb-3.5">
                 {isFr ? "Aperçu en direct" : "Live preview"}
               </p>
