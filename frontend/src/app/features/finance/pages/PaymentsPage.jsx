@@ -30,7 +30,6 @@ import {
   FiXCircle,
 } from "react-icons/fi";
 import { getStudents } from "../../../core/api/studentService";
-import { getFees } from "../../../core/api/feeService";
 import { createPayment, getPayments } from "../../../core/api/paymentService";
 import { getStudentFeeSummary } from "../../../core/api/feeCalculationService";
 
@@ -71,7 +70,6 @@ export default function PaymentsPage() {
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [feeSummary, setFeeSummary] = useState(null);
-  const [allFees, setAllFees] = useState([]);
   const [recentPayments, setRecentPayments] = useState([]);
 
   // Payment form
@@ -80,16 +78,12 @@ export default function PaymentsPage() {
   const [feeId, setFeeId] = useState("");
   const [reference, setReference] = useState("");
 
-  // ── Load initial data ──
+  // ── Load initial data (recent payments only) ──
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        const [feesData, paymentsData] = await Promise.all([
-          getFees({ limit: 500 }).catch(() => ({ fees: [] })),
-          getPayments({ limit: 10 }).catch(() => ({ payments: [] })),
-        ]);
-        setAllFees(Array.isArray(feesData) ? feesData : feesData?.fees || []);
+        const paymentsData = await getPayments({ limit: 10 }).catch(() => ({ payments: [] }));
         const payList = Array.isArray(paymentsData) ? paymentsData : paymentsData?.payments || [];
         setRecentPayments(payList);
       } catch {
@@ -131,6 +125,7 @@ export default function PaymentsPage() {
     setAmount("");
     setFeeId("");
     setReference("");
+    setFeeSummary(null); // ← Clear old summary immediately
 
     try {
       const summary = await getStudentFeeSummary(student.id);
@@ -345,7 +340,23 @@ export default function PaymentsPage() {
                   )}
                 </div>
 
+                {/* No fees assigned message */}
+                {feeSummary && assignedFees.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-10 text-center bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <FiAlertCircle className="w-8 h-8 mb-2" style={{ color: "#F59E0B" }} />
+                    <p className="text-sm font-semibold text-gray-700 mb-1">
+                      {isFr ? "Aucun frais assigné" : "No fees assigned"}
+                    </p>
+                    <p className="text-xs text-gray-400 max-w-xs">
+                      {isFr
+                        ? "Cet élève n'a aucun frais de scolarité assigné. Veuillez d'abord lui assigner des frais depuis la page de gestion des frais."
+                        : "This student has no tuition fees assigned. Please assign fees first from the fee management page."}
+                    </p>
+                  </div>
+                )}
+
                 {/* Payment form */}
+                {assignedFees.length > 0 && (
                 <form onSubmit={handleRecordPayment} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
                   <h3 className="text-sm font-bold text-gray-800 mb-4">
                     {isFr ? "Détails du paiement" : "Payment Details"}
@@ -491,6 +502,7 @@ export default function PaymentsPage() {
                     </button>
                   </div>
                 </form>
+                )}
               </div>
             )}
 

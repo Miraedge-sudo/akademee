@@ -1,9 +1,10 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
 import { EducationalSystemProvider } from "./app/core/context/EducationalSystemContext";
 import { Toaster } from "react-hot-toast";
 import LoadingFallback from "./app/components/ui/LoadingFallback";
+import UnderDevelopmentPage from "./app/components/ui/UnderDevelopmentPage";
 import SyncQueueIndicator from "./app/components/offline/SyncQueueIndicator";
 import ProtectedRoute from "./app/core/guards/ProtectedRoute";
 import AcademicYearGuard from "./app/core/guards/AcademicYearGuard";
@@ -337,8 +338,8 @@ function App() {
             }
           />
 
-          {/* Default redirect */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Default redirect — show under development page instead of logging out */}
+          <Route path="*" element={page(UnderDevelopmentPage)} />
         </Routes>
       </BrowserRouter>
     </EducationalSystemProvider>

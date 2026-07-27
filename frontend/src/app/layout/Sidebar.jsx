@@ -623,10 +623,8 @@ const BASE_NAV_CONFIG = {
     {
       group: "grades",
       items: [
-        { key: "gradeReports", path: "/dashboard/grades", icon: "barchart" },
         { key: "reportCards", path: "/dashboard/report-cards", icon: "file" },
         { key: "subjectOfferings", path: "/dashboard/subject-offerings", icon: "book" },
-        { key: "gradingConfig", path: "/dashboard/grading-config", icon: "wrench" },
         { key: "attendance", path: "/dashboard/attendance", icon: "calendar" },
       ],
     },
@@ -671,11 +669,6 @@ const BASE_NAV_CONFIG = {
       group: "system",
       items: [
         { key: "settings", path: "/dashboard/settings", icon: "settings" },
-        {
-          key: "systemConfig",
-          path: "/dashboard/system-configuration",
-          icon: "settings",
-        },
       ],
     },
   ],
