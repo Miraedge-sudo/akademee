@@ -17,6 +17,15 @@ import { listEducationSystems } from "../../../core/api/gradingService";
 import levelService from "../../../core/api/levelService";
 import seriesService from "../../../core/api/seriesService";
 
+// ── Mapping school onboarding system names → DB codes ──
+const ONBOARDING_TO_DB_CODE = {
+  'francophone_general': 'FR_GEN',
+  'anglophone_general': 'ANG_GEN',
+  'francophone_technical': 'FR_TECH',
+  'anglophone_technical': 'ANG_TECH',
+  'university': 'UNIV',
+};
+
 export default function CreateClassPage() {
   const { id } = useParams();
   const { t, i18n } = useTranslation("common");

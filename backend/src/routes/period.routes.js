@@ -35,6 +35,10 @@ router.delete(
   auditMiddleware('DELETE', 'periods'),
   periodController.delete
 );
+router.patch('/:id/open', roleMiddleware(['admin']), periodController.open);
+router.patch('/:id/close', roleMiddleware(['admin']), periodController.close);
+router.patch('/:id/lock', roleMiddleware(['admin']), periodController.lock);
+router.patch('/:id/unlock', roleMiddleware(['admin']), periodController.unlock);
 
 /**
  * @openapi

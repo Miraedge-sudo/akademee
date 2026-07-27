@@ -462,41 +462,6 @@ class GradingService {
           reason,
         });
       }
-    } else {
-      // ── Fallback: old grade system (grades table with subject_id + period_id) ──
-      // Used when subject_offerings / assessment_components are not configured
-      // IMPORTANT: Deduplicate by subject_id — use the average of all scores per subject
-      const oldGrades = await sql`
-        SELECT s.subject_id, s.name AS subject_name, s.name_fr, s.name_en, s.code, s.category,
-               ROUND(AVG(g.score)::numeric, 2) AS avg_score
-        FROM grades g
-        JOIN subjects s ON g.subject_id = s.subject_id
-        WHERE g.student_id = ${studentId}
-          AND g.period_id = ${periodStructureId}
-          AND g.score IS NOT NULL
-        GROUP BY s.subject_id, s.name, s.name_fr, s.name_en, s.code, s.category
-        ORDER BY s.name
-      `;
-
-      for (const g of oldGrades) {
-        const average = Number(g.avg_score);
-        const coeff = 1; // Default coefficient
-        weightedSum += average * coeff;
-        coefficientSum += coeff;
-        subjectResults.push({
-          subjectOfferingId: null,
-          subjectId: g.subject_id,
-          subjectName: g.subject_name,
-          nameFr: g.name_fr,
-          nameEn: g.name_en,
-          code: g.code,
-          category: g.category,
-          coefficient: coeff,
-          credits: 0,
-          average,
-          reason: null,
-        });
-      }
     }
 
     const generalAverage = coefficientSum > 0 ? weightedSum / coefficientSum : null;
@@ -681,7 +646,6 @@ class GradingService {
     const subjectLines = [];
     for (const sub of periodResult.subjectResults) {
       const weightedPoints = sub.average != null ? sub.average * sub.coefficient : null;
-      // Support fallback: use subject_id when subject_offering_id is null (old grade system)
       const offeringId = sub.subjectOfferingId;
       const rankKey = sub.subjectOfferingId || sub.subjectId;
       const line = await sql`
@@ -867,6 +831,7 @@ class GradingService {
       const range = rangeMap[l.subject_offering_id || l.subject_id] || {};
       const cs = componentScoresMap[l.subject_offering_id] || {};
       return {
+        subjectId: l.subject_id,
         subjectCode: l.subject_code,
         name: label(l, l.name_fr, l.name_en),
         nameFr: l.name_fr,
@@ -894,8 +859,59 @@ class GradingService {
         practicalMaxScore: cs['PRACTICAL']?.maxScore ?? cs['TP']?.maxScore ?? null,
         practicalWeightPercent: cs['PRACTICAL']?.weightPercent ?? cs['TP']?.weightPercent ?? null,
         componentStatus: Object.values(cs).length > 0 ? (Object.values(cs).some(c => c.status === 'GRADED') ? 'GRADED' : 'PENDING') : null,
+        // Sequence-level scores for trimester/annual report cards
+        sequenceScores: [],
       };
     });
+
+    // ── Compute per-sequence subject scores for period-level report cards ──
+    // Uses direct grades query with sequence_id since offerings are linked to the parent period
+    if (!report.sequence_id && report.period_structure_id) {
+      try {
+        const sequences = await sql`
+          SELECT sequence_id, label FROM sequences
+          WHERE period_id = ${report.period_structure_id}
+          ORDER BY created_at
+        `;
+
+        for (const seq of sequences) {
+          try {
+            // Direct query: grades filtered by sequence_id (old system field still populated)
+            const seqGrades = await sql`
+              SELECT g.subject_id, s.name AS subject_name,
+                     ROUND(AVG(g.score)::numeric, 2) AS avg_score
+              FROM grades g
+              JOIN subjects s ON g.subject_id = s.subject_id
+              WHERE g.student_id = ${report.student_id}
+                AND g.sequence_id = ${seq.sequence_id}
+                AND g.score IS NOT NULL
+              GROUP BY g.subject_id, s.name
+            `;
+
+            // Build a lookup by subjectId
+            const seqLookup = {};
+            for (const sg of seqGrades) {
+              seqLookup[sg.subject_id] = Number(sg.avg_score);
+            }
+
+            for (const sub of subjects) {
+              const seqScore = sub.subjectId ? seqLookup[sub.subjectId] : null;
+              sub.sequenceScores.push({
+                sequenceLabel: seq.label,
+                score: seqScore ?? null,
+              });
+            }
+          } catch (seqErr) {
+            console.warn(`Could not compute scores for sequence ${seq.label}:`, seqErr.message);
+            for (const sub of subjects) {
+              sub.sequenceScores.push({ sequenceLabel: seq.label, score: null });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch sequences for period-level scores:', err.message);
+      }
+    }
 
     // ── Attendance stats for the student within the period's date range ──
     let attendance = null;
@@ -1075,17 +1091,20 @@ class GradingService {
   }
 
   async listReportCards(filters = {}) {
-    const { studentId, classLevelId, periodStructureId, status, educationSystemCode } = filters;
+    const { schoolId, studentId, classLevelId, periodStructureId, status, educationSystemCode } = filters;
     const rows = await sql`
-      SELECT rc.*, CONCAT(u.first_name, ' ', u.last_name) AS student_name, p.name AS period_name
+      SELECT rc.*, CONCAT(u.first_name, ' ', u.last_name) AS student_name, p.name AS period_name,
+             seq.label AS sequence_label
       FROM report_cards rc
       JOIN students s ON rc.student_id = s.student_id
       JOIN users u ON s.user_id = u.user_id
       JOIN periods p ON rc.period_structure_id = p.period_id
+      LEFT JOIN sequences seq ON rc.sequence_id = seq.sequence_id
       ${classLevelId || educationSystemCode ? sql`JOIN enrollments e ON e.student_id = rc.student_id AND (e.enrolled_to IS NULL OR e.enrolled_to >= CURRENT_DATE)` : sql``}
       ${educationSystemCode ? sql`JOIN classes cl ON e.class_id = cl.class_id` : sql``}
       ${educationSystemCode ? sql`JOIN education_systems es ON cl.education_system_id = es.education_system_id` : sql``}
       WHERE TRUE
+        ${schoolId ? sql`AND s.school_id = ${schoolId}` : sql``}
         ${studentId ? sql`AND rc.student_id = ${studentId}` : sql``}
         ${classLevelId ? sql`AND e.class_id = ${classLevelId}` : sql``}
         ${periodStructureId ? sql`AND rc.period_structure_id = ${periodStructureId}` : sql``}

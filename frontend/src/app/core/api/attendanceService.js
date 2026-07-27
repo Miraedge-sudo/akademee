@@ -79,3 +79,12 @@ export async function getMonthlyTrends(params = {}) {
   const response = await api.get(API_ENDPOINTS.ATTENDANCE_STATS.MONTHLY_TRENDS, { params });
   return response.data.data;
 }
+
+/**
+ * Get attendance records for a specific student (per-day)
+ * @param {string} studentId
+ */
+export async function getStudentAttendance(studentId) {
+  const response = await api.get(API_ENDPOINTS.ATTENDANCE.STUDENT(studentId));
+  return response.data.data;
+}

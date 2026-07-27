@@ -66,6 +66,7 @@ export default function PaymentsPage() {
   // ── State ──
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [studentSearch, setStudentSearch] = useState("");
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -103,8 +104,10 @@ export default function PaymentsPage() {
   const searchStudents = useCallback(async (query) => {
     if (!query || query.length < 2) {
       setStudents([]);
+      setSearching(false);
       return;
     }
+    setSearching(true);
     try {
       const data = await getStudents({ search: query, limit: 10 });
       const list = Array.isArray(data) ? data : data?.students || [];
@@ -112,6 +115,7 @@ export default function PaymentsPage() {
     } catch {
       setStudents([]);
     }
+    setSearching(false);
   }, []);
 
   useEffect(() => {
@@ -259,7 +263,15 @@ export default function PaymentsPage() {
               </div>
 
               {/* Student suggestions */}
-              {students.length > 0 && !selectedStudent && (
+              {searching && !selectedStudent && (
+                <div className="mt-2 border border-gray-200 rounded-xl overflow-hidden max-h-48">
+                  <div className="flex items-center gap-3 px-5 py-4 text-sm text-gray-500">
+                    <FiRefreshCw className="w-4 h-4 animate-spin" style={{ color: pc }} />
+                    {isFr ? "Recherche en cours..." : "Searching..."}
+                  </div>
+                </div>
+              )}
+              {!searching && students.length > 0 && !selectedStudent && (
                 <div className="mt-2 border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100 max-h-48 overflow-y-auto">
                   {students.map((s) => (
                     <button

@@ -1,5 +1,41 @@
 const sql = require('../config/database');
 
+/**
+ * Determine period/sequence status based on its date range vs. the current date.
+ * @param {string|Date} startDate
+ * @param {string|Date} endDate
+ * @returns {'EN_ATTENTE'|'OUVERTE'|'FERMEE'}
+ */
+function determineStatus(startDate, endDate) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  if (now > end) return 'FERMEE';                // End date has passed → closed
+  if (now >= start && now <= end) return 'OUVERTE'; // Currently active → open
+  return 'EN_ATTENTE';                               // Future → pending
+}
+
+/**
+ * Validate that a period/sequence is not being created entirely in the past.
+ */
+function validateNotInPast(startDate) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+
+  if (start < today) {
+    throw new Error('Cannot create a period with a start date in the past');
+  }
+}
+
 class PeriodService {
   formatPeriod(row) {
     return {
@@ -10,6 +46,7 @@ class PeriodService {
       type: row.type,
       startDate: row.start_date,
       endDate: row.end_date,
+      status: row.status || 'EN_ATTENTE',
       isCurrent: row.is_current,
       sortOrder: row.sort_order,
     };
@@ -27,9 +64,19 @@ class PeriodService {
       }
     }
 
+    // ── Validate: cannot create a period with start date in the past ──
+    if (startDate) {
+      validateNotInPast(startDate);
+    }
+
+    // ── Auto-determine status based on dates ──
+    const status = startDate && endDate
+      ? determineStatus(startDate, endDate)
+      : 'EN_ATTENTE';
+
     const rows = await sql`
-      INSERT INTO periods (school_id, academic_year_id, name, type, start_date, end_date, sort_order)
-      VALUES (${schoolId}, ${academicYearId}, ${name}, ${type || 'term'}, ${startDate || null}, ${endDate || null}, ${sortOrder || 0})
+      INSERT INTO periods (school_id, academic_year_id, name, type, start_date, end_date, status, sort_order)
+      VALUES (${schoolId}, ${academicYearId}, ${name}, ${type || 'term'}, ${startDate || null}, ${endDate || null}, ${status}, ${sortOrder || 0})
       RETURNING *
     `;
     return this.formatPeriod(rows[0]);
@@ -76,6 +123,22 @@ class PeriodService {
       await sql`UPDATE periods SET is_current = false WHERE school_id = ${schoolId}`;
     }
 
+    // ── If dates are changing, validate and recalculate status ──
+    const hasDateChanges = startDate || endDate;
+    let newStatus = null;
+    if (hasDateChanges) {
+      // Resolve effective dates: use new value or keep existing
+      const current = await this.getById(schoolId, periodId);
+      const effStart = startDate || current.startDate;
+      const effEnd = endDate || current.endDate;
+
+      if (startDate) {
+        validateNotInPast(startDate);
+      }
+
+      newStatus = determineStatus(effStart, effEnd);
+    }
+
     const rows = await sql`
       UPDATE periods SET
         name = COALESCE(${name || null}, name),
@@ -83,7 +146,23 @@ class PeriodService {
         start_date = COALESCE(${startDate || null}, start_date),
         end_date = COALESCE(${endDate || null}, end_date),
         is_current = COALESCE(${isCurrent ?? null}, is_current),
-        sort_order = COALESCE(${sortOrder ?? null}, sort_order)
+        sort_order = COALESCE(${sortOrder ?? null}, sort_order),
+        status = COALESCE(${newStatus}, status),
+        updated_at = now()
+      WHERE period_id = ${periodId} AND school_id = ${schoolId}
+      RETURNING *
+    `;
+    return this.formatPeriod(rows[0]);
+  }
+
+  async updateStatus(schoolId, periodId, status) {
+    await this.getById(schoolId, periodId);
+
+    const validStatuses = ['EN_ATTENTE', 'OUVERTE', 'FERMEE', 'VERROUILLEE'];
+    if (!validStatuses.includes(status)) throw new Error('Invalid status');
+
+    const rows = await sql`
+      UPDATE periods SET status = ${status}, updated_at = now()
       WHERE period_id = ${periodId} AND school_id = ${schoolId}
       RETURNING *
     `;

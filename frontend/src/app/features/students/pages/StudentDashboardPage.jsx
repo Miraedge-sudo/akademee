@@ -103,7 +103,8 @@ export default function StudentDashboardPage() {
   const totalAbsences = (attendanceStats?.absent || 0) + (attendanceStats?.late || 0);
 
   // Fee summary
-  const totalDue = feeSummary?.totalDue || 0;
+  // Backend returns { totalFees, totalPaid, balance, status } — NOT totalDue
+  const totalDue = feeSummary?.totalFees || feeSummary?.totalDue || 0;
   const totalPaid = feeSummary?.totalPaid || 0;
   const feeStatus = feeSummary?.status || student?.feeStatus || 'pending';
   const paidPct = totalDue > 0 ? Math.round((totalPaid / totalDue) * 100) : 0;

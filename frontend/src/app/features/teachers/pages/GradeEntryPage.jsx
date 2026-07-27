@@ -19,6 +19,8 @@ import { getTeacherClasses } from "../../../core/api/classService";
 import { getClassGrades, recordGrade, updateGrade } from "../../../core/api/gradeService";
 import periodService from "../../../core/api/periodService";
 import sequencesService from "../../../core/api/sequencesService";
+import { useOffline } from "../../../core/offline/OfflineContext";
+import { OPERATIONS } from "../../../core/offline/syncQueue";
 import {
   BookOpen,
   Users,
@@ -56,6 +58,7 @@ export default function GradeEntryPage() {
   const { user } = useAuth();
   const { primaryColor } = useTheme();
   const { t } = useTranslation('common');
+  const { isOnline, syncQueue } = useOffline();
   const pc = primaryColor || "#085041";
 
   // ── State ──
@@ -63,6 +66,7 @@ export default function GradeEntryPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [offlineQueued, setOfflineQueued] = useState(false);
 
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -80,15 +84,20 @@ export default function GradeEntryPage() {
   const [selectedSequenceId, setSelectedSequenceId] = useState("");
   const [sequenceDateWarning, setSequenceDateWarning] = useState(null);
   const [sequenceStatusWarning, setSequenceStatusWarning] = useState(null);
+  const [sequenceManualOpenInfo, setSequenceManualOpenInfo] = useState(null);
 
   // Scores keyed by studentId
   const [scores, setScores] = useState({});
+
+  // ── Loading state for grade fetching (subject/period switches) ──
+  const [loadingGrades, setLoadingGrades] = useState(false);
 
   // ── Check date / status warnings for selected sequence ──
   useEffect(() => {
     if (!selectedSequenceId) {
       setSequenceDateWarning(null);
       setSequenceStatusWarning(null);
+      setSequenceManualOpenInfo(null);
       return;
     }
     const seq = sequences.find((s) => s.id === selectedSequenceId);
@@ -105,29 +114,41 @@ export default function GradeEntryPage() {
       setSequenceStatusWarning(
         `Cette séquence est « ${statusLabels[seq.statut] || seq.statut} ». Les notes ne peuvent être saisies que dans une séquence ouverte.`
       );
+      setSequenceManualOpenInfo(null);
     } else {
       setSequenceStatusWarning(null);
     }
 
-    // Date check
+    // Date check — si l'admin a ouvert manuellement la séquence (statut OUVERTE),
+    // son action prime sur les dates. On ne bloque PAS la saisie avec un avertissement.
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const start = seq.dateDebutSaisie ? new Date(seq.dateDebutSaisie) : null;
     const end = seq.dateFinSaisie ? new Date(seq.dateFinSaisie) : null;
 
-    if (start && end) {
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      if (today < start) {
-        setSequenceDateWarning(
-          `La saisie débutera le ${start.toLocaleDateString('fr-FR')}`
-        );
-      } else if (today > end) {
-        setSequenceDateWarning(
-          `La période de saisie est terminée (fin le ${end.toLocaleDateString('fr-FR')})`
-        );
-      } else {
-        setSequenceDateWarning(null);
+    if (seq.statut === "OUVERTE" && start && today < start) {
+      // L'admin a ouvert cette séquence avant sa date → message d'info vert
+      setSequenceDateWarning(null);
+      setSequenceManualOpenInfo(
+        `Ouverture manuelle par l'administration — la saisie est autorisée`
+      );
+    } else {
+      setSequenceManualOpenInfo(null);
+
+      if (start && end) {
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        if (today < start) {
+          setSequenceDateWarning(
+            `La saisie débutera le ${start.toLocaleDateString('fr-FR')}`
+          );
+        } else if (today > end) {
+          setSequenceDateWarning(
+            `La période de saisie est terminée (fin le ${end.toLocaleDateString('fr-FR')})`
+          );
+        } else {
+          setSequenceDateWarning(null);
+        }
       }
     }
   }, [selectedSequenceId, sequences]);
@@ -198,19 +219,31 @@ export default function GradeEntryPage() {
     load();
   }, [selectedPeriodId]);
 
-  // ── When class changes, load students ──
+  // ── When class or subject changes, load students & grades ──
   useEffect(() => {
+    let cancelled = false;
+
     if (!selectedClassId) {
       setStudents([]);
       setScores({});
       setExistingGrades({});
       return;
     }
+
+    // Clear previous scores immediately so we never show stale data
+    setScores({});
+    setExistingGrades({});
+    setLoadingGrades(true);
+
     async function load() {
       try {
         const [enrollData] = await Promise.all([
           getEnrollments({ classId: selectedClassId, status: "active", limit: 500 }),
         ]);
+
+        // If dependencies changed while we were fetching, bail out
+        if (cancelled) return;
+
         const studentList = (enrollData?.enrollments || []).map((e) => ({
           id: e.studentId,
           fullName: e.studentName || "Unknown",
@@ -222,33 +255,53 @@ export default function GradeEntryPage() {
         // Load existing grades for the selected class + subject (+ period)
         if (selectedSubjectId) {
           const gradeData = await getClassGrades(selectedClassId).catch(() => []);
+
+          // Another safety check after the second async call
+          if (cancelled) return;
+
           const grades = Array.isArray(gradeData) ? gradeData : gradeData?.grades || [];
           const gradeMap = {};
           grades.forEach((g) => {
             const matchSubject = String(g.subjectId) === String(selectedSubjectId);
             const matchPeriod = !selectedPeriodId || String(g.periodId) === String(selectedPeriodId);
-            if (matchSubject && matchPeriod) {
+            const matchSequence = !selectedSequenceId || String(g.sequenceId) === String(selectedSequenceId);
+            if (matchSubject && matchPeriod && matchSequence) {
               gradeMap[g.studentId] = { id: g.id, score: Number(g.score), comment: g.comment };
             }
           });
-          setExistingGrades(gradeMap);
 
-          // Pre-fill scores from existing grades (filtered by period)
-          const initScores = {};
-          studentList.forEach((s) => {
-            if (gradeMap[s.id]) initScores[s.id] = gradeMap[s.id].score;
-          });
-          setScores(initScores);
+          if (!cancelled) {
+            setExistingGrades(gradeMap);
+
+            // Pre-fill scores from existing grades for this subject
+            const initScores = {};
+            studentList.forEach((s) => {
+              if (gradeMap[s.id]) initScores[s.id] = gradeMap[s.id].score;
+            });
+            setScores(initScores);
+            setLoadingGrades(false);
+          }
         } else {
-          setExistingGrades({});
-          setScores({});
+          if (!cancelled) {
+            setExistingGrades({});
+            setScores({});
+            setLoadingGrades(false);
+          }
         }
       } catch {
-        setStudents([]);
+        if (!cancelled) {
+          setStudents([]);
+          setLoadingGrades(false);
+        }
       }
     }
     load();
-  }, [selectedClassId, selectedSubjectId, selectedPeriodId]);
+
+    // Cleanup: mark as cancelled so stale responses don't overwrite state
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedClassId, selectedSubjectId, selectedPeriodId, selectedSequenceId]);
 
   // ── When class changes, filter available subjects ──
   const availableSubjects = selectedClassId
@@ -267,7 +320,7 @@ export default function GradeEntryPage() {
     }
   };
 
-  // ── Save all grades ──
+  // ── Save all grades (with offline fallback to sync queue) ──
   const handleSaveAll = async () => {
     if (!selectedSubjectId || !selectedClassId || !selectedPeriodId || !selectedSequenceId) {
       setError(t('teacher.gradeEntry.saveError'));
@@ -281,28 +334,92 @@ export default function GradeEntryPage() {
     setSaving(true);
     setError(null);
     setSuccess(false);
+    setOfflineQueued(false);
 
+    const entries = Object.entries(scores);
+
+    // ── Hors ligne → tout mettre dans la file d'attente ──
+    if (!isOnline) {
+      try {
+        for (const [studentId, score] of entries) {
+          const existing = existingGrades[studentId];
+          if (existing) {
+            await syncQueue.addToQueue(OPERATIONS.GRADE_UPDATE, {
+              id: existing.id,
+              data: { score, comment: "" },
+            });
+          } else {
+            await syncQueue.addToQueue(OPERATIONS.GRADE_CREATE, {
+              studentId,
+              subjectId: selectedSubjectId,
+              periodId: selectedPeriodId || undefined,
+              sequenceId: selectedSequenceId || undefined,
+              score,
+              comment: "",
+            });
+          }
+        }
+        await syncQueue.refreshCount();
+        setOfflineQueued(true);
+        setSuccess(true);
+      } catch (qErr) {
+        setError("Erreur lors de la mise en file d'attente. Veuillez réessayer.");
+      }
+      setSaving(false);
+      return;
+    }
+
+    // ── En ligne → essayer l'API, puis file d'attente en cas d'échec réseau ──
     try {
-      const entries = Object.entries(scores);
-      let saved = 0;
-
+      let allQueued = false;
       for (const [studentId, score] of entries) {
         const existing = existingGrades[studentId];
-        if (existing) {
-          await updateGrade(existing.id, { score, comment: "" });
-        } else {
-          await recordGrade({
-            studentId,
-            subjectId: selectedSubjectId,
-            periodId: selectedPeriodId || undefined,
-            sequenceId: selectedSequenceId || undefined,
-            score,
-            comment: "",
-          });
+        try {
+          if (existing) {
+            await updateGrade(existing.id, { score, comment: "" });
+          } else {
+            await recordGrade({
+              studentId,
+              subjectId: selectedSubjectId,
+              periodId: selectedPeriodId || undefined,
+              sequenceId: selectedSequenceId || undefined,
+              score,
+              comment: "",
+            });
+          }
+        } catch (err) {
+          // En cas d'erreur réseau sur une note, on bascule tout en file d'attente
+          const isNetErr = !err.response || err.code === "ERR_NETWORK" || err.message?.includes("Network Error");
+          if (isNetErr) {
+            // Mettre en file les notes déjà sauvegardées + les restantes
+            const remaining = entries.slice(entries.findIndex(([sid]) => sid === studentId));
+            for (const [sid, sc] of remaining) {
+              const ex = existingGrades[sid];
+              if (ex) {
+                await syncQueue.addToQueue(OPERATIONS.GRADE_UPDATE, { id: ex.id, data: { score: sc, comment: "" } });
+              } else {
+                await syncQueue.addToQueue(OPERATIONS.GRADE_CREATE, {
+                  studentId: sid,
+                  subjectId: selectedSubjectId,
+                  periodId: selectedPeriodId || undefined,
+                  sequenceId: selectedSequenceId || undefined,
+                  score: sc,
+                  comment: "",
+                });
+              }
+            }
+            allQueued = true;
+            await syncQueue.refreshCount();
+          } else {
+            throw err; // Erreur non-réseau → propager
+          }
+          break;
         }
-        saved++;
       }
 
+      if (allQueued) {
+        setOfflineQueued(true);
+      }
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
@@ -489,9 +606,19 @@ export default function GradeEntryPage() {
         </div>
       )}
 
-      {/* ── Sequence warnings ── */}
-      {(sequenceDateWarning || sequenceStatusWarning) && (
+      {/* ── Sequence warnings & info ── */}
+      {(sequenceDateWarning || sequenceStatusWarning || sequenceManualOpenInfo) && (
         <div className="gr-fade space-y-2" style={{ animationDelay: "0.09s" }}>
+          {sequenceManualOpenInfo && (
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-medium" style={{
+              background: 'rgba(29,158,117,0.08)',
+              border: '1.5px solid rgba(29,158,117,0.25)',
+              color: '#1D9E75',
+            }}>
+              <CheckCircle2 size={14} className="flex-shrink-0" />
+              <span>{sequenceManualOpenInfo}</span>
+            </div>
+          )}
           {sequenceDateWarning && (
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-medium" style={{
               background: sequenceDateWarning.startsWith('La période') ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)',
@@ -564,7 +691,23 @@ export default function GradeEntryPage() {
               </div>
             </div>
 
-            {filteredStudents.length === 0 ? (
+            {loadingGrades ? (
+              <div className="flex flex-col items-center justify-center py-14 text-center">
+                <div className="relative w-12 h-12 mb-4">
+                  <div
+                    className="absolute inset-0 rounded-full border-[3px] opacity-20"
+                    style={{ borderColor: pc }}
+                  />
+                  <div
+                    className="absolute inset-0 rounded-full border-[3px] border-t-transparent animate-spin"
+                    style={{ borderColor: pc, borderTopColor: 'transparent' }}
+                  />
+                </div>
+                <p className="text-sm font-medium text-surface-400 animate-pulse">
+                  Chargement des notes…
+                </p>
+              </div>
+            ) : filteredStudents.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <Users size={32} className="text-surface-200 dark:text-surface-600 mb-3" />
                 <p className="text-sm font-medium text-surface-400">
@@ -651,7 +794,9 @@ export default function GradeEntryPage() {
               {success && (
                 <span className="text-[12px] font-medium text-teal-600 flex items-center gap-1">
                   <CheckCircle2 size={13} />
-                  {t('teacher.gradeEntry.savedSuccess')}
+                  {offlineQueued
+                    ? "Notes mises en attente — synchronisation automatique au retour en ligne"
+                    : t('teacher.gradeEntry.savedSuccess')}
                 </span>
               )}
             </div>

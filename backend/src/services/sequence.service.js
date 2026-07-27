@@ -1,5 +1,41 @@
 const sql = require('../config/database');
 
+/**
+ * Determine status based on date range vs. current date.
+ * @param {string|Date} startDate
+ * @param {string|Date} endDate
+ * @returns {'EN_ATTENTE'|'OUVERTE'|'FERMEE'}
+ */
+function determineStatus(startDate, endDate) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  if (now > end) return 'FERMEE';                // End date has passed → closed
+  if (now >= start && now <= end) return 'OUVERTE'; // Currently active → open
+  return 'EN_ATTENTE';                               // Future → pending
+}
+
+/**
+ * Validate that creation date is not in the past.
+ */
+function validateNotInPast(startDate) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+
+  if (start < today) {
+    throw new Error('Cannot create a sequence with a start date in the past');
+  }
+}
+
 class SequenceService {
   formatSequence(row) {
     return {
@@ -19,13 +55,23 @@ class SequenceService {
   async create(schoolId, data) {
     const { label, periodeId, dateDebut, dateFin } = data;
 
+    // ── Validate: cannot create a sequence with start date in the past ──
+    if (dateDebut) {
+      validateNotInPast(dateDebut);
+    }
+
+    // ── Auto-determine status based on dates ──
+    const status = dateDebut && dateFin
+      ? determineStatus(dateDebut, dateFin)
+      : 'EN_ATTENTE';
+
     const maxOrder = await sql`
       SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM sequences WHERE period_id = ${periodeId}
     `;
 
     const rows = await sql`
-      INSERT INTO sequences (school_id, period_id, label, date_debut, date_fin, sort_order)
-      VALUES (${schoolId}, ${periodeId}, ${label}, ${dateDebut || null}, ${dateFin || null}, ${maxOrder[0].next_order})
+      INSERT INTO sequences (school_id, period_id, label, date_debut, date_fin, status, sort_order)
+      VALUES (${schoolId}, ${periodeId}, ${label}, ${dateDebut || null}, ${dateFin || null}, ${status}, ${maxOrder[0].next_order})
       RETURNING *
     `;
     return this.formatSequence(rows[0]);
@@ -65,11 +111,28 @@ class SequenceService {
   async update(schoolId, sequenceId, data) {
     await this.getById(schoolId, sequenceId);
     const { label, dateDebut, dateFin } = data;
+
+    // ── If dates are changing, validate and recalculate status ──
+    const hasDateChanges = dateDebut || dateFin;
+    let newStatus = null;
+    if (hasDateChanges) {
+      const current = await this.getById(schoolId, sequenceId);
+      const effStart = dateDebut || current.dateDebut;
+      const effEnd = dateFin || current.dateFin;
+
+      if (dateDebut) {
+        validateNotInPast(dateDebut);
+      }
+
+      newStatus = determineStatus(effStart, effEnd);
+    }
+
     const rows = await sql`
       UPDATE sequences SET
         label = COALESCE(${label || null}, label),
         date_debut = COALESCE(${dateDebut || null}, date_debut),
         date_fin = COALESCE(${dateFin || null}, date_fin),
+        status = COALESCE(${newStatus}, status),
         updated_at = now()
       WHERE sequence_id = ${sequenceId} AND school_id = ${schoolId}
       RETURNING *

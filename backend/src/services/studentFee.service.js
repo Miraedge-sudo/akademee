@@ -144,17 +144,20 @@ class StudentFeeService {
   }
 
   async updatePayment(schoolId, studentId, feeId, amount, academicYearId) {
+    // Dynamic WHERE: if academicYearId is omitted, we don't filter by it.
+    // The standard codebase pattern is inline ternary — NOT sql.join().
     const rows = await sql`
       UPDATE student_fees SET
         amount_paid = amount_paid + ${amount},
         status = CASE WHEN (amount_paid + ${amount}) >= amount_due THEN 'paid' ELSE 'partial' END,
         updated_at = NOW()
       WHERE student_id = ${studentId}
-        AND ${feeId ? sql`fee_id = ${feeId}` : sql`fee_id IS NULL`}
-        AND ${academicYearId ? sql`academic_year_id = ${academicYearId}` : sql`academic_year_id IS NULL`}
         AND school_id = ${schoolId}
+        ${feeId ? sql`AND fee_id = ${feeId}` : sql``}
+        ${academicYearId ? sql`AND academic_year_id = ${academicYearId}` : sql``}
       RETURNING *
     `;
+
     return rows.length > 0 ? this.formatStudentFee(rows[0]) : null;
   }
 }

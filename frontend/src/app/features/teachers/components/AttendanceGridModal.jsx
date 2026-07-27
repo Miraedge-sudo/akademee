@@ -15,6 +15,8 @@ import {
   getClassAttendanceByDate,
   recordBulkAttendance,
 } from "../../../core/api/attendanceService";
+import { useOffline } from "../../../core/offline/OfflineContext";
+import { OPERATIONS } from "../../../core/offline/syncQueue";
 import {
   X,
   CheckCircle2,
@@ -56,6 +58,7 @@ function initials(name) {
 }
 
 export default function AttendanceGridModal({ cls, pc = "#085041", onClose }) {
+  const { isOnline, syncQueue } = useOffline();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [students, setStudents] = useState([]);
@@ -64,6 +67,7 @@ export default function AttendanceGridModal({ cls, pc = "#085041", onClose }) {
   const [search, setSearch] = useState("");
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [offlineQueued, setOfflineQueued] = useState(false);
 
   // ── Load students + existing attendance ──
   const loadData = useCallback(async () => {
@@ -125,36 +129,65 @@ export default function AttendanceGridModal({ cls, pc = "#085041", onClose }) {
     setSuccess(false);
   };
 
-  // ── Save ──
+  // ── Save (with offline fallback to sync queue) ──
   const handleSave = async () => {
     setSaving(true);
     setError(null);
     setSuccess(false);
-    try {
-      const records = students
-        .filter((s) => attendance[s.id]) // Only submit students with a status
-        .map((s) => ({
-          studentId: s.id,
-          status: attendance[s.id],
-        }));
+    setOfflineQueued(false);
 
-      if (records.length === 0) {
-        setError("Please mark at least one student before saving.");
-        setSaving(false);
-        return;
+    const records = students
+      .filter((s) => attendance[s.id])
+      .map((s) => ({
+        studentId: s.id,
+        status: attendance[s.id],
+      }));
+
+    if (records.length === 0) {
+      setError("Please mark at least one student before saving.");
+      setSaving(false);
+      return;
+    }
+
+    const payload = { classId: cls.id, date, records };
+
+    // ── Hors ligne → file d'attente ──
+    if (!isOnline) {
+      try {
+        await syncQueue.addToQueue(OPERATIONS.ATTENDANCE_BULK, payload);
+        await syncQueue.refreshCount();
+        setOfflineQueued(true);
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+      } catch (qErr) {
+        setError("Erreur lors de la mise en file d'attente.");
       }
+      setSaving(false);
+      return;
+    }
 
-      await recordBulkAttendance({
-        classId: cls.id,
-        date,
-        records,
-      });
-
+    // ── En ligne → tenter l'API ──
+    try {
+      await recordBulkAttendance(payload);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      console.error("Failed to save attendance:", err);
-      setError(err.response?.data?.message || err.message || "Failed to save attendance");
+      // Si erreur réseau, basculer en file d'attente
+      const isNetErr = !err.response || err.code === "ERR_NETWORK" || err.message?.includes("Network Error");
+      if (isNetErr) {
+        try {
+          await syncQueue.addToQueue(OPERATIONS.ATTENDANCE_BULK, payload);
+          await syncQueue.refreshCount();
+          setOfflineQueued(true);
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
+        } catch (qErr) {
+          setError("Erreur réseau. Les données seront synchronisées automatiquement.");
+        }
+      } else {
+        console.error("Failed to save attendance:", err);
+        setError(err.response?.data?.message || err.message || "Failed to save attendance");
+      }
     }
     setSaving(false);
   };
@@ -425,7 +458,9 @@ export default function AttendanceGridModal({ cls, pc = "#085041", onClose }) {
             {success && (
               <span className="text-[11px] font-medium text-teal-600 flex items-center gap-1">
                 <CheckCircle2 size={12} />
-                Attendance saved!
+                {offlineQueued
+                  ? "Présences mises en attente — synchro automatique au retour en ligne"
+                  : "Attendance saved!"}
               </span>
             )}
           </div>

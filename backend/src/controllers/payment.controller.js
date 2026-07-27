@@ -36,6 +36,18 @@ class PaymentController {
           : 'An identical payment has already been made today for this student.';
         return response.error(res, msg, null, 409);
       }
+      if (error.message === 'FEE_ALREADY_PAID') {
+        const msg = isFr
+          ? 'Ce frais a déjà été entièrement payé.'
+          : 'This fee has already been fully paid.';
+        return response.error(res, msg, null, 400);
+      }
+      if (error.message === 'OVERPAYMENT') {
+        const msg = isFr
+          ? 'Le montant dépasse le solde restant dû.'
+          : 'Payment amount exceeds the remaining balance.';
+        return response.error(res, msg, null, 400);
+      }
       next(error);
     }
   }

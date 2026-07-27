@@ -52,6 +52,7 @@ const swaggerRoutes = require('./routes/swagger.routes');
 const levelRoutes = require('./routes/level.routes');
 const seriesRoutes = require('./routes/series.routes');
 const inviteRoutes = require('./routes/invite.routes');
+const adminRoutes = require('./routes/admin.routes');
 const v1PeriodRoutes = require('./routes/v1/period.routes');
 const v1SequenceRoutes = require('./routes/v1/sequence.routes');
 const v1GradingRoutes = require('./routes/v1/gradingSystem.routes');
@@ -127,6 +128,9 @@ app.use('/api/invites', inviteRoutes);
 app.use('/api/v1/periodes', v1PeriodRoutes);
 app.use('/api/v1/sequences', v1SequenceRoutes);
 app.use('/api/v1', v1GradingRoutes);
+
+// Admin maintenance routes
+app.use('/api/admin', adminRoutes);
 
 // API documentation
 app.use('/api-docs', swaggerRoutes);

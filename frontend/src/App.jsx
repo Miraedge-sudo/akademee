@@ -4,6 +4,7 @@ import "./App.css";
 import { EducationalSystemProvider } from "./app/core/context/EducationalSystemContext";
 import { Toaster } from "react-hot-toast";
 import LoadingFallback from "./app/components/ui/LoadingFallback";
+import SyncQueueIndicator from "./app/components/offline/SyncQueueIndicator";
 import ProtectedRoute from "./app/core/guards/ProtectedRoute";
 import AcademicYearGuard from "./app/core/guards/AcademicYearGuard";
 import RoleRoute from "./app/core/guards/RoleRoute";
@@ -118,6 +119,7 @@ function App() {
           error: { iconTheme: { primary: "#dc2626", secondary: "#fff" } },
         }}
       />
+      <SyncQueueIndicator />
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
@@ -237,8 +239,8 @@ function App() {
 
             {/* Finance */}
             <Route path="finance" element={dashboardPage(FinancePage)} />
-            <Route path="fees" element={dashboardPage(FeesManagementPage)} />
-            <Route path="fees/assign" element={dashboardPage(FeesAssignmentPage)} />
+            <Route path="fees" element={<RoleRoute allowedRoles={["ADMIN"]}>{dashboardPage(FeesManagementPage)}</RoleRoute>} />
+            <Route path="fees/assign" element={<RoleRoute allowedRoles={["ADMIN"]}>{dashboardPage(FeesAssignmentPage)}</RoleRoute>} />
             <Route path="payments" element={dashboardPage(PaymentsPage)} />
             <Route path="receipts" element={dashboardPage(ReceiptsPage)} />
 

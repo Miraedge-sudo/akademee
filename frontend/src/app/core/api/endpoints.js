@@ -63,6 +63,10 @@ export const API_ENDPOINTS = {
     ACTIVATE_YEAR: (id) => `/api/academics/years/${id}/activate`,
     PERIODS: "/api/periods",
     PERIOD: (id) => `/api/periods/${id}`,
+    PERIOD_OPEN: (id) => `/api/periods/${id}/open`,
+    PERIOD_CLOSE: (id) => `/api/periods/${id}/close`,
+    PERIOD_LOCK: (id) => `/api/periods/${id}/lock`,
+    PERIOD_UNLOCK: (id) => `/api/periods/${id}/unlock`,
     CLASSES: "/api/classes",
     CLASS: (id) => `/api/classes/${id}`,
     CLASS_STUDENTS: (id) => `/api/classes/${id}/students`,
@@ -127,6 +131,7 @@ export const API_ENDPOINTS = {
   GRADE_CALCULATIONS: {
     AVERAGES: (studentId) => `/api/grade-calculations/averages/${studentId}`,
     RANKINGS: (classId) => `/api/grade-calculations/rankings/${classId}`,
+    SEQUENCE_AVERAGES: (studentId) => `/api/grade-calculations/sequence-averages/${studentId}`,
   },
 
   // Attendance

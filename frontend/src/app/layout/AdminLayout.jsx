@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import MobileBottomNav from './MobileBottomNav';
+import ConnectionStatusBanner from '../components/offline/ConnectionStatusBanner';
 
 export default function AdminLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -25,6 +26,7 @@ export default function AdminLayout() {
             }
           }}
         />
+        <ConnectionStatusBanner />
         <main className="flex-1 overflow-y-auto p-6 pb-[76px] lg:pb-6">
           <Outlet />
         </main>

@@ -5,6 +5,7 @@ import App from "./App.jsx";
 import { ThemeProvider } from "./app/core/context/ThemeContext";
 import { AuthProvider } from "./app/core/context/AuthContext";
 import { YearProvider } from "./app/core/context/YearContext";
+import { OfflineProvider } from "./app/core/offline/OfflineContext";
 import "./app/core/i18n/i18n";
 
 createRoot(document.getElementById("root")).render(
@@ -12,7 +13,9 @@ createRoot(document.getElementById("root")).render(
     <ThemeProvider>
       <AuthProvider>
         <YearProvider>
-          <App />
+          <OfflineProvider>
+            <App />
+          </OfflineProvider>
         </YearProvider>
       </AuthProvider>
     </ThemeProvider>

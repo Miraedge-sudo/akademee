@@ -923,9 +923,9 @@ export default function ReportCardsPage() {
                         <div className="text-[13px] font-semibold text-surface-900 dark:text-surface-100 truncate">
                           {rc.student_name || (isFr ? "N/A" : "N/A")}
                         </div>
-                        {rc.period_name && (
+                        {(rc.sequence_label || rc.period_name) && (
                           <div className="text-[11px] text-surface-400 truncate lg:hidden">
-                            {rc.period_name}
+                            {rc.sequence_label || rc.period_name}
                           </div>
                         )}
                       </div>
@@ -934,7 +934,7 @@ export default function ReportCardsPage() {
                     {/* Period (desktop) */}
                     <div className="hidden lg:block lg:col-span-2">
                       <span className="text-[13px] text-surface-700 dark:text-surface-200">
-                        {rc.period_name || "-"}
+                        {rc.sequence_label || rc.period_name || "-"}
                       </span>
                     </div>
 
@@ -977,6 +977,15 @@ export default function ReportCardsPage() {
                         title={isFr ? "Voir le détail" : "View payload"}
                       >
                         <FiEye size={13} />
+                      </button>
+
+                      {/* Download PDF */}
+                      <button
+                        onClick={() => handleViewPayload(rc)}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-blue-500"
+                        title={isFr ? "Télécharger PDF" : "Download PDF"}
+                      >
+                        <FiDownload size={12} />
                       </button>
 
                       {/* Publish */}
@@ -1661,7 +1670,7 @@ export default function ReportCardsPage() {
         open={!!payloadModal}
         onClose={() => { setPayloadModal(null); setPayloadData(null); }}
         title={isFr ? "Bulletin Scolaire" : "Report Card"}
-        subtitle={payloadModal?.student_name
+        subtitle={payloadModal?.sequence_label || payloadModal?.period_name || payloadModal?.student_name
           ? `${payloadModal.student_name} — ${payloadModal.period_name || ""}`
           : ""}
         width="max-w-4xl"

@@ -7,6 +7,7 @@ router.use(authMiddleware);
 
 router.get('/averages/:studentId', gradeCalculationController.calculateAverages);
 router.get('/rankings/:classId', gradeCalculationController.calculateClassRankings);
+router.get('/sequence-averages/:studentId', gradeCalculationController.getSequenceAverages);
 
 /**
  * @openapi

@@ -176,6 +176,10 @@ export default function ClassDetailPage() {
   const [removeSubjectConfirm, setRemoveSubjectConfirm] = useState({ open: false, assignmentId: null, subjectName: "" });
   const [removeTeacherConfirm, setRemoveTeacherConfirm] = useState({ open: false, teacherId: null, teacherName: "" });
 
+  // ── Add Students modal state ──
+  const [showAddStudentsModal, setShowAddStudentsModal] = useState(false);
+  const [existingStudentIds, setExistingStudentIds] = useState([]);
+
   // ── Edit form state ──
   const [editForm, setEditForm] = useState({ name: "", levelId: "", seriesId: "", capacity: 40, classTeacherId: "", educationSystemId: "" });
   const [isEditing, setIsEditing] = useState(false);
@@ -217,6 +221,7 @@ export default function ClassDetailPage() {
           (s.className && classData.name && s.className === classData.name)
         );
         setStudents(classStudents);
+        setExistingStudentIds(classStudents.map(s => String(s.id)));
 
         // Handle teachers — getAvailableTeachers returns an array directly
         const allTeachers = Array.isArray(teachersData) ? teachersData : (teachersData?.data || teachersData?.teachers || []);
@@ -1412,6 +1417,7 @@ export default function ClassDetailPage() {
           {activeTab === "students" && (
             <div>
               {students.length > 0 && (
+                <>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex-1 max-w-xs flex items-center gap-2.5 bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-600 rounded-lg px-3 h-10">
                     <FiSearch className="w-3.5 h-3.5 text-surface-400 flex-shrink-0" />
@@ -1422,8 +1428,19 @@ export default function ClassDetailPage() {
                       placeholder={isFr ? "Rechercher un élève..." : "Search student..."}
                       className="flex-1 border-none outline-none text-xs bg-transparent text-surface-800 dark:text-surface-100 placeholder:text-surface-400"
                     />
-                  </div>
+                  </div>
                 </div>
+              <div className="flex items-center justify-end mb-4">
+                  <button
+                    onClick={() => setShowAddStudentsModal(true)}
+                    className="h-9 px-4 rounded-lg text-white text-xs font-semibold flex items-center gap-1.5 transition-all hover:shadow-md flex-shrink-0"
+                    style={{ backgroundColor: pc }}
+                  >
+                    <FiPlus className="w-3.5 h-3.5" />
+                    {isFr ? "Ajouter un élève" : "Add student"}
+                  </button>
+                </div>
+                </>
               )}
 
               {students.length === 0 ? (
@@ -1431,12 +1448,7 @@ export default function ClassDetailPage() {
                   icon={<FiUser className="w-8 h-8" />}
                   title={isFr ? "Aucun élève inscrit" : "No students enrolled"}
                   subtitle={isFr ? "Ajoutez des élèves à cette classe." : "Add students to this class."}
-                  action={
-                    <button className="h-10 px-5 text-white text-xs font-semibold rounded-lg transition-all hover:shadow-md" style={{ backgroundColor: pc }}>
-                      <FiPlus className="w-3.5 h-3.5 inline mr-1.5" />
-                      {isFr ? "Ajouter un élève" : "Add student"}
-                    </button>
-                  }
+                  subtitle={isFr ? "Utilisez le bouton ci-dessus pour ajouter des élèves." : "Use the button above to add students."}
                 />
               ) : filteredStudents.length === 0 ? (
                 <div className="text-center py-8">
@@ -1562,4 +1574,15 @@ export default function ClassDetailPage() {
       />
     </div>
   );
+        {/* ── ADD STUDENTS MODAL ── */}
+        <AddStudentsModal
+          isOpen={showAddStudentsModal}
+          onClose={() => setShowAddStudentsModal(false)}
+          classId={id}
+          className={cls?.name || ""}
+          existingStudentIds={existingStudentIds}
+          onSuccess={(count) => {
+            window.location.reload();
+          }}
+        />
 }

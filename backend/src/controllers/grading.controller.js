@@ -286,7 +286,8 @@ class GradingController {
 
   async listReportCards(req, res, next) {
     try {
-      const data = await gradingService.listReportCards(req.query);
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const data = await gradingService.listReportCards({ ...req.query, schoolId });
       response.success(res, 'Report cards retrieved', data);
     } catch (err) {
       next(err);

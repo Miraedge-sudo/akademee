@@ -171,6 +171,14 @@ export default function SequencesPage() {
       );
       return;
     }
+    if (new Date(newStart) < new Date(new Date().toDateString())) {
+      toast.error(
+        isFr
+          ? "La date de début ne peut pas être dans le passé"
+          : "Start date cannot be in the past"
+      );
+      return;
+    }
     setAdding(true);
     try {
       await sequencesService.create({
@@ -216,6 +224,14 @@ export default function SequencesPage() {
         isFr
           ? "La date de fin doit être après la date de début"
           : "End date must be after start date"
+      );
+      return;
+    }
+    if (new Date(editStart) < new Date(new Date().toDateString())) {
+      toast.error(
+        isFr
+          ? "La date de début ne peut pas être dans le passé"
+          : "Start date cannot be in the past"
       );
       return;
     }
