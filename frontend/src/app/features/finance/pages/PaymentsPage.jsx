@@ -192,6 +192,18 @@ export default function PaymentsPage() {
     setReference("");
   };
 
+  // ── Remaining balance for the selected fee ──
+  const assignedFees = feeSummary?.assignedFees || [];
+  const selectedFeeInfo = feeId
+    ? assignedFees.find((f) => f.id === feeId)
+    : null;
+  const selectedFeeRemaining = selectedFeeInfo
+    ? Math.max(0, selectedFeeInfo.amount - selectedFeeInfo.amountPaid)
+    : 0;
+  const selectedFeeAlreadyPaid = selectedFeeInfo && selectedFeeRemaining <= 0;
+  const amtNum = parseFloat(amount) || 0;
+  const isOverpaying = selectedFeeInfo && amtNum > 0 && amtNum > selectedFeeRemaining;
+
   const totalDue = feeSummary?.totalDue || feeSummary?.totalFees || 0;
   const totalPaid = feeSummary?.totalPaid || 0;
   const balance = Math.max(0, totalDue - totalPaid);
@@ -340,24 +352,50 @@ export default function PaymentsPage() {
                   </h3>
 
                   <div className="space-y-4">
-                    {/* Fee selection */}
+                    {/* Fee selection — only fees assigned to this student */}
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1.5">
                         {isFr ? "Frais à payer *" : "Fee to pay *"}
                       </label>
                       <select
                         value={feeId}
-                        onChange={(e) => setFeeId(e.target.value)}
+                        onChange={(e) => { setFeeId(e.target.value); setAmount(""); }}
                         className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-teal-700 focus:ring-2 focus:ring-teal-100 outline-none text-sm appearance-none bg-white cursor-pointer"
                       >
                         <option value="">{isFr ? "Sélectionner un frais..." : "Select a fee..."}</option>
-                        {allFees.map((f) => (
-                          <option key={f.id} value={f.id}>
-                            {f.name} — {Number(f.amount).toLocaleString("en")} FCFA
-                          </option>
-                        ))}
+                        {assignedFees.map((f) => {
+                          const remaining = Math.max(0, f.amount - f.amountPaid);
+                          const isPaid = remaining <= 0;
+                          return (
+                            <option key={f.id} value={f.id} disabled={isPaid}>
+                              {f.name} — {Number(f.amount).toLocaleString("en")} FCFA
+                              {isPaid ? ` (${isFr ? "Payé" : "Paid"})` : ` (${isFr ? "Restant" : "Remaining"}: ${remaining.toLocaleString("en")} FCFA)`}
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
+
+                    {/* Selected fee remaining balance indicator */}
+                    {selectedFeeInfo && (
+                      <div
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold"
+                        style={{
+                          background: selectedFeeAlreadyPaid ? "rgba(239,68,68,0.08)" : "rgba(245,158,11,0.08)",
+                          color: selectedFeeAlreadyPaid ? "#EF4444" : "#D97706",
+                          border: `1px solid ${selectedFeeAlreadyPaid ? "rgba(239,68,68,0.2)" : "rgba(245,158,11,0.2)"}`,
+                        }}
+                      >
+                        {selectedFeeAlreadyPaid ? (
+                          <FiCheckCircle size={14} />
+                        ) : (
+                          <FiAlertCircle size={14} />
+                        )}
+                        {selectedFeeAlreadyPaid
+                          ? (isFr ? "Ce frais a déjà été entièrement payé" : "This fee has already been fully paid")
+                          : `${isFr ? "Solde restant" : "Remaining balance"} : ${formatCurrency(selectedFeeRemaining)}`}
+                      </div>
+                    )}
 
                     {/* Amount */}
                     <div>
@@ -371,11 +409,22 @@ export default function PaymentsPage() {
                           step="100"
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
+                          max={selectedFeeRemaining > 0 ? selectedFeeRemaining : undefined}
                           className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-teal-700 focus:ring-2 focus:ring-teal-100 outline-none text-sm"
                           placeholder={isFr ? "Ex: 50000" : "E.g. 50000"}
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-400">FCFA</span>
                       </div>
+
+                      {/* Overpayment warning */}
+                      {isOverpaying && (
+                        <div className="mt-1.5 flex items-center gap-1.5 text-xs font-medium" style={{ color: "#EF4444" }}>
+                          <FiAlertCircle size={12} />
+                          {isFr
+                            ? `Le montant dépasse le solde restant (${formatCurrency(selectedFeeRemaining)}). Réduisez le montant.`
+                            : `Amount exceeds remaining balance (${formatCurrency(selectedFeeRemaining)}). Please reduce the amount.`}
+                        </div>
+                      )}
                     </div>
 
                     {/* Payment method */}
@@ -425,9 +474,9 @@ export default function PaymentsPage() {
                   <div className="mt-6 pt-4 border-t border-gray-100">
                     <button
                       type="submit"
-                      disabled={submitting || !selectedStudent || !feeId || !amount}
+                      disabled={submitting || !selectedStudent || !feeId || !amount || selectedFeeAlreadyPaid || isOverpaying}
                       className="w-full h-12 rounded-xl text-white text-sm font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                      style={{ background: pc }}
+                      style={{ background: selectedFeeAlreadyPaid || isOverpaying ? "#9CA3AF" : pc }}
                     >
                       {submitting ? (
                         <FiRefreshCw className="w-4 h-4 animate-spin" />
