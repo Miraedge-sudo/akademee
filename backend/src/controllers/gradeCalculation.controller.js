@@ -25,6 +25,15 @@ class GradeCalculationController {
     } catch (error) { next(error); }
   }
 
+  async getSequenceAverages(req, res, next) {
+    try {
+      const { studentId } = req.params;
+      const schoolId = req.schoolId || req.user.schoolId;
+      const result = await gradeCalculationService.getSequenceAverages(schoolId, studentId);
+      response.success(res, 'Sequence averages calculated', result);
+    } catch (error) { next(error); }
+  }
+
   async calculate(req, res, next) {
     try {
       const { studentId, classId, periodId } = req.body;

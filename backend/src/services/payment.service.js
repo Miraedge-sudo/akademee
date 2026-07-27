@@ -45,6 +45,30 @@ class PaymentService {
       throw new Error('DUPLICATE_PAYMENT');
     }
 
+    // ── Prevent overpayment: check remaining balance for this student + fee ──
+    const feeRecord = await sql`
+      SELECT amount_due, amount_paid
+      FROM student_fees
+      WHERE student_id = ${studentId}
+        AND school_id = ${schoolId}
+        AND fee_id = ${feeId}
+      LIMIT 1
+    `;
+
+    if (feeRecord.length > 0) {
+      const amountDue = Number(feeRecord[0].amount_due);
+      const amountPaid = Number(feeRecord[0].amount_paid);
+      const remaining = amountDue - amountPaid;
+
+      if (remaining <= 0) {
+        throw new Error('FEE_ALREADY_PAID');
+      }
+
+      if (amount > remaining) {
+        throw new Error('OVERPAYMENT');
+      }
+    }
+
     const receiptNumber = reference || `RCP-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
     const rows = await sql`

@@ -30,7 +30,6 @@ import {
   FiXCircle,
 } from "react-icons/fi";
 import { getStudents } from "../../../core/api/studentService";
-import { getFees } from "../../../core/api/feeService";
 import { createPayment, getPayments } from "../../../core/api/paymentService";
 import { getStudentFeeSummary } from "../../../core/api/feeCalculationService";
 
@@ -66,11 +65,11 @@ export default function PaymentsPage() {
   // ── State ──
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [studentSearch, setStudentSearch] = useState("");
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [feeSummary, setFeeSummary] = useState(null);
-  const [allFees, setAllFees] = useState([]);
   const [recentPayments, setRecentPayments] = useState([]);
 
   // Payment form
@@ -79,16 +78,12 @@ export default function PaymentsPage() {
   const [feeId, setFeeId] = useState("");
   const [reference, setReference] = useState("");
 
-  // ── Load initial data ──
+  // ── Load initial data (recent payments only) ──
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        const [feesData, paymentsData] = await Promise.all([
-          getFees({ limit: 500 }).catch(() => ({ fees: [] })),
-          getPayments({ limit: 10 }).catch(() => ({ payments: [] })),
-        ]);
-        setAllFees(Array.isArray(feesData) ? feesData : feesData?.fees || []);
+        const paymentsData = await getPayments({ limit: 10 }).catch(() => ({ payments: [] }));
         const payList = Array.isArray(paymentsData) ? paymentsData : paymentsData?.payments || [];
         setRecentPayments(payList);
       } catch {
@@ -103,8 +98,10 @@ export default function PaymentsPage() {
   const searchStudents = useCallback(async (query) => {
     if (!query || query.length < 2) {
       setStudents([]);
+      setSearching(false);
       return;
     }
+    setSearching(true);
     try {
       const data = await getStudents({ search: query, limit: 10 });
       const list = Array.isArray(data) ? data : data?.students || [];
@@ -112,6 +109,7 @@ export default function PaymentsPage() {
     } catch {
       setStudents([]);
     }
+    setSearching(false);
   }, []);
 
   useEffect(() => {
@@ -127,6 +125,7 @@ export default function PaymentsPage() {
     setAmount("");
     setFeeId("");
     setReference("");
+    setFeeSummary(null); // ← Clear old summary immediately
 
     try {
       const summary = await getStudentFeeSummary(student.id);
@@ -187,6 +186,18 @@ export default function PaymentsPage() {
     setFeeId("");
     setReference("");
   };
+
+  // ── Remaining balance for the selected fee ──
+  const assignedFees = feeSummary?.assignedFees || [];
+  const selectedFeeInfo = feeId
+    ? assignedFees.find((f) => f.id === feeId)
+    : null;
+  const selectedFeeRemaining = selectedFeeInfo
+    ? Math.max(0, selectedFeeInfo.amount - selectedFeeInfo.amountPaid)
+    : 0;
+  const selectedFeeAlreadyPaid = selectedFeeInfo && selectedFeeRemaining <= 0;
+  const amtNum = parseFloat(amount) || 0;
+  const isOverpaying = selectedFeeInfo && amtNum > 0 && amtNum > selectedFeeRemaining;
 
   const totalDue = feeSummary?.totalDue || feeSummary?.totalFees || 0;
   const totalPaid = feeSummary?.totalPaid || 0;
@@ -259,7 +270,15 @@ export default function PaymentsPage() {
               </div>
 
               {/* Student suggestions */}
-              {students.length > 0 && !selectedStudent && (
+              {searching && !selectedStudent && (
+                <div className="mt-2 border border-gray-200 rounded-xl overflow-hidden max-h-48">
+                  <div className="flex items-center gap-3 px-5 py-4 text-sm text-gray-500">
+                    <FiRefreshCw className="w-4 h-4 animate-spin" style={{ color: pc }} />
+                    {isFr ? "Recherche en cours..." : "Searching..."}
+                  </div>
+                </div>
+              )}
+              {!searching && students.length > 0 && !selectedStudent && (
                 <div className="mt-2 border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100 max-h-48 overflow-y-auto">
                   {students.map((s) => (
                     <button
@@ -321,31 +340,73 @@ export default function PaymentsPage() {
                   )}
                 </div>
 
+                {/* No fees assigned message */}
+                {feeSummary && assignedFees.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-10 text-center bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <FiAlertCircle className="w-8 h-8 mb-2" style={{ color: "#F59E0B" }} />
+                    <p className="text-sm font-semibold text-gray-700 mb-1">
+                      {isFr ? "Aucun frais assigné" : "No fees assigned"}
+                    </p>
+                    <p className="text-xs text-gray-400 max-w-xs">
+                      {isFr
+                        ? "Cet élève n'a aucun frais de scolarité assigné. Veuillez d'abord lui assigner des frais depuis la page de gestion des frais."
+                        : "This student has no tuition fees assigned. Please assign fees first from the fee management page."}
+                    </p>
+                  </div>
+                )}
+
                 {/* Payment form */}
+                {assignedFees.length > 0 && (
                 <form onSubmit={handleRecordPayment} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
                   <h3 className="text-sm font-bold text-gray-800 mb-4">
                     {isFr ? "Détails du paiement" : "Payment Details"}
                   </h3>
 
                   <div className="space-y-4">
-                    {/* Fee selection */}
+                    {/* Fee selection — only fees assigned to this student */}
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1.5">
                         {isFr ? "Frais à payer *" : "Fee to pay *"}
                       </label>
                       <select
                         value={feeId}
-                        onChange={(e) => setFeeId(e.target.value)}
+                        onChange={(e) => { setFeeId(e.target.value); setAmount(""); }}
                         className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-teal-700 focus:ring-2 focus:ring-teal-100 outline-none text-sm appearance-none bg-white cursor-pointer"
                       >
                         <option value="">{isFr ? "Sélectionner un frais..." : "Select a fee..."}</option>
-                        {allFees.map((f) => (
-                          <option key={f.id} value={f.id}>
-                            {f.name} — {Number(f.amount).toLocaleString("en")} FCFA
-                          </option>
-                        ))}
+                        {assignedFees.map((f) => {
+                          const remaining = Math.max(0, f.amount - f.amountPaid);
+                          const isPaid = remaining <= 0;
+                          return (
+                            <option key={f.id} value={f.id} disabled={isPaid}>
+                              {f.name} — {Number(f.amount).toLocaleString("en")} FCFA
+                              {isPaid ? ` (${isFr ? "Payé" : "Paid"})` : ` (${isFr ? "Restant" : "Remaining"}: ${remaining.toLocaleString("en")} FCFA)`}
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
+
+                    {/* Selected fee remaining balance indicator */}
+                    {selectedFeeInfo && (
+                      <div
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold"
+                        style={{
+                          background: selectedFeeAlreadyPaid ? "rgba(239,68,68,0.08)" : "rgba(245,158,11,0.08)",
+                          color: selectedFeeAlreadyPaid ? "#EF4444" : "#D97706",
+                          border: `1px solid ${selectedFeeAlreadyPaid ? "rgba(239,68,68,0.2)" : "rgba(245,158,11,0.2)"}`,
+                        }}
+                      >
+                        {selectedFeeAlreadyPaid ? (
+                          <FiCheckCircle size={14} />
+                        ) : (
+                          <FiAlertCircle size={14} />
+                        )}
+                        {selectedFeeAlreadyPaid
+                          ? (isFr ? "Ce frais a déjà été entièrement payé" : "This fee has already been fully paid")
+                          : `${isFr ? "Solde restant" : "Remaining balance"} : ${formatCurrency(selectedFeeRemaining)}`}
+                      </div>
+                    )}
 
                     {/* Amount */}
                     <div>
@@ -359,11 +420,22 @@ export default function PaymentsPage() {
                           step="100"
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
+                          max={selectedFeeRemaining > 0 ? selectedFeeRemaining : undefined}
                           className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-teal-700 focus:ring-2 focus:ring-teal-100 outline-none text-sm"
                           placeholder={isFr ? "Ex: 50000" : "E.g. 50000"}
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-400">FCFA</span>
                       </div>
+
+                      {/* Overpayment warning */}
+                      {isOverpaying && (
+                        <div className="mt-1.5 flex items-center gap-1.5 text-xs font-medium" style={{ color: "#EF4444" }}>
+                          <FiAlertCircle size={12} />
+                          {isFr
+                            ? `Le montant dépasse le solde restant (${formatCurrency(selectedFeeRemaining)}). Réduisez le montant.`
+                            : `Amount exceeds remaining balance (${formatCurrency(selectedFeeRemaining)}). Please reduce the amount.`}
+                        </div>
+                      )}
                     </div>
 
                     {/* Payment method */}
@@ -413,9 +485,9 @@ export default function PaymentsPage() {
                   <div className="mt-6 pt-4 border-t border-gray-100">
                     <button
                       type="submit"
-                      disabled={submitting || !selectedStudent || !feeId || !amount}
+                      disabled={submitting || !selectedStudent || !feeId || !amount || selectedFeeAlreadyPaid || isOverpaying}
                       className="w-full h-12 rounded-xl text-white text-sm font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                      style={{ background: pc }}
+                      style={{ background: selectedFeeAlreadyPaid || isOverpaying ? "#9CA3AF" : pc }}
                     >
                       {submitting ? (
                         <FiRefreshCw className="w-4 h-4 animate-spin" />
@@ -430,6 +502,7 @@ export default function PaymentsPage() {
                     </button>
                   </div>
                 </form>
+                )}
               </div>
             )}
 

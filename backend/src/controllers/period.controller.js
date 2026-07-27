@@ -46,6 +46,46 @@ class PeriodController {
       next(error);
     }
   }
+
+  async open(req, res, next) {
+    try {
+      const result = await periodService.updateStatus(req.schoolId || req.user.schoolId, req.params.id, 'OUVERTE');
+      response.success(res, 'Period opened', result);
+    } catch (error) {
+      if (error.message === 'Period not found') return response.error(res, error.message, null, 404);
+      next(error);
+    }
+  }
+
+  async close(req, res, next) {
+    try {
+      const result = await periodService.updateStatus(req.schoolId || req.user.schoolId, req.params.id, 'FERMEE');
+      response.success(res, 'Period closed', result);
+    } catch (error) {
+      if (error.message === 'Period not found') return response.error(res, error.message, null, 404);
+      next(error);
+    }
+  }
+
+  async lock(req, res, next) {
+    try {
+      const result = await periodService.updateStatus(req.schoolId || req.user.schoolId, req.params.id, 'VERROUILLEE');
+      response.success(res, 'Period locked', result);
+    } catch (error) {
+      if (error.message === 'Period not found') return response.error(res, error.message, null, 404);
+      next(error);
+    }
+  }
+
+  async unlock(req, res, next) {
+    try {
+      const result = await periodService.updateStatus(req.schoolId || req.user.schoolId, req.params.id, 'OUVERTE');
+      response.success(res, 'Period unlocked', result);
+    } catch (error) {
+      if (error.message === 'Period not found') return response.error(res, error.message, null, 404);
+      next(error);
+    }
+  }
 }
 
 module.exports = new PeriodController();

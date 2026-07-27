@@ -37,7 +37,10 @@ export async function deleteAcademicYear(id) {
 
 export async function getTerms(params = {}) {
   const response = await api.get(API_ENDPOINTS.ACADEMIC.PERIODS, { params });
-  return response.data.data;
+  // Normalize: backend wraps in { periods: [...] }
+  const data = response.data.data;
+  if (data && data.periods) return data.periods;
+  return data || [];
 }
 
 export async function getTermById(id) {
@@ -57,5 +60,25 @@ export async function updateTerm(id, data) {
 
 export async function deleteTerm(id) {
   const response = await api.delete(API_ENDPOINTS.ACADEMIC.PERIOD(id));
+  return response.data.data;
+}
+
+export async function openTerm(id) {
+  const response = await api.patch(API_ENDPOINTS.ACADEMIC.PERIOD_OPEN(id));
+  return response.data.data;
+}
+
+export async function closeTerm(id) {
+  const response = await api.patch(API_ENDPOINTS.ACADEMIC.PERIOD_CLOSE(id));
+  return response.data.data;
+}
+
+export async function lockTerm(id) {
+  const response = await api.patch(API_ENDPOINTS.ACADEMIC.PERIOD_LOCK(id));
+  return response.data.data;
+}
+
+export async function unlockTerm(id) {
+  const response = await api.patch(API_ENDPOINTS.ACADEMIC.PERIOD_UNLOCK(id));
   return response.data.data;
 }

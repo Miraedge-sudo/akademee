@@ -10,7 +10,7 @@
  *
  * Design extracted from frontend/public/new/bulletin-designs.html
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 // ── Shared constants (not system-specific) ──
 const REMARKS_FR = ["Excellent trimestre", "Peut mieux faire", "Travail satisfaisant", "Efforts à poursuivre", "Bon ensemble"];
@@ -54,7 +54,18 @@ function pickLabel(lang, fr, en) {
 
 function Letterhead({ eduConfig, schoolInfo }) {
   const fr = eduConfig?.lang === "fr";
-  const hasLogo = schoolInfo?.logoUrl;
+  const [logoError, setLogoError] = useState(false);
+  const hasLogo = schoolInfo?.logoUrl && !logoError;
+
+  // Extract school initials (e.g. "G.S. Bilingual School" → "GS")
+  const schoolInitials = schoolInfo?.name
+    ? schoolInfo.name
+        .split(/[\s]+/)
+        .filter(Boolean)
+        .slice(0, 3)
+        .map(w => w[0].toUpperCase())
+        .join('')
+    : (fr ? 'ÉTA' : 'SCH');
 
   return (
     <div style={{
@@ -65,6 +76,7 @@ function Letterhead({ eduConfig, schoolInfo }) {
         <img
           src={schoolInfo.logoUrl}
           alt={schoolInfo.name || "Logo"}
+          onError={() => setLogoError(true)}
           style={{
             width: "56px", height: "56px", borderRadius: "50%",
             objectFit: "cover", border: "2px solid #1c1c1a",
@@ -77,10 +89,10 @@ function Letterhead({ eduConfig, schoolInfo }) {
           width: "56px", height: "56px", borderRadius: "50%",
           border: "2px solid #1c1c1a", display: "flex", alignItems: "center",
           justifyContent: "center", flexShrink: 0,
-          fontSize: "10px", fontWeight: 700, letterSpacing: "0.03em",
-          textAlign: "center", lineHeight: "1.15",
+          fontSize: "15px", fontWeight: 800, letterSpacing: "0.04em",
+          textAlign: "center", lineHeight: "1.15", color: eduConfig?.accent || '#1B6B3C',
         }}>
-          R.C.<br />{fr ? <>RÉP. DU<br/>CAMEROUN</> : <>REP. OF<br/>CAMEROON</>}
+          {schoolInitials}
         </div>
       )}
       <div style={{ flex: 1, textAlign: "center" }}>
@@ -185,6 +197,9 @@ function SubjectTable({ subjects, eduConfig, periodType }) {
   const isSplitMode = hasSplitScores && eduConfig?.is_university === false &&
     (eduConfig?.code === "ANG_TECH" || eduConfig?.code === "FR_TECH");
 
+  // ── Determine sequence count for period-level report cards ──
+  const seqCount = subjects.length > 0 ? (subjects[0].sequenceScores?.length || 0) : 0;
+
   // ── Table cell styles ──
   const th = (label, extraStyle = {}) => (
     <th style={{ ...HEADER_CELL_STYLE, ...extraStyle }} key={label}>{label}</th>
@@ -217,11 +232,24 @@ function SubjectTable({ subjects, eduConfig, periodType }) {
       </tr>
     );
   } else if (periodType === "TRIMESTRIEL") {
+    // Dynamic sequence columns based on actual data
+    const seqHeaderWidth = seqCount > 0 ? `${Math.floor(22 / seqCount)}%` : '12%';
+    const seqHeaders = [];
+    if (seqCount > 0) {
+      for (let i = 0; i < seqCount; i++) {
+        const seq = subjects[0].sequenceScores[i];
+        seqHeaders.push(th(
+          seq?.sequenceLabel ? (fr ? seq.sequenceLabel : seq.sequenceLabel) : `${fr ? 'Séq.' : 'Seq.'}${i + 1}`,
+          { width: seqHeaderWidth }
+        ));
+      }
+    } else {
+      seqHeaders.push(th(fr ? 'Séq.' : 'Seq.', { width: '10%' }));
+    }
     headerCells = (
       <tr key="header-trimestriel">
         {th(fr ? "Matière" : "Subject", { textAlign: "left", width: "28%" })}
-        {th(fr ? "Séq.1" : "Seq.1", { width: "12%" })}
-        {th(fr ? "Séq.2" : "Seq.2", { width: "12%" })}
+        {seqHeaders}
         {th(fr ? "Moy. Trim./20" : "Term Avg./20", { width: "14%" })}
         {th(fr ? "Coef." : "Coef.", { width: "10%" })}
         {th(fr ? "Total Pts" : "Total Pts", { width: "12%" })}
@@ -328,11 +356,25 @@ function SubjectTable({ subjects, eduConfig, periodType }) {
     }
 
     if (periodType === "TRIMESTRIEL") {
+      const seqScores = subj.sequenceScores || [];
       return (
         <tr key={i} style={naRowStyle}>
           <td style={subjectCellStyle}>{displayName}</td>
-          <td style={cellStyle}>—</td>
-          <td style={cellStyle}>—</td>
+          {seqScores.length > 0 ? (
+            seqScores.map((sq, si) => (
+              <td key={si} style={cellStyle}>
+                {sq.score != null ? (
+                  <span style={{ color: scoreColor(sq.score) }}>{sq.score.toFixed(1)}</span>
+                ) : (
+                  <span style={{ fontStyle: "italic", color: "#c9c6ba" }}>—</span>
+                )}
+              </td>
+            ))
+          ) : (
+            <>
+              <td style={cellStyle}><span style={{ fontStyle: "italic", color: "#c9c6ba" }}>—</span></td>
+            </>
+          )}
           <td style={cellStyle}>{avgCell}</td>
           <td style={cellStyle}>{subj.coefficient}</td>
           <td style={cellStyle}>{na ? "—" : subj.weightedPoints?.toFixed(1)}</td>

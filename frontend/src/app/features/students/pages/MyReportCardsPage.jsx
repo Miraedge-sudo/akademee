@@ -7,7 +7,7 @@
  * Route: /dashboard/my-report-cards
  * Backend: /api/v1/report-cards (list + payload)
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useTheme } from "../../../core/hooks/useTheme";
@@ -169,7 +169,7 @@ export default function MyReportCardsPage() {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
-      (rc.period_name || "").toLowerCase().includes(q) ||
+      (rc.sequence_label || rc.period_name || "").toLowerCase().includes(q) ||
       (rc.student_name || "").toLowerCase().includes(q)
     );
   });
@@ -180,6 +180,32 @@ export default function MyReportCardsPage() {
     reportCards.length > 0
       ? Math.max(...reportCards.map((r) => Number(r.general_average) || 0))
       : 0;
+
+  // ── Sorted cards & progress summary ──
+  const sortedCards = useMemo(() => {
+    return [...reportCards].sort(
+      (a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0)
+    );
+  }, [reportCards]);
+
+  const progressSummary = useMemo(() => {
+    const cards = sortedCards;
+    if (cards.length < 2) return null;
+    const first = cards[0];
+    const last = cards[cards.length - 1];
+    const delta = +(
+      Number(last.general_average) - Number(first.general_average)
+    ).toFixed(1);
+
+    let best = cards[0];
+    let worst = cards[0];
+    for (const rc of cards) {
+      if (Number(rc.general_average) > Number(best.general_average)) best = rc;
+      if (Number(rc.general_average) < Number(worst.general_average)) worst = rc;
+    }
+
+    return { first, last, delta: Number(delta), best, worst };
+  }, [sortedCards]);
 
   // ── Render ──
   return (
@@ -306,10 +332,108 @@ export default function MyReportCardsPage() {
       {/* ── Progress Chart ── */}
       {reportCards.length >= 2 && (
         <ProgressChart
-          data={reportCards}
+          data={sortedCards}
           primaryColor={pc}
           isFr={isFr}
+          onDotClick={handleViewPayload}
         />
+      )}
+
+      {/* ── Progress Summary Cards ── */}
+      {progressSummary && (
+        <div
+          className="mr-fade grid grid-cols-2 sm:grid-cols-4 gap-3"
+          style={{ animationDelay: "0.055s" }}
+        >
+          {/* Progression */}
+          <div className="bg-white dark:bg-surface-800 rounded-xl border-[1.5px] border-surface-100 dark:border-surface-700 p-4 shadow-sm">
+            <div className="text-[11px] font-medium text-surface-400 mb-2">
+              {isFr ? "Progression" : "Progress"}
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className="text-[22px] font-extrabold tabular-nums"
+                style={{
+                  color:
+                    progressSummary.delta > 0.5
+                      ? "#1D9E75"
+                      : progressSummary.delta < -0.5
+                        ? "#EF4444"
+                        : "#9CA3AF",
+                }}
+              >
+                {progressSummary.delta > 0 ? "+" : ""}
+                {progressSummary.delta.toFixed(1)}
+              </span>
+              <span className="text-[11px] text-surface-400">
+                {isFr ? "pts sur la période" : "pts overall"}
+              </span>
+            </div>
+          </div>
+
+          {/* Meilleure période */}
+          <div className="bg-white dark:bg-surface-800 rounded-xl border-[1.5px] border-surface-100 dark:border-surface-700 p-4 shadow-sm">
+            <div className="text-[11px] font-medium text-surface-400 mb-2">
+              {isFr ? "Meilleure période" : "Best Period"}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[22px] font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                {Number(progressSummary.best.general_average).toFixed(1)}
+              </span>
+              <span className="text-[10px] text-surface-400 truncate">
+                {progressSummary.best.sequence_label ||
+                  progressSummary.best.period_name}
+              </span>
+            </div>
+          </div>
+
+          {/* Plus faible période */}
+          <div className="bg-white dark:bg-surface-800 rounded-xl border-[1.5px] border-surface-100 dark:border-surface-700 p-4 shadow-sm">
+            <div className="text-[11px] font-medium text-surface-400 mb-2">
+              {isFr ? "Plus faible période" : "Lowest Period"}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[22px] font-extrabold text-red-500 tabular-nums">
+                {Number(progressSummary.worst.general_average).toFixed(1)}
+              </span>
+              <span className="text-[10px] text-surface-400 truncate">
+                {progressSummary.worst.sequence_label ||
+                  progressSummary.worst.period_name}
+              </span>
+            </div>
+          </div>
+
+          {/* Tendance */}
+          <div className="bg-white dark:bg-surface-800 rounded-xl border-[1.5px] border-surface-100 dark:border-surface-700 p-4 shadow-sm">
+            <div className="text-[11px] font-medium text-surface-400 mb-2">
+              {isFr ? "Tendance" : "Trend"}
+            </div>
+            <div className="flex items-center gap-2">
+              {progressSummary.delta > 0.5 ? (
+                <>
+                  <span className="text-[20px]">📈</span>
+                  <span className="text-[13px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    {isFr ? "En progrès" : "Improving"}
+                  </span>
+                </>
+              ) : progressSummary.delta < -0.5 ? (
+                <>
+                  <span className="text-[20px]">📉</span>
+                  <span className="text-[13px] font-semibold text-red-500">
+                    {isFr ? "En baisse" : "Declining"}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="text-[20px]">➡️</span>
+                  <span className="text-[13px] font-semibold text-surface-500">
+                    {isFr ? "Stable" : "Stable"}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Report Cards List ── */}
@@ -374,7 +498,7 @@ export default function MyReportCardsPage() {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-semibold text-surface-900 dark:text-surface-100 truncate">
-                        {rc.period_name || (isFr ? "Période" : "Period")}
+                        {rc.sequence_label || rc.period_name || (isFr ? "Période" : "Period")}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
                         {/* Status badge */}
@@ -424,7 +548,7 @@ export default function MyReportCardsPage() {
         open={!!payloadModal}
         onClose={() => { setPayloadModal(null); setPayloadData(null); }}
         title={isFr ? "Bulletin Scolaire" : "Report Card"}
-        subtitle={payloadModal?.period_name || ""}
+        subtitle={payloadModal?.sequence_label || payloadModal?.period_name || ""}
         width="max-w-4xl"
       >
         {payloadLoading ? (

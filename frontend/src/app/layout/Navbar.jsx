@@ -4,6 +4,7 @@ import { useAuth } from '../core/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { getPrimaryRole } from '../core/utils/roleUtils';
 import ThemeLangToggles from './ThemeLangToggles';
+import InstallPWAButton from '../components/offline/InstallPWAButton';
 import { ROLES } from '../core/constants/roles';
 import { buildSubdomainUrl } from '../core/utils/subdomainHelper';
 import { YearContext } from '../core/context/YearContext';
@@ -122,6 +123,9 @@ export default function Navbar({ onToggleSidebar }) {
       </div>
 
       <ThemeLangToggles />
+
+      {/* Install PWA button */}
+      <InstallPWAButton />
 
       {/* Notifications */}
       <button

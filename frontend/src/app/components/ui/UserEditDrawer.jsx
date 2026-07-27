@@ -269,7 +269,9 @@ export default function UserEditDrawer({ isOpen, onClose, onSuccess, user, role 
           educationalSystem: formData.educationalSystem || null,
         };
         if (isEditing) {
-          await updateStudent(user.id, payload);
+          // Use studentId if available (from UsersListPage), fall back to user.id (from StudentProfilePage)
+          const studentId = user.studentId || user.id;
+          await updateStudent(studentId, payload);
           toast.success(isFr ? "Élève mis à jour" : "Student updated");
         } else {
           await createStudent(payload);

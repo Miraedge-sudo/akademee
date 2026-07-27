@@ -281,6 +281,7 @@ class StudentService {
       email,
       phone,
       className,
+      classId,
       dateOfBirth,
       gender,
       status,
@@ -316,6 +317,36 @@ class StudentService {
         fee_status = COALESCE(${feeStatus || null}, fee_status)
       WHERE student_id = ${studentId} AND school_id = ${schoolId}
     `;
+
+    // ── Sync enrollment when classId is provided ──
+    if (classId) {
+      const existingEnrollments = await sql`
+        SELECT enrollment_id, class_id FROM enrollments
+        WHERE student_id = ${studentId} AND school_id = ${schoolId} AND status = 'active'
+        LIMIT 1
+      `;
+
+      if (existingEnrollments.length === 0) {
+        // No active enrollment — create one
+        const number = `ENR-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+        await sql`
+          INSERT INTO enrollments (school_id, student_id, class_id, status, enrollment_number)
+          VALUES (${schoolId}, ${studentId}, ${classId}, 'active', ${number})
+        `;
+      } else if (String(existingEnrollments[0].class_id) !== String(classId)) {
+        // Enrolled in a different class — withdraw old, enroll in new
+        await sql`
+          UPDATE enrollments SET status = 'transferred', updated_at = NOW()
+          WHERE enrollment_id = ${existingEnrollments[0].enrollment_id}
+        `;
+        const number = `ENR-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+        await sql`
+          INSERT INTO enrollments (school_id, student_id, class_id, status, enrollment_number)
+          VALUES (${schoolId}, ${studentId}, ${classId}, 'active', ${number})
+        `;
+      }
+      // else: already enrolled in this class — nothing to do
+    }
 
     return this.getStudentById(schoolId, studentId);
   }

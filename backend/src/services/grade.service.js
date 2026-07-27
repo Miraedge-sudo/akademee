@@ -1,6 +1,71 @@
 const sql = require('../config/database');
 
 class GradeService {
+  /**
+   * Assure qu'une subject_offering + assessment_component existent
+   * pour un couple (subject_id, class_id, period_id).
+   * Retourne l'assessment_component_id.
+   *
+   * C'est le pont entre l'ancien système (subject_id) et le nouveau
+   * système (assessment_component_id). Une fois que toutes les notes
+   * sont migrées, cette méthode pourra être simplifiée/supprimée.
+   */
+  async _ensureOfferingAndComponent(schoolId, studentId, subjectId, periodId) {
+    // 1. Trouver la classe de l'élève
+    let classId = null;
+    if (periodId) {
+      const enrollRows = await sql`
+        SELECT class_id FROM enrollments
+        WHERE student_id = ${studentId} AND school_id = ${schoolId}
+          AND status = 'active'
+        LIMIT 1
+      `;
+      if (enrollRows.length > 0) classId = enrollRows[0].class_id;
+    }
+
+    // 2. Trouver ou créer une subject_offering
+    let offeringId = null;
+    if (classId && periodId) {
+      const existing = await sql`
+        SELECT subject_offering_id FROM subject_offerings
+        WHERE subject_id = ${subjectId}
+          AND class_level_id = ${classId}
+          AND period_structure_id = ${periodId}
+        LIMIT 1
+      `;
+      if (existing.length > 0) {
+        offeringId = existing[0].subject_offering_id;
+      } else {
+        const created = await sql`
+          INSERT INTO subject_offerings (subject_id, class_level_id, period_structure_id, coefficient, credits, is_elective)
+          VALUES (${subjectId}, ${classId}, ${periodId}, 1, 0, false)
+          RETURNING subject_offering_id
+        `;
+        offeringId = created[0].subject_offering_id;
+      }
+    }
+
+    if (!offeringId) return null;
+
+    // 3. Trouver ou créer un assessment_component par défaut (type GENERIC)
+    const compRows = await sql`
+      SELECT assessment_component_id FROM assessment_components
+      WHERE subject_offering_id = ${offeringId}
+        AND type = 'GENERIC'
+      LIMIT 1
+    `;
+    if (compRows.length > 0) {
+      return compRows[0].assessment_component_id;
+    }
+
+    const newComp = await sql`
+      INSERT INTO assessment_components (subject_offering_id, type, weight_percent, max_score)
+      VALUES (${offeringId}, 'GENERIC', 100, 20)
+      RETURNING assessment_component_id
+    `;
+    return newComp[0].assessment_component_id;
+  }
+
   formatGrade(row) {
     return {
       id: row.grade_id,
@@ -22,27 +87,48 @@ class GradeService {
     };
   }
 
+  /**
+   * Crée une note en utilisant LE NOUVEAU SYSTÈME
+   * (assessment_component_id) si possible, avec fallback
+   * automatique vers l'ancien système.
+   *
+   * Si subjectId est fourni sans assessmentComponentId,
+   * on crée automatiquement les entités du nouveau système.
+   */
   async create(schoolId, data) {
     const { studentId, subjectId, periodId, sequenceId, score, comment } = data;
+
+    // ── Créer via le nouveau système (assessment_component_id) uniquement ──
+    const assessmentComponentId = await this._ensureOfferingAndComponent(
+      schoolId, studentId, subjectId, periodId
+    );
+
+    if (!assessmentComponentId) {
+      throw new Error(
+        'Impossible de créer la note : aucun assessment component disponible. ' +
+        'Assurez-vous que l\'élève est inscrit dans une classe.'
+      );
+    }
+
     const rows = await sql`
-      INSERT INTO grades (school_id, student_id, subject_id, period_id, sequence_id, score, comment)
-      VALUES (${schoolId}, ${studentId}, ${subjectId}, ${periodId || null}, ${sequenceId || null}, ${score}, ${comment || null})
+      INSERT INTO grades (school_id, student_id, assessment_component_id, score, status, comment)
+      VALUES (${schoolId}, ${studentId}, ${assessmentComponentId}, ${score}, 'GRADED', ${comment || null})
       RETURNING *
     `;
-    const created = this.formatGrade(rows[0]);
-    // Fetch period name if periodId is provided
-    if (rows[0].period_id) {
-      const periodRows = await sql`SELECT name FROM periods WHERE period_id = ${rows[0].period_id}`;
-      if (periodRows.length > 0) {
-        created.periodName = periodRows[0].name;
-      }
+    const created = this.formatGrade({
+      ...rows[0],
+      subject_id: subjectId,
+      period_id: periodId,
+      sequence_id: sequenceId,
+    });
+    // Fetch names
+    if (periodId) {
+      const periodRows = await sql`SELECT name FROM periods WHERE period_id = ${periodId}`;
+      if (periodRows.length > 0) created.periodName = periodRows[0].name;
     }
-    // Fetch sequence name if sequenceId is provided
-    if (rows[0].sequence_id) {
-      const seqRows = await sql`SELECT label FROM sequences WHERE sequence_id = ${rows[0].sequence_id}`;
-      if (seqRows.length > 0) {
-        created.sequenceName = seqRows[0].label;
-      }
+    if (sequenceId) {
+      const seqRows = await sql`SELECT label FROM sequences WHERE sequence_id = ${sequenceId}`;
+      if (seqRows.length > 0) created.sequenceName = seqRows[0].label;
     }
     return created;
   }

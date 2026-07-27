@@ -1,44 +1,69 @@
 /**
  * AttendanceMiniCalendar — simple grid showing present/absent/late days for the month.
- * Fetches real attendance data from the API.
+ * Fetches real attendance data from the API and color-codes each day.
  */
 import { useEffect, useState, useMemo } from 'react';
-import { getAttendanceStats } from '../../../core/api/attendanceService';
+import { getAttendanceStats, getStudentAttendance } from '../../../core/api/attendanceService';
 
 const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 const STATUS_COLORS = {
-  present: { bg: '#E1F5EE', text: '#085041' },
-  absent:  { bg: 'rgba(239,68,68,.12)', text: '#EF4444' },
-  late:    { bg: 'rgba(245,158,11,.12)', text: '#F59E0B' },
-  empty:   { bg: '#F7F8F6', text: '#BFC4BB' },
+  present: { bg: '#D1FAE5', text: '#065F46' },
+  absent:  { bg: '#FEE2E2', text: '#991B1B' },
+  late:    { bg: '#FEF3C7', text: '#92400E' },
+  excused: { bg: '#DBEAFE', text: '#1E40AF' },
+  empty:   { bg: '#F3F4F6', text: '#D1D5DB' },
 };
 
 export default function AttendanceMiniCalendar({ studentId, attendanceStats }) {
   const [stats, setStats] = useState(null);
+  const [dailyRecords, setDailyRecords] = useState({}); // date string -> status
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (attendanceStats) {
-      setStats(attendanceStats);
+    if (!studentId) {
       setLoading(false);
-    } else if (studentId) {
-      setLoading(true);
-      getAttendanceStats({ studentId })
-        .then(data => setStats(data))
-        .catch(() => setStats(null))
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+      return;
     }
+
+    setLoading(true);
+    
+    // Fetch both aggregated stats AND per-day records
+    const promises = [
+      attendanceStats
+        ? Promise.resolve(attendanceStats)
+        : getAttendanceStats({ studentId }).catch(() => null),
+      getStudentAttendance(studentId).catch(() => []),
+    ];
+
+    Promise.all(promises)
+      .then(([statsData, attendanceRecords]) => {
+        setStats(statsData);
+        
+        // Build date -> status lookup
+        const records = Array.isArray(attendanceRecords) ? attendanceRecords : [];
+        const lookup = {};
+        for (const rec of records) {
+          if (rec.date) {
+            // Normalize the date to YYYY-MM-DD format
+            const d = new Date(rec.date);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            lookup[key] = rec.status;
+          }
+        }
+        setDailyRecords(lookup);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [studentId, attendanceStats]);
 
-  // Build a visual representation of the month's attendance
+  // Build a visual representation of the month's attendance with real data
   const monthDays = useMemo(() => {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
     const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0=Sun
 
     const days = [];
@@ -46,13 +71,15 @@ export default function AttendanceMiniCalendar({ studentId, attendanceStats }) {
     for (let i = 0; i < (firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1); i++) {
       days.push({ day: null, status: 'empty' });
     }
-    // Actual days
+    // Actual days — check if there's an attendance record for each date
     for (let i = 1; i <= daysInMonth; i++) {
-      days.push({ day: i, status: 'empty' });
+      const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      const recordStatus = dailyRecords[dateKey] || 'empty';
+      days.push({ day: i, status: recordStatus });
     }
 
     return days;
-  }, []);
+  }, [dailyRecords]);
 
   const totalRecords = stats ? (stats.present + stats.absent + stats.late + stats.excused) : 0;
 

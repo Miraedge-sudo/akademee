@@ -63,6 +63,7 @@ import PageLoader from "../../../components/ui/PageLoader";
 import TableSkeleton from "../../../components/ui/TableSkeleton";
 import StatsSkeleton from "../../../components/ui/StatsSkeleton";
 import BulletinTemplate from "../../../components/ui/BulletinTemplate";
+import ReportCardGenerationAnimation from "../../../components/ui/ReportCardGenerationAnimation";
 
 // ── Status config ──
 const STATUS_CONFIG = {
@@ -147,6 +148,7 @@ export default function ReportCardsPage() {
 
   // ── Form states ──
   const [genStudentId, setGenStudentId] = useState("");
+  const [genStudentSearch, setGenStudentSearch] = useState("");
   const [genPeriodId, setGenPeriodId] = useState("");
   const [genSequenceId, setGenSequenceId] = useState("");
   const [genSequences, setGenSequences] = useState([]);
@@ -196,6 +198,7 @@ export default function ReportCardsPage() {
     return [];
   })();
   const [generating, setGenerating] = useState(false);
+  const [genDismissed, setGenDismissed] = useState(false);
 
   // ── Revise modal ──
   const [reviseModal, setReviseModal] = useState(null);
@@ -294,6 +297,7 @@ export default function ReportCardsPage() {
       return;
     }
     setGenerating(true);
+    setGenDismissed(false);
     try {
       const result = await generateReportCard({
         studentId: genStudentId,
@@ -325,6 +329,7 @@ export default function ReportCardsPage() {
       return;
     }
     setGenerating(true);
+    setGenDismissed(false);
     try {
       const result = await generateBatchReportCards({
         classLevelId: genClassId,
@@ -923,9 +928,9 @@ export default function ReportCardsPage() {
                         <div className="text-[13px] font-semibold text-surface-900 dark:text-surface-100 truncate">
                           {rc.student_name || (isFr ? "N/A" : "N/A")}
                         </div>
-                        {rc.period_name && (
+                        {(rc.sequence_label || rc.period_name) && (
                           <div className="text-[11px] text-surface-400 truncate lg:hidden">
-                            {rc.period_name}
+                            {rc.sequence_label || rc.period_name}
                           </div>
                         )}
                       </div>
@@ -934,7 +939,7 @@ export default function ReportCardsPage() {
                     {/* Period (desktop) */}
                     <div className="hidden lg:block lg:col-span-2">
                       <span className="text-[13px] text-surface-700 dark:text-surface-200">
-                        {rc.period_name || "-"}
+                        {rc.sequence_label || rc.period_name || "-"}
                       </span>
                     </div>
 
@@ -977,6 +982,15 @@ export default function ReportCardsPage() {
                         title={isFr ? "Voir le détail" : "View payload"}
                       >
                         <FiEye size={13} />
+                      </button>
+
+                      {/* Download PDF */}
+                      <button
+                        onClick={() => handleViewPayload(rc)}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-blue-500"
+                        title={isFr ? "Télécharger PDF" : "Download PDF"}
+                      >
+                        <FiDownload size={12} />
                       </button>
 
                       {/* Publish */}
@@ -1106,7 +1120,7 @@ export default function ReportCardsPage() {
       {/* ════════════════════════════════════════════ */}
       <ModalBackdrop
         open={genStudentOpen}
-        onClose={() => { setGenStudentOpen(false); setGenStudentId(""); setGenPeriodId(""); setGenSequenceId(""); setGenSequences([]); setGenEduSystem(""); }}
+        onClose={() => { setGenStudentOpen(false); setGenStudentId(""); setGenStudentSearch(""); setGenPeriodId(""); setGenSequenceId(""); setGenSequences([]); setGenEduSystem(""); }}
         title={isFr ? "Générer un bulletin" : "Generate Report Card"}
         subtitle={isFr ? "Suivez les étapes pour générer le bulletin d'un élève" : "Follow the steps to generate a student report card"}
       >
@@ -1161,8 +1175,18 @@ export default function ReportCardsPage() {
               <span className="text-[13px] font-bold text-surface-800 dark:text-surface-100">
                 {isFr ? "Choisir un élève" : "Select a student"}
               </span>
-            </div>
-            <div className="relative">
+            </div>                    {/* Search input */}
+                    <div className="relative mb-2">
+                      <FiSearch size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={genStudentSearch}
+                        onChange={(e) => { setGenStudentSearch(e.target.value); setGenStudentId(""); }}
+                        placeholder={isFr ? "Rechercher un élève..." : "Search a student..."}
+                        className="w-full h-10 pl-10 pr-4 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-[13px] text-surface-800 dark:text-surface-100 focus:outline-none focus:border-primary-400 transition-all"
+                      />
+                    </div>
+                    <div className="relative">
               <FiUserCheck size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
               <select
                 value={genStudentId}
@@ -1170,7 +1194,13 @@ export default function ReportCardsPage() {
                 className="w-full h-11 pl-10 pr-9 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-[13px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all hover:border-surface-300 dark:hover:border-surface-600"
               >
                 <option value="">{isFr ? "Sélectionnez un élève..." : "Select a student..."}</option>
-                {students.map((s) => (
+                {students
+                  .filter((s) => {
+                    if (!genStudentSearch) return true;
+                    const name = (s.fullName || s.first_name + " " + s.last_name || s.name || "").toLowerCase();
+                    return name.includes(genStudentSearch.toLowerCase());
+                  })
+                  .map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.fullName || s.first_name + " " + s.last_name || s.name}
                     {(() => {
@@ -1661,7 +1691,7 @@ export default function ReportCardsPage() {
         open={!!payloadModal}
         onClose={() => { setPayloadModal(null); setPayloadData(null); }}
         title={isFr ? "Bulletin Scolaire" : "Report Card"}
-        subtitle={payloadModal?.student_name
+        subtitle={payloadModal?.sequence_label || payloadModal?.period_name || payloadModal?.student_name
           ? `${payloadModal.student_name} — ${payloadModal.period_name || ""}`
           : ""}
         width="max-w-4xl"
@@ -1702,6 +1732,14 @@ export default function ReportCardsPage() {
           </div>
         )}
       </ModalBackdrop>
+
+      {/* ── Spectacular generation animation overlay ── */}
+      <ReportCardGenerationAnimation
+        visible={generating && !genDismissed}
+        primaryColor={pc}
+        onFinish={() => {}}
+        onDismiss={() => setGenDismissed(true)}
+      />
     </div>
   );
 }

@@ -8,6 +8,10 @@ import {
   FiX,
   FiCalendar,
   FiSearch,
+  FiLock,
+  FiUnlock,
+  FiPlay,
+  FiSquare,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import {
@@ -15,8 +19,56 @@ import {
   createTerm,
   updateTerm,
   deleteTerm,
+  openTerm,
+  closeTerm,
+  lockTerm,
+  unlockTerm,
   getAcademicYears,
 } from "../../../core/api/academicYearService";
+
+// ── Status config ──
+const STATUS = {
+  EN_ATTENTE: {
+    label: { en: "Pending", fr: "En attente" },
+    color: {
+      bg: "bg-amber-50 dark:bg-amber-900/20",
+      border: "border-amber-200 dark:border-amber-800",
+      text: "text-amber-600 dark:text-amber-400",
+      dot: "bg-amber-500",
+    },
+    actions: ["open"],
+  },
+  OUVERTE: {
+    label: { en: "Open", fr: "Ouverte" },
+    color: {
+      bg: "bg-emerald-50 dark:bg-emerald-900/20",
+      border: "border-emerald-200 dark:border-emerald-800",
+      text: "text-emerald-600 dark:text-emerald-400",
+      dot: "bg-emerald-500",
+    },
+    actions: ["close", "lock"],
+  },
+  FERMEE: {
+    label: { en: "Closed", fr: "Fermée" },
+    color: {
+      bg: "bg-red-50 dark:bg-red-900/20",
+      border: "border-red-200 dark:border-red-800",
+      text: "text-red-600 dark:text-red-400",
+      dot: "bg-red-500",
+    },
+    actions: ["open", "lock"],
+  },
+  VERROUILLEE: {
+    label: { en: "Locked", fr: "Verrouillée" },
+    color: {
+      bg: "bg-purple-50 dark:bg-purple-900/20",
+      border: "border-purple-200 dark:border-purple-800",
+      text: "text-purple-600 dark:text-purple-400",
+      dot: "bg-purple-500",
+    },
+    actions: ["unlock"],
+  },
+};
 
 // ── Animations ──
 const ROW_ANIMATION = "animate-fadeInUp";
@@ -33,6 +85,7 @@ export default function PeriodsPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [adding, setAdding] = useState(false);
   const [deleting, setDeleting] = useState(null);
+  const [statusLoading, setStatusLoading] = useState(null);
 
   // Add form state
   const [newName, setNewName] = useState("");
@@ -96,6 +149,14 @@ export default function PeriodsPage() {
       );
       return;
     }
+    if (new Date(newStart) < new Date(new Date().toDateString())) {
+      toast.error(
+        isFr
+          ? "La date de début ne peut pas être dans le passé"
+          : "Start date cannot be in the past"
+      );
+      return;
+    }
     setAdding(true);
     const maxOrder = periods
       .filter((p) => p.academicYearId === yearFilter)
@@ -149,6 +210,14 @@ export default function PeriodsPage() {
       );
       return;
     }
+    if (new Date(editStart) < new Date(new Date().toDateString())) {
+      toast.error(
+        isFr
+          ? "La date de début ne peut pas être dans le passé"
+          : "Start date cannot be in the past"
+      );
+      return;
+    }
     try {
       await updateTerm(id, {
         name: editName.trim(),
@@ -173,6 +242,54 @@ export default function PeriodsPage() {
       toast.error(isFr ? "Erreur lors de la suppression" : "Error deleting period");
     } finally {
       setDeleting(null);
+    }
+  };
+
+  // ── Status management ──
+  const handleStatus = async (id, action) => {
+    setStatusLoading(`${id}_${action}`);
+    try {
+      const fn = {
+        open: openTerm,
+        close: closeTerm,
+        lock: lockTerm,
+        unlock: unlockTerm,
+      }[action];
+      if (!fn) return;
+      await fn(id);
+      fetchData();
+      const actionLabel = {
+        open: isFr ? "ouverte" : "opened",
+        close: isFr ? "fermée" : "closed",
+        lock: isFr ? "verrouillée" : "locked",
+        unlock: isFr ? "déverrouillée" : "unlocked",
+      }[action];
+      toast.success(isFr ? `Période ${actionLabel}` : `Period ${actionLabel}`);
+    } catch {
+      toast.error(isFr ? "Erreur lors du changement de statut" : "Error changing status");
+    } finally {
+      setStatusLoading(null);
+    }
+  };
+
+  // ── Status action icons ──
+  const statusActionIcon = (action) => {
+    switch (action) {
+      case "open": return <FiPlay className="w-3 h-3" />;
+      case "close": return <FiSquare className="w-3 h-3" />;
+      case "lock": return <FiLock className="w-3 h-3" />;
+      case "unlock": return <FiUnlock className="w-3 h-3" />;
+      default: return null;
+    }
+  };
+
+  const statusActionLabel = (action) => {
+    switch (action) {
+      case "open": return isFr ? "Ouvrir" : "Open";
+      case "close": return isFr ? "Fermer" : "Close";
+      case "lock": return isFr ? "Verrouiller" : "Lock";
+      case "unlock": return isFr ? "Déverrouiller" : "Unlock";
+      default: return action;
     }
   };
 
@@ -384,6 +501,7 @@ export default function PeriodsPage() {
                   <Th>{isFr ? "Nom" : "Name"}</Th>
                   <Th>{isFr ? "Année" : "Year"}</Th>
                   <Th>{isFr ? "Dates" : "Dates"}</Th>
+                  <Th>{isFr ? "Statut" : "Status"}</Th>
                   <Th className="text-right">{isFr ? "Actions" : "Actions"}</Th>
                 </tr>
               </thead>
@@ -454,6 +572,19 @@ export default function PeriodsPage() {
                           </span>
                         )}
                       </td>
+                      {/* ── Status ── */}
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all duration-300 ${(STATUS[p.status] || STATUS.EN_ATTENTE).color.bg} ${(STATUS[p.status] || STATUS.EN_ATTENTE).color.border} ${(STATUS[p.status] || STATUS.EN_ATTENTE).color.text}`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${(STATUS[p.status] || STATUS.EN_ATTENTE).color.dot} animate-pulse-slow`}
+                          />
+                          {isFr
+                            ? (STATUS[p.status] || STATUS.EN_ATTENTE).label.fr
+                            : (STATUS[p.status] || STATUS.EN_ATTENTE).label.en}
+                        </span>
+                      </td>
                       <td className="px-4 py-3 text-right">
                         {isEditing ? (
                           <div className="flex items-center justify-end gap-1">
@@ -471,7 +602,39 @@ export default function PeriodsPage() {
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                          <div className="flex items-center justify-end gap-1">
+                            {/* Status actions */}
+                            <div className="flex items-center gap-0.5 mr-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                              {(STATUS[p.status] || STATUS.EN_ATTENTE).actions.map((action) => {
+                                const isLoading = statusLoading === `${p.id}_${action}`;
+                                return (
+                                  <button
+                                    key={action}
+                                    onClick={() => handleStatus(p.id, action)}
+                                    disabled={isLoading}
+                                    className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold transition-all duration-150 active:scale-90 disabled:opacity-50 ${
+                                      action === "open"
+                                        ? "text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
+                                        : action === "close"
+                                        ? "text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 border border-red-200 dark:border-red-800"
+                                        : action === "lock"
+                                        ? "text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 border border-purple-200 dark:border-purple-800"
+                                        : action === "unlock"
+                                        ? "text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+                                        : "text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-700 border border-surface-200 dark:border-surface-600"
+                                    }`}
+                                    title={statusActionLabel(action)}
+                                  >
+                                    {isLoading ? (
+                                      <span className="w-2.5 h-2.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                                    ) : (
+                                      statusActionIcon(action)
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+
                             <button
                               onClick={() => startEdit(p)}
                               className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-105 hover:border-primary-200 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:shadow-sm active:scale-90 transition-all duration-150"

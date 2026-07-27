@@ -72,6 +72,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "gceOLevel",
+          label: "GCE O-Level",
+          labelFr: "GCE O-Level",
           path: "/dashboard/exams/gce-o-level",
           icon: "exam",
           description: "Forms 1–5 (FSLC to O-Level)",
@@ -79,6 +81,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "gceALevel",
+          label: "GCE A-Level",
+          labelFr: "GCE A-Level",
           path: "/dashboard/exams/gce-a-level",
           icon: "exam",
           description: "Lower & Upper Sixth (A-Level)",
@@ -93,6 +97,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "artsSeries",
+          label: "Arts Series",
+          labelFr: "Séries Artistiques",
           path: "/dashboard/series/arts",
           icon: "book",
           description: "A1 (Lit., Fr., Hist.) – A8 (Arts & Culture)",
@@ -100,6 +106,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "scienceSeries",
+          label: "Science Series",
+          labelFr: "Séries Scientifiques",
           path: "/dashboard/series/science",
           icon: "flask",
           description: "S1 (Math, Chem, Phys) – S4 (Bio, Chem, Geo)",
@@ -114,6 +122,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "lowerSecondary",
+          label: "Lower Secondary",
+          labelFr: "Premier Cycle",
           path: "/dashboard/classes/lower-secondary",
           icon: "classes",
           description: "Form 1 · Form 2 · Form 3 · Form 4 · Form 5",
@@ -121,6 +131,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "upperSecondary",
+          label: "Upper Secondary",
+          labelFr: "Second Cycle",
           path: "/dashboard/classes/upper-secondary",
           icon: "classes",
           description: "Lower Sixth · Upper Sixth",
@@ -135,11 +147,15 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "gceResults",
+          label: "GCE Results",
+          labelFr: "Résultats GCE",
           path: "/dashboard/exams/gce-results",
           icon: "barchart",
         },
         {
           key: "gradeSheets",
+          label: "Grade Sheets",
+          labelFr: "Relevés de Notes",
           path: "/dashboard/grades/anglophone",
           icon: "file",
         },
@@ -154,6 +170,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "bepc",
+          label: "BEPC",
+          labelFr: "BEPC",
           path: "/dashboard/exams/bepc",
           icon: "exam",
           description: "Brevet d'Études du Premier Cycle",
@@ -161,6 +179,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "probatoire",
+          label: "Probatoire",
+          labelFr: "Probatoire",
           path: "/dashboard/exams/probatoire",
           icon: "exam",
           description: "Examen probatoire (2ⁿᵈ cycle, 2ᵉ année)",
@@ -168,6 +188,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "baccalaureat",
+          label: "Baccalauréat",
+          labelFr: "Baccalauréat",
           path: "/dashboard/exams/baccalaureat",
           icon: "exam",
           description: "Baccalauréat Général (séries A–E, TI)",
@@ -182,6 +204,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "literarySeries",
+          label: "Literary Series (A)",
+          labelFr: "Séries Littéraires (A)",
           path: "/dashboard/series/literary",
           icon: "book",
           description: "A (Lettres), A1–A5 (Langues, Philo)",
@@ -189,6 +213,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "scientificSeries",
+          label: "Scientific Series (C–E)",
+          labelFr: "Séries Scientifiques (C–E)",
           path: "/dashboard/series/scientific",
           icon: "flask",
           description: "C (Math-Phys), D (Math-SVT), E (Math-Tech)",
@@ -196,6 +222,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "economicSeries",
+          label: "Economic Series (B)",
+          labelFr: "Séries Économiques (B)",
           path: "/dashboard/series/economic",
           icon: "trending",
           description: "B (Sciences Économiques et Sociales)",
@@ -203,6 +231,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "techSeries",
+          label: "Technical Series (TI)",
+          labelFr: "Séries Techniques (TI)",
           path: "/dashboard/series/technical",
           icon: "cpu",
           description: "TI (Technologies de l'Information)",
@@ -217,6 +247,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "college",
+          label: "Collège (6ᵉ–3ᵉ)",
+          labelFr: "Collège (6ᵉ–3ᵉ)",
           path: "/dashboard/classes/college",
           icon: "classes",
           description: "6ᵉ · 5ᵉ · 4ᵉ · 3ᵉ (Premier cycle)",
@@ -224,6 +256,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "lycee",
+          label: "Lycée (2nde–Tle)",
+          labelFr: "Lycée (2nde–Tle)",
           path: "/dashboard/classes/lycee",
           icon: "classes",
           description: "Seconde · Première · Terminale (Second cycle)",
@@ -238,11 +272,15 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "examResults",
+          label: "Exam Results",
+          labelFr: "Résultats d'Examens",
           path: "/dashboard/exams/francophone-results",
           icon: "barchart",
         },
         {
           key: "bulletins",
+          label: "Bulletins",
+          labelFr: "Bulletins",
           path: "/dashboard/grades/francophone",
           icon: "file",
         },
@@ -257,6 +295,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "tveeIl",
+          label: "TVEE Intermediate",
+          labelFr: "TVEE Intermédiaire",
           path: "/dashboard/exams/tvee-il",
           icon: "exam",
           description: "TVEE Intermediate Level (Form 5)",
@@ -264,6 +304,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "tveeAl",
+          label: "TVEE Advanced",
+          labelFr: "TVEE Avancé",
           path: "/dashboard/exams/tvee-al",
           icon: "exam",
           description: "TVEE Advanced Level (Upper Sixth)",
@@ -278,6 +320,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "industrial",
+          label: "Industrial Specialties",
+          labelFr: "Spécialités Industrielles",
           path: "/dashboard/series/industrial",
           icon: "cpu",
           description: "Woodwork, Mechanics, Electrical, Electronics",
@@ -285,6 +329,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "commercial",
+          label: "Commercial Specialties",
+          labelFr: "Spécialités Commerciales",
           path: "/dashboard/series/commercial",
           icon: "briefcase",
           description: "Accounting, Secretarial, Management",
@@ -299,6 +345,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "techLower",
+          label: "Technical Lower",
+          labelFr: "Technique 1er Cycle",
           path: "/dashboard/classes/tech-lower",
           icon: "classes",
           description: "Form 1–5 (Technical)",
@@ -306,6 +354,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "techUpper",
+          label: "Technical Upper",
+          labelFr: "Technique 2nd Cycle",
           path: "/dashboard/classes/tech-upper",
           icon: "classes",
           description: "Lower & Upper Sixth (Technical)",
@@ -320,11 +370,15 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "tveeResults",
+          label: "TVEE Results",
+          labelFr: "Résultats TVEE",
           path: "/dashboard/exams/tvee-results",
           icon: "barchart",
         },
         {
           key: "techGradeSheets",
+          label: "Tech Grade Sheets",
+          labelFr: "Relevés Techniques",
           path: "/dashboard/grades/anglophone",
           icon: "file",
         },
@@ -339,6 +393,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "cap",
+          label: "CAP",
+          labelFr: "CAP",
           path: "/dashboard/exams/cap",
           icon: "exam",
           description: "Certificat d'Aptitude Professionnelle",
@@ -346,6 +402,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "probatoireTechnique",
+          label: "Probatoire Technique",
+          labelFr: "Probatoire Technique",
           path: "/dashboard/exams/probatoire-technique",
           icon: "exam",
           description: "Probatoire Technique (2ᵉ année)",
@@ -353,6 +411,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "bacTechnique",
+          label: "Bac Technique",
+          labelFr: "Bac Technique",
           path: "/dashboard/exams/bac-technique",
           icon: "exam",
           description: "Baccalauréat Technique / Brevet de Technicien",
@@ -367,6 +427,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "industrielFiliere",
+          label: "Industrial Stream",
+          labelFr: "Filière Industrielle",
           path: "/dashboard/series/industriel",
           icon: "cpu",
           description: "TI — Techniques Industrielles",
@@ -374,6 +436,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "tertiaireFiliere",
+          label: "Tertiary Stream",
+          labelFr: "Filière Tertiaire",
           path: "/dashboard/series/tertiaire",
           icon: "briefcase",
           description: "STT — Sciences et Technologies du Tertiaire",
@@ -388,6 +452,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "techCollege",
+          label: "Collège Technique",
+          labelFr: "Collège Technique",
           path: "/dashboard/classes/tech-college",
           icon: "classes",
           description: "6ᵉ · 5ᵉ · 4ᵉ · 3ᵉ (Lycée technique)",
@@ -395,6 +461,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "techLycee",
+          label: "Lycée Technique",
+          labelFr: "Lycée Technique",
           path: "/dashboard/classes/tech-lycee",
           icon: "classes",
           description: "Seconde · Première · Terminale (Lycée technique)",
@@ -409,11 +477,15 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "techExamResults",
+          label: "Tech Exam Results",
+          labelFr: "Résultats Examens Tech",
           path: "/dashboard/exams/tech-results",
           icon: "barchart",
         },
         {
           key: "techBulletins",
+          label: "Tech Bulletins",
+          labelFr: "Bulletins Techniques",
           path: "/dashboard/grades/francophone",
           icon: "file",
         },
@@ -428,6 +500,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "licence",
+          label: "Licence (Bachelor)",
+          labelFr: "Licence (Bachelor)",
           path: "/dashboard/programs/licence",
           icon: "graduation",
           description: "Licence (Bac+3) · Bachelor",
@@ -435,6 +509,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "master",
+          label: "Master",
+          labelFr: "Master",
           path: "/dashboard/programs/master",
           icon: "graduation",
           description: "Master (Bac+5)",
@@ -442,6 +518,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "doctorate",
+          label: "Doctorate (PhD)",
+          labelFr: "Doctorat (PhD)",
           path: "/dashboard/programs/doctorate",
           icon: "graduation",
           description: "Doctorat (Bac+8) · PhD",
@@ -456,6 +534,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "faculties",
+          label: "Faculties",
+          labelFr: "Facultés",
           path: "/dashboard/faculties",
           icon: "building",
           description: "Sciences, Arts, Health, Engineering",
@@ -463,6 +543,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "departments",
+          label: "Departments",
+          labelFr: "Départements",
           path: "/dashboard/departments",
           icon: "layers",
           description: "Departmental management",
@@ -477,6 +559,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
       items: [
         {
           key: "researchProjects",
+          label: "Research Projects",
+          labelFr: "Projets de Recherche",
           path: "/dashboard/research",
           icon: "search",
           description: "Research projects & grants",
@@ -484,6 +568,8 @@ const SYSTEM_SPECIFIC_ITEMS = {
         },
         {
           key: "publications",
+          label: "Publications",
+          labelFr: "Publications",
           path: "/dashboard/publications",
           icon: "file",
           description: "Journals, papers & theses",
@@ -537,10 +623,8 @@ const BASE_NAV_CONFIG = {
     {
       group: "grades",
       items: [
-        { key: "gradeReports", path: "/dashboard/grades", icon: "barchart" },
         { key: "reportCards", path: "/dashboard/report-cards", icon: "file" },
         { key: "subjectOfferings", path: "/dashboard/subject-offerings", icon: "book" },
-        { key: "gradingConfig", path: "/dashboard/grading-config", icon: "wrench" },
         { key: "attendance", path: "/dashboard/attendance", icon: "calendar" },
       ],
     },
@@ -585,11 +669,6 @@ const BASE_NAV_CONFIG = {
       group: "system",
       items: [
         { key: "settings", path: "/dashboard/settings", icon: "settings" },
-        {
-          key: "systemConfig",
-          path: "/dashboard/system-configuration",
-          icon: "settings",
-        },
       ],
     },
   ],
@@ -640,8 +719,6 @@ const BASE_NAV_CONFIG = {
       items: [
         { key: "payments", path: "/dashboard/payments", icon: "dollar" },
         { key: "receipts", path: "/dashboard/receipts", icon: "file" },
-        { key: "fees", path: "/dashboard/fees", icon: "dollar" },
-        { key: "feesAssign", path: "/dashboard/fees/assign", icon: "layers" },
         { key: "financeReports", path: "/dashboard/finance/reports", icon: "barchart" },
       ],
     },
@@ -896,29 +973,29 @@ function SystemSectionRenderer({ systemId, groups, collapsed: sidebarCollapsed, 
   if (sidebarCollapsed) {
     // When sidebar is collapsed, just render groups as regular items
     return groups.map((g) => (
-      <div key={g._groupKey || g.group}>
-        {g.items.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <NavLink
-              key={item._itemKey || item.key}
-              to={item.path}
-              onClick={onCloseMobile}
-              className="group relative flex items-center gap-2.5 min-h-[36px] mx-2 px-3 rounded-md text-[13px] whitespace-nowrap overflow-hidden transition-colors lg:justify-center lg:px-0 text-primary-200 hover:bg-white/[0.08] hover:text-white"
-            >
-              <NavIcon name={item.icon} className="w-[16px] h-[16px] flex-shrink-0 opacity-80" />
-              <span className="flex flex-col transition-opacity min-w-0 lg:hidden">
-                <span className="text-[13px] leading-tight truncate">{t(`nav.${item.key}`, item.key)}</span>
-              </span>
-              <span className="hidden lg:group-hover:block absolute left-[60px] top-1/2 -translate-y-1/2 bg-surface-900 text-white text-xs px-2.5 py-1.5 rounded-md whitespace-nowrap z-[200] shadow-lg">
-                {t(`nav.${item.key}`, item.key)}
-              </span>
-            </NavLink>
-          );
-        })}
-      </div>
-    ));
-  }
+      <div key={g._groupKey || g.group}>            {g.items.map((item) => {
+              const isActive = location.pathname === item.path;
+              const itemLabel = isFr && item.labelFr ? item.labelFr : (item.label || item.key);
+              return (
+                <NavLink
+                  key={item._itemKey || item.key}
+                  to={item.path}
+                  onClick={onCloseMobile}
+                  className="group relative flex items-center gap-2.5 min-h-[36px] mx-2 px-3 rounded-md text-[13px] whitespace-nowrap overflow-hidden transition-colors lg:justify-center lg:px-0 text-primary-200 hover:bg-white/[0.08] hover:text-white"
+                >
+                  <NavIcon name={item.icon} className="w-[16px] h-[16px] flex-shrink-0 opacity-80" />
+                  <span className="flex flex-col transition-opacity min-w-0 lg:hidden">
+                    <span className="text-[13px] leading-tight truncate">{itemLabel}</span>
+                  </span>
+                  <span className="hidden lg:group-hover:block absolute left-[60px] top-1/2 -translate-y-1/2 bg-surface-900 text-white text-xs px-2.5 py-1.5 rounded-md whitespace-nowrap z-[200] shadow-lg">
+                    {itemLabel}
+                  </span>
+                </NavLink>
+              );
+            })}
+          </div>
+        ));
+      }
 
   return (
     <div className="relative mb-1">
@@ -951,7 +1028,7 @@ function SystemSectionRenderer({ systemId, groups, collapsed: sidebarCollapsed, 
         {groups.map((g) => (
           <div key={g._groupKey || g.group}>
             <div className="flex items-center gap-2 text-[10px] font-semibold tracking-wider uppercase text-primary-400/60 px-5 pt-2.5 pb-1 whitespace-nowrap">
-              {t(`nav.group.${g.group}`, g.group)}
+              {isFr && g.labelFr ? g.labelFr : (g.label || g.group)}
             </div>
             {g.items.map((item) => {
               const isActive = location.pathname === item.path;
@@ -971,7 +1048,7 @@ function SystemSectionRenderer({ systemId, groups, collapsed: sidebarCollapsed, 
                 >
                   <NavIcon name={item.icon} className="w-4 h-4 flex-shrink-0 opacity-70" />
                   <span className="flex flex-col min-w-0">
-                    <span className="text-[13px] leading-tight truncate">{t(`nav.${item.key}`, item.key)}</span>
+                    <span className="text-[13px] leading-tight truncate">{isFr && item.labelFr ? item.labelFr : (item.label || item.key)}</span>
                     {item.description && (
                       <span className="text-[10px] text-primary-400/60 leading-tight truncate">
                         {i18n.language === "fr" && item.descriptionFr ? item.descriptionFr : item.description}

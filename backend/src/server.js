@@ -6,8 +6,15 @@ require('dotenv').config();
 const app = require('./app');
 const logger = require('./utils/logger');
 const { validateEnv } = require('./config/env');
+const { startScheduler, refreshStatuses } = require('./services/scheduler.service');
 
 const { port } = validateEnv();
+
+// ── Start the auto-status scheduler ──
+startScheduler();
+
+// ── Catch up on any status changes missed during downtime ──
+refreshStatuses();
 
 const server = app.listen(port, () => {
   logger.info(`Server started on http://localhost:${port}`);

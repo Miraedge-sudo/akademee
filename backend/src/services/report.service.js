@@ -1,4 +1,5 @@
 const sql = require('../config/database');
+const gradingService = require('./grading.service');
 
 class ReportService {
   async generateBulletin(schoolId, studentId, periodId) {
@@ -15,18 +16,49 @@ class ReportService {
       FROM schools WHERE school_id = ${schoolId}
     `;
 
-    const grades = await sql`
-      SELECT g.*, s.name AS subject_name, s.coefficient
-      FROM grades g
-      JOIN subjects s ON g.subject_id = s.subject_id
-      WHERE g.student_id = ${studentId} AND g.school_id = ${schoolId}
-        ${periodId ? sql`AND g.period_id = ${periodId}` : sql``}
-      ORDER BY s.name ASC
-    `;
+    // ── Utiliser le nouveau système via gradingService ──
+    let periodResult;
+    try {
+      periodResult = await gradingService.computePeriodAverage(studentId, periodId);
+    } catch (err) {
+      // Si aucun enrollment actif trouvé, retourner un bulletin vide
+      if (err.message.includes('not actively enrolled')) {
+        return {
+          student: {
+            id: student[0].student_id,
+            name: student[0].student_name,
+            email: student[0].email,
+            classLabel: student[0].class_label,
+            studentNumber: student[0].student_number,
+          },
+          school: school[0] ? {
+            name: school[0].name,
+            subdomain: school[0].subdomain,
+            logoUrl: school[0].logo_url,
+            primaryColor: school[0].primary_color,
+          } : null,
+          periodId,
+          grades: [],
+          summary: {
+            totalSubjects: 0,
+            totalScore: 0,
+            totalCoefficients: 0,
+            average: null,
+          },
+        };
+      }
+      throw err;
+    }
 
-    const totalScore = grades.reduce((sum, g) => sum + Number(g.score) * Number(g.coefficient), 0);
-    const totalCoefficients = grades.reduce((sum, g) => sum + Number(g.coefficient), 0);
-    const average = totalCoefficients > 0 ? (totalScore / totalCoefficients).toFixed(2) : '0.00';
+    const mappedGrades = periodResult.subjectResults.map(sub => ({
+      subject: sub.subjectName,
+      score: sub.average,
+      coefficient: sub.coefficient,
+      weightedScore: sub.average != null ? sub.average * sub.coefficient : null,
+    }));
+
+    const totalScore = mappedGrades.reduce((sum, g) => sum + (g.weightedScore || 0), 0);
+    const totalCoefficients = mappedGrades.reduce((sum, g) => sum + g.coefficient, 0);
 
     return {
       student: {
@@ -43,17 +75,12 @@ class ReportService {
         primaryColor: school[0].primary_color,
       } : null,
       periodId,
-      grades: grades.map(g => ({
-        subject: g.subject_name,
-        score: Number(g.score),
-        coefficient: Number(g.coefficient),
-        weightedScore: Number(g.score) * Number(g.coefficient),
-      })),
+      grades: mappedGrades,
       summary: {
-        totalSubjects: grades.length,
+        totalSubjects: mappedGrades.length,
         totalScore,
         totalCoefficients,
-        average: Number(average),
+        average: periodResult.average,
       },
     };
   }

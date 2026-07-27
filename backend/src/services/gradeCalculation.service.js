@@ -148,6 +148,40 @@ class GradeCalculationService {
 
     return results;
   }
+
+  /**
+   * Get per-sequence grade averages for a student.
+   * Queries the grades table directly, grouped by sequence_id.
+   * Works with migrated old-system grades AND new-system grades that have sequence_id populated.
+   *
+   * Returns an array of: { sequenceId, sequenceLabel, average, color }
+   */
+  async getSequenceAverages(schoolId, studentId) {
+    // Note: no school_id filter because the new grading system (grading.service.js)
+    // does NOT set school_id on grades. student_id alone is sufficient for tenant isolation.
+    const rows = await sql`
+      SELECT
+        g.sequence_id,
+        seq.label AS sequence_label,
+        ROUND(AVG(g.score)::numeric, 2) AS average_score
+      FROM grades g
+      JOIN sequences seq ON g.sequence_id = seq.sequence_id
+      WHERE g.student_id = ${studentId}
+        AND g.sequence_id IS NOT NULL
+        AND g.score IS NOT NULL
+      GROUP BY g.sequence_id, seq.label, seq.created_at
+      ORDER BY seq.created_at
+    `;
+
+    const COLORS = ['#085041', '#0EA5E9', '#8B5CF6', '#F59E0B', '#EF4444', '#14B8A6'];
+
+    return rows.map((r, i) => ({
+      sequenceId: r.sequence_id,
+      sequenceLabel: r.sequence_label,
+      average: Number(r.average_score),
+      color: COLORS[i % COLORS.length],
+    }));
+  }
 }
 
 module.exports = new GradeCalculationService();

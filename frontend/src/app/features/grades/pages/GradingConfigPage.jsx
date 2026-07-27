@@ -10,7 +10,7 @@
  * Route: /dashboard/grading-config
  * Backend: /api/v1/grading-scales, /api/v1/mention-threshold-sets
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useTheme } from "../../../core/hooks/useTheme";
 import { useTranslation } from "react-i18next";
@@ -86,6 +86,23 @@ export default function GradingConfigPage() {
   const pc = primaryColor || "#085041";
   const isFr = i18n.language === "fr";
 
+  // ── Mapping onboarding system names → DB codes ──
+  const ONBOARDING_TO_DB_CODE = {
+    'francophone_general': 'FR_GEN',
+    'anglophone_general': 'ANG_GEN',
+    'francophone_technical': 'FR_TECH',
+    'anglophone_technical': 'ANG_TECH',
+    'university': 'UNIV',
+  };
+
+  // ── School's allowed education systems (from onboarding) ──
+  const schoolSystems = user?.school?.educationalSystems || [];
+  const allowedEduCodes = useMemo(() => new Set(
+    schoolSystems
+      .map(s => ONBOARDING_TO_DB_CODE[s] || null)
+      .filter(Boolean)
+  ), [schoolSystems]);
+
   // ── Data ──
   const [educationSystems, setEducationSystems] = useState([]);
   const [gradingScales, setGradingScales] = useState([]);
@@ -110,6 +127,12 @@ export default function GradingConfigPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // ── Filter education systems by what the school selected during onboarding ──
+  const schoolEduSystems = useMemo(() => {
+    if (allowedEduCodes.size === 0) return educationSystems;
+    return educationSystems.filter(sys => allowedEduCodes.has(sys.code));
+  }, [educationSystems, allowedEduCodes]);
 
   // ── Load data ──
   const loadData = useCallback(async () => {
@@ -288,11 +311,11 @@ export default function GradingConfigPage() {
       {/* ════════════════════════════════════════ */}
       <div className="gf-fade" style={{ animationDelay: "0.04s" }}>
         <ExpandableSection title={isFr ? "Systèmes éducatifs" : "Education Systems"} icon={FiLayers}>
-          {educationSystems.length === 0 ? (
-            <p className="text-[13px] text-surface-400 text-center py-4">{isFr ? "Aucun système configuré" : "No systems configured"}</p>
+          {schoolEduSystems.length === 0 ? (
+            <p className="text-[13px] text-surface-400 text-center py-4">{isFr ? "Aucun système configuré pour cette école" : "No systems configured for this school"}</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {educationSystems.map((sys) => (
+              {schoolEduSystems.map((sys) => (
                 <div key={sys.education_system_id} className="p-3 rounded-xl bg-surface-50 dark:bg-surface-900 border border-surface-100 dark:border-surface-700">
                   <div className="text-[13px] font-bold text-surface-900 dark:text-surface-100">{sys.code}</div>
                   <div className="text-[11px] text-surface-400">{isFr ? sys.name_fr : sys.name_en}</div>
@@ -453,7 +476,7 @@ export default function GradingConfigPage() {
                 const isExpanded = expandedMentionSetId === setId;
 
                 // Look up the linked education system & grading scale
-                const linkedSys = educationSystems.find(
+                const linkedSys = schoolEduSystems.find(
                   (s) => s.education_system_id === ts.education_system_id
                 );
                 const linkedScale = gradingScales.find(
@@ -669,7 +692,7 @@ export default function GradingConfigPage() {
                 className="w-full h-10 pl-3 pr-8 bg-surface-50 dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-[13px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-colors"
               >
                 <option value="">{isFr ? "Choisir..." : "Choose..."}</option>
-                {educationSystems.map((sys) => (
+                {schoolEduSystems.map((sys) => (
                   <option key={sys.education_system_id} value={sys.education_system_id}>
                     {sys.code} — {isFr ? sys.name_fr : sys.name_en}
                   </option>
