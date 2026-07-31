@@ -168,6 +168,7 @@ const errorMiddleware = (err, req, res, _next) => {
     });
 
     // Use friendly message for known codes; generic DB error for unknown codes
+    const isProduction = process.env.NODE_ENV === 'production';
     const message =
       humanMessage ||
       'A database error occurred. Please try again or contact support.';
@@ -176,6 +177,7 @@ const errorMiddleware = (err, req, res, _next) => {
       success: false,
       message,
       reqId,
+      ...(isProduction ? {} : { dbError: err.message, dbCode: err.code }),
     });
   }
 

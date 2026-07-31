@@ -7,6 +7,7 @@
  */
 
 const sql = require('../config/database');
+const AppError = require('../utils/AppError');
 
 class GradingService {
   // ------------------------------------------------------------------
@@ -174,6 +175,29 @@ class GradingService {
     return null;
   }
 
+  /**
+   * Generate an automatic per-subject remark from the subject average (out of
+   * 20), following standard Cameroonian secondary-education wording. The
+   * language follows the education system (ANG_* → English, otherwise French).
+   * Returns null when there is no grade, so bulletins show « — » instead of a
+   * fabricated remark. Teachers can still override it later.
+   */
+  generateSubjectRemark(average, eduSystemCode = null) {
+    if (average == null) return null;
+    const en = String(eduSystemCode || '').startsWith('ANG');
+    const levels = [
+      { min: 17, fr: 'Excellent', en: 'Excellent' },
+      { min: 16, fr: 'Très bien', en: 'Very good' },
+      { min: 14, fr: 'Bien', en: 'Good' },
+      { min: 12, fr: 'Assez bien', en: 'Fairly good' },
+      { min: 10, fr: 'Passable', en: 'Passable' },
+      { min: 8, fr: 'Insuffisant', en: 'Insufficient' },
+      { min: 0, fr: 'Faible', en: 'Weak' },
+    ];
+    const level = levels.find((l) => average >= l.min);
+    return level ? (en ? level.en : level.fr) : null;
+  }
+
   // ------------------------------------------------------------------
   // Report Card Config
   // ------------------------------------------------------------------
@@ -298,6 +322,7 @@ class GradingService {
       score,
       status = 'GRADED',
       isResit = false,
+      sequenceId = null,
     } = data;
 
     if ((score == null || score === '') && status === 'GRADED') {
@@ -308,8 +333,8 @@ class GradingService {
     }
 
     const rows = await sql`
-      INSERT INTO grades (student_id, assessment_component_id, score, status, entered_by, entered_at, is_resit)
-      VALUES (${studentId}, ${assessmentComponentId}, ${score || null}, ${status}, ${actorId || null}, now(), ${isResit})
+      INSERT INTO grades (student_id, assessment_component_id, score, status, entered_by, entered_at, is_resit, sequence_id)
+      VALUES (${studentId}, ${assessmentComponentId}, ${score || null}, ${status}, ${actorId || null}, now(), ${isResit}, ${sequenceId || null})
       RETURNING *
     `;
 
@@ -370,14 +395,15 @@ class GradingService {
    * Returns { average, maxScore } or { average: null, reason }.
    */
   async computeSubjectAverage(studentId, subjectOfferingId, options = {}) {
-    const { includeResit = false } = options;
+    const { includeResit = false, sequenceId = null } = options;
 
     const components = await sql`
       SELECT ac.*, g.score, g.status, g.is_resit
       FROM assessment_components ac
       LEFT JOIN grades g ON g.assessment_component_id = ac.assessment_component_id
         AND g.student_id = ${studentId}
-        AND g.is_resit = ${includeResit}
+        AND (g.is_resit = ${includeResit} OR (${includeResit} = false AND g.is_resit IS NULL))
+        ${sequenceId ? sql`AND g.sequence_id = ${sequenceId}` : sql``}
       WHERE ac.subject_offering_id = ${subjectOfferingId}
     `;
 
@@ -386,7 +412,7 @@ class GradingService {
     }
 
     const weightSum = components.reduce((sum, c) => {
-      return c.status === 'GRADED' ? sum + Number(c.weight_percent) : sum;
+      return c.status === 'GRADED' && c.score != null ? sum + Number(c.weight_percent) : sum;
     }, 0);
 
     if (weightSum === 0) {
@@ -396,10 +422,10 @@ class GradingService {
     let total = 0;
     let maxScore = 0;
     for (const c of components) {
-      if (c.status === 'GRADED') {
+      if (c.status === 'GRADED' && c.score != null) {
         const ratio = Number(c.score) / Number(c.max_score);
         total += ratio * Number(c.weight_percent);
-        if (!maxScore) maxScore = Number(c.max_score);
+        if (Number(c.max_score) > maxScore) maxScore = Number(c.max_score);
       }
     }
 
@@ -412,7 +438,7 @@ class GradingService {
    * Compute period average for one student and one period.
    */
   async computePeriodAverage(studentId, periodStructureId, options = {}) {
-    const { gradingScaleVersion, classLevelId: providedClassLevelId } = options;
+    const { gradingScaleVersion, classLevelId: providedClassLevelId, sequenceId = null } = options;
 
     let classLevelId = providedClassLevelId;
     if (!classLevelId) {
@@ -443,7 +469,7 @@ class GradingService {
     if (offerings.length > 0) {
       // ── New grading system: subject_offerings + assessment_components ──
       for (const offering of offerings) {
-        const { average, reason } = await this.computeSubjectAverage(studentId, offering.subject_offering_id);
+        const { average, reason } = await this.computeSubjectAverage(studentId, offering.subject_offering_id, { sequenceId });
         if (average != null) {
           weightedSum += average * Number(offering.coefficient);
           coefficientSum += Number(offering.coefficient);
@@ -480,9 +506,23 @@ class GradingService {
   /**
    * Compute ranks (class + per subject) for a cohort in a single pass.
    */
-  async computeCohortRanks(classLevelId, periodStructureId, options = {}) {
-    const { gradingScaleVersion } = options;
+  /**
+   * Compute per-student averages + ranks for the WHOLE cohort in a handful of
+   * queries (instead of N+1 per student). This is the heart of the Phase 2
+   * performance fix: one query for students, one for offerings, one for
+   * components, one for all grades.
+   *
+   * Returns:
+   *  {
+   *    studentsMap: { [studentId]: { average, rawAverage, coefficientSum, subjectResults } },
+   *    ranks: { [studentId]: { classRank, partialClassRanking, subjectRanks } },
+   *    classAverage, classSize, partialClassRanking, subjectStats,
+   *  }
+   */
+  async computeCohortResults(classLevelId, periodStructureId, options = {}) {
+    const { gradingScaleVersion = null, sequenceId = null } = options;
 
+    // 1. Students in the class (1 query)
     const students = await sql`
       SELECT e.student_id
       FROM enrollments e
@@ -490,20 +530,124 @@ class GradingService {
         AND (e.enrolled_to IS NULL OR e.enrolled_to >= CURRENT_DATE)
       ORDER BY e.student_id
     `;
+    const studentIds = students.map((s) => s.student_id);
 
-    const classAverages = {};
-    const subjectAverages = {};
+    // 2. Offerings for this class + period (1 query)
+    const offerings = await sql`
+      SELECT so.*, s.name AS subject_name, s.name_fr, s.name_en, s.code, s.category
+      FROM subject_offerings so
+      JOIN subjects s ON so.subject_id = s.subject_id
+      WHERE so.period_structure_id = ${periodStructureId}
+        AND so.class_level_id = ${classLevelId}
+    `;
+    const offeringIds = offerings.map((o) => o.subject_offering_id);
 
-    for (const s of students) {
-      const result = await this.computePeriodAverage(s.student_id, periodStructureId, { gradingScaleVersion });
-      classAverages[s.student_id] = result.average;
-      for (const sub of result.subjectResults) {
-        const rankKey = sub.subjectOfferingId || sub.subjectId;
-        if (!subjectAverages[rankKey]) subjectAverages[rankKey] = {};
-        subjectAverages[rankKey][s.student_id] = sub.average;
-      }
+    // 3. Assessment components for those offerings (1 query)
+    const components = offeringIds.length > 0 ? await sql`
+      SELECT * FROM assessment_components
+      WHERE subject_offering_id = ANY(${offeringIds})
+    ` : [];
+    const componentIds = components.map((c) => c.assessment_component_id);
+
+    // 4. All grades for these students + components (1 query)
+    const grades = (studentIds.length > 0 && componentIds.length > 0) ? await sql`
+      SELECT g.student_id, g.assessment_component_id, g.score, g.status, g.is_resit
+      FROM grades g
+      WHERE g.student_id = ANY(${studentIds})
+        AND g.assessment_component_id = ANY(${componentIds})
+        AND (g.is_resit = false OR g.is_resit IS NULL)
+        ${sequenceId ? sql`AND g.sequence_id = ${sequenceId}` : sql``}
+    ` : [];
+
+    // ── Build lookup maps ──
+    const compsByOffering = {};
+    for (const c of components) {
+      if (!compsByOffering[c.subject_offering_id]) compsByOffering[c.subject_offering_id] = [];
+      compsByOffering[c.subject_offering_id].push(c);
+    }
+    // Note: a student may have SEVERAL grade rows for the SAME assessment component
+    // (e.g. legacy grade.service.create reuses the component across sequences).
+    // We must keep ALL of them and average the scores below — otherwise term
+    // bulletins would silently use only the last score.
+    const gradesByKey = new Map(); // `studentId:componentId` -> [grade, ...]
+    for (const g of grades) {
+      const key = `${g.student_id}:${g.assessment_component_id}`;
+      if (!gradesByKey.has(key)) gradesByKey.set(key, []);
+      gradesByKey.get(key).push(g);
     }
 
+    // ── Per-student subject averages + general average (in-memory) ──
+    const studentsMap = {};
+    const classAverages = {};
+
+    for (const st of students) {
+      const sid = st.student_id;
+      let weightedSum = 0;
+      let coefficientSum = 0;
+      const subjectResults = [];
+
+      for (const offering of offerings) {
+        const comps = compsByOffering[offering.subject_offering_id] || [];
+        let average = null;
+        let reason = null;
+
+        if (comps.length === 0) {
+          reason = 'NO_COMPONENTS_CONFIGURED';
+        } else {
+          let total = 0;
+          let weightSum = 0;
+          let maxScore = 0;
+          for (const c of comps) {
+            // Average ALL grade rows for this (student, component) — matches the
+            // old per-student LEFT JOIN which produced one row per grade and
+            // therefore averaged scores when several sequences existed.
+            const all = gradesByKey.get(`${sid}:${c.assessment_component_id}`) || [];
+            const graded = all.filter((g) => g.status === 'GRADED' && g.score != null);
+            if (graded.length > 0) {
+              const avgScore = graded.reduce((s, g) => s + Number(g.score), 0) / graded.length;
+              const ratio = avgScore / Number(c.max_score);
+              total += ratio * Number(c.weight_percent);
+              weightSum += Number(c.weight_percent);
+              maxScore = Math.max(maxScore, Number(c.max_score));
+            }
+          }
+          if (weightSum === 0) {
+            reason = 'NO_GRADES_ENTERED';
+          } else {
+            const weightedRatio = total / weightSum;
+            average = maxScore ? weightedRatio * maxScore : null;
+          }
+        }
+
+        if (average != null) {
+          weightedSum += average * Number(offering.coefficient);
+          coefficientSum += Number(offering.coefficient);
+        }
+        subjectResults.push({
+          subjectOfferingId: offering.subject_offering_id,
+          subjectId: offering.subject_id,
+          subjectName: offering.subject_name,
+          nameFr: offering.name_fr,
+          nameEn: offering.name_en,
+          code: offering.code,
+          category: offering.category,
+          coefficient: Number(offering.coefficient),
+          credits: Number(offering.credits),
+          average,
+          reason,
+        });
+      }
+
+      const generalAverage = coefficientSum > 0 ? weightedSum / coefficientSum : null;
+      const rounded = generalAverage != null && gradingScaleVersion
+        ? this._round(generalAverage, gradingScaleVersion.rounding_rule, gradingScaleVersion.decimal_precision)
+        : generalAverage;
+
+      studentsMap[sid] = { average: rounded, rawAverage: generalAverage, coefficientSum, subjectResults };
+      classAverages[sid] = rounded;
+    }
+
+    // ── Ranks (class + per subject) ──
     const rank = (values, studentId) => {
       const sorted = Object.entries(values)
         .filter(([, v]) => v != null)
@@ -513,18 +657,28 @@ class GradingService {
       return { rank: pos >= 0 ? pos + 1 : null, partial };
     };
 
+    const subjectAverages = {};
+    for (const offering of offerings) {
+      subjectAverages[offering.subject_offering_id] = {};
+      for (const st of students) {
+        const sr = studentsMap[st.student_id].subjectResults.find((r) => r.subjectOfferingId === offering.subject_offering_id);
+        subjectAverages[offering.subject_offering_id][st.student_id] = sr?.average ?? null;
+      }
+    }
+
     const ranks = {};
-    for (const s of students) {
-      const classRank = rank(classAverages, s.student_id);
-      ranks[s.student_id] = {
+    for (const st of students) {
+      const sid = st.student_id;
+      const classRank = rank(classAverages, sid);
+      const subjectRanks = {};
+      for (const offering of offerings) {
+        subjectRanks[offering.subject_offering_id] = rank(subjectAverages[offering.subject_offering_id], sid).rank;
+      }
+      ranks[sid] = {
         classRank: classRank.rank,
         partialClassRanking: classRank.partial,
-        subjectRanks: {},
+        subjectRanks,
       };
-      for (const offeringId of Object.keys(subjectAverages)) {
-        const subjectRank = rank(subjectAverages[offeringId], s.student_id);
-        ranks[s.student_id].subjectRanks[offeringId] = subjectRank.rank;
-      }
     }
 
     const gradedAverages = Object.values(classAverages).filter((v) => v != null);
@@ -546,7 +700,98 @@ class GradingService {
       }
     }
 
-    return { ranks, classAverage, classSize: students.length, partialClassRanking: Object.keys(classAverages).length < students.length, subjectStats };
+    return {
+      studentsMap,
+      ranks,
+      classAverage,
+      classSize: students.length,
+      partialClassRanking: Object.keys(classAverages).length < students.length,
+      subjectStats,
+    };
+  }
+
+  /**
+   * Compute ranks for a cohort (kept for API compat — delegates to the batch method).
+   */
+  async computeCohortRanks(classLevelId, periodStructureId, options = {}) {
+    const data = await this.computeCohortResults(classLevelId, periodStructureId, options);
+    return {
+      ranks: data.ranks,
+      classAverage: data.classAverage,
+      classSize: data.classSize,
+      partialClassRanking: data.partialClassRanking,
+      subjectStats: data.subjectStats,
+    };
+  }
+
+  /**
+   * Phase 2: Pre-compute EVERYTHING needed for a whole-class report card batch
+   * in a handful of queries, so the worker only does the inserts per student.
+   *
+   * Returns { prepared, cohortData } where `prepared` holds the resolved
+   * school/config/grading-scale/mention data and `cohortData` holds the full
+   * per-student averages + ranks (see computeCohortResults).
+   */
+  async prepareBatch(classLevelId, periodStructureId, options = {}) {
+    const { sequenceId = null } = options;
+
+    // Class → school + education system (1 query)
+    const classRows = await sql`
+      SELECT school_id, education_system_id FROM classes WHERE class_id = ${classLevelId}
+    `;
+    if (classRows.length === 0) throw new Error('Class not found');
+    const schoolId = classRows[0].school_id;
+    const educationSystemId = classRows[0].education_system_id;
+
+    // Resolve period (sequence → parent period) (1-2 queries)
+    let actualPeriodStructureId = periodStructureId;
+    let originalSequenceId = sequenceId || null;
+    let granularity = 'SEQUENCE';
+    let periodRow = await sql`SELECT * FROM periods WHERE period_id = ${periodStructureId}`;
+    if (periodRow.length === 0) {
+      const seqRow = await sql`SELECT period_id FROM sequences WHERE sequence_id = ${periodStructureId}`;
+      if (seqRow.length > 0) {
+        originalSequenceId = periodStructureId;
+        actualPeriodStructureId = seqRow[0].period_id;
+        periodRow = await sql`SELECT * FROM periods WHERE period_id = ${actualPeriodStructureId}`;
+      }
+    }
+    if (periodRow.length === 0) throw new Error('Period not found');
+    granularity = this._periodTypeToGranularity(periodRow[0].type || 'SEQUENCE');
+
+    // Config + grading scale + mention thresholds (shared by the whole class)
+    const config = await this.getReportCardConfig(schoolId, granularity)
+      || await this._defaultReportCardConfig(schoolId, granularity);
+    const gradingScale = await this.getActiveGradingScaleVersion(config.grading_scale_id || (await this._defaultGradingScaleId(schoolId)));
+    const scaleId = gradingScale ? gradingScale.grading_scale_version_id : null;
+    const mentionSet = educationSystemId
+      ? await this.getActiveMentionThresholdSet(educationSystemId, config.grading_scale_id || (await this._defaultGradingScaleId(schoolId)))
+      : null;
+    const thresholdSetId = mentionSet ? mentionSet.threshold_set_id : null;
+    const thresholds = thresholdSetId ? await this.listMentionThresholds(thresholdSetId) : [];
+
+    // Whole-cohort averages + ranks (4 queries)
+    const cohortData = await this.computeCohortResults(classLevelId, actualPeriodStructureId, {
+      gradingScaleVersion: gradingScale,
+      sequenceId: originalSequenceId || null,
+    });
+
+    return {
+      prepared: {
+        schoolId,
+        classLevelId,
+        educationSystemId,
+        actualPeriodStructureId,
+        originalSequenceId,
+        granularity,
+        config,
+        gradingScale,
+        scaleId,
+        thresholdSetId,
+        thresholds,
+      },
+      cohortData,
+    };
   }
 
   // ------------------------------------------------------------------
@@ -557,66 +802,103 @@ class GradingService {
     try {
       return await this._generateReportCardInternal(studentId, periodStructureId, actorId, options);
     } catch (err) {
-      // Strip any database error code so the error middleware returns a proper message
-      // instead of a generic 409 for all PostgreSQL errors
-      const cleanError = new Error(err.message);
-      // Database errors → 500 (server error); other errors keep original status
+      // Database errors → 500 (server error)
       if (err.code && String(err.code).length >= 4) {
-        cleanError.statusCode = 500;
-      } else {
-        cleanError.statusCode = err.statusCode || 400;
+        throw new AppError(err.message, 500, err.details);
       }
-      if (err.details) cleanError.details = err.details;
-      throw cleanError;
+      // Already an AppError — re-throw as-is so the middleware uses the original message
+      if (err instanceof AppError) {
+        throw err;
+      }
+      // Other errors: wrap in AppError to preserve the message through the error middleware
+      throw new AppError(err.message, err.statusCode || 400, err.details);
     }
   }
 
   async _generateReportCardInternal(studentId, periodStructureId, actorId, options = {}) {
-    const classRow = await sql`
-      SELECT c.class_id, c.school_id, c.education_system_id
-      FROM enrollments e
-      JOIN classes c ON e.class_id = c.class_id
-      WHERE e.student_id = ${studentId}
-        AND (e.enrolled_to IS NULL OR e.enrolled_to >= CURRENT_DATE)
-      LIMIT 1
-    `;
-    if (classRow.length === 0) throw new Error('Student is not actively enrolled in any class');
+    // ── Phase 2 perf: reuse a pre-computed cohort (worker) when available ──
+    const prepared = options.prepared || null;
+    const cohortData = options.cohortData || null;
 
-    const { school_id: schoolId, class_id: classLevelId, education_system_id: educationSystemId } = classRow[0];
+    let schoolId;
+    let classLevelId;
+    let educationSystemId;
+    if (prepared) {
+      ({ schoolId, classLevelId, educationSystemId } = prepared);
+    } else {
+      const classRow = await sql`
+        SELECT c.class_id, c.school_id, c.education_system_id
+        FROM enrollments e
+        JOIN classes c ON e.class_id = c.class_id
+        WHERE e.student_id = ${studentId}
+          AND (e.enrolled_to IS NULL OR e.enrolled_to >= CURRENT_DATE)
+        LIMIT 1
+      `;
+      if (classRow.length === 0) throw new Error('Student is not actively enrolled in any class');
+      ({ school_id: schoolId, class_id: classLevelId, education_system_id: educationSystemId } = classRow[0]);
+    }
 
     // Resolve periodStructureId: it may be a sequence ID, so look up the parent period
-    let resolvedPeriodId = periodStructureId;
-    let originalSequenceId = null;
-    let periodRow = await sql`SELECT * FROM periods WHERE period_id = ${periodStructureId}`;
-    if (periodRow.length === 0) {
-      // Not a period — check if it's a sequence
-      const seqRow = await sql`SELECT period_id FROM sequences WHERE sequence_id = ${periodStructureId}`;
-      if (seqRow.length > 0) {
-        originalSequenceId = periodStructureId;
-        resolvedPeriodId = seqRow[0].period_id;
-        periodRow = await sql`SELECT * FROM periods WHERE period_id = ${resolvedPeriodId}`;
+    let actualPeriodStructureId;
+    let originalSequenceId;
+    let granularity;
+    if (prepared) {
+      ({ actualPeriodStructureId, originalSequenceId, granularity } = prepared);
+    } else {
+      let resolvedPeriodId = periodStructureId;
+      originalSequenceId = null;
+      let periodRow = await sql`SELECT * FROM periods WHERE period_id = ${periodStructureId}`;
+      if (periodRow.length === 0) {
+        // Not a period — check if it's a sequence
+        const seqRow = await sql`SELECT period_id FROM sequences WHERE sequence_id = ${periodStructureId}`;
+        if (seqRow.length > 0) {
+          originalSequenceId = periodStructureId;
+          resolvedPeriodId = seqRow[0].period_id;
+          periodRow = await sql`SELECT * FROM periods WHERE period_id = ${resolvedPeriodId}`;
+        }
       }
+      if (periodRow.length === 0) throw new Error('Period not found');
+      actualPeriodStructureId = resolvedPeriodId;
+      granularity = this._periodTypeToGranularity(periodRow[0].type || 'SEQUENCE');
+      // Also honor an explicit sequenceId in options when a plain period was given
+      if (!originalSequenceId && options.sequenceId) originalSequenceId = options.sequenceId;
     }
-    if (periodRow.length === 0) throw new Error('Period not found');
-    const granularity = this._periodTypeToGranularity(periodRow[0].type || 'SEQUENCE');
 
-    // Use the resolved period ID throughout the rest of the method
-    const actualPeriodStructureId = resolvedPeriodId;
+    let config;
+    let gradingScale;
+    let scaleId;
+    let thresholdSetId;
+    let thresholds;
+    if (prepared) {
+      ({ config, gradingScale, scaleId, thresholdSetId, thresholds } = prepared);
+    } else {
+      config = await this.getReportCardConfig(schoolId, granularity)
+        || await this._defaultReportCardConfig(schoolId, granularity);
 
-    const config = await this.getReportCardConfig(schoolId, granularity)
-      || await this._defaultReportCardConfig(schoolId, granularity);
+      gradingScale = await this.getActiveGradingScaleVersion(config.grading_scale_id || (await this._defaultGradingScaleId(schoolId)));
+      scaleId = gradingScale ? gradingScale.grading_scale_version_id : null;
 
-    const gradingScale = await this.getActiveGradingScaleVersion(config.grading_scale_id || (await this._defaultGradingScaleId(schoolId)));
-    const scaleId = gradingScale ? gradingScale.grading_scale_version_id : null;
+      const mentionSet = educationSystemId
+        ? await this.getActiveMentionThresholdSet(educationSystemId, config.grading_scale_id || (await this._defaultGradingScaleId(schoolId)))
+        : null;
+      thresholdSetId = mentionSet ? mentionSet.threshold_set_id : null;
+      thresholds = thresholdSetId ? await this.listMentionThresholds(thresholdSetId) : [];
+    }
 
-    const mentionSet = educationSystemId
-      ? await this.getActiveMentionThresholdSet(educationSystemId, config.grading_scale_id || (await this._defaultGradingScaleId(schoolId)))
-      : null;
-    const thresholdSetId = mentionSet ? mentionSet.threshold_set_id : null;
-    const thresholds = thresholdSetId ? await this.listMentionThresholds(thresholdSetId) : [];
-
-    const periodResult = await this.computePeriodAverage(studentId, actualPeriodStructureId, { gradingScaleVersion: gradingScale, classLevelId });
-    const cohortRanks = await this.computeCohortRanks(classLevelId, actualPeriodStructureId, { gradingScaleVersion: gradingScale });
+    // ── Averages + cohort ranks: single batch computation (kills the N+1) ──
+    let periodResult;
+    let cohortRanks;
+    if (cohortData) {
+      periodResult = cohortData.studentsMap[studentId] || { average: null, rawAverage: null, coefficientSum: 0, subjectResults: [] };
+      cohortRanks = cohortData;
+    } else {
+      const cohort = await this.computeCohortResults(classLevelId, actualPeriodStructureId, {
+        gradingScaleVersion: gradingScale,
+        sequenceId: originalSequenceId || null,
+      });
+      periodResult = cohort.studentsMap[studentId] || { average: null, rawAverage: null, coefficientSum: 0, subjectResults: [] };
+      cohortRanks = cohort;
+    }
 
     const studentRank = cohortRanks.ranks[studentId];
     const generalAverage = periodResult.average;
@@ -624,15 +906,44 @@ class GradingService {
 
     const eduSystemCode = options.educationSystemCode || null;
 
-    const report = await sql`
-      INSERT INTO report_cards (
-        student_id, period_structure_id, sequence_id, status, general_average,
+    // Wrap delete + re-insert + lines in a transaction for atomicity
+    const reportCard = await sql.begin(async (tx) => {
+      // Delete existing report card for this combo to avoid duplicate key
+      await tx`
+        DELETE FROM report_card_lines
+        WHERE report_card_id IN (
+          SELECT report_card_id FROM report_cards
+          WHERE student_id = ${studentId}
+            AND period_structure_id = ${actualPeriodStructureId}
+            AND sequence_id IS NOT DISTINCT FROM ${originalSequenceId}
+        )
+      `;
+      await tx`
+        DELETE FROM grading_audit_logs
+        WHERE entity_type = 'ReportCard'
+          AND entity_id IN (
+            SELECT report_card_id FROM report_cards
+            WHERE student_id = ${studentId}
+              AND period_structure_id = ${actualPeriodStructureId}
+              AND sequence_id IS NOT DISTINCT FROM ${originalSequenceId}
+          )
+      `;
+      await tx`
+        DELETE FROM report_cards
+        WHERE student_id = ${studentId}
+          AND period_structure_id = ${actualPeriodStructureId}
+          AND sequence_id IS NOT DISTINCT FROM ${originalSequenceId}
+      `;
+
+      const [report] = await tx`
+        INSERT INTO report_cards (
+        student_id, period_structure_id, sequence_id, status, version, general_average,
         class_rank, partial_ranking, class_size, class_average,
         mention, grading_scale_version_id, threshold_set_id, report_card_config_id,
         education_system_code,
         computed_at
       ) VALUES (
-        ${studentId}, ${actualPeriodStructureId}, ${originalSequenceId}, 'DRAFT', ${generalAverage},
+        ${studentId}, ${actualPeriodStructureId}, ${originalSequenceId}, 'DRAFT', 1, ${generalAverage},
         ${studentRank?.classRank || null}, ${studentRank?.partialClassRanking || false},
         ${cohortRanks.classSize}, ${cohortRanks.classAverage},
         ${mention}, ${scaleId}, ${thresholdSetId}, ${config.report_card_config_id},
@@ -642,31 +953,49 @@ class GradingService {
       RETURNING *
     `;
 
-    // Create ReportCardLine rows
-    const subjectLines = [];
-    for (const sub of periodResult.subjectResults) {
-      const weightedPoints = sub.average != null ? sub.average * sub.coefficient : null;
-      const offeringId = sub.subjectOfferingId;
-      const rankKey = sub.subjectOfferingId || sub.subjectId;
-      const line = await sql`
-        INSERT INTO report_card_lines (
-          report_card_id, subject_offering_id, subject_id, subject_average,
-          coefficient, weighted_points, subject_rank, validation_reason
-        ) VALUES (
-          ${report[0].report_card_id}, ${offeringId}, ${sub.subjectId}, ${sub.average},
-          ${sub.coefficient}, ${weightedPoints}, ${studentRank?.subjectRanks[rankKey] || null}, ${null}
-        )
-        RETURNING *
-      `;
-      subjectLines.push(line[0]);
-    }
+      // Create ReportCardLine rows inside the transaction
+      const subjectLines = [];
+      for (const sub of periodResult.subjectResults) {
+        const weightedPoints = sub.average != null ? sub.average * sub.coefficient : null;
+        const offeringId = sub.subjectOfferingId;
+        const rankKey = sub.subjectOfferingId || sub.subjectId;
+        const line = await tx`
+          INSERT INTO report_card_lines (
+            report_card_id, subject_offering_id, subject_id, subject_average,
+            coefficient, weighted_points, subject_rank, validation_reason,
+            teacher_remark
+          ) VALUES (
+            ${report.report_card_id}, ${offeringId}, ${sub.subjectId}, ${sub.average},
+            ${sub.coefficient}, ${weightedPoints}, ${studentRank?.subjectRanks[rankKey] || null}, ${null},
+            ${this.generateSubjectRemark(sub.average, eduSystemCode)}
+          )
+          RETURNING *
+        `;
+        subjectLines.push(line[0]);
+      }
 
-    await this._audit('CREATE', 'ReportCard', report[0].report_card_id, actorId, null, report[0]);
+      return {
+        reportCard: report,
+        lines: subjectLines,
+      };
+    });
 
-    return {
-      reportCard: report[0],
-      lines: subjectLines,
-    };
+    // Audit outside transaction (can't pass tx to _audit helper)
+    await this._audit('CREATE', 'ReportCard', reportCard.reportCard.report_card_id, actorId, null, reportCard.reportCard);    return reportCard;
+  }
+
+  /**
+   * Get the school a report card belongs to (via its student).
+   * Used to scope PDF/payload access to the requester's school.
+   */
+  async getReportCardSchool(reportCardId) {
+    const rows = await sql`
+      SELECT s.school_id
+      FROM report_cards rc
+      JOIN students s ON rc.student_id = s.student_id
+      WHERE rc.report_card_id = ${reportCardId}
+    `;
+    return rows[0]?.school_id || null;
   }
 
   async getReportCardPayload(reportCardId, language = 'EN') {
@@ -699,7 +1028,7 @@ class GradingService {
              u.email AS student_email,
              c.class_id, c.name AS class_name,
              c.school_id,
-             COALESCE(es.code, 'FR_GEN') AS education_system_code,
+             COALESCE(es.code::text, 'FR_GEN') AS education_system_code,
              COALESCE(es.name_en, es.name_fr, es.code::text, 'Francophone Général') AS education_system_label,
              p.period_id, p.type AS period_type, p.label_fr, p.label_en, p.start_date, p.end_date,
              rc.sequence_id,
@@ -1082,9 +1411,80 @@ class GradingService {
     const existing = await sql`SELECT * FROM report_cards WHERE report_card_id = ${reportCardId}`;
     if (existing.length === 0) throw new Error('Report card not found');
 
-    // Delete associated lines first (CASCADE should handle this, but explicit is safer)
-    await sql`DELETE FROM report_card_lines WHERE report_card_id = ${reportCardId}`;
-    await sql`DELETE FROM report_cards WHERE report_card_id = ${reportCardId}`;
+    await sql.begin(async (tx) => {
+      // Delete associated lines first (CASCADE should handle this, but explicit is safer)
+      await tx`DELETE FROM report_card_lines WHERE report_card_id = ${reportCardId}`;
+      await tx`DELETE FROM report_cards WHERE report_card_id = ${reportCardId}`;
+
+      // ── Clean up background generation jobs ──
+      // Jobs store the report_card_ids they produced in their `results` JSONB
+      // column. Drop the dead reference when a bulletin is deleted. If a job has
+      // reached a terminal state AND all of its cards are gone, remove the job
+      // entirely — no point keeping jobs for bulletins that no longer exist.
+      // ── Clean up background generation jobs ──
+      // Jobs store the report_card_ids they produced in their `results` JSONB
+      // column. IMPORTANT: with the installed postgres.js, binding a JS string
+      // to a jsonb column stores it as a jsonb *string* (not an array) — see
+      // reportCardQueue.normalizeJob. So jsonb array operators (jsonb_array_elements,
+      // @>) would fail or silently match nothing here; we filter in JS instead.
+      // Narrow candidates with a cheap text search, then parse + filter in JS.
+      const candidateJobs = await tx`
+        SELECT job_id, status, results
+        FROM report_card_jobs
+        WHERE results::text LIKE ${`%${reportCardId}%`}
+      `;
+
+      // Lazy require: reportCardQueue requires this module, so importing
+      // it at the top would create a circular dependency. (Node caches the
+      // module, so requiring once here is cheap.)
+      const { getQueue } = require('./reportCardQueue');
+
+      for (const row of candidateJobs) {
+        // Normalize: postgres.js returns the jsonb as a raw JSON string with
+        // the current stored shape (or a JS array) — handle both defensively.
+        let results;
+        if (Array.isArray(row.results)) {
+          results = row.results;
+        } else if (typeof row.results === 'string') {
+          try { results = JSON.parse(row.results); } catch { results = null; }
+        } else {
+          results = null;
+        }
+        if (!Array.isArray(results)) continue; // unparseable → leave the job alone
+
+        const before = results.length;
+        const newResults = results.filter((r) => r && r.reportCardId !== reportCardId);
+        if (newResults.length === before) continue; // this job doesn't reference the card
+
+        const allCardsDeleted = newResults.length === 0;
+        const terminal = ['COMPLETED', 'FAILED', 'CANCELLED'].includes(row.status);
+
+        if (allCardsDeleted && terminal) {
+          // Every card this job produced has been deleted → purge the job
+          // (DB row + the underlying BullMQ job to stop any pending retry).
+          const [deleted] = await tx`
+            DELETE FROM report_card_jobs WHERE job_id = ${row.job_id} RETURNING bull_job_id
+          `;
+          if (deleted?.bull_job_id) {
+            try {
+              const bullJob = await getQueue().getJob(deleted.bull_job_id);
+              if (bullJob) await bullJob.remove();
+            } catch (err) {
+              console.warn(`[GradingService] Could not remove Bull job ${deleted.bull_job_id}:`, err.message);
+            }
+          }
+        } else {
+          // Job still has (or may still produce) other cards → just drop the
+          // reference to the deleted one so the history stays accurate.
+          // (Same binding pattern as reportCardQueue — keeps the stored shape.)
+          await tx`
+            UPDATE report_card_jobs
+            SET results = ${JSON.stringify(newResults)}, updated_at = now()
+            WHERE job_id = ${row.job_id}
+          `;
+        }
+      }
+    });
 
     await this._audit('DELETE', 'ReportCard', reportCardId, actorId, existing[0], null);
     return { deleted: true };
@@ -1094,46 +1494,36 @@ class GradingService {
     const { schoolId, studentId, classLevelId, periodStructureId, status, educationSystemCode } = filters;
     const rows = await sql`
       SELECT rc.*, CONCAT(u.first_name, ' ', u.last_name) AS student_name, p.name AS period_name,
-             seq.label AS sequence_label
+             seq.label AS sequence_label,
+             e.class_id, cl.name AS class_name,
+             -- The education system chosen at generation time (stored on the
+             -- report card) is authoritative; the class's CURRENT system is
+             -- only a fallback for legacy rows. This keeps generated bulletins
+             -- grouped under the system the admin selected.
+             COALESCE(rc.education_system_code::text, es.code::text) AS education_system_code,
+             COALESCE(es_rc.name_en, es_rc.name_fr, es.name_en, es.name_fr,
+                      rc.education_system_code::text, es.code::text) AS education_system_label
       FROM report_cards rc
       JOIN students s ON rc.student_id = s.student_id
       JOIN users u ON s.user_id = u.user_id
       JOIN periods p ON rc.period_structure_id = p.period_id
       LEFT JOIN sequences seq ON rc.sequence_id = seq.sequence_id
-      ${classLevelId || educationSystemCode ? sql`JOIN enrollments e ON e.student_id = rc.student_id AND (e.enrolled_to IS NULL OR e.enrolled_to >= CURRENT_DATE)` : sql``}
-      ${educationSystemCode ? sql`JOIN classes cl ON e.class_id = cl.class_id` : sql``}
-      ${educationSystemCode ? sql`JOIN education_systems es ON cl.education_system_id = es.education_system_id` : sql``}
+      LEFT JOIN enrollments e ON e.student_id = rc.student_id AND (e.enrolled_to IS NULL OR e.enrolled_to >= CURRENT_DATE)
+      LEFT JOIN classes cl ON e.class_id = cl.class_id
+      LEFT JOIN education_systems es ON cl.education_system_id = es.education_system_id
+      -- education_systems.code is an enum column (education_system_code_enum);
+      -- cast both sides to text so the join always resolves.
+      LEFT JOIN education_systems es_rc ON es_rc.code::text = rc.education_system_code::text
       WHERE TRUE
         ${schoolId ? sql`AND s.school_id = ${schoolId}` : sql``}
         ${studentId ? sql`AND rc.student_id = ${studentId}` : sql``}
         ${classLevelId ? sql`AND e.class_id = ${classLevelId}` : sql``}
         ${periodStructureId ? sql`AND rc.period_structure_id = ${periodStructureId}` : sql``}
         ${status ? sql`AND rc.status = ${status}` : sql``}
-        ${educationSystemCode ? sql`AND es.code = ${educationSystemCode}` : sql``}
-      ORDER BY rc.created_at DESC
+        ${educationSystemCode ? sql`AND COALESCE(rc.education_system_code::text, es.code::text) = ${educationSystemCode}` : sql``}
+      ORDER BY COALESCE(rc.education_system_code::text, es.code::text), cl.name, student_name, rc.created_at DESC
     `;
     return rows;
-  }
-
-  async generateBatch(classLevelId, periodStructureId, actorId, options = {}) {
-    const students = await sql`
-      SELECT e.student_id
-      FROM enrollments e
-      WHERE e.class_id = ${classLevelId}
-        AND (e.enrolled_to IS NULL OR e.enrolled_to >= CURRENT_DATE)
-      ORDER BY e.student_id
-    `;
-
-    const results = [];
-    for (const s of students) {
-      try {
-        const generated = await this.generateReportCard(s.student_id, periodStructureId, actorId, options);
-        results.push({ studentId: s.student_id, reportCardId: generated.reportCard.report_card_id, success: true });
-      } catch (err) {
-        results.push({ studentId: s.student_id, success: false, error: err.message });
-      }
-    }
-    return results;
   }
 
   // ------------------------------------------------------------------

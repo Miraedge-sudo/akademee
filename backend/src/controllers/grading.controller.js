@@ -6,7 +6,37 @@
  */
 
 const gradingService = require('../services/grading.service');
+const reportCardQueue = require('../services/reportCardQueue');
+const reportCardPdfService = require('../services/reportCardPdf.service');
+const reportCardExportService = require('../services/reportCardExport.service');
+const logger = require('../utils/logger');
 const response = require('../utils/response');
+
+/**
+ * Multi-tenant guard: ensure the report card belongs to the requester's school.
+ * Sends a 404/403 response and returns null when access is denied; otherwise
+ * returns the report card's school id.
+ *
+ * Module-level function (NOT a class method) because Express calls the route
+ * handlers unbound — `this` would be undefined inside the class.
+ *
+ * NOTE: only enforced when a requester school is resolved (req.schoolId or
+ * req.user.schoolId) — keeps legacy flows working when schoolId is not
+ * attached to the token.
+ */
+async function assertReportCardAccess(req, res, id) {
+  const requesterSchoolId = req.schoolId || req.user?.schoolId;
+  const reportCardSchoolId = await gradingService.getReportCardSchool(id);
+  if (!reportCardSchoolId) {
+    response.error(res, 'Report card not found', null, 404);
+    return null;
+  }
+  if (requesterSchoolId && requesterSchoolId !== reportCardSchoolId) {
+    response.error(res, 'Forbidden: report card does not belong to your school', null, 403);
+    return null;
+  }
+  return reportCardSchoolId;
+}
 
 class GradingController {
   // ------------------------------------------------------------------
@@ -276,13 +306,26 @@ class GradingController {
   async generateBatchReportCards(req, res, next) {
     try {
       const actorId = req.user?.userId;
-      const { classLevelId, periodStructureId } = req.body;
-      const data = await gradingService.generateBatch(classLevelId, periodStructureId, actorId, req.body);
-      response.success(res, 'Batch report cards generated', data);
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const { classLevelId, periodStructureId, sequenceId, educationSystemCode } = req.body;
+
+      // Enqueue the job to BullMQ instead of processing synchronously
+      const result = await reportCardQueue.enqueueBatchJob({
+        schoolId,
+        classLevelId,
+        periodStructureId,
+        sequenceId,
+        educationSystemCode,
+        actorId,
+      });
+
+      response.success(res, 'Report card generation job queued', result, 202);
     } catch (err) {
       next(err);
     }
   }
+
+
 
   async listReportCards(req, res, next) {
     try {
@@ -298,8 +341,205 @@ class GradingController {
     try {
       const { id } = req.params;
       const { lang } = req.query;
+
+      const reportCardSchoolId = await assertReportCardAccess(req, res, id);
+      if (!reportCardSchoolId) return; // response already sent
+
       const data = await gradingService.getReportCardPayload(id, lang);
       response.success(res, 'Report card payload retrieved', data);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async downloadReportCardPdf(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { lang } = req.query;
+
+      const reportCardSchoolId = await assertReportCardAccess(req, res, id);
+      if (!reportCardSchoolId) return; // response already sent
+
+      const payload = await gradingService.getReportCardPayload(id, lang);
+      const pdfBuffer = await reportCardPdfService.generateReportCardPdf(payload);
+
+      const studentName = (payload?.student?.full_name || 'report-card').replace(/[^a-zA-Z0-9]/g, '-');
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="bulletin-${studentName}.pdf"`);
+      res.send(pdfBuffer);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /report-card-exports
+   *
+   * Starts a BACKGROUND ZIP export of individual bulletins (one PDF per
+   * student) organized in class folders with students sorted alphabetically.
+   * Returns { exportId, total } immediately; the client then follows progress
+   * via GET /report-card-exports/:id/progress (SSE) and downloads the finished
+   * archive via GET /report-card-exports/:id/file.
+   *
+   * Selection: explicit `ids` (max 200, each guarded against the requester's
+   * school) OR `classLevelId` / `educationSystemCode` filters resolved
+   * server-side through the school-scoped list query.
+   *
+   * SECURITY: the filter path must NOT run without a school context —
+   * listReportCards({ schoolId: null }) would skip the school WHERE clause
+   * and resolve cards from OTHER schools' classes/systems.
+   */
+  async startReportCardExport(req, res, next) {
+    try {
+      const { ids, lang, classLevelId, educationSystemCode } = req.body;
+      const schoolId = req.schoolId || req.user?.schoolId;
+      let idList = [];
+
+      if (classLevelId || educationSystemCode) {
+        if (!schoolId) {
+          return res.status(400).json({ success: false, message: 'School context is required for group export' });
+        }
+        const cards = await gradingService.listReportCards({ schoolId, classLevelId, educationSystemCode });
+        idList = cards.map((c) => c.report_card_id);
+        if (idList.length === 0) {
+          return res.status(404).json({ success: false, message: 'No report cards found for the requested filters' });
+        }
+      } else {
+        idList = String(ids || '').split(',').map((s) => s.trim()).filter(Boolean);
+        if (idList.length === 0) {
+          return res.status(400).json({ success: false, message: 'Provide ids (comma-separated), classLevelId or educationSystemCode' });
+        }
+        if (idList.length > 200) {
+          return res.status(400).json({ success: false, message: 'Too many report cards (max 200 per ids export)' });
+        }
+      }
+
+      // Resolve payloads now (synchronously) so total is known immediately and
+      // the response can return { exportId, total }. The actual ZIP generation
+      // runs in the background via reportCardExportService.
+      const payloads = [];
+      let skipped = 0;
+      for (const id of idList) {
+        if (!classLevelId && !educationSystemCode) {
+          const schoolMatch = await assertReportCardAccess(req, res, id);
+          if (!schoolMatch) return; // response already sent (404/403)
+        }
+        try {
+          const payload = await gradingService.getReportCardPayload(id, lang || 'EN');
+          if (payload) payloads.push(payload);
+          else skipped++;
+        } catch (err) {
+          logger.warn(`[Export] Skipping report card ${id}: ${err.message}`);
+          skipped++;
+        }
+      }
+
+      if (skipped > 0) {
+        logger.warn(`[Export] ${skipped}/${idList.length} report cards skipped (unloadable payload)`);
+      }
+      if (payloads.length === 0) {
+        return res.status(500).json({ success: false, message: 'Could not load any report card payloads' });
+      }
+
+      // Meaningful filename used both in the POST response and for the actual
+      // download (stored on the record so downloadExportFile can serve it).
+      const safe = (s) => String(s || '').replace(/[^a-zA-Z0-9_-]/g, '-').trim();
+      const fileName = educationSystemCode
+        ? `bulletins-${safe(educationSystemCode)}.zip`
+        : classLevelId && payloads[0]?.student?.class_name
+          ? `bulletins-${safe(payloads[0].student.class_name)}.zip`
+          : `bulletins-${payloads.length}.zip`;
+
+      const { exportId, total } = reportCardExportService.startExport({ payloads, lang: lang || 'EN', fileName });
+
+      response.success(res, 'Export started', { exportId, total, fileName }, 202);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * GET /report-card-exports/:id/progress
+   * SSE endpoint streaming live ZIP-export progress — same event shape as the
+   * report-card generation jobs ({ type: 'progress' | 'complete', current,
+   * total, status }). Client disconnects cleanly stop the polling loop.
+   */
+  async streamExportProgress(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
+      res.flushHeaders();
+
+      let aborted = false;
+      req.on('close', () => {
+        aborted = true;
+        try { res.end(); } catch { /* ignore */ }
+      });
+
+      const interval = setInterval(async () => {
+        if (aborted) {
+          clearInterval(interval);
+          return;
+        }
+        try {
+          const progress = reportCardExportService.getProgress(id);
+          if (!progress) {
+            res.write(`data: ${JSON.stringify({ type: 'error', message: 'Export not found' })}\n\n`);
+            clearInterval(interval);
+            res.end();
+            return;
+          }
+
+          res.write(`data: ${JSON.stringify({
+            type: 'progress',
+            status: progress.status,
+            current: progress.current,
+            total: progress.total,
+          })}\n\n`);
+
+          if (['COMPLETED', 'FAILED'].includes(progress.status)) {
+            clearInterval(interval);
+            res.write(`data: ${JSON.stringify({
+              type: 'complete',
+              status: progress.status,
+              results: null,
+              errors: progress.error ? [{ error: progress.error }] : [],
+            })}\n\n`);
+            res.end();
+          }
+        } catch (err) {
+          if (!aborted) {
+            res.write(`data: ${JSON.stringify({ type: 'error', message: err.message })}\n\n`);
+          }
+          clearInterval(interval);
+          res.end();
+        }
+      }, 700);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * GET /report-card-exports/:id/file
+   * Download the finished ZIP archive. One-shot: the buffer is freed after
+   * this request (see reportCardExportService.getBuffer).
+   */
+  async downloadExportFile(req, res, next) {
+    try {
+      const { id } = req.params;
+      const result = reportCardExportService.getBuffer(id);
+      if (!result.ok) {
+        const message = result.message || (result.code === 404 ? 'Export not found' : 'Export is not ready yet');
+        return res.status(result.code).json({ success: false, message });
+      }
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="${result.fileName || 'bulletins.zip'}"`);
+      res.send(result.buffer);
     } catch (err) {
       next(err);
     }

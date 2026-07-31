@@ -56,6 +56,7 @@ const adminRoutes = require('./routes/admin.routes');
 const v1PeriodRoutes = require('./routes/v1/period.routes');
 const v1SequenceRoutes = require('./routes/v1/sequence.routes');
 const v1GradingRoutes = require('./routes/v1/gradingSystem.routes');
+const reportCardJobsRoutes = require('./routes/reportCardJobs.routes');
 
 const app = express();
 
@@ -128,6 +129,9 @@ app.use('/api/invites', inviteRoutes);
 app.use('/api/v1/periodes', v1PeriodRoutes);
 app.use('/api/v1/sequences', v1SequenceRoutes);
 app.use('/api/v1', v1GradingRoutes);
+
+// ── Background report card job routes ──
+app.use('/api/v1/report-card-jobs', reportCardJobsRoutes);
 
 // Admin maintenance routes
 app.use('/api/admin', adminRoutes);

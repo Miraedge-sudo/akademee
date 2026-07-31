@@ -12,10 +12,6 @@
  */
 import { useMemo, useState } from "react";
 
-// ── Shared constants (not system-specific) ──
-const REMARKS_FR = ["Excellent trimestre", "Peut mieux faire", "Travail satisfaisant", "Efforts à poursuivre", "Bon ensemble"];
-const REMARKS_EN = ["Excellent effort", "Can do better", "Satisfactory work", "Needs more effort", "Good overall"];
-
 const HEADER_CELL_STYLE = {
   border: "1px solid #c9c6ba",
   background: "rgba(0,0,0,.05)",
@@ -281,9 +277,10 @@ function SubjectTable({ subjects, eduConfig, periodType }) {
       <b style={{ color: scoreColor(subj.score) }}>{subj.score.toFixed(1)}</b>
     );
 
-    const hasRemark = subj.teacherRemark;
-    const arr = fr ? REMARKS_FR : REMARKS_EN;
-    const remark = hasRemark || arr[i % arr.length];
+    // Real teacher remark only — never fabricate a placeholder on an official bulletin.
+    // With no grade there is nothing to remark about → show « — »; the
+    // « En attente d'appréciation » fallback only appears for graded subjects.
+    const remark = subj.teacherRemark || (na ? "—" : (fr ? "En attente d'appréciation" : "Awaiting remark"));
 
     const cellStyle = {
       border: "1px solid #c9c6ba",

@@ -2,6 +2,9 @@ FROM node:20-alpine
 WORKDIR /app
 
 RUN npm install -g nodemon
+# Chromium is required by puppeteer-core for server-side report card PDF rendering.
+RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont font-noto font-noto-cjk
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 COPY package*.json ./
 RUN npm install

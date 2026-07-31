@@ -77,7 +77,11 @@ router.get('/calculations/cohort-ranks', authMiddleware, roleMiddleware(['admin'
 router.post('/report-cards', authMiddleware, roleMiddleware(['admin', 'teacher']), gradingController.generateReportCard);
 router.post('/report-cards/batch', authMiddleware, roleMiddleware(['admin', 'teacher']), gradingController.generateBatchReportCards);
 router.get('/report-cards', authMiddleware, roleMiddleware(['admin', 'teacher', 'student', 'parent']), gradingController.listReportCards);
+router.post('/report-card-exports', authMiddleware, roleMiddleware(['admin', 'teacher']), gradingController.startReportCardExport);
+router.get('/report-card-exports/:id/progress', authMiddleware, roleMiddleware(['admin', 'teacher']), gradingController.streamExportProgress);
+router.get('/report-card-exports/:id/file', authMiddleware, roleMiddleware(['admin', 'teacher']), gradingController.downloadExportFile);
 router.get('/report-cards/:id/payload', authMiddleware, roleMiddleware(['admin', 'teacher', 'student', 'parent']), gradingController.getReportCardPayload);
+router.get('/report-cards/:id/pdf', authMiddleware, roleMiddleware(['admin', 'teacher', 'student', 'parent']), gradingController.downloadReportCardPdf);
 router.post('/report-cards/:id/publish', authMiddleware, roleMiddleware(['admin']), gradingController.publishReportCard);
 router.post('/report-cards/:id/revise', authMiddleware, roleMiddleware(['admin']), gradingController.reviseReportCard);
 router.post('/report-cards/:id/lock', authMiddleware, roleMiddleware(['admin']), gradingController.lockReportCard);

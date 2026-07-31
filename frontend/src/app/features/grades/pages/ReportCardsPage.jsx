@@ -12,7 +12,7 @@
  * Route: /dashboard/report-cards
  * Backend: /api/v1/report-cards
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useTheme } from "../../../core/hooks/useTheme";
 import { useTranslation } from "react-i18next";
@@ -24,13 +24,19 @@ import { listEducationSystems } from "../../../core/api/gradingService";
 import {
   listReportCards,
   generateReportCard,
-  generateBatchReportCards,
   getReportCardPayload,
   publishReportCard,
   reviseReportCard,
   lockReportCard,
   unlockReportCard,
   deleteReportCard,
+  enqueueBatchJob,
+  subscribeToJobProgress,
+  downloadReportCardPdf,
+  startReportCardExport,
+  subscribeToExportProgress,
+  downloadExportFile,
+  saveBlobAs,
 } from "../../../core/api/reportCardsService";
 import toast from "react-hot-toast";
 import {
@@ -56,14 +62,14 @@ import {
   FiLayers,
   FiUserCheck,
   FiZap,
+  FiLoader,
 } from "react-icons/fi";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import PageLoader from "../../../components/ui/PageLoader";
 import TableSkeleton from "../../../components/ui/TableSkeleton";
 import StatsSkeleton from "../../../components/ui/StatsSkeleton";
 import BulletinTemplate from "../../../components/ui/BulletinTemplate";
 import ReportCardGenerationAnimation from "../../../components/ui/ReportCardGenerationAnimation";
+import JobsDashboard from "../components/JobsDashboard";
 
 // ── Status config ──
 const STATUS_CONFIG = {
@@ -206,10 +212,25 @@ export default function ReportCardsPage() {
 
   // ── Delete confirmation ──
   const [deleteModal, setDeleteModal] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteProgress, setDeleteProgress] = useState(null); // { done, total } during batch delete
 
   // ── Batch selection ──
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [batchProcessing, setBatchProcessing] = useState(false);
+
+  // ── Batch generation progress ──
+  const [batchProgress, setBatchProgress] = useState(null); // { current, total } or null
+  const jobSubscriptionRef = useRef(null);
+
+  // ── Group ZIP export: background job + real SSE progress ──
+  const [exportingGroup, setExportingGroup] = useState(false);
+  const [exportProgress, setExportProgress] = useState(null); // { exportId, current, total, status }
+  const exportSubRef = useRef(null);
+
+  // ── Accordion state for grouped view ──
+  const [expandedEduSystems, setExpandedEduSystems] = useState(new Set());
+  const [expandedClasses, setExpandedClasses] = useState(new Set());
 
   // ── Load initial data ──
   const loadInitial = useCallback(async () => {
@@ -240,13 +261,28 @@ export default function ReportCardsPage() {
       if (filterEduSystem) params.educationSystemCode = filterEduSystem;
       const data = await listReportCards(params);
       setReportCards(Array.isArray(data) ? data : data?.reportCards || []);
-    } catch {
+    } catch (err) {
+      console.error('[ReportCardList] Failed to load report cards:', err.response?.data || err.message || err);
       setReportCards([]);
     }
     setLoading(false);
   }, [filterClassId, filterPeriodId, filterStatus, filterEduSystem]);
 
   useEffect(() => { loadReportCards(); }, [loadReportCards]);
+
+  // ── Clean up the active job / export SSE subscriptions on unmount ──
+  useEffect(() => {
+    return () => {
+      if (jobSubscriptionRef.current) {
+        jobSubscriptionRef.current();
+        jobSubscriptionRef.current = null;
+      }
+      if (exportSubRef.current) {
+        exportSubRef.current();
+        exportSubRef.current = null;
+      }
+    };
+  }, []);
 
   // ── Initial page load ──
   useEffect(() => {
@@ -285,6 +321,47 @@ export default function ReportCardsPage() {
   const draftCards = reportCards.filter((r) => r.status === "DRAFT").length;
   const lockedCards = reportCards.filter((r) => r.status === "LOCKED").length;
 
+  // ── Group report cards by education system → class ──
+  const groupedCards = useMemo(() => {
+    const map = {};
+    for (const rc of reportCards) {
+      const eduCode = rc.education_system_code || 'OTHER';
+      const classId = rc.class_id || 'unassigned';
+      const className = rc.class_name || (isFr ? 'Sans classe' : 'No class');
+      const eduLabel = rc.education_system_label || eduCode;
+      if (!map[eduCode]) {
+        map[eduCode] = { code: eduCode, label: eduLabel, color: getEduSystemColor(eduCode), classes: {} };
+      }
+      if (!map[eduCode].classes[classId]) {
+        map[eduCode].classes[classId] = { id: classId, name: className, cards: [] };
+      }
+      map[eduCode].classes[classId].cards.push(rc);
+    }
+    return Object.entries(map)
+      .sort(([, a], [, b]) => a.label.localeCompare(b.label))
+      .map(([, group]) => ({
+        ...group,
+        classList: Object.entries(group.classes)
+          .sort(([, a], [, b]) => a.name.localeCompare(b.name))
+          .map(([, cls]) => ({
+            ...cls,
+            cards: [...cls.cards].sort((a, b) => (a.student_name || '').localeCompare(b.student_name || '')),
+          })),
+      }));
+  }, [reportCards, isFr]);
+
+  // ── Toggle expand for education system / class ──
+  const toggleEduSystem = (code) => {
+    const next = new Set(expandedEduSystems);
+    if (next.has(code)) next.delete(code); else next.add(code);
+    setExpandedEduSystems(next);
+  };
+  const toggleClass = (classId) => {
+    const next = new Set(expandedClasses);
+    if (next.has(classId)) next.delete(classId); else next.add(classId);
+    setExpandedClasses(next);
+  };
+
   // ── Generate individual (uses sequence ID as periodStructureId) ──
   const handleGenerateStudent = async () => {
     const periodId = genSequenceId || genPeriodId;
@@ -298,26 +375,38 @@ export default function ReportCardsPage() {
     }
     setGenerating(true);
     setGenDismissed(false);
+    setBatchProgress(null);
     try {
       const result = await generateReportCard({
         studentId: genStudentId,
         periodStructureId: periodId,
         educationSystemCode: genEduSystem,
       });
+      // Show completion briefly before dismissing
+      setBatchProgress({ current: 1, total: 1 });
+      await new Promise(resolve => setTimeout(resolve, 1800));
       toast.success(isFr ? "Bulletin généré !" : "Report card generated!");
       setGenStudentOpen(false);
       setGenStudentId("");
       setGenPeriodId("");
       setGenSequenceId("");
       setGenSequences([]);
+      // Don't reset batchProgress to null — let it stay at 100%
+      // so the completion animation remains visible until generating=false hides it
       loadReportCards();
     } catch (err) {
+      console.error('[ReportCardGeneration] Individual generation failed:', err);
       toast.error(err.response?.data?.message || err.message || (isFr ? "Échec de la génération" : "Generation failed"));
+      setBatchProgress(null);
     }
     setGenerating(false);
   };
 
   // ── Generate batch (uses sequence ID as periodStructureId) ──
+  // Enqueues a background job via BullMQ, keeps the full-screen animation
+  // visible and drives its progress bar from the job's real SSE stream.
+  // The animation disappears when the job completes (or errors), and can be
+  // closed early with the ✕ button.
   const handleGenerateBatch = async () => {
     const periodId = genBatchSequenceId || genBatchPeriodId;
     if (!genBatchEduSystem) {
@@ -330,28 +419,98 @@ export default function ReportCardsPage() {
     }
     setGenerating(true);
     setGenDismissed(false);
+    setBatchProgress({ current: 0, total: 0 });
     try {
-      const result = await generateBatchReportCards({
+      console.log('[ReportCardGeneration] Enqueueing batch job:', { classLevelId: genClassId, periodStructureId: periodId, educationSystemCode: genBatchEduSystem });
+      const job = await enqueueBatchJob({
         classLevelId: genClassId,
         periodStructureId: periodId,
         educationSystemCode: genBatchEduSystem,
       });
-      const successCount = result.filter((r) => r.success).length;
-      toast.success(
-        isFr
-          ? `${successCount} bulletins générés sur ${result.length}`
-          : `${successCount} report cards generated out of ${result.length}`
-      );
+      console.log('[ReportCardGeneration] Job queued:', job);
+
+      // Close the modal immediately — the job runs in the background
       setGenBatchOpen(false);
       setGenClassId("");
       setGenBatchPeriodId("");
       setGenBatchSequenceId("");
       setGenBatchSequences([]);
-      loadReportCards();
+
+      const jobId = job?.jobId;
+      const totalStudents = job?.totalStudents || 0;
+
+      if (!jobId) {
+        // No job id — nothing to track, hide the animation right away
+        toast.success(
+          isFr
+            ? "Génération lancée en arrière-plan."
+            : "Generation started in background."
+        );
+        setGenerating(false);
+        setBatchProgress(null);
+        loadReportCards();
+        return;
+      }
+
+      toast.success(
+        isFr
+          ? "Génération lancée — l'animation suit la progression du job."
+          : "Generation started — the animation tracks the job progress."
+      );
+
+      // Keep the animation visible and drive it from the job's real SSE
+      // progress. `generating` stays true until the job completes/errors, so
+      // the overlay never disappears prematurely.
+      if (jobSubscriptionRef.current) {
+        jobSubscriptionRef.current(); // clean up a previous subscription if any
+        jobSubscriptionRef.current = null;
+      }
+      jobSubscriptionRef.current = subscribeToJobProgress(
+        jobId,
+        (progress) => {
+          // progress: { type:'progress', status, current, total, failed }
+          if (progress && progress.current != null && progress.total != null) {
+            setBatchProgress({ current: progress.current, total: progress.total });
+          }
+        },
+        (complete) => {
+          // Job finished — COMPLETED / FAILED / CANCELLED
+          const succeeded = complete?.status === 'COMPLETED';
+          if (succeeded) {
+            // Show 100% and let the success ✓ animation play before hiding
+            setBatchProgress({ current: totalStudents, total: totalStudents });
+            setTimeout(() => {
+              setGenerating(false);
+              setGenDismissed(false);
+              loadReportCards();
+            }, 2200);
+          } else {
+            const failed = complete?.errors?.length || 0;
+            toast.error(
+              isFr
+                ? `Génération terminée avec ${failed} échec(s).`
+                : `Generation finished with ${failed} failure(s).`
+            );
+            setGenerating(false);
+            setBatchProgress(null);
+            loadReportCards();
+          }
+        },
+        (error) => {
+          console.error('[ReportCardGeneration] Job progress stream error:', error);
+          setGenerating(false);
+          setBatchProgress(null);
+          loadReportCards();
+        }
+      );
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || (isFr ? "Échec de la génération" : "Generation failed"));
+      console.error('[ReportCardGeneration] Batch job enqueue failed:', err);
+      toast.error(err.response?.data?.message || err.message || (isFr ? "Échec du lancement de la génération" : "Failed to start generation"));
+      setGenerating(false);
+      setBatchProgress(null);
     }
-    setGenerating(false);
+    // The JobsDashboard below polls /api/v1/report-card-jobs automatically
+    // and subscribes via SSE for live progress.
   };
 
   // ── View payload ──
@@ -426,13 +585,16 @@ export default function ReportCardsPage() {
       await handleBatchDeleteConfirm();
       return;
     }
+    setDeleting(true);
     try {
       await deleteReportCard(deleteModal.report_card_id);
       toast.success(isFr ? "Bulletin supprimé !" : "Report card deleted!");
-      setDeleteModal(null);
       loadReportCards();
+      setDeleting(false);
+      setDeleteModal(null);
     } catch (err) {
       toast.error(err.response?.data?.message || (isFr ? "Échec de la suppression" : "Delete failed"));
+      setDeleting(false);
     }
   };
 
@@ -484,56 +646,127 @@ export default function ReportCardsPage() {
   );
 
   const handleBatchDeleteConfirm = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
     setBatchProcessing(true);
+    setDeleting(true);
+    setDeleteProgress({ done: 0, total: ids.length });
     let successCount = 0;
     let failCount = 0;
-    for (const id of selectedIds) {
-      try {
-        await deleteReportCard(id);
-        successCount++;
-      } catch {
-        failCount++;
+    try {
+      for (const id of ids) {
+        try {
+          await deleteReportCard(id);
+          successCount++;
+        } catch {
+          failCount++;
+        }
+        setDeleteProgress({ done: successCount + failCount, total: ids.length });
       }
+      toast.success(`${successCount} ${isFr ? 'bulletins supprimés' : 'report cards deleted'}` + (failCount > 0 ? `, ${failCount} ${isFr ? "échec(s)" : "failed"}` : ''));
+    } finally {
+      setSelectedIds(new Set());
+      setBatchProcessing(false);
+      setDeleting(false);
+      setDeleteProgress(null);
+      setDeleteModal(null);
+      loadReportCards();
     }
-    toast.success(`${successCount} ${isFr ? 'bulletins supprimés' : 'report cards deleted'}` + (failCount > 0 ? `, ${failCount} ${isFr ? "échec(s)" : "failed"}` : ''));
-    setSelectedIds(new Set());
-    setBatchProcessing(false);
-    setDeleteModal(null);
-    loadReportCards();
   };
 
-  // ── Download PDF ──
+  // ── Download PDF (server-rendered, deterministic, real pagination) ──
   const handleDownloadPDF = async () => {
-    const container = document.getElementById("report-card-payload");
-    if (!container || !payloadData) return;
+    if (!payloadData) return;
     try {
-      // Temporarily remove max-height/overflow to capture full content
-      const origOverflow = container.style.overflow;
-      const origMaxHeight = container.style.maxHeight;
-      container.style.overflow = "visible";
-      container.style.maxHeight = "none";
-      
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-      });
-      
-      // Restore original styles
-      container.style.overflow = origOverflow;
-      container.style.maxHeight = origMaxHeight;
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
       const studentName = (payloadData?.student?.full_name || "report-card").replace(/[^a-zA-Z0-9]/g, "-");
-      pdf.save(`bulletin-${studentName}.pdf`);
+      const { blob, filename } = await downloadReportCardPdf(payloadData.report_card_id, "EN", studentName);
+      saveBlobAs(blob, filename);
       toast.success(isFr ? "PDF téléchargé !" : "PDF downloaded!");
-    } catch {
-      toast.error(isFr ? "Échec du téléchargement PDF" : "PDF download failed");
+    } catch (err) {
+      console.error("[ReportCardPdf] Server-side PDF download failed:", err);
+      toast.error(err.response?.data?.message || (isFr ? "Échec du téléchargement PDF" : "PDF download failed"));
     }
+  };
+
+  // ── Download ALL report cards of a group (education system or class) ──
+  // Three phases, mirroring the background job flow:
+  //   1. startReportCardExport → { exportId, total }
+  //   2. subscribeToExportProgress → real SSE progress (current/total)
+  //   3. downloadExportFile → saves the finished ZIP once complete
+  const handleExportGroup = async (cards, label, filters = {}) => {
+    if (!cards || cards.length === 0) {
+      toast.error(isFr ? "Aucun bulletin à télécharger" : "No report cards to download");
+      return;
+    }
+    const safeName = (label || "bulletins").replace(/[^a-zA-Z0-9_-]/g, "-");
+    setExportingGroup(true);
+    try {
+      const { exportId, total } = await startReportCardExport({
+        ids: cards.map((c) => c.report_card_id),
+        lang: "EN",
+        ...filters,
+      });
+      setExportProgress({ exportId, current: 0, total, status: "RUNNING" });
+
+      // Clean up any previous export subscription
+      if (exportSubRef.current) {
+        exportSubRef.current();
+        exportSubRef.current = null;
+      }
+
+      exportSubRef.current = subscribeToExportProgress(
+        exportId,
+        (progress) => {
+          // progress: { type:'progress', status, current, total }
+          setExportProgress((prev) => (prev
+            ? {
+                ...prev,
+                current: progress.current ?? prev.current,
+                total: progress.total ?? prev.total,
+                status: progress.status || prev.status,
+              }
+            : prev));
+        },
+        async (complete) => {
+          exportSubRef.current = null;
+          if (complete?.status === "COMPLETED") {
+            try {
+              const { blob, filename } = await downloadExportFile(exportId, safeName);
+              saveBlobAs(blob, filename);
+              toast.success(isFr ? `ZIP téléchargé (${total} bulletin(s)) !` : `ZIP downloaded (${total} card(s))!`);
+            } catch (dlErr) {
+              toast.error(dlErr.response?.data?.message || (isFr ? "Échec du téléchargement ZIP" : "ZIP download failed"));
+            }
+          } else {
+            toast.error(complete?.errors?.[0]?.error || (isFr ? "Échec de la préparation du ZIP" : "ZIP preparation failed"));
+          }
+          setExportProgress(null);
+          setExportingGroup(false);
+        },
+        (error) => {
+          exportSubRef.current = null;
+          console.error("[ReportCardZip] Export progress stream error:", error);
+          toast.error(isFr ? "Échec du suivi de l'export" : "Export progress stream failed");
+          setExportProgress(null);
+          setExportingGroup(false);
+        }
+      );
+    } catch (err) {
+      console.error("[ReportCardZip] Group ZIP export failed:", err);
+      toast.error(err.response?.data?.message || (isFr ? "Échec du téléchargement ZIP" : "ZIP download failed"));
+      setExportingGroup(false);
+    }
+  };
+
+  // ── Cancel the ongoing ZIP export (hide the progress bar; the server
+  // finishes in the background and its in-memory record expires via TTL) ──
+  const handleCancelExport = () => {
+    if (exportSubRef.current) {
+      exportSubRef.current();
+      exportSubRef.current = null;
+    }
+    setExportProgress(null);
+    setExportingGroup(false);
   };
 
   // ── Status badge ──
@@ -594,6 +827,10 @@ export default function ReportCardsPage() {
           to   { opacity: 1; transform: scale(1); }
         }
         .rc-modal { animation: rcSlideIn 0.25s cubic-bezier(.16,1,.3,1); }
+        @keyframes exportBarIn {
+          from { opacity: 0; transform: translateY(16px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
 
         /* ── Print Styles ── */
         @media print {
@@ -847,32 +1084,9 @@ export default function ReportCardsPage() {
         </div>
       </div>
 
-      {/* ── Report Cards Table ── */}
+      {/* ── Report Cards — Grouped by Education System & Class ── */}
       <div className="rc-fade" style={{ animationDelay: "0.08s" }}>
         <div className="bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-2xl shadow-sm overflow-hidden">
-          {/* Table header */}
-          <div className="hidden lg:grid grid-cols-12 gap-3 px-5 py-3 bg-surface-50 dark:bg-surface-900/50 border-b border-surface-100 dark:border-surface-700 text-[11px] font-semibold tracking-wider uppercase text-surface-400">
-            <div className="col-span-1 flex items-center">
-              <div
-                onClick={toggleSelectAll}
-                className={`w-4 h-4 rounded border-2 cursor-pointer transition-all flex items-center justify-center ${
-                  allSelected ? 'border-primary-500 bg-primary-500' : someSelected ? 'border-primary-500 bg-primary-500/30' : 'border-surface-300 dark:border-surface-600'
-                }`}
-              >
-                {(allSelected || someSelected) && (
-                  <FiCheckCircle size={10} className={allSelected ? 'text-white' : 'text-primary-500'} />
-                )}
-              </div>
-            </div>
-            <div className="col-span-2">{isFr ? "Élève" : "Student"}</div>
-            <div className="col-span-2">{isFr ? "Période" : "Period"}</div>
-            <div className="col-span-2">{isFr ? "Statut" : "Status"}</div>
-            <div className="col-span-1 text-center">V.</div>
-            <div className="col-span-1 text-center">{isFr ? "Moy." : "Avg"}</div>
-            <div className="col-span-1 text-center">{isFr ? "Rang" : "Rank"}</div>
-            <div className="col-span-2 text-right">{isFr ? "Actions" : "Actions"}</div>
-          </div>
-
           {loading ? (
             <TableSkeleton rows={6} columns={7} />
           ) : reportCards.length === 0 ? (
@@ -890,164 +1104,289 @@ export default function ReportCardsPage() {
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-surface-50 dark:divide-surface-700/50">
-              {reportCards.map((rc, idx) => {
-                const statusCfg = STATUS_CONFIG[rc.status] || STATUS_CONFIG.DRAFT;
-                const avg = rc.general_average != null ? Number(rc.general_average) : null;
-                const avgColor = avg ? scoreColor(avg) : "#9CA3AF";
-                const rankStr = rc.class_rank ? `${rc.class_rank}/${rc.class_size}` : "-";
-                const actions = allowedActions(rc.status);
-
+            <div className="divide-y divide-surface-100 dark:divide-surface-700">
+              {groupedCards.map((group, gi) => {
+                const isEduOpen = expandedEduSystems.has(group.code);
+                const totalInGroup = group.classList.reduce((s, c) => s + c.cards.length, 0);
                 return (
-                  <div
-                    key={rc.report_card_id}
-                    className="rc-fade grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-3 px-5 py-4 hover:bg-surface-50 dark:hover:bg-surface-900/30 transition-colors items-center"
-                    style={{
-                      animationDelay: `${0.1 + idx * 0.03}s`,
-                      background: selectedIds.has(rc.report_card_id) ? 'rgba(var(--primary-rgb, 8,80,65), 0.03)' : '',
-                    }}
-                  >
-                    {/* Checkbox */}
-                    <div className="lg:col-span-1 flex items-center">
-                      <div
-                        onClick={(e) => { e.stopPropagation(); toggleSelect(rc.report_card_id); }}
-                        className={`w-4 h-4 rounded border-2 cursor-pointer transition-all flex items-center justify-center ${
-                          selectedIds.has(rc.report_card_id) ? 'border-primary-500 bg-primary-500' : 'border-surface-300 dark:border-surface-600'
-                        }`}
+                  <div key={group.code} className="rc-fade" style={{ animationDelay: `${0.05 + gi * 0.04}s` }}>
+                    {/* ── Education System Header ── */}
+                    <div className="w-full flex items-center gap-2 px-5 py-3.5 hover:bg-surface-50 dark:hover:bg-surface-900/30 transition-colors">
+                      <button
+                        onClick={() => toggleEduSystem(group.code)}
+                        className="flex-1 min-w-0 flex items-center gap-3 text-left cursor-pointer"
                       >
-                        {selectedIds.has(rc.report_card_id) && <FiCheckCircle size={10} className="text-white" />}
-                      </div>
-                    </div>
-
-                    {/* Student info */}
-                    <div className="lg:col-span-2 flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center text-[10px] font-extrabold text-surface-600 dark:text-surface-300 flex-shrink-0">
-                        {(rc.student_name || "NA").split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-[13px] font-semibold text-surface-900 dark:text-surface-100 truncate">
-                          {rc.student_name || (isFr ? "N/A" : "N/A")}
+                        <div
+                          className="w-1.5 h-8 rounded-full flex-shrink-0"
+                          style={{ background: group.color }}
+                        />
+                        <FiChevronRight
+                          size={16}
+                          className={`text-surface-400 transition-transform duration-200 ${isEduOpen ? 'rotate-90' : ''}`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[13px] font-bold text-surface-900 dark:text-surface-100">
+                            {group.label}
+                          </span>
+                          <span className="text-[11px] text-surface-400 ml-2">
+                            {group.classList.length} {isFr ? 'classe(s)' : 'class(es)'} · {totalInGroup} {isFr ? 'bulletin(s)' : 'card(s)'}
+                          </span>
                         </div>
-                        {(rc.sequence_label || rc.period_name) && (
-                          <div className="text-[11px] text-surface-400 truncate lg:hidden">
-                            {rc.sequence_label || rc.period_name}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Period (desktop) */}
-                    <div className="hidden lg:block lg:col-span-2">
-                      <span className="text-[13px] text-surface-700 dark:text-surface-200">
-                        {rc.sequence_label || rc.period_name || "-"}
-                      </span>
-                    </div>
-
-                    {/* Status badge */}
-                    <div className="lg:col-span-2">
-                      <StatusBadge status={rc.status} />
-                    </div>
-
-                    {/* Version */}
-                    <div className="lg:col-span-1 text-center">
-                      <span className="text-[13px] font-mono text-surface-600 dark:text-surface-300">
-                        {rc.version || 1}
-                      </span>
-                    </div>
-
-                    {/* Average */}
-                    <div className="lg:col-span-1 text-center">
-                      {avg != null ? (
-                        <span className="text-[15px] font-extrabold tabular-nums" style={{ color: avgColor }}>
-                          {avg.toFixed(2)}
+                        <span
+                          className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full tracking-wider flex-shrink-0"
+                          style={{ background: `${group.color}18`, color: group.color }}
+                        >
+                          {group.code}
                         </span>
-                      ) : (
-                        <span className="text-[12px] text-surface-400">-</span>
-                      )}
-                    </div>
-
-                    {/* Rank */}
-                    <div className="lg:col-span-1 text-center">
-                      <span className="text-[12px] text-surface-500 dark:text-surface-400 font-medium">
-                        {rc.class_rank != null ? rankStr : "-"}
-                      </span>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="lg:col-span-2 flex items-center justify-end gap-1.5 flex-wrap">
-                      {/* View payload */}
-                      <button
-                        onClick={() => handleViewPayload(rc)}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors text-surface-400 hover:text-surface-700 dark:hover:text-surface-200"
-                        title={isFr ? "Voir le détail" : "View payload"}
-                      >
-                        <FiEye size={13} />
                       </button>
-
-                      {/* Download PDF */}
+                      {/* Download all for this education system */}
                       <button
-                        onClick={() => handleViewPayload(rc)}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-blue-500"
-                        title={isFr ? "Télécharger PDF" : "Download PDF"}
+                        onClick={() => handleExportGroup(
+                          group.classList.flatMap((c) => c.cards),
+                          group.label,
+                          group.code && group.code !== 'OTHER'
+                            ? { educationSystemCode: group.code }
+                            : {}
+                        )}
+                        disabled={exportingGroup}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-white/10 hover:text-white transition-all flex-shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                        title={isFr
+                          ? `Tout télécharger (${group.code})`
+                          : `Download all (${group.code})`}
                       >
-                        <FiDownload size={12} />
+                        {exportingGroup ? <FiLoader size={14} className="animate-spin" /> : <FiDownload size={14} />}
                       </button>
-
-                      {/* Publish */}
-                      {actions.includes("publish") && (
-                        <button
-                          onClick={() => handlePublish(rc)}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-green-600"
-                          title={isFr ? "Publier" : "Publish"}
-                        >
-                          <FiSend size={12} />
-                        </button>
-                      )}
-
-                      {/* Revise */}
-                      {actions.includes("revise") && (
-                        <button
-                          onClick={() => setReviseModal(rc)}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors text-purple-600"
-                          title={isFr ? "Réviser" : "Revise"}
-                        >
-                          <FiRefreshCw size={12} />
-                        </button>
-                      )}
-
-                      {/* Lock */}
-                      {actions.includes("lock") && (
-                        <button
-                          onClick={() => handleLock(rc)}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors text-amber-600"
-                          title={isFr ? "Verrouiller" : "Lock"}
-                        >
-                          <FiLock size={12} />
-                        </button>
-                      )}
-
-                      {/* Unlock */}
-                      {actions.includes("unlock") && (
-                        <button
-                          onClick={() => handleUnlock(rc)}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-blue-600"
-                          title={isFr ? "Déverrouiller" : "Unlock"}
-                        >
-                          <FiUnlock size={12} />
-                        </button>
-                      )}
-
-                      {/* Delete */}
-                      {actions.includes("delete") && (
-                        <button
-                          onClick={() => setDeleteModal(rc)}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-red-500"
-                          title={isFr ? "Supprimer" : "Delete"}
-                        >
-                          <FiTrash2 size={12} />
-                        </button>
-                      )}
                     </div>
+
+                    {/* ── Classes within this Education System ── */}
+                    {isEduOpen && (
+                      <div className="border-t border-surface-100 dark:border-surface-700">
+                        {group.classList.map((cls, ci) => {
+                          const isClassOpen = expandedClasses.has(cls.id);
+                          return (
+                            <div key={cls.id}>
+                              {/* Class Header */}
+                              <div className="w-full flex items-center gap-2 px-5 py-2.5 pl-12 hover:bg-surface-50 dark:hover:bg-surface-900/20 transition-colors">
+                                <button
+                                  onClick={() => toggleClass(cls.id)}
+                                  className="flex-1 min-w-0 flex items-center gap-3 text-left cursor-pointer"
+                                >
+                                  <FiChevronRight
+                                    size={13}
+                                    className={`text-surface-400 transition-transform duration-200 ${isClassOpen ? 'rotate-90' : ''}`}
+                                  />
+                                  <span className="text-[12px] font-semibold text-surface-700 dark:text-surface-200">
+                                    {cls.name}
+                                  </span>
+                                  <span className="text-[11px] text-surface-400">
+                                    {cls.cards.length} {isFr ? 'élève(s)' : 'student(s)'}
+                                  </span>
+                                  {/* Mini status summary */}
+                                  {(() => {
+                                    const pub = cls.cards.filter(c => c.status === 'PUBLISHED').length;
+                                    const drf = cls.cards.filter(c => c.status === 'DRAFT' || c.status === 'COMPLETE').length;
+                                    return (
+                                      <div className="flex items-center gap-1.5 ml-auto">
+                                        {pub > 0 && (
+                                          <span className="text-[10px] font-semibold text-green-600 dark:text-green-400">
+                                            {pub} {isFr ? 'pub.' : 'pub.'}
+                                          </span>
+                                        )}
+                                        {drf > 0 && (
+                                          <span className="text-[10px] font-semibold text-surface-400">
+                                            {drf} {isFr ? 'br.' : 'drf.'}
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
+                                </button>
+                                {/* Download all report cards of this class */}
+                                <button
+                                  onClick={() => handleExportGroup(
+                                  cls.cards,
+                                  cls.name,
+                                  cls.id && cls.id !== 'unassigned'
+                                    ? { classLevelId: cls.id }
+                                    : {}
+                                )}
+                                  disabled={exportingGroup}
+                                  className="w-7 h-7 rounded-md flex items-center justify-center text-surface-400 hover:bg-white/10 hover:text-white transition-all flex-shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                  title={isFr
+                                    ? `Tout télécharger (${cls.name})`
+                                    : `Download all (${cls.name})`}
+                                >
+                                  {exportingGroup ? <FiLoader size={12} className="animate-spin" /> : <FiDownload size={12} />}
+                                </button>
+                              </div>
+
+                              {/* Student Report Card Rows */}
+                              {isClassOpen && (
+                                <div className="border-t border-surface-50 dark:border-surface-700/50">
+                                  {/* Mini table header */}
+                                  <div className="hidden lg:grid grid-cols-10 gap-2 px-5 py-2 pl-16 bg-surface-50/50 dark:bg-surface-900/20 text-[10px] font-semibold tracking-wider uppercase text-surface-400">
+                                    <div className="col-span-1 flex items-center">
+                                      <input
+                                        type="checkbox"
+                                        checked={cls.cards.every(c => selectedIds.has(c.report_card_id))}
+                                        onChange={() => {
+                                          const allSelected = cls.cards.every(c => selectedIds.has(c.report_card_id));
+                                          const next = new Set(selectedIds);
+                                          for (const c of cls.cards) {
+                                            if (allSelected) next.delete(c.report_card_id);
+                                            else next.add(c.report_card_id);
+                                          }
+                                          setSelectedIds(next);
+                                        }}
+                                        className="w-3.5 h-3.5 cursor-pointer"
+                                      />
+                                    </div>
+                                    <div className="col-span-2">{isFr ? 'Élève' : 'Student'}</div>
+                                    <div className="col-span-2">{isFr ? 'Période' : 'Period'}</div>
+                                    <div className="col-span-1">{isFr ? 'Statut' : 'Status'}</div>
+                                    <div className="col-span-1 text-center">V.</div>
+                                    <div className="col-span-1 text-center">{isFr ? 'Moy.' : 'Avg'}</div>
+                                    <div className="col-span-1 text-center">{isFr ? 'Rang' : 'Rank'}</div>
+                                    <div className="col-span-1 text-right">{isFr ? 'Actions' : 'Actions'}</div>
+                                  </div>
+
+                                  {cls.cards.map((rc, ri) => {
+                                    const avg = rc.general_average != null ? Number(rc.general_average) : null;
+                                    const avgColor = avg ? scoreColor(avg) : '#9CA3AF';
+                                    const rankStr = rc.class_rank ? `${rc.class_rank}/${rc.class_size}` : '-';
+                                    const actions = allowedActions(rc.status);
+                                    return (
+                                      <div
+                                        key={rc.report_card_id}
+                                        className="grid grid-cols-1 lg:grid-cols-10 gap-2 px-5 py-2.5 pl-16 hover:bg-surface-50 dark:hover:bg-surface-900/20 transition-colors items-center"
+                                        style={{
+                                          background: selectedIds.has(rc.report_card_id)
+                                            ? 'rgba(var(--primary-rgb, 8,80,65), 0.03)'
+                                            : '',
+                                        }}
+                                      >
+                                        {/* Checkbox */}
+                                        <div className="lg:col-span-1 flex items-center">
+                                          <input
+                                            type="checkbox"
+                                            checked={selectedIds.has(rc.report_card_id)}
+                                            onChange={() => toggleSelect(rc.report_card_id)}
+                                            className="w-3.5 h-3.5 cursor-pointer"
+                                          />
+                                        </div>
+
+                                        {/* Student name */}
+                                        <div className="lg:col-span-2 flex items-center gap-2 min-w-0">
+                                          <div className="w-6 h-6 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center text-[8px] font-extrabold text-surface-500 dark:text-surface-400 flex-shrink-0">
+                                            {(rc.student_name || 'NA').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}
+                                          </div>
+                                          <span className="text-[12px] font-semibold text-surface-900 dark:text-surface-100 truncate">
+                                            {rc.student_name || '-'}
+                                          </span>
+                                        </div>
+
+                                        {/* Period */}
+                                        <div className="hidden lg:block lg:col-span-2">
+                                          <span className="text-[11px] text-surface-600 dark:text-surface-300">
+                                            {rc.sequence_label || rc.period_name || '-'}
+                                          </span>
+                                        </div>
+
+                                        {/* Status */}
+                                        <div className="lg:col-span-1">
+                                          <StatusBadge status={rc.status} />
+                                        </div>
+
+                                        {/* Version */}
+                                        <div className="lg:col-span-1 text-center">
+                                          <span className="text-[12px] font-mono text-surface-500">
+                                            {rc.version || 1}
+                                          </span>
+                                        </div>
+
+                                        {/* Average */}
+                                        <div className="lg:col-span-1 text-center">
+                                          {avg != null ? (
+                                            <span className="text-[13px] font-extrabold tabular-nums" style={{ color: avgColor }}>
+                                              {avg.toFixed(2)}
+                                            </span>
+                                          ) : (
+                                            <span className="text-[11px] text-surface-400">-</span>
+                                          )}
+                                        </div>
+
+                                        {/* Rank */}
+                                        <div className="lg:col-span-1 text-center">
+                                          <span className="text-[11px] text-surface-500 font-medium">
+                                            {rc.class_rank != null ? rankStr : '-'}
+                                          </span>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="lg:col-span-1 flex items-center justify-end gap-1">
+                                          <button
+                                            onClick={() => handleViewPayload(rc)}
+                                            className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors text-surface-400 hover:text-surface-700 dark:hover:text-surface-200"
+                                            title={isFr ? 'Voir' : 'View'}
+                                          >
+                                            <FiEye size={11} />
+                                          </button>
+                                          {actions.includes('publish') && (
+                                            <button
+                                              onClick={() => handlePublish(rc)}
+                                              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-green-600"
+                                              title={isFr ? 'Publier' : 'Publish'}
+                                            >
+                                              <FiSend size={10} />
+                                            </button>
+                                          )}
+                                          {actions.includes('revise') && (
+                                            <button
+                                              onClick={() => setReviseModal(rc)}
+                                              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors text-purple-600"
+                                              title={isFr ? 'Réviser' : 'Revise'}
+                                            >
+                                              <FiRefreshCw size={10} />
+                                            </button>
+                                          )}
+                                          {actions.includes('lock') && (
+                                            <button
+                                              onClick={() => handleLock(rc)}
+                                              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors text-amber-600"
+                                              title={isFr ? 'Verrouiller' : 'Lock'}
+                                            >
+                                              <FiLock size={10} />
+                                            </button>
+                                          )}
+                                          {actions.includes('unlock') && (
+                                            <button
+                                              onClick={() => handleUnlock(rc)}
+                                              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-blue-600"
+                                              title={isFr ? 'Déverrouiller' : 'Unlock'}
+                                            >
+                                              <FiUnlock size={10} />
+                                            </button>
+                                          )}
+                                          {actions.includes('delete') && (
+                                            <button
+                                              onClick={() => setDeleteModal(rc)}
+                                              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-red-500"
+                                              title={isFr ? 'Supprimer' : 'Delete'}
+                                            >
+                                              <FiTrash2 size={10} />
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1055,6 +1394,9 @@ export default function ReportCardsPage() {
           )}
         </div>
       </div>
+
+      {/* ── Jobs Dashboard — Background Job Monitoring ── */}
+      <JobsDashboard primaryColor={pc} />
 
       {/* ── Floating Batch Action Bar ── */}
       {selectedIds.size > 0 && (
@@ -1590,6 +1932,36 @@ export default function ReportCardsPage() {
               )}
             </button>
           </div>
+
+          {/* ── Progress Bar ── */}
+          {batchProgress && batchProgress.total > 0 && (
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-semibold text-surface-600 dark:text-surface-300">
+                  {isFr
+                    ? `${batchProgress.current} / ${batchProgress.total} bulletins`
+                    : `${batchProgress.current} / ${batchProgress.total} report cards`}
+                </span>
+                <span className="font-bold" style={{ color: pc }}>
+                  {Math.round((batchProgress.current / batchProgress.total) * 100)}%
+                </span>
+              </div>
+              <div className="w-full h-2 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500 ease-out"
+                  style={{
+                    width: `${(batchProgress.current / batchProgress.total) * 100}%`,
+                    background: `linear-gradient(90deg, ${pc}, ${pc}dd)`,
+                  }}
+                />
+              </div>
+              {batchProgress.current === batchProgress.total && (
+                <p className="text-[11px] text-green-600 dark:text-green-400 font-semibold animate-pulse">
+                  {isFr ? "Terminé !" : "Complete!"}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </ModalBackdrop>
 
@@ -1642,11 +2014,15 @@ export default function ReportCardsPage() {
       {/* ════════════════════════════════════════════ */}
       <ModalBackdrop
         open={!!deleteModal}
-        onClose={() => setDeleteModal(null)}
+        onClose={() => { if (!deleting) setDeleteModal(null); }}
         title={isFr ? "Confirmer la suppression" : "Confirm Deletion"}
-        subtitle={deleteModal?.student_name
-          ? `${deleteModal.student_name} — ${deleteModal.period_name || ""}`
-          : ""}
+        subtitle={deleteModal?.batch
+          ? (isFr
+              ? `${selectedIds.size} bulletin(s) sélectionné(s)`
+              : `${selectedIds.size} report card(s) selected`)
+          : deleteModal?.student_name
+            ? `${deleteModal.student_name} — ${deleteModal.period_name || ""}`
+            : ""}
       >
         <div className="space-y-4">
           <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800">
@@ -1669,16 +2045,36 @@ export default function ReportCardsPage() {
           <div className="flex items-center justify-end gap-2 pt-2">
             <button
               onClick={() => setDeleteModal(null)}
-              className="h-9 px-4 rounded-xl text-[12px] font-semibold text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+              disabled={deleting}
+              className="h-9 px-4 rounded-xl text-[12px] font-semibold text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isFr ? "Annuler" : "Cancel"}
             </button>
             <button
               onClick={handleDeleteConfirm}
-              className="h-9 px-5 rounded-xl text-[12px] font-semibold text-white transition-all hover:scale-105 hover:shadow-md flex items-center gap-1.5 bg-red-600 hover:bg-red-700"
+              disabled={deleting}
+              className="h-9 px-5 rounded-xl text-[12px] font-semibold text-white transition-all hover:scale-105 hover:shadow-md flex items-center gap-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              <FiTrash2 size={13} />
-              {isFr ? "Supprimer" : "Delete"}
+              {deleting ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  {deleteProgress
+                    ? (isFr
+                        ? `Suppression ${deleteProgress.done}/${deleteProgress.total}...`
+                        : `Deleting ${deleteProgress.done}/${deleteProgress.total}...`)
+                    : (isFr ? "Suppression..." : "Deleting...")}
+                </>
+              ) : (
+                <>
+                  <FiTrash2 size={13} />
+                  {deleteModal?.batch
+                    ? (isFr ? `Supprimer (${selectedIds.size})` : `Delete (${selectedIds.size})`)
+                    : (isFr ? "Supprimer" : "Delete")}
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -1733,10 +2129,56 @@ export default function ReportCardsPage() {
         )}
       </ModalBackdrop>
 
+      {/* ── Floating ZIP export progress bar ── */}
+      {exportProgress && exportProgress.total > 0 && (
+        <div
+          className="fixed bottom-6 right-6 z-[90] w-80 rounded-2xl shadow-2xl border border-surface-100 dark:border-surface-700 p-4 backdrop-blur-md bg-white/95 dark:bg-surface-900/95"
+          style={{ animation: "exportBarIn 0.3s cubic-bezier(.16,1,.3,1) both" }}>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[12px] font-bold text-surface-800 dark:text-surface-100 flex items-center gap-1.5">
+                <FiDownload size={13} className="text-primary-500" />
+                {isFr ? "Préparation du ZIP..." : "Preparing ZIP..."}
+              </p>
+              <p className="text-[11px] text-surface-500 dark:text-surface-400 mt-0.5">
+                {isFr
+                  ? `${exportProgress.current} / ${exportProgress.total} bulletins`
+                  : `${exportProgress.current} / ${exportProgress.total} report cards`}
+              </p>
+            </div>
+            <button
+              onClick={handleCancelExport}
+              className="shrink-0 p-1.5 rounded-lg text-surface-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+              title={isFr ? "Fermer" : "Close"}
+            >
+              <FiX size={15} />
+            </button>
+          </div>
+          <div className="w-full h-2 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden mt-2.5">
+            <div
+              className="h-full rounded-full transition-all duration-500 ease-out"
+              style={{
+                width: `${(exportProgress.current / exportProgress.total) * 100}%`,
+                background: `linear-gradient(90deg, ${pc}, ${pc}dd)`,
+              }}
+            />
+          </div>
+          <div className="flex items-center justify-between mt-1.5">
+            <span className="text-[10px] text-surface-400">
+              {isFr ? "Génération des PDF en arrière-plan..." : "Rendering PDFs in background..."}
+            </span>
+            <span className="text-[11px] font-bold tabular-nums" style={{ color: pc }}>
+              {Math.round((exportProgress.current / exportProgress.total) * 100)}%
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* ── Spectacular generation animation overlay ── */}
       <ReportCardGenerationAnimation
         visible={generating && !genDismissed}
         primaryColor={pc}
+        realProgress={batchProgress?.total > 0 ? Math.round((batchProgress.current / batchProgress.total) * 100) : null}
         onFinish={() => {}}
         onDismiss={() => setGenDismissed(true)}
       />
