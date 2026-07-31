@@ -1,4 +1,4 @@
-import { FiChevronRight, FiGlobe, FiSettings, FiUsers, FiBell, FiCalendar } from "react-icons/fi";
+import { FiChevronRight, FiGlobe, FiUsers, FiBell, FiCalendar } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
@@ -25,15 +25,6 @@ export default function SettingsPage() {
       desc: "Configure your school's public website",
       descFr: "Configurer le site public de votre école",
       path: "/dashboard/website",
-    },
-    {
-      key: "general",
-      icon: <FiSettings className="w-5 h-5" />,
-      label: "General Settings",
-      labelFr: "Paramètres généraux",
-      desc: "School info, branding, localization",
-      descFr: "Infos école, image de marque, localisation",
-      path: "#",
     },
     {
       key: "users",

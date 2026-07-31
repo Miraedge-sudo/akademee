@@ -16,6 +16,8 @@ import { getStudentMe } from "../../../core/api/studentService";
 import {
   listReportCards,
   getReportCardPayload,
+  downloadReportCardPdf,
+  saveBlobAs,
 } from "../../../core/api/reportCardsService";
 import toast from "react-hot-toast";
 import {
@@ -33,9 +35,7 @@ import {
   FiArrowLeft,
   FiSearch,
 } from "react-icons/fi";
-import { jsPDF } from "jspdf";
 import BulletinTemplate from "../../../components/ui/BulletinTemplate";
-import html2canvas from "html2canvas";
 import ProgressChart from "../components/ProgressChart";
 
 // ── Score helpers ──
@@ -131,36 +131,17 @@ export default function MyReportCardsPage() {
     setPayloadLoading(false);
   };
 
-  // ── Download PDF ──
+  // ── Download PDF (server-rendered, deterministic, real pagination) ──
   const handleDownloadPDF = async () => {
-    const container = document.getElementById("report-card-payload");
-    if (!container || !payloadData) return;
+    if (!payloadData) return;
     try {
-      const origOverflow = container.style.overflow;
-      const origMaxHeight = container.style.maxHeight;
-      container.style.overflow = "visible";
-      container.style.maxHeight = "none";
-
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-      });
-
-      container.style.overflow = origOverflow;
-      container.style.maxHeight = origMaxHeight;
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
       const name = (payloadData?.student?.full_name || "report-card").replace(/[^a-zA-Z0-9]/g, "-");
-      pdf.save(`bulletin-${name}.pdf`);
+      const { blob, filename } = await downloadReportCardPdf(payloadData.report_card_id, "EN", name);
+      saveBlobAs(blob, filename);
       toast.success(isFr ? "PDF téléchargé !" : "PDF downloaded!");
-    } catch {
-      toast.error(isFr ? "Échec du téléchargement" : "Download failed");
+    } catch (err) {
+      console.error("[ReportCardPdf] Server-side PDF download failed:", err);
+      toast.error(err.response?.data?.message || (isFr ? "Échec du téléchargement" : "Download failed"));
     }
   };
 

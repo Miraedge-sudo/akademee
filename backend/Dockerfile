@@ -5,9 +5,14 @@ RUN npm ci --only=production
 
 FROM node:20-alpine AS runner
 WORKDIR /app
-RUN apk add --no-cache tzdata
+# Chromium is required by puppeteer-core for server-side report card PDF rendering.
+RUN apk add --no-cache tzdata chromium nss freetype harfbuzz ca-certificates \
+    ttf-freefont \
+    font-noto \
+    font-noto-cjk
 ENV NODE_ENV=production
 ENV TZ=UTC
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .

@@ -111,8 +111,8 @@ class GradeService {
     }
 
     const rows = await sql`
-      INSERT INTO grades (school_id, student_id, assessment_component_id, score, status, comment)
-      VALUES (${schoolId}, ${studentId}, ${assessmentComponentId}, ${score}, 'GRADED', ${comment || null})
+      INSERT INTO grades (school_id, student_id, subject_id, assessment_component_id, score, status, comment, period_id, sequence_id)
+      VALUES (${schoolId}, ${studentId}, ${subjectId || null}, ${assessmentComponentId}, ${score}, 'GRADED', ${comment || null}, ${periodId || null}, ${sequenceId || null})
       RETURNING *
     `;
     const created = this.formatGrade({

@@ -7,7 +7,7 @@
 
 Ce document spécifie les API REST nécessaires aux modules **Programmes LMD**, **Facultés**, **Départements**, **Projets de Recherche** et **Publications** pour le système d'enseignement supérieur (University).
 
----
+--- 
 
 ## Conventions générales
 
