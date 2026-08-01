@@ -18,19 +18,19 @@ import {
 import { useOffline } from "../../../core/offline/OfflineContext";
 import { OPERATIONS } from "../../../core/offline/syncQueue";
 import {
-  X,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  AlertCircle,
-  Save,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  RefreshCw,
-  Users,
-  CalendarDays,
-} from "lucide-react";
+  FiX as X,
+  FiCheckCircle as CheckCircle2,
+  FiXCircle as XCircle,
+  FiClock as Clock,
+  FiAlertCircle as AlertCircle,
+  FiSave as Save,
+  FiChevronLeft as ChevronLeft,
+  FiChevronRight as ChevronRight,
+  FiSearch as Search,
+  FiRefreshCw as RefreshCw,
+  FiUsers as Users,
+  FiCalendar as CalendarDays,
+} from "react-icons/fi";
 
 const STATUS_OPTIONS = [
   { value: "present", label: "P", full: "Present", icon: CheckCircle2, color: "#1D9E75", bg: "bg-teal-500" },

@@ -10,6 +10,7 @@ const jwtConfig = require('../config/jwt');
 const emailConfig = require('../config/email');
 const SlugGenerator = require('../utils/slugGenerator');
 const { buildSchoolUrls } = require('../utils/domainHelper');
+const { optimizeImageUrl } = require('../utils/imageUrl');
 
 class AuthService {
   generateAccessToken(user, school, roleCodes) {
@@ -73,8 +74,8 @@ class AuthService {
           subdomain: school.subdomain,
           educationalSystems: school.educational_systems || [],
           primaryColor: school.primary_color || null,
-          logoUrl: school.logo_url || null,
-          heroImageUrl: school.hero_image_url || null,
+          logoUrl: optimizeImageUrl(school.logo_url, { width: 256 }) || null,
+          heroImageUrl: optimizeImageUrl(school.hero_image_url, { width: 1920 }) || null,
         },
       },
       token: accessToken,
@@ -277,14 +278,17 @@ class AuthService {
           ...schools[0],
           educationalSystems: schools[0].educational_systems || [],
           primaryColor: schools[0].primary_color,
-          logoUrl: schools[0].logo_url,
-          heroImageUrl: schools[0].hero_image_url,
-          heroImageUrl2: schools[0].hero_image_url_2,
+          logoUrl: optimizeImageUrl(schools[0].logo_url, { width: 256 }),
+          heroImageUrl: optimizeImageUrl(schools[0].hero_image_url, { width: 1920 }),
+          heroImageUrl2: optimizeImageUrl(schools[0].hero_image_url_2, { width: 1920 }),
           examType: schools[0].exam_type,
           examPassRate: schools[0].exam_pass_rate,
           ranking: schools[0].ranking,
           rankingCity: schools[0].ranking_city,
-          aboutPhotos: schools[0].about_photos || [],
+          aboutPhotos: (schools[0].about_photos || []).map((photo) => ({
+            ...photo,
+            url: optimizeImageUrl(photo?.url, { width: 800 }),
+          })),
           classesConfig: schools[0].classes_config || {},
         }
       : null;
@@ -296,7 +300,7 @@ class AuthService {
       lastName: user.last_name,
       schoolId: user.school_id,
       phone: user.phone,
-      avatarUrl: user.avatar_url,
+      avatarUrl: optimizeImageUrl(user.avatar_url, { width: 256 }),
       gender: user.gender,
       dateOfBirth: user.date_of_birth,
       nationality: user.nationality,

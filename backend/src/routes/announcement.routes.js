@@ -7,8 +7,10 @@ const auditMiddleware = require('../middleware/audit.middleware');
 const { createAnnouncementValidator, updateAnnouncementValidator } = require('../validators/announcement.validator');
 const { standardLimiter } = require('../middleware/rateLimiter.middleware');
 const announcementUpload = require('../middleware/announcementUpload.middleware');
+const { invalidateCache } = require('../middleware/cache.middleware');
 
 const router = express.Router();
+router.use(invalidateCache('http'));
 
 // Public route — no auth required, used by website templates
 router.get('/public', announcementController.listPublic);

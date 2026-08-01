@@ -2,7 +2,13 @@
  * StudentNotifications — list of recent notifications from the API.
  */
 import { useEffect, useState } from 'react';
-import { Bell, CreditCard, Calendar, FileText, Award } from 'lucide-react';
+import {
+  FiBell as Bell,
+  FiCreditCard as CreditCard,
+  FiCalendar as Calendar,
+  FiFileText as FileText,
+  FiAward as Award,
+} from "react-icons/fi";
 import api from '../../../core/api/axios';
 import { API_ENDPOINTS } from '../../../core/api/endpoints';
 

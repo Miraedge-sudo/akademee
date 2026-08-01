@@ -28,6 +28,7 @@ const { getRedisConnection } = require('../config/redis');
 const gradingService = require('./grading.service');
 const sql = require('../config/database');
 const logger = require('../utils/logger');
+const cache = require('../utils/cache');
 
 // ── Constants ──
 const QUEUE_NAME = 'report-card-generation';
@@ -324,6 +325,18 @@ async function processBatchJob(job) {
     `;
 
     logger.info(`[ReportCardQueue] Job ${dbJobId} completed: ${results.length} success, ${errors.length} failures`);
+
+    // ── Invalidate the school's HTTP cache (reports/grades/dashboard) ──
+    // Background workers have no HTTP request, so invalidate directly and
+    // scoped to the school — never across tenants.
+    try {
+      const cleared = await cache.delByPrefix('http', `school:${schoolId}`);
+      if (cleared > 0) {
+        logger.info(`[ReportCardQueue] Cache invalidated for school ${schoolId}: ${cleared} keys`);
+      }
+    } catch (err) {
+      logger.warn(`[ReportCardQueue] Cache invalidation failed for school ${schoolId}:`, err.message);
+    }
 
     return { success: true, results, errors };
   } catch (err) {

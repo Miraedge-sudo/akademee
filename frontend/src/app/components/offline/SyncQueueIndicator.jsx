@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
-import { Upload, RefreshCw, AlertCircle, X } from "lucide-react";
+import {
+  FiUpload as Upload,
+  FiRefreshCw as RefreshCw,
+  FiAlertCircle as AlertCircle,
+  FiX as X,
+} from "react-icons/fi";
 import { useOffline } from "../../core/offline/OfflineContext";
 
 /**

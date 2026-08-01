@@ -14,8 +14,10 @@ const auditMiddleware = require('../middleware/audit.middleware');
 const { createClassValidator, updateClassValidator } = require('../validators/class.validator');
 const { createEnrollmentValidator } = require('../validators/enrollment.validator');
 const { standardLimiter } = require('../middleware/rateLimiter.middleware');
+const { invalidateCache } = require('../middleware/cache.middleware');
 
 const router = express.Router();
+router.use(invalidateCache('http'));
 
 router.post(
   '/',

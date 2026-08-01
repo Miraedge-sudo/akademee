@@ -8,6 +8,7 @@
 
 const sql = require('../config/database');
 const AppError = require('../utils/AppError');
+const { optimizeImageUrl } = require('../utils/imageUrl');
 
 class GradingService {
   // ------------------------------------------------------------------
@@ -1061,7 +1062,8 @@ class GradingService {
         const s = schoolRows[0];
         schoolInfo = {
           name: s.name,
-          logoUrl: s.logo_url,
+          // Keep the original format (no f_auto) for html2canvas/PDF bulletins.
+          logoUrl: optimizeImageUrl(s.logo_url, { width: 256, format: false }),
           address: s.address,
           city: s.city,
           region: s.region,

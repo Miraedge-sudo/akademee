@@ -9,8 +9,10 @@ const express = require('express');
 const gradingController = require('../../controllers/grading.controller');
 const authMiddleware = require('../../middleware/auth.middleware');
 const roleMiddleware = require('../../middleware/role.middleware');
+const { invalidateCache } = require('../../middleware/cache.middleware');
 
 const router = express.Router();
+router.use(invalidateCache('http'));
 
 // ------------------------------------------------------------------
 // 9.1 Education Systems

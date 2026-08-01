@@ -81,16 +81,18 @@ app.use(httpLogger);
 app.use(schoolResolverMiddleware);
 app.use(tenantMiddleware);
 
-// Cache TTLs (seconds) for low-churn GET endpoints
+// Cache TTLs (seconds) for low-churn GET endpoints.
+// Longer TTLs are safe now because write routes invalidate the school's
+// cache (see invalidateCache) — data freshness is preserved per tenant.
 app.use('/api/config', cacheMiddleware(600));
-app.use('/api/website', cacheMiddleware(300));
-app.use('/api/dashboard', cacheMiddleware(30));
-app.use('/api/reports', cacheMiddleware(300));
-app.use('/api/grades', cacheMiddleware(120));
-app.use('/api/grade-calculations', cacheMiddleware(120));
-app.use('/api/attendance-stats', cacheMiddleware(120));
-app.use('/api/fee-calculations', cacheMiddleware(120));
-app.use('/api/audit-logs', cacheMiddleware(300));
+app.use('/api/website', cacheMiddleware(600));
+app.use('/api/dashboard', cacheMiddleware(300));
+app.use('/api/reports', cacheMiddleware(600));
+app.use('/api/grades', cacheMiddleware(300));
+app.use('/api/grade-calculations', cacheMiddleware(300));
+app.use('/api/attendance-stats', cacheMiddleware(300));
+app.use('/api/fee-calculations', cacheMiddleware(300));
+app.use('/api/audit-logs', cacheMiddleware(600));
 
 // Routes — all /api/* handlers; tenant middleware resolves school from subdomain
 app.use('/api/config', configRoutes);

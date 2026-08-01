@@ -1,4 +1,6 @@
-import { ArrowRight } from 'lucide-react';
+import {
+  FiArrowRight as ArrowRight,
+} from "react-icons/fi";
 import { Link } from 'react-router-dom';
 
 const LEVEL_STYLE = {

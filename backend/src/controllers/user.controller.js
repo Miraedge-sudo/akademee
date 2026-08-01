@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const sql = require('../config/database');
 const response = require('../utils/response');
+const { optimizeImageUrl } = require('../utils/imageUrl');
 
 class UserController {
   async getProfile(req, res, next) {
@@ -29,7 +30,8 @@ class UserController {
       const u = rows[0];
       response.success(res, 'Profile updated', {
         userId: u.user_id, firstName: u.first_name, lastName: u.last_name,
-        email: u.email, phone: u.phone, avatarUrl: u.avatar_url,
+        email: u.email, phone: u.phone,
+        avatarUrl: optimizeImageUrl(u.avatar_url, { width: 256 }),
       });
     } catch (error) {
       next(error);

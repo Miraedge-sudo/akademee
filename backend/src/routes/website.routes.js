@@ -4,8 +4,10 @@
 
 const express = require('express');
 const websiteController = require('../controllers/website.controller');
+const { invalidateCache } = require('../middleware/cache.middleware');
 
 const router = express.Router();
+router.use(invalidateCache('http'));
 
 router.get('/public', websiteController.getWebsiteData);
 router.get('/data', websiteController.getWebsiteData);

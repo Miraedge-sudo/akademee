@@ -7,6 +7,7 @@ const crypto = require("crypto");
 const sql = require("../config/database");
 const SlugGenerator = require("../utils/slugGenerator");
 const { buildSchoolUrls } = require("../utils/domainHelper");
+const { optimizeImageUrl } = require("../utils/imageUrl");
 const mediaService = require("./media.service");
 
 const EDUCATIONAL_SYSTEM_MAP = {
@@ -88,9 +89,9 @@ class OnboardingService {
       address: school.address,
       city: school.city,
       region: school.region,
-      logoUrl: school.logo_url,
-      heroImageUrl: school.hero_image_url,
-      heroImageUrl2: school.hero_image_url_2,
+      logoUrl: optimizeImageUrl(school.logo_url, { width: 256 }),
+      heroImageUrl: optimizeImageUrl(school.hero_image_url, { width: 1920 }),
+      heroImageUrl2: optimizeImageUrl(school.hero_image_url_2, { width: 1920 }),
       primaryColor: school.primary_color || "#085041",
       websiteDescription: school.website_description,
       yearFounded: school.year_founded,
@@ -101,7 +102,10 @@ class OnboardingService {
       examPassRate: school.exam_pass_rate,
       ranking: school.ranking,
       rankingCity: school.ranking_city,
-      aboutPhotos: school.about_photos || [],
+      aboutPhotos: (school.about_photos || []).map((photo) => ({
+        ...photo,
+        url: optimizeImageUrl(photo?.url, { width: 800 }),
+      })),
       classesConfig: school.classes_config || [],
       templateCode,
       onboardingCompleted: school.onboarding_completed,

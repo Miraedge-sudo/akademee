@@ -1,5 +1,13 @@
 import { useEffect, useRef } from 'react';
-import { Banknote, AlertTriangle, Percent, Receipt, TrendingUp, Users, Clock } from 'lucide-react';
+import {
+  FiDollarSign as Banknote,
+  FiAlertTriangle as AlertTriangle,
+  FiPercent as Percent,
+  FiFileText as Receipt,
+  FiTrendingUp as TrendingUp,
+  FiUsers as Users,
+  FiClock as Clock,
+} from "react-icons/fi";
 
 const SPARK_PATHS = {
   collected:   'M0,28 L16,22 L33,18 L50,20 L66,12 L83,8 L100,4',

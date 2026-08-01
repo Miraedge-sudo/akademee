@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
+import { queryClient, dashboardQueryKeys } from '../../../core/api/queryClient';
 import {
   FiUsers,
   FiUser,
@@ -25,6 +26,7 @@ import {
   getRecentActivities,
   getRevenueData,
 } from '../../../core/api/dashboardService';
+
 import { useTheme } from '../../../core/hooks/useTheme';
 import Spinner from '../../../components/ui/Spinner';
 import Card from '../../../components/ui/Card';
@@ -220,39 +222,45 @@ export default function DashboardPage() {
   const isFr = lang === 'fr';
   const pc = primaryColor || '#085041';
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [stats, setStats] = useState(null);
-  const [activities, setActivities] = useState([]);
-  const [revenue, setRevenue] = useState([]);
-  const [chartLoading, setChartLoading] = useState(true);
-  // ── Load dashboard data WITHOUT academic year filter ──
-  // The year filter caused teachers and classes to show 0 when data wasn't
-  // explicitly linked to the selected year. Global stats should show ALL data.
-  const loadDashboardData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [statsData, activitiesData, revenueData] = await Promise.all([
-        getDashboardStats(),
-        getRecentActivities(),
-        getRevenueData(),
-      ]);
-      setStats(statsData);
-      setActivities(activitiesData || []);
-      setRevenue(revenueData || []);
-    } catch (err) {
-      console.error('Dashboard load error:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to load dashboard');
-    } finally {
-      setLoading(false);
-      setChartLoading(false);
-    }
-  }, []);
+  // ── TanStack Query: 5-min cache + silent background refresh ──
+  // On a return visit the data is served instantly from the cache; once stale,
+  // it revalidates in the background without blocking the UI (no spinner loop).
+  // Queries are keyed 'dashboard' so a manual refresh invalidates them all.
+  // Note: loaded WITHOUT academic year filter — global stats show ALL data
+  // (the year filter made teachers/classes show 0 when not linked to a year).
+  const statsQuery = useQuery({
+    queryKey: dashboardQueryKeys.stats,
+    queryFn: getDashboardStats,
+  });
+  const activitiesQuery = useQuery({
+    queryKey: dashboardQueryKeys.activities,
+    queryFn: getRecentActivities,
+  });
+  const revenueQuery = useQuery({
+    queryKey: dashboardQueryKeys.revenue,
+    queryFn: getRevenueData,
+  });
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
+  const stats = statsQuery.data;
+  const activities = activitiesQuery.data || [];
+  const revenue = revenueQuery.data || [];
+  // Show the loading skeleton only on the very first load — while ANY of the
+  // three dashboard queries is still pending without cached data. Once cached,
+  // revisits render instantly and refresh silently in the background.
+  const loading =
+    (statsQuery.isPending && !statsQuery.data) ||
+    (activitiesQuery.isPending && !activitiesQuery.data) ||
+    (revenueQuery.isPending && !revenueQuery.data);
+  const chartLoading = revenueQuery.isPending && !revenueQuery.data;
+  const fetchError = statsQuery.error || activitiesQuery.error || revenueQuery.error;
+  const error = fetchError
+    ? fetchError?.response?.data?.message || fetchError?.message || 'Failed to load dashboard'
+    : null;
+
+  // Manual refresh → revalidate every dashboard query in the background.
+  const refreshDashboard = () => {
+    queryClient.invalidateQueries({ queryKey: dashboardQueryKeys.all });
+  };
 
   // ── Loading state ──
   if (loading) {
@@ -290,7 +298,7 @@ export default function DashboardPage() {
         </h3>
         <p className="text-sm text-surface-400 max-w-md mb-5">{error}</p>
         <button
-          onClick={() => loadDashboardData()}
+          onClick={refreshDashboard}
           className="h-10 px-5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition-colors"
         >
           {isFr ? 'Réessayer' : 'Retry'}
@@ -352,7 +360,7 @@ export default function DashboardPage() {
                 </p>
               </div>
               <button
-                onClick={() => loadDashboardData()}
+                onClick={refreshDashboard}
                 className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all hover:scale-105"
               >
                 <FiRefreshCw className="w-3.5 h-3.5" />

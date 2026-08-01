@@ -1,7 +1,11 @@
 /**
  * TeacherNotifications — notification list with icon, title, time and unread pulse dot.
  */
-import { Bell, UserCheck, Calendar } from 'lucide-react';
+import {
+  FiBell as Bell,
+  FiUserCheck as UserCheck,
+  FiCalendar as Calendar,
+} from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 
 const ICON_MAP = { bell: Bell, 'user-check': UserCheck, calendar: Calendar };

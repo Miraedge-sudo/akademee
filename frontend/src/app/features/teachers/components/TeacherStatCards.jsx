@@ -4,13 +4,13 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  BookOpen,
-  Users,
-  ClipboardList,
-  CheckCircle2,
-  TrendingUp,
-  AlertCircle,
-} from 'lucide-react';
+  FiBookOpen as BookOpen,
+  FiUsers as Users,
+  FiList as ClipboardList,
+  FiCheckCircle as CheckCircle2,
+  FiTrendingUp as TrendingUp,
+  FiAlertCircle as AlertCircle,
+} from "react-icons/fi";
 
 const SPARK_PATHS = {
   classes:    'M0,28 L16,24 L33,20 L50,22 L66,14 L83,10 L100,8',

@@ -3,7 +3,7 @@ import { getSubdomain } from "../utils/subdomainHelper";
 import toast from "react-hot-toast";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:1000",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000",
   timeout: Number(import.meta.env.VITE_API_TIMEOUT) || 30000,
   withCredentials: true,
   headers: {

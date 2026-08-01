@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Check } from 'lucide-react';
+import {
+  FiCheck as Check,
+} from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 
 const INITIAL_TASKS = [

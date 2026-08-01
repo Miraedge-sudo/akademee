@@ -11,7 +11,11 @@
  *  - Affiche immédiatement un état (loading, error, empty ou chart)
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { TrendingUp, Loader2, RefreshCw } from 'lucide-react';
+import {
+  FiTrendingUp as TrendingUp,
+  FiLoader as Loader2,
+  FiRefreshCw as RefreshCw,
+} from "react-icons/fi";
 import { getStudentSequenceAverages } from '../../../core/api/gradeCalculationService';
 import { listReportCards } from '../../../core/api/reportCardsService';
 
