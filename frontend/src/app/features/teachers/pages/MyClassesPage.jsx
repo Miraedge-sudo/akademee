@@ -20,19 +20,19 @@ import AttendanceGridModal from "../components/AttendanceGridModal";
 
 // ── Icons ──
 import {
-  BookOpen,
-  Users,
-  ClipboardCheck,
-  Calendar,
-  ChevronRight,
-  Search,
-  RefreshCw,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  GraduationCap,
-} from "lucide-react";
+  FiBookOpen as BookOpen,
+  FiUsers as Users,
+  FiClipboard as ClipboardCheck,
+  FiCalendar as Calendar,
+  FiChevronRight as ChevronRight,
+  FiSearch as Search,
+  FiRefreshCw as RefreshCw,
+  FiAlertCircle as AlertCircle,
+  FiCheckCircle as CheckCircle2,
+  FiClock as Clock,
+  FiXCircle as XCircle,
+  FiAward as GraduationCap,
+} from "react-icons/fi";
 
 // ── Helpers ──
 function initials(name) {

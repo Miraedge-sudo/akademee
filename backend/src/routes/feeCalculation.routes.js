@@ -2,9 +2,11 @@ const express = require('express');
 const feeCalculationController = require('../controllers/feeCalculation.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 const roleMiddleware = require('../middleware/role.middleware');
+const { invalidateCache } = require('../middleware/cache.middleware');
 
 const router = express.Router();
 router.use(authMiddleware);
+router.use(invalidateCache('http'));
 
 router.post('/recalculate', roleMiddleware(['admin']), feeCalculationController.updateAllStatuses);
 router.get('/student/:studentId', feeCalculationController.getStudentFeeStatus);

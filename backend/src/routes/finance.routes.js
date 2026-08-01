@@ -9,8 +9,10 @@ const validateMiddleware = require('../middleware/validate.middleware');
 const auditMiddleware = require('../middleware/audit.middleware');
 const { createFeeValidator, updateFeeValidator, assignFeesValidator } = require('../validators/fee.validator');
 const { standardLimiter } = require('../middleware/rateLimiter.middleware');
+const { invalidateCache } = require('../middleware/cache.middleware');
 
 const router = express.Router();
+router.use(invalidateCache('http'));
 
 router.post(
   '/fees',

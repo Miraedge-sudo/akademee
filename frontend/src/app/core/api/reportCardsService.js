@@ -71,7 +71,7 @@ export async function cancelJob(jobId) {
  * @returns {function} unsubscribe function
  */
 function subscribeToSSE(endpoint, { onProgress, onComplete, onError, timeout = 600000 } = {}) {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:1000";
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
   const subdomain = getSubdomain();
 
   const controller = new AbortController();

@@ -7,11 +7,13 @@ const validateMiddleware = require('../middleware/validate.middleware');
 const auditMiddleware = require('../middleware/audit.middleware');
 const { createUserValidator, updateUserValidator } = require('../validators/userManagement.validator');
 const { standardLimiter } = require('../middleware/rateLimiter.middleware');
+const { invalidateCache } = require('../middleware/cache.middleware');
 
 const avatarUpload = multer.single('avatar');
 
 const router = express.Router();
 router.use(authMiddleware);
+router.use(invalidateCache('http'));
 
 router.get('/', roleMiddleware(['admin']), userManagementController.list);
 router.post(

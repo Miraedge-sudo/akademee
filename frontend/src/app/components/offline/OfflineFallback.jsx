@@ -1,4 +1,8 @@
-import { WifiOff, RefreshCw, Database } from "lucide-react";
+import {
+  FiWifiOff as WifiOff,
+  FiRefreshCw as RefreshCw,
+  FiDatabase as Database,
+} from "react-icons/fi";
 import { useState, useEffect, useMemo } from "react";
 import { useOffline } from "../../core/offline/OfflineContext";
 

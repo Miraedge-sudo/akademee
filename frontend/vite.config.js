@@ -67,12 +67,16 @@ export default defineConfig({
             },
           },
           {
+            // StaleWhileRevalidate: serve the last cached response instantly,
+            // then refresh it in the background — no more waiting up to 5s for
+            // a slow API before the cache kicks in (TanStack Query also keeps
+            // the same data warm client-side).
             urlPattern: /\/api\/.*/i,
-            handler: 'NetworkFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'api-cache',
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 12 },
-              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 12 },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
         ],
@@ -85,7 +89,9 @@ export default defineConfig({
     allowedHosts: ['.lvh.me', 'localhost'],
     proxy: {
       '/api': {
-        target: 'http://localhost:1000',
+        // Backend runs on :5000 (docker-compose exposes 5000:5000).
+        // The old :1000 target made every API call return 502 in dev.
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
     },
@@ -99,7 +105,10 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/') || id.includes('node_modules/react-router')) return 'vendor-react';
-          if (id.includes('node_modules/react-icons') || id.includes('node_modules/lucide-react')) return 'vendor-icons';
+          // Single icon library (react-icons/fi) — lucide-react was removed.
+          if (id.includes('node_modules/react-icons')) return 'vendor-icons';
+          if (id.includes('node_modules/recharts')) return 'vendor-charts';
+          if (id.includes('node_modules/html2canvas') || id.includes('node_modules/jspdf')) return 'vendor-pdf';
           if (id.includes('node_modules/i18next')) return 'vendor-i18n';
           if (id.includes('node_modules/axios')) return 'vendor-utils';
           if (id.includes('node_modules/lottie-react')) return 'vendor-anim';

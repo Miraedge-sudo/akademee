@@ -14,17 +14,17 @@ import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  BookOpen,
-  Users,
-  GraduationCap,
-  ClipboardCheck,
-  TrendingUp,
-  Star,
-  ArrowRight,
-  Search,
-  XCircle,
-  Eye,
-} from 'lucide-react';
+  FiBookOpen as BookOpen,
+  FiUsers as Users,
+  FiAward as GraduationCap,
+  FiClipboard as ClipboardCheck,
+  FiTrendingUp as TrendingUp,
+  FiStar as Star,
+  FiArrowRight as ArrowRight,
+  FiSearch as Search,
+  FiXCircle as XCircle,
+  FiEye as Eye,
+} from "react-icons/fi";
 import { getEnrollments } from '../../../core/api/enrollmentService';
 
 // ── Color palette for class cards ──

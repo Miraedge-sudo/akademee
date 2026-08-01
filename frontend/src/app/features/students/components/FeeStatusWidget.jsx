@@ -3,7 +3,9 @@
  * Uses real data from the API passed via props.
  */
 import { useEffect, useRef } from 'react';
-import { Clock } from 'lucide-react';
+import {
+  FiClock as Clock,
+} from "react-icons/fi";
 
 function getStatusConfig(status, pct) {
   if (status === 'paid' || pct >= 100) {

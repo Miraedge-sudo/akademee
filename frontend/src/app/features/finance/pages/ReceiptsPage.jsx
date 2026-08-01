@@ -15,8 +15,6 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useTheme } from "../../../core/hooks/useTheme";
 import toast from "react-hot-toast";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import {
   FiChevronLeft,
   FiSearch,
@@ -92,6 +90,13 @@ function ReceiptModal({ payment, onClose, t, isFr, schoolName, schoolAddress, pc
     if (!element) return;
 
     try {
+      // Lazy-load the heavy PDF libs ONLY when the user downloads — they stay
+      // out of the route chunk and load on demand from separate CDN chunks.
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,

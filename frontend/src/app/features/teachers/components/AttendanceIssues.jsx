@@ -1,4 +1,6 @@
-import { ArrowRight } from 'lucide-react';
+import {
+  FiArrowRight as ArrowRight,
+} from "react-icons/fi";
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 

@@ -18,13 +18,13 @@ import { getStudentMe } from '../../../core/api/studentService';
 import { getAttendanceStats } from '../../../core/api/attendanceService';
 import AttendanceMiniCalendar from '../components/AttendanceMiniCalendar';
 import {
-  ArrowLeft,
-  CalendarCheck,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  TrendingUp,
-} from 'lucide-react';
+  FiArrowLeft as ArrowLeft,
+  FiCalendar as CalendarCheck,
+  FiCheckCircle as CheckCircle2,
+  FiXCircle as XCircle,
+  FiClock as Clock,
+  FiTrendingUp as TrendingUp,
+} from "react-icons/fi";
 
 function StatCard({ icon: Icon, label, value, color, sub }) {
   return (

@@ -21,15 +21,15 @@ import { getStudentGrades } from '../../../core/api/gradeService';
 import SubjectGrades from '../components/SubjectGrades';
 import SequencePerformance from '../components/SequencePerformance';
 import {
-  ArrowLeft,
-  TrendingUp,
-  Award,
-  BookOpen,
-  BarChart3,
-  Medal,
-  ClipboardList,
-  RotateCcw,
-} from 'lucide-react';
+  FiArrowLeft as ArrowLeft,
+  FiTrendingUp as TrendingUp,
+  FiAward as Award,
+  FiBookOpen as BookOpen,
+  FiBarChart2 as BarChart3,
+  FiAward as Medal,
+  FiList as ClipboardList,
+  FiRotateCcw as RotateCcw,
+} from "react-icons/fi";
 
 function scoreColor(score) {
   const pct = (score / 20) * 100;

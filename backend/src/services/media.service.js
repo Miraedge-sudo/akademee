@@ -5,6 +5,7 @@
 
 const cloudinary = require('../config/cloudinary');
 const sql = require('../config/database');
+const { optimizeImageUrl } = require('../utils/imageUrl');
 
 class MediaService {
   cloudinaryReady() {
@@ -94,12 +95,18 @@ class MediaService {
   }
 
   async listGallery(schoolId) {
-    return sql`
+    const rows = await sql`
       SELECT media_id, url, caption, sort_order
       FROM school_media
       WHERE school_id = ${schoolId} AND media_type = 'gallery'
       ORDER BY sort_order ASC, created_at ASC
     `;
+    // Serve gallery photos via Cloudinary on-the-fly transforms (WebP/AVIF,
+    // resized to 800px) — the stored URL stays the original.
+    return rows.map((row) => ({
+      ...row,
+      url: optimizeImageUrl(row.url, { width: 800 }),
+    }));
   }
 }
 

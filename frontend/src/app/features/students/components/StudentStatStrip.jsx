@@ -2,7 +2,12 @@
  * StudentStatStrip — 4 KPI cards: Average, Attendance, Fees, Rank.
  */
 import { useEffect, useRef } from 'react';
-import { BarChart2, CalendarCheck, CreditCard, Award } from 'lucide-react';
+import {
+  FiBarChart2 as BarChart2,
+  FiCalendar as CalendarCheck,
+  FiCreditCard as CreditCard,
+  FiAward as Award,
+} from "react-icons/fi";
 
 function useCountUp(ref, target, isDecimal, suffix = '', duration = 1300) {
   useEffect(() => {

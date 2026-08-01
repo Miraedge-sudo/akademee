@@ -10,8 +10,10 @@ const uploadMiddleware = require('../middleware/upload.middleware');
 const { recordGradeValidator, updateGradeValidator } = require('../validators/grade.validator');
 const validateMiddleware = require('../middleware/validate.middleware');
 const gradeCalculationController = require('../controllers/gradeCalculation.controller');
+const { invalidateCache } = require('../middleware/cache.middleware');
 
 const router = express.Router();
+router.use(invalidateCache('http'));
 
 router.post(
   '/',

@@ -20,8 +20,10 @@ const {
 } = require('../validators/school.validator');
 const { saveOnboardingValidator } = require('../validators/onboarding.validator');
 const validateMiddleware = require('../middleware/validate.middleware');
+const { invalidateCache } = require('../middleware/cache.middleware');
 
 const router = express.Router();
+router.use(invalidateCache('http'));
 
 const registerLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

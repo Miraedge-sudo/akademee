@@ -10,8 +10,10 @@ const roleMiddleware = require('../middleware/role.middleware');
 const { createStudentValidator, updateStudentValidator } = require('../validators/student.validator');
 const { param } = require('express-validator');
 const validateMiddleware = require('../middleware/validate.middleware');
+const { invalidateCache } = require('../middleware/cache.middleware');
 
 const router = express.Router();
+router.use(invalidateCache('http'));
 
 const uuidParam = [param('id').isUUID().withMessage('Student ID must be a valid UUID')];
 

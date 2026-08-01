@@ -8,18 +8,12 @@ const { resolveSubdomain } = require('../utils/domainHelper');
 const tenantMiddleware = async (req, res, next) => {
   try {
     if (req.user?.schoolId) {
+      // The JWT already carries the tenant identity (schoolId + subdomain) —
+      // no extra DB round trip is needed for authenticated requests.
       req.schoolId = req.user.schoolId;
       req.tenantId = req.user.schoolId;
-
-      const schools = await sql`
-        SELECT school_id, name, subdomain, email, city, region, is_active, website_template_id, subscription_plan
-        FROM schools
-        WHERE school_id = ${req.user.schoolId} AND is_active = true
-      `;
-
-      if (schools.length > 0) {
-        req.school = schools[0];
-        req.subdomain = schools[0].subdomain;
+      if (!req.subdomain && req.user.subdomain) {
+        req.subdomain = req.user.subdomain;
       }
 
       return next();

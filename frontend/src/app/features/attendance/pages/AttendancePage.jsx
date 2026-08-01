@@ -29,24 +29,24 @@ import {
   getMonthlyTrends,
 } from "../../../core/api/attendanceService";
 import {
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  Users,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  AlertCircle,
-  Save,
-  RefreshCw,
-  GraduationCap,
-  BookOpen,
-  TrendingUp,
-  BarChart3,
-  Activity,
-  TrendingDown,
-} from "lucide-react";
+  FiCalendar as CalendarDays,
+  FiChevronLeft as ChevronLeft,
+  FiChevronRight as ChevronRight,
+  FiSearch as Search,
+  FiUsers as Users,
+  FiCheckCircle as CheckCircle2,
+  FiXCircle as XCircle,
+  FiClock as Clock,
+  FiAlertCircle as AlertCircle,
+  FiSave as Save,
+  FiRefreshCw as RefreshCw,
+  FiAward as GraduationCap,
+  FiBookOpen as BookOpen,
+  FiTrendingUp as TrendingUp,
+  FiBarChart2 as BarChart3,
+  FiActivity as Activity,
+  FiTrendingDown as TrendingDown,
+} from "react-icons/fi";
 
 const STATUS_CONFIG = [
   {

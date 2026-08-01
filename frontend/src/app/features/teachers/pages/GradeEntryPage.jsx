@@ -22,19 +22,19 @@ import sequencesService from "../../../core/api/sequencesService";
 import { useOffline } from "../../../core/offline/OfflineContext";
 import { OPERATIONS } from "../../../core/offline/syncQueue";
 import {
-  BookOpen,
-  Users,
-  Save,
-  AlertCircle,
-  CheckCircle2,
-  ChevronDown,
-  Search,
-  GraduationCap,
-  Bookmark,
-  CalendarDays,
-  Lock,
-  Clock,
-} from "lucide-react";
+  FiBookOpen as BookOpen,
+  FiUsers as Users,
+  FiSave as Save,
+  FiAlertCircle as AlertCircle,
+  FiCheckCircle as CheckCircle2,
+  FiChevronDown as ChevronDown,
+  FiSearch as Search,
+  FiAward as GraduationCap,
+  FiBookmark as Bookmark,
+  FiCalendar as CalendarDays,
+  FiLock as Lock,
+  FiClock as Clock,
+} from "react-icons/fi";
 import GradeEntrySkeleton from "../../../components/ui/GradeEntrySkeleton";
 
 // ── Score color helpers ──

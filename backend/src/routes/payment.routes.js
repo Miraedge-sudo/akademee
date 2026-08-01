@@ -9,8 +9,10 @@ const roleMiddleware = require('../middleware/role.middleware');
 const tenantMiddleware = require('../middleware/tenant.middleware');
 const { initiatePaymentValidator, confirmPaymentValidator } = require('../validators/payment.validator');
 const validateMiddleware = require('../middleware/validate.middleware');
+const { invalidateCache } = require('../middleware/cache.middleware');
 
 const router = express.Router();
+router.use(invalidateCache('http'));
 
 router.post(
   '/',

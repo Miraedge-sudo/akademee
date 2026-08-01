@@ -20,18 +20,18 @@ import { getStudentFeeSummary } from '../../../core/api/feeCalculationService';
 import { getStudentFeeBreakdown } from '../../../core/api/feeCalculationService';
 import FeeStatusWidget from '../components/FeeStatusWidget';
 import {
-  ArrowLeft,
-  Wallet,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  AlertCircle,
-  Receipt,
-  CreditCard,
-  CalendarDays,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+  FiArrowLeft as ArrowLeft,
+  FiCreditCard as Wallet,
+  FiCheckCircle as CheckCircle2,
+  FiClock as Clock,
+  FiAlertTriangle as AlertTriangle,
+  FiAlertCircle as AlertCircle,
+  FiFileText as Receipt,
+  FiCreditCard as CreditCard,
+  FiCalendar as CalendarDays,
+  FiChevronDown as ChevronDown,
+  FiChevronUp as ChevronUp,
+} from "react-icons/fi";
 
 function getFeeStatusColor(status) {
   switch (status) {

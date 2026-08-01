@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { Download, Smartphone, X } from "lucide-react";
+import {
+  FiDownload as Download,
+  FiSmartphone as Smartphone,
+  FiX as X,
+} from "react-icons/fi";
 
 /**
  * InstallPWAButton — Bouton "Installer l'application"

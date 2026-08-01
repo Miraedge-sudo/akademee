@@ -2,70 +2,84 @@ const sql = require("../config/database");
 
 class DashboardService {
   async getStats(schoolId, { academicYearId } = {}) {
-    // If no academicYearId provided, use the active academic year
-    if (!academicYearId) {
-      const [activeYear] = await sql`
-        SELECT academic_year_id FROM academic_years 
-        WHERE school_id = ${schoolId} AND is_current = true
-        LIMIT 1
-      `;
-      academicYearId = activeYear?.academic_year_id || null;
-    }
+    // ── Phase 1: resolve active year + run all independent aggregates in
+    // parallel (1 round trip instead of 9 sequential ones). ──
+    const [
+      activeYearRows,
+      studentCount,
+      teacherCount,
+      secretaryCount,
+      parentCount,
+      accountantCount,
+      classCount,
+      userCount,
+      activeYearCheck,
+    ] = await Promise.all([
+      academicYearId
+        ? Promise.resolve([])
+        : sql`
+            SELECT academic_year_id FROM academic_years
+            WHERE school_id = ${schoolId} AND is_current = true
+            LIMIT 1
+          `,
+      sql`
+        SELECT COUNT(*)::int AS total FROM students WHERE school_id = ${schoolId} AND status = 'active'
+      `,
+      // Teacher count: from user_roles (not class_teachers) because teachers may
+      // be assigned via subject_teachers rather than class_teachers. The frontend
+      // explicitly requests stats without academic year filtering.
+      sql`
+        SELECT COUNT(*)::int AS total
+        FROM user_roles ur
+        JOIN users u ON ur.user_id = u.user_id
+        JOIN roles r ON ur.role_id = r.role_id
+        WHERE u.school_id = ${schoolId}
+          AND UPPER(r.role_code) = 'TEACHER'
+          AND u.is_active = true
+      `,
+      sql`
+        SELECT COUNT(*)::int AS total
+        FROM user_roles ur
+        JOIN users u ON ur.user_id = u.user_id
+        JOIN roles r ON ur.role_id = r.role_id
+        WHERE u.school_id = ${schoolId}
+          AND UPPER(r.role_code) = 'SECRETARY'
+          AND u.is_active = true
+      `,
+      sql`
+        SELECT COUNT(*)::int AS total
+        FROM user_roles ur
+        JOIN users u ON ur.user_id = u.user_id
+        JOIN roles r ON ur.role_id = r.role_id
+        WHERE u.school_id = ${schoolId}
+          AND UPPER(r.role_code) = 'PARENT'
+          AND u.is_active = true
+      `,
+      sql`
+        SELECT COUNT(*)::int AS total
+        FROM user_roles ur
+        JOIN users u ON ur.user_id = u.user_id
+        JOIN roles r ON ur.role_id = r.role_id
+        WHERE u.school_id = ${schoolId}
+          AND UPPER(r.role_code) = 'ACCOUNTANT'
+          AND u.is_active = true
+      `,
+      // Class count: ALL classes regardless of academic year.
+      sql`
+        SELECT COUNT(*)::int AS total FROM classes WHERE school_id = ${schoolId}
+      `,
+      sql`
+        SELECT COUNT(*)::int AS total FROM users WHERE school_id = ${schoolId} AND is_active = true
+      `,
+      sql`
+        SELECT COUNT(*)::int AS total FROM academic_years WHERE school_id = ${schoolId} AND is_current = true
+      `,
+    ]);
 
-    // Student count: ALL active students regardless of academic year.
-    const [studentCount] = await sql`
-      SELECT COUNT(*)::int AS total FROM students WHERE school_id = ${schoolId} AND status = 'active'
-    `;
+    // Resolve the academic year used by the revenue query.
+    academicYearId = academicYearId || activeYearRows[0]?.academic_year_id || null;
 
-    // Teacher count: from user_roles (not class_teachers) because teachers may
-    // be assigned via subject_teachers rather than class_teachers. The frontend
-    // explicitly requests stats without academic year filtering.
-    const [teacherCount] = await sql`
-      SELECT COUNT(*)::int AS total
-      FROM user_roles ur
-      JOIN users u ON ur.user_id = u.user_id
-      JOIN roles r ON ur.role_id = r.role_id
-      WHERE u.school_id = ${schoolId} 
-        AND UPPER(r.role_code) = 'TEACHER' 
-        AND u.is_active = true
-    `;
-
-    const [secretaryCount] = await sql`
-      SELECT COUNT(*)::int AS total
-      FROM user_roles ur
-      JOIN users u ON ur.user_id = u.user_id
-      JOIN roles r ON ur.role_id = r.role_id
-      WHERE u.school_id = ${schoolId} 
-        AND UPPER(r.role_code) = 'SECRETARY' 
-        AND u.is_active = true
-    `;
-
-    const [parentCount] = await sql`
-      SELECT COUNT(*)::int AS total
-      FROM user_roles ur
-      JOIN users u ON ur.user_id = u.user_id
-      JOIN roles r ON ur.role_id = r.role_id
-      WHERE u.school_id = ${schoolId} 
-        AND UPPER(r.role_code) = 'PARENT' 
-        AND u.is_active = true
-    `;
-
-    const [accountantCount] = await sql`
-      SELECT COUNT(*)::int AS total
-      FROM user_roles ur
-      JOIN users u ON ur.user_id = u.user_id
-      JOIN roles r ON ur.role_id = r.role_id
-      WHERE u.school_id = ${schoolId} 
-        AND UPPER(r.role_code) = 'ACCOUNTANT' 
-        AND u.is_active = true
-    `;
-
-    // Class count: ALL classes regardless of academic year.
-    // The frontend explicitly requests stats without year filtering.
-    const [classCount] = await sql`
-      SELECT COUNT(*)::int AS total FROM classes WHERE school_id = ${schoolId}
-    `;
-
+    // ── Phase 2: revenue depends on the resolved academic year. ──
     const [revenueData] = await sql`
       SELECT COALESCE(SUM(amount), 0)::numeric AS total
       FROM payments
@@ -73,24 +87,18 @@ class DashboardService {
         ${academicYearId ? sql`AND academic_year_id = ${academicYearId}` : sql``}
     `;
 
-    const [userCount] = await sql`
-      SELECT COUNT(*)::int AS total FROM users WHERE school_id = ${schoolId} AND is_active = true
-    `;
-
-    const [activeYearCheck] = await sql`
-      SELECT COUNT(*)::int AS total FROM academic_years WHERE school_id = ${schoolId} AND is_current = true
-    `;
-
+    // The `postgres` driver always returns rows as an ARRAY, so each COUNT
+    // result is `[ { total: N } ]` — read `[0]?.total` (undefined rows safe).
     return {
-      totalStudents: studentCount.total,
-      totalTeachers: teacherCount.total,
-      totalSecretaries: secretaryCount.total,
-      totalParents: parentCount.total,
-      totalAccountants: accountantCount.total,
-      totalUsers: userCount.total,
-      totalClasses: classCount.total,
-      totalRevenue: Number(revenueData.total),
-      activeAcademicYear: activeYearCheck.total > 0,
+      totalStudents: studentCount[0]?.total ?? 0,
+      totalTeachers: teacherCount[0]?.total ?? 0,
+      totalSecretaries: secretaryCount[0]?.total ?? 0,
+      totalParents: parentCount[0]?.total ?? 0,
+      totalAccountants: accountantCount[0]?.total ?? 0,
+      totalUsers: userCount[0]?.total ?? 0,
+      totalClasses: classCount[0]?.total ?? 0,
+      totalRevenue: Number(revenueData?.total ?? 0),
+      activeAcademicYear: (activeYearCheck[0]?.total ?? 0) > 0,
       academicYearId: academicYearId,
     };
   }
@@ -98,49 +106,51 @@ class DashboardService {
   async getRecentActivities(schoolId, { limit = 10, academicYearId } = {}) {
     limit = Math.min(Math.max(1, limit), 50);
 
-    // If no academicYearId provided, use the active academic year
+    // Resolve the academic year filter first (used by all three queries).
     if (!academicYearId) {
       const [activeYear] = await sql`
-        SELECT academic_year_id FROM academic_years 
+        SELECT academic_year_id FROM academic_years
         WHERE school_id = ${schoolId} AND is_current = true
         LIMIT 1
       `;
       academicYearId = activeYear?.academic_year_id || null;
     }
 
-    const students = await sql`
-      SELECT CONCAT(u.first_name, ' ', u.last_name) AS name, 'student_created' AS action, st.created_at AS date
-      FROM students st
-      JOIN users u ON st.user_id = u.user_id
-      LEFT JOIN enrollments e ON st.student_id = e.student_id AND e.status = 'active'
-      LEFT JOIN classes c ON e.class_id = c.class_id
-      WHERE st.school_id = ${schoolId}
-        ${academicYearId ? sql`AND c.academic_year_id = ${academicYearId}` : sql``}
-      ORDER BY st.created_at DESC
-      LIMIT ${limit}
-    `;
-
-    const payments = await sql`
-      SELECT CONCAT(u.first_name, ' ', u.last_name) AS name, 'payment_received' AS action, p.created_at AS date
-      FROM payments p
-      LEFT JOIN students st ON p.student_id = st.student_id
-      LEFT JOIN users u ON st.user_id = u.user_id
-      WHERE p.school_id = ${schoolId}
-        ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
-      ORDER BY p.created_at DESC
-      LIMIT ${limit}
-    `;
-
-    const grades = await sql`
-      SELECT CONCAT(u.first_name, ' ', u.last_name) AS name, 'grade_recorded' AS action, g.created_at AS date
-      FROM grades g
-      LEFT JOIN students st ON g.student_id = st.student_id
-      LEFT JOIN users u ON st.user_id = u.user_id
-      ${academicYearId ? sql`JOIN periods p ON g.period_id = p.period_id AND p.academic_year_id = ${academicYearId}` : sql``}
-      WHERE g.school_id = ${schoolId}
-      ORDER BY g.created_at DESC
-      LIMIT ${limit}
-    `;
+    // ── The three source queries are independent — run them in parallel
+    // (1 round trip instead of 3 sequential ones). ──
+    const [students, payments, grades] = await Promise.all([
+      sql`
+        SELECT CONCAT(u.first_name, ' ', u.last_name) AS name, 'student_created' AS action, st.created_at AS date
+        FROM students st
+        JOIN users u ON st.user_id = u.user_id
+        LEFT JOIN enrollments e ON st.student_id = e.student_id AND e.status = 'active'
+        LEFT JOIN classes c ON e.class_id = c.class_id
+        WHERE st.school_id = ${schoolId}
+          ${academicYearId ? sql`AND c.academic_year_id = ${academicYearId}` : sql``}
+        ORDER BY st.created_at DESC
+        LIMIT ${limit}
+      `,
+      sql`
+        SELECT CONCAT(u.first_name, ' ', u.last_name) AS name, 'payment_received' AS action, p.created_at AS date
+        FROM payments p
+        LEFT JOIN students st ON p.student_id = st.student_id
+        LEFT JOIN users u ON st.user_id = u.user_id
+        WHERE p.school_id = ${schoolId}
+          ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
+        ORDER BY p.created_at DESC
+        LIMIT ${limit}
+      `,
+      sql`
+        SELECT CONCAT(u.first_name, ' ', u.last_name) AS name, 'grade_recorded' AS action, g.created_at AS date
+        FROM grades g
+        LEFT JOIN students st ON g.student_id = st.student_id
+        LEFT JOIN users u ON st.user_id = u.user_id
+        ${academicYearId ? sql`JOIN periods p ON g.period_id = p.period_id AND p.academic_year_id = ${academicYearId}` : sql``}
+        WHERE g.school_id = ${schoolId}
+        ORDER BY g.created_at DESC
+        LIMIT ${limit}
+      `,
+    ]);
 
     const all = [...students, ...payments, ...grades]
       .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -161,7 +171,7 @@ class DashboardService {
   async getFinanceStats(schoolId) {
     // If no academicYearId provided, use the active academic year
     const [activeYear] = await sql`
-      SELECT academic_year_id FROM academic_years 
+      SELECT academic_year_id FROM academic_years
       WHERE school_id = ${schoolId} AND is_current = true
       LIMIT 1
     `;
@@ -304,24 +314,34 @@ class DashboardService {
   }
 
   async getRevenueData(schoolId, { months = 6, academicYearId } = {}) {
-    // If no academicYearId provided, use the active academic year
-    if (!academicYearId) {
-      const [activeYear] = await sql`
-        SELECT academic_year_id FROM academic_years 
-        WHERE school_id = ${schoolId} AND is_current = true
-        LIMIT 1
-      `;
-      academicYearId = activeYear?.academic_year_id || null;
-    }
-
+    // Single combined query: resolve the active year inline so the revenue
+    // aggregation happens in ONE round trip instead of two sequential ones.
+    // Semantics preserved exactly:
+    //  - explicit academicYearId → filter by it
+    //  - no year but an active year exists → filter by the active year
+    //  - no year and no active year → fall back to the last N months
     const rows = await sql`
       SELECT
-        DATE_TRUNC('month', created_at) AS month,
-        COALESCE(SUM(amount), 0)::numeric AS total
-      FROM payments
-      WHERE school_id = ${schoolId} AND status = 'completed'
-        ${academicYearId ? sql`AND academic_year_id = ${academicYearId}` : sql`AND created_at >= NOW() - INTERVAL '1 month' * ${months}`}
-      GROUP BY DATE_TRUNC('month', created_at)
+        DATE_TRUNC('month', p.created_at) AS month,
+        COALESCE(SUM(p.amount), 0)::numeric AS total
+      FROM payments p
+      -- At most ONE current year per school (DISTINCT ON mirrors the original
+      -- LIMIT 1 lookup and prevents the join from multiplying payment rows).
+      LEFT JOIN (
+        SELECT DISTINCT ON (school_id) school_id, academic_year_id
+        FROM academic_years
+        WHERE is_current = true AND school_id = ${schoolId}
+        ORDER BY school_id, academic_year_id
+      ) ay ON ay.school_id = p.school_id
+      WHERE p.school_id = ${schoolId}
+        AND p.status = 'completed'
+        AND (
+          ${academicYearId
+            ? sql`p.academic_year_id = ${academicYearId}`
+            : sql`(ay.academic_year_id IS NOT NULL AND p.academic_year_id = ay.academic_year_id)
+                   OR (ay.academic_year_id IS NULL AND p.created_at >= NOW() - INTERVAL '1 month' * ${months})`}
+        )
+      GROUP BY DATE_TRUNC('month', p.created_at)
       ORDER BY month ASC
     `;
 

@@ -1,4 +1,9 @@
-import { WifiOff, Upload, RefreshCw, X } from "lucide-react";
+import {
+  FiWifiOff as WifiOff,
+  FiUpload as Upload,
+  FiRefreshCw as RefreshCw,
+  FiX as X,
+} from "react-icons/fi";
 import { useState, useEffect } from "react";
 import { useOffline } from "../../core/offline/OfflineContext";
 
