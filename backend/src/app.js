@@ -57,6 +57,7 @@ const v1PeriodRoutes = require('./routes/v1/period.routes');
 const v1SequenceRoutes = require('./routes/v1/sequence.routes');
 const v1GradingRoutes = require('./routes/v1/gradingSystem.routes');
 const reportCardJobsRoutes = require('./routes/reportCardJobs.routes');
+const universityRoutes = require('./routes/v1/university.routes');
 
 const app = express();
 
@@ -131,6 +132,7 @@ app.use('/api/invites', inviteRoutes);
 app.use('/api/v1/periodes', v1PeriodRoutes);
 app.use('/api/v1/sequences', v1SequenceRoutes);
 app.use('/api/v1', v1GradingRoutes);
+app.use('/api/v1/university', universityRoutes);
 
 // ── Background report card job routes ──
 app.use('/api/v1/report-card-jobs', reportCardJobsRoutes);

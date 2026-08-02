@@ -302,5 +302,23 @@ export const API_ENDPOINTS = {
     CALC_PERIOD_AVG: "/api/v1/calculations/period-average",
     CALC_COHORT_RANKS: "/api/v1/calculations/cohort-ranks",
   },
+
+  // University Modules (Faculties, Departments, LMD Programs, Research, Publications)
+  UNIVERSITY: {
+    FACULTIES: "/api/v1/university/faculties",
+    FACULTY: (id) => `/api/v1/university/faculties/${id}`,
+    FACULTY_STATS: (id) => `/api/v1/university/faculties/${id}/stats`,
+    FACULTY_PROGRAMS: (id) => `/api/v1/university/faculties/${id}/programs`,
+    DEPARTMENTS: "/api/v1/university/departments",
+    DEPARTMENT: (id) => `/api/v1/university/departments/${id}`,
+    PROGRAMS: "/api/v1/university/programs",
+    PROGRAM: (id) => `/api/v1/university/programs/${id}`,
+    RESEARCH: "/api/v1/university/research",
+    RESEARCH_ITEM: (id) => `/api/v1/university/research/${id}`,
+    RESEARCH_PUBLIC: "/api/v1/university/research/public",
+    PUBLICATIONS: "/api/v1/university/publications",
+    PUBLICATION: (id) => `/api/v1/university/publications/${id}`,
+    PUBLICATIONS_PUBLIC: "/api/v1/university/publications/public",
+  },
 };
 export default API_ENDPOINTS;
