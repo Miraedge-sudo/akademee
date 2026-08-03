@@ -27,10 +27,20 @@ import {
   getRevenueData,
 } from '../../../core/api/dashboardService';
 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+
 import { useTheme } from '../../../core/hooks/useTheme';
 import Spinner from '../../../components/ui/Spinner';
 import Card from '../../../components/ui/Card';
-import { hexToRgba, formatCurrency } from '../../../components/utils/colors';
+import { formatCurrency } from '../../../components/utils/colors';
 
 // ── Month name short mapping ──
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
@@ -135,7 +145,7 @@ function StaffRow({ label, count, total, color }) {
   );
 }
 
-// ── Revenue bar chart ──
+// ── Revenue bar chart (Recharts BarChart) ──
 function RevenueChart({ data, loading, lang, pc = '#085041' }) {
   const months = lang === 'fr' ? MONTHS_FR : MONTHS_EN;
 
@@ -156,36 +166,63 @@ function RevenueChart({ data, loading, lang, pc = '#085041' }) {
     );
   }
 
-  const maxValue = Math.max(...data.map((d) => d.total), 1);
+  // Transform API rows ({ month: 'YYYY-MM-01T...', total }) into
+  // Recharts-friendly points with localized month labels.
+  const chartData = data.map((item) => {
+    const date = new Date(item.month);
+    return {
+      name: months[date.getMonth()] || String(item.month || '').slice(0, 7),
+      total: Number(item.total) || 0,
+    };
+  });
 
   return (
-    <div className="h-64 flex items-end justify-between gap-1.5">
-      {data.map((item, idx) => {
-        const date = new Date(item.month);
-        const monthLabel = months[date.getMonth()];
-        const heightPct = (item.total / maxValue) * 100;
-        const isMax = item.total === maxValue;
-
-        return (
-          <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 group">
-            <span className="text-[10px] font-semibold text-surface-500 dark:text-surface-400 opacity-0 group-hover:opacity-100 transition-opacity">
-              {formatCurrency(item.total)}
-            </span>
-            <div
-              className="w-full rounded-t-md transition-all duration-300 group-hover:brightness-110"
-              style={{
-                height: `${Math.max(heightPct, 4)}%`,
-                background: isMax
-                  ? `linear-gradient(180deg, ${pc}, ${hexToRgba(pc, 0.53)})`
-                  : `linear-gradient(180deg, ${hexToRgba(pc, 0.53)}, ${hexToRgba(pc, 0.27)})`,
-              }}
-            />
-            <span className="text-[10px] text-surface-500 dark:text-surface-400 font-medium">
-              {monthLabel}
-            </span>
-          </div>
-        );
-      })}
+    <div className="h-64 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={chartData} margin={{ top: 8, right: 4, bottom: 0, left: -14 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+          <XAxis
+            dataKey="name"
+            tick={{ fontSize: 11, fill: '#9CA3AF' }}
+            tickLine={false}
+            axisLine={{ stroke: '#e5e7eb' }}
+            interval="preserveStartEnd"
+          />
+          <YAxis
+            tick={{ fontSize: 11, fill: '#9CA3AF' }}
+            tickLine={false}
+            axisLine={false}
+            width={42}
+            tickFormatter={(v) =>
+              v >= 1000000 ? `${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`
+            }
+          />
+          <Tooltip
+            cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+            content={({ active, payload, label }) => {
+              if (!active || !payload || payload.length === 0) return null;
+              return (
+                <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl shadow-xl px-3 py-2">
+                  <div className="text-[11px] font-semibold text-surface-500 dark:text-surface-400 mb-0.5">
+                    {label}
+                  </div>
+                  <div className="text-[13px] font-bold" style={{ color: pc }}>
+                    {formatCurrency(payload[0].value)}
+                  </div>
+                </div>
+              );
+            }}
+          />
+          <Bar
+            dataKey="total"
+            fill={pc}
+            radius={[6, 6, 0, 0]}
+            maxBarSize={42}
+            animationDuration={700}
+            animationEasing="ease-out"
+          />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }

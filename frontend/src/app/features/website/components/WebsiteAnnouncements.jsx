@@ -82,6 +82,9 @@ export default function WebsiteAnnouncements({ school, variant = "bold", primary
     return luminance > 0.179;
   };
 
+  // Text color that reads well on the primary color (used across cards + footer CTA)
+  const textOnPrimary = isLight(primaryColor) ? "#1a1a18" : "#ffffff";
+
   // ── Variant base styles ──
   const sectionBg = variant === "playful"
     ? isDark ? "bg-[#1e1e1e]" : "bg-gradient-to-b from-white via-[#f8f7f4] to-white"
@@ -145,7 +148,6 @@ export default function WebsiteAnnouncements({ school, variant = "bold", primary
             const p = getPriority(ann.priority);
             const Icon = p.icon;
             const isExpanded = expanded === ann.id;
-            const textOnPrimary = isLight(primaryColor) ? "#1a1a18" : "#ffffff";
 
             return (
               <div

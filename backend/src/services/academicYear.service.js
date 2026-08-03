@@ -10,6 +10,12 @@ class AcademicYearService {
       endDate: row.end_date,
       isCurrent: row.is_current,
       createdAt: row.created_at,
+      // Per-year stats used by the academic years page (YearCard).
+      // Default to 0 when the row was fetched without the stats join
+      // (e.g. single-year create/update flows).
+      students: row.student_count ?? 0,
+      teachers: row.teacher_count ?? 0,
+      classes: row.class_count ?? 0,
     };
   }
 
@@ -35,7 +41,19 @@ class AcademicYearService {
 
   async getById(schoolId, yearId) {
     const rows = await sql`
-      SELECT * FROM academic_years WHERE academic_year_id = ${yearId} AND school_id = ${schoolId}
+      SELECT ay.*,
+        (SELECT COUNT(*)::int FROM enrollments e
+          WHERE e.academic_year_id = ay.academic_year_id AND e.status = 'active'
+        ) AS student_count,
+        (SELECT COUNT(*)::int FROM classes c
+          WHERE c.academic_year_id = ay.academic_year_id AND c.school_id = ay.school_id
+        ) AS class_count,
+        (SELECT COUNT(DISTINCT st.teacher_id)::int FROM subject_teachers st
+          JOIN classes c ON c.class_id = st.class_id
+          WHERE c.academic_year_id = ay.academic_year_id AND c.school_id = ay.school_id
+        ) AS teacher_count
+      FROM academic_years ay
+      WHERE ay.academic_year_id = ${yearId} AND ay.school_id = ${schoolId}
     `;
     if (rows.length === 0) throw new Error('Academic year not found');
     return this.formatYear(rows[0]);
@@ -46,7 +64,20 @@ class AcademicYearService {
     offset = Math.max(0, offset);
 
     const rows = await sql`
-      SELECT * FROM academic_years WHERE school_id = ${schoolId} ORDER BY start_date DESC NULLS LAST
+      SELECT ay.*,
+        (SELECT COUNT(*)::int FROM enrollments e
+          WHERE e.academic_year_id = ay.academic_year_id AND e.status = 'active'
+        ) AS student_count,
+        (SELECT COUNT(*)::int FROM classes c
+          WHERE c.academic_year_id = ay.academic_year_id AND c.school_id = ay.school_id
+        ) AS class_count,
+        (SELECT COUNT(DISTINCT st.teacher_id)::int FROM subject_teachers st
+          JOIN classes c ON c.class_id = st.class_id
+          WHERE c.academic_year_id = ay.academic_year_id AND c.school_id = ay.school_id
+        ) AS teacher_count
+      FROM academic_years ay
+      WHERE ay.school_id = ${schoolId}
+      ORDER BY ay.start_date DESC NULLS LAST
       LIMIT ${limit} OFFSET ${offset}
     `;
 

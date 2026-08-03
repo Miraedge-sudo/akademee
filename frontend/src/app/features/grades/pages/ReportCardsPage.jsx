@@ -153,23 +153,31 @@ export default function ReportCardsPage() {
   const [payloadLoading, setPayloadLoading] = useState(false);
 
   // ── Form states ──
-  const [genStudentId, setGenStudentId] = useState("");
+  const [genStudentIds, setGenStudentIds] = useState([]); // multi-select students
   const [genStudentSearch, setGenStudentSearch] = useState("");
   const [genPeriodId, setGenPeriodId] = useState("");
   const [genSequenceId, setGenSequenceId] = useState("");
   const [genSequences, setGenSequences] = useState([]);
   const [genEduSystem, setGenEduSystem] = useState("");
-  const [genClassId, setGenClassId] = useState("");
+  const [genClassIds, setGenClassIds] = useState([]); // multi-select classes
   const [genBatchPeriodId, setGenBatchPeriodId] = useState("");
   const [genBatchSequenceId, setGenBatchSequenceId] = useState("");
   const [genBatchSequences, setGenBatchSequences] = useState([]);
   const [genBatchEduSystem, setGenBatchEduSystem] = useState("");
 
-  // ── Education system for selected class/student ──
-  const selectedClass = classes.find(c => c.id === genClassId);
-  const selectedStudentClass = genStudentId
-    ? classes.find(c => c.id === students.find(s => (s.id === genStudentId))?.classId)
-    : null;
+  // ── Education system for selected class (first selected) ──
+  const selectedClass = classes.find(c => c.id === genClassIds[0]);
+
+  // ── Students filtered by the gen-student modal search (shared by the
+  // list render and the select-all toggle so the two can never drift) ──
+  const filteredStudents = useMemo(() => {
+    if (!genStudentSearch) return students;
+    const q = genStudentSearch.toLowerCase();
+    return students.filter((s) => {
+      const name = (s.fullName || s.first_name + " " + s.last_name || s.name || "").toLowerCase();
+      return name.includes(q);
+    });
+  }, [students, genStudentSearch]);
 
   // ── Mapping onboarding system names → DB codes ──
   const ONBOARDING_TO_DB_CODE = {
@@ -363,31 +371,54 @@ export default function ReportCardsPage() {
   };
 
   // ── Generate individual (uses sequence ID as periodStructureId) ──
+  // Supports MULTI-SELECT: one synchronous generateReportCard call per
+  // selected student, with a progress bar tracking the whole batch.
   const handleGenerateStudent = async () => {
     const periodId = genSequenceId || genPeriodId;
     if (!genEduSystem) {
       toast.error(isFr ? "Sélectionnez d'abord un système éducatif" : "First select an education system");
       return;
     }
-    if (!genStudentId || !periodId) {
-      toast.error(isFr ? "Sélectionnez un étudiant et une période ou séquence" : "Select a student and a period or sequence");
+    if (genStudentIds.length === 0 || !periodId) {
+      toast.error(isFr ? "Sélectionnez au moins un étudiant et une période ou séquence" : "Select at least one student and a period or sequence");
       return;
     }
     setGenerating(true);
     setGenDismissed(false);
-    setBatchProgress(null);
+    const total = genStudentIds.length;
+    setBatchProgress({ current: 0, total });
+    let successCount = 0;
+    let failCount = 0;
     try {
-      const result = await generateReportCard({
-        studentId: genStudentId,
-        periodStructureId: periodId,
-        educationSystemCode: genEduSystem,
-      });
+      for (let i = 0; i < genStudentIds.length; i++) {
+        const studentId = genStudentIds[i];
+        try {
+          await generateReportCard({
+            studentId,
+            periodStructureId: periodId,
+            educationSystemCode: genEduSystem,
+          });
+          successCount++;
+        } catch (err) {
+          console.error(`[ReportCardGeneration] Failed for student ${studentId}:`, err);
+          failCount++;
+        }
+        setBatchProgress({ current: i + 1, total });
+      }
       // Show completion briefly before dismissing
-      setBatchProgress({ current: 1, total: 1 });
       await new Promise(resolve => setTimeout(resolve, 1800));
-      toast.success(isFr ? "Bulletin généré !" : "Report card generated!");
+      if (failCount > 0) {
+        toast.error(isFr
+          ? `${successCount} bulletin(s) généré(s), ${failCount} échec(s).`
+          : `${successCount} report card(s) generated, ${failCount} failed.`);
+      } else {
+        toast.success(isFr
+          ? `${successCount} bulletin(s) généré(s) !`
+          : `${successCount} report card(s) generated!`);
+      }
       setGenStudentOpen(false);
-      setGenStudentId("");
+      setGenStudentIds([]);
+      setGenStudentSearch("");
       setGenPeriodId("");
       setGenSequenceId("");
       setGenSequences([]);
@@ -403,44 +434,45 @@ export default function ReportCardsPage() {
   };
 
   // ── Generate batch (uses sequence ID as periodStructureId) ──
-  // Enqueues a background job via BullMQ, keeps the full-screen animation
-  // visible and drives its progress bar from the job's real SSE stream.
-  // The animation disappears when the job completes (or errors), and can be
-  // closed early with the ✕ button.
+  // Supports MULTI-SELECT: one background job is enqueued per selected class
+  // and the progress bar aggregates all jobs' real SSE streams.
   const handleGenerateBatch = async () => {
     const periodId = genBatchSequenceId || genBatchPeriodId;
     if (!genBatchEduSystem) {
       toast.error(isFr ? "Sélectionnez d'abord un système éducatif" : "First select an education system");
       return;
     }
-    if (!genClassId || !periodId) {
-      toast.error(isFr ? "Sélectionnez une classe et une période ou séquence" : "Select a class and a period or sequence");
+    if (genClassIds.length === 0 || !periodId) {
+      toast.error(isFr ? "Sélectionnez au moins une classe et une période ou séquence" : "Select at least one class and a period or sequence");
       return;
     }
     setGenerating(true);
     setGenDismissed(false);
     setBatchProgress({ current: 0, total: 0 });
     try {
-      console.log('[ReportCardGeneration] Enqueueing batch job:', { classLevelId: genClassId, periodStructureId: periodId, educationSystemCode: genBatchEduSystem });
-      const job = await enqueueBatchJob({
-        classLevelId: genClassId,
+      console.log('[ReportCardGeneration] Enqueueing batch jobs:', { classLevelIds: genClassIds, periodStructureId: periodId, educationSystemCode: genBatchEduSystem });
+      const result = await enqueueBatchJob({
+        classLevelIds: genClassIds,
         periodStructureId: periodId,
         educationSystemCode: genBatchEduSystem,
       });
-      console.log('[ReportCardGeneration] Job queued:', job);
+      console.log('[ReportCardGeneration] Jobs queued:', result);
 
-      // Close the modal immediately — the job runs in the background
+      // Close the modal immediately — the jobs run in the background
       setGenBatchOpen(false);
-      setGenClassId("");
+      setGenClassIds([]);
       setGenBatchPeriodId("");
       setGenBatchSequenceId("");
       setGenBatchSequences([]);
 
-      const jobId = job?.jobId;
-      const totalStudents = job?.totalStudents || 0;
+      // Backend returns { jobs: [{ jobId, totalStudents }], totalStudents }
+      // (legacy single-class responses are normalized into the same shape).
+      const jobs = Array.isArray(result?.jobs) && result.jobs.length > 0
+        ? result.jobs
+        : (result?.jobId ? [{ jobId: result.jobId, totalStudents: result.totalStudents }] : []);
 
-      if (!jobId) {
-        // No job id — nothing to track, hide the animation right away
+      if (jobs.length === 0) {
+        // No job ids — nothing to track, hide the animation right away
         toast.success(
           isFr
             ? "Génération lancée en arrière-plan."
@@ -454,55 +486,83 @@ export default function ReportCardsPage() {
 
       toast.success(
         isFr
-          ? "Génération lancée — l'animation suit la progression du job."
-          : "Generation started — the animation tracks the job progress."
+          ? `Génération lancée — ${jobs.length} job(s) en arrière-plan.`
+          : `Generation started — ${jobs.length} job(s) in background.`
       );
 
-      // Keep the animation visible and drive it from the job's real SSE
-      // progress. `generating` stays true until the job completes/errors, so
+      // Keep the animation visible and drive it from the jobs' real SSE
+      // progress. `generating` stays true until ALL jobs complete/error, so
       // the overlay never disappears prematurely.
       if (jobSubscriptionRef.current) {
         jobSubscriptionRef.current(); // clean up a previous subscription if any
         jobSubscriptionRef.current = null;
       }
-      jobSubscriptionRef.current = subscribeToJobProgress(
-        jobId,
-        (progress) => {
-          // progress: { type:'progress', status, current, total, failed }
-          if (progress && progress.current != null && progress.total != null) {
-            setBatchProgress({ current: progress.current, total: progress.total });
-          }
-        },
-        (complete) => {
-          // Job finished — COMPLETED / FAILED / CANCELLED
-          const succeeded = complete?.status === 'COMPLETED';
-          if (succeeded) {
-            // Show 100% and let the success ✓ animation play before hiding
-            setBatchProgress({ current: totalStudents, total: totalStudents });
-            setTimeout(() => {
+
+      // Per-job tracking so we can aggregate progress across several jobs.
+      const jobState = jobs.map((job) => ({
+        jobId: job.jobId,
+        total: job.totalStudents || 0,
+        current: 0,
+        done: false,
+        failed: false,
+      }));
+      const unsubs = jobState.map((state) =>
+        subscribeToJobProgress(
+          state.jobId,
+          (progress) => {
+            // progress: { type:'progress', status, current, total, failed }
+            if (progress && progress.current != null && progress.total != null) {
+              state.current = progress.current;
+              state.total = progress.total;
+              const agg = jobState.reduce((acc, s) => ({
+                current: acc.current + (s.current || 0),
+                total: acc.total + (s.total || 0),
+              }), { current: 0, total: 0 });
+              setBatchProgress({ current: agg.current, total: agg.total });
+            }
+          },
+          (complete) => {
+            // Job finished — COMPLETED / FAILED / CANCELLED
+            state.done = true;
+            state.failed = complete?.status !== 'COMPLETED';
+            const allDone = jobState.every((s) => s.done);
+            if (!allDone) return;
+
+            const anyFailed = jobState.some((s) => s.failed);
+            if (!anyFailed) {
+              // Show 100% and let the success ✓ animation play before hiding
+              const aggTotal = jobState.reduce((sum, s) => sum + s.total, 0);
+              setBatchProgress({ current: aggTotal, total: aggTotal });
+              setTimeout(() => {
+                setGenerating(false);
+                setGenDismissed(false);
+                loadReportCards();
+              }, 2200);
+            } else {
+              const failed = jobState.filter((s) => s.failed).length;
+              toast.error(
+                isFr
+                  ? `Génération terminée avec ${failed} échec(s).`
+                  : `Generation finished with ${failed} failure(s).`
+              );
               setGenerating(false);
-              setGenDismissed(false);
+              setBatchProgress(null);
               loadReportCards();
-            }, 2200);
-          } else {
-            const failed = complete?.errors?.length || 0;
-            toast.error(
-              isFr
-                ? `Génération terminée avec ${failed} échec(s).`
-                : `Generation finished with ${failed} failure(s).`
-            );
-            setGenerating(false);
-            setBatchProgress(null);
-            loadReportCards();
+            }
+          },
+          (error) => {
+            console.error(`[ReportCardGeneration] Job progress stream error (${state.jobId}):`, error);
+            state.done = true;
+            state.failed = true;
+            if (jobState.every((s) => s.done)) {
+              setGenerating(false);
+              setBatchProgress(null);
+              loadReportCards();
+            }
           }
-        },
-        (error) => {
-          console.error('[ReportCardGeneration] Job progress stream error:', error);
-          setGenerating(false);
-          setBatchProgress(null);
-          loadReportCards();
-        }
+        )
       );
+      jobSubscriptionRef.current = () => unsubs.forEach((unsub) => unsub());
     } catch (err) {
       console.error('[ReportCardGeneration] Batch job enqueue failed:', err);
       toast.error(err.response?.data?.message || err.message || (isFr ? "Échec du lancement de la génération" : "Failed to start generation"));
@@ -1462,7 +1522,7 @@ export default function ReportCardsPage() {
       {/* ════════════════════════════════════════════ */}
       <ModalBackdrop
         open={genStudentOpen}
-        onClose={() => { setGenStudentOpen(false); setGenStudentId(""); setGenStudentSearch(""); setGenPeriodId(""); setGenSequenceId(""); setGenSequences([]); setGenEduSystem(""); }}
+        onClose={() => { setGenStudentOpen(false); setGenStudentIds([]); setGenStudentSearch(""); setGenPeriodId(""); setGenSequenceId(""); setGenSequences([]); setGenEduSystem(""); }}
         title={isFr ? "Générer un bulletin" : "Generate Report Card"}
         subtitle={isFr ? "Suivez les étapes pour générer le bulletin d'un élève" : "Follow the steps to generate a student report card"}
       >
@@ -1506,53 +1566,102 @@ export default function ReportCardsPage() {
             </div>
           </div>
 
-          {/* ── Step 2: Student Selection ── */}
+          {/* ── Step 2: Student Selection (multi) ── */}
           <div className={`p-4 rounded-xl border-[1.5px] transition-all ${
-            genStudentId ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-900/15' : 'border-surface-100 dark:border-surface-700'
+            genStudentIds.length > 0 ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-900/15' : 'border-surface-100 dark:border-surface-700'
           }`}>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ background: genStudentId ? 'var(--primary-color, #085041)' : '#9CA3AF' }}>
-                {genStudentId ? <FiCheckCircle size={12} /> : '2'}
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ background: genStudentIds.length > 0 ? 'var(--primary-color, #085041)' : '#9CA3AF' }}>
+                {genStudentIds.length > 0 ? <FiCheckCircle size={12} /> : '2'}
               </div>
               <span className="text-[13px] font-bold text-surface-800 dark:text-surface-100">
-                {isFr ? "Choisir un élève" : "Select a student"}
+                {isFr ? "Choisir les élèves" : "Select students"}
               </span>
-            </div>                    {/* Search input */}
-                    <div className="relative mb-2">
-                      <FiSearch size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+              {genStudentIds.length > 0 && (
+                <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-bold" style={{
+                  background: 'var(--primary-color, #085041)18',
+                  color: 'var(--primary-color, #085041)',
+                }}>
+                  {genStudentIds.length} {isFr ? "sélectionné(s)" : "selected"}
+                </span>
+              )}
+            </div>
+            {/* Search input */}
+            <div className="relative mb-2">
+              <FiSearch size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+              <input
+                type="text"
+                value={genStudentSearch}
+                onChange={(e) => setGenStudentSearch(e.target.value)}
+                placeholder={isFr ? "Rechercher un élève..." : "Search a student..."}
+                className="w-full h-10 pl-10 pr-4 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-[13px] text-surface-800 dark:text-surface-100 focus:outline-none focus:border-primary-400 transition-all"
+              />
+            </div>
+            {/* Selectable list */}
+            <div className="max-h-56 overflow-y-auto rounded-xl border-[1.5px] border-surface-100 dark:border-surface-700 divide-y divide-surface-50 dark:divide-surface-700/50">
+              {filteredStudents.map((s) => {
+                  const checked = genStudentIds.includes(s.id);
+                  const sc = classes.find(c => c.id === s.classId);
+                  return (
+                    <label
+                      key={s.id}
+                      className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-colors ${
+                        checked ? 'bg-primary-50/50 dark:bg-primary-900/15' : 'hover:bg-surface-50 dark:hover:bg-surface-900/30'
+                      }`}
+                    >
                       <input
-                        type="text"
-                        value={genStudentSearch}
-                        onChange={(e) => { setGenStudentSearch(e.target.value); setGenStudentId(""); }}
-                        placeholder={isFr ? "Rechercher un élève..." : "Search a student..."}
-                        className="w-full h-10 pl-10 pr-4 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-[13px] text-surface-800 dark:text-surface-100 focus:outline-none focus:border-primary-400 transition-all"
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          setGenStudentIds((prev) =>
+                            checked ? prev.filter((id) => id !== s.id) : [...prev, s.id]
+                          );
+                        }}
+                        className="w-4 h-4 rounded accent-[var(--primary-color, #085041)] cursor-pointer"
                       />
-                    </div>
-                    <div className="relative">
-              <FiUserCheck size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
-              <select
-                value={genStudentId}
-                onChange={(e) => setGenStudentId(e.target.value)}
-                className="w-full h-11 pl-10 pr-9 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-[13px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all hover:border-surface-300 dark:hover:border-surface-600"
+                      <FiUserCheck size={14} className="text-surface-400 flex-shrink-0" />
+                      <span className="flex-1 min-w-0 text-[12px] font-semibold text-surface-800 dark:text-surface-100 truncate">
+                        {s.fullName || s.first_name + " " + s.last_name || s.name}
+                      </span>
+                      {sc?.educationSystemCode && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-surface-100 dark:bg-surface-700 text-surface-500 flex-shrink-0">
+                          {sc.educationSystemCode}
+                        </span>
+                      )}
+                    </label>
+                  );
+                })}
+              {filteredStudents.length === 0 && (
+                <div className="px-3 py-4 text-[11px] text-surface-400">
+                  {isFr ? "Aucun élève trouvé" : "No students found"}
+                </div>
+              )}
+            </div>
+            {/* Select / clear all */}
+            <div className="flex items-center justify-between mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const filteredIds = filteredStudents.map((s) => s.id);
+                  setGenStudentIds((prev) => {
+                    const allFilteredSelected = filteredIds.length > 0 && filteredIds.every((id) => prev.includes(id));
+                    if (allFilteredSelected) return prev.filter((id) => !filteredIds.includes(id));
+                    return Array.from(new Set([...prev, ...filteredIds]));
+                  });
+                }}
+                className="text-[11px] font-semibold text-primary-600 dark:text-primary-400 hover:underline"
               >
-                <option value="">{isFr ? "Sélectionnez un élève..." : "Select a student..."}</option>
-                {students
-                  .filter((s) => {
-                    if (!genStudentSearch) return true;
-                    const name = (s.fullName || s.first_name + " " + s.last_name || s.name || "").toLowerCase();
-                    return name.includes(genStudentSearch.toLowerCase());
-                  })
-                  .map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.fullName || s.first_name + " " + s.last_name || s.name}
-                    {(() => {
-                      const sc = classes.find(c => c.id === s.classId);
-                      return sc?.educationSystemCode ? ` (${sc.educationSystemCode})` : '';
-                    })()}
-                  </option>
-                ))}
-              </select>
-              <FiChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+                {isFr ? "Tout sélectionner" : "Select all"}
+              </button>
+              {genStudentIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setGenStudentIds([])}
+                  className="text-[11px] font-semibold text-surface-400 hover:text-red-500 hover:underline"
+                >
+                  {isFr ? "Effacer" : "Clear"}
+                </button>
+              )}
             </div>
           </div>
 
@@ -1649,7 +1758,7 @@ export default function ReportCardsPage() {
           </div>
 
           {/* ── Template preview ── */}
-          {genEduSystem && genStudentId && genPeriodId && (
+          {genEduSystem && genStudentIds.length > 0 && genPeriodId && (
             <div className="p-3 rounded-xl border border-primary-200 dark:border-primary-800 bg-primary-50/30 dark:bg-primary-900/10">
               <div className="flex items-center gap-2">
                 <FiFileText size={14} className="text-primary-500" />
@@ -1666,14 +1775,14 @@ export default function ReportCardsPage() {
           {/* ── Actions ── */}
           <div className="flex items-center justify-end gap-2 pt-1">
             <button
-              onClick={() => { setGenStudentOpen(false); setGenStudentId(""); setGenPeriodId(""); setGenSequenceId(""); setGenSequences([]); setGenEduSystem(""); }}
+              onClick={() => { setGenStudentOpen(false); setGenStudentIds([]); setGenPeriodId(""); setGenSequenceId(""); setGenSequences([]); setGenEduSystem(""); }}
               className="h-9 px-4 rounded-xl text-[12px] font-semibold text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
             >
               {isFr ? "Annuler" : "Cancel"}
             </button>
             <button
               onClick={handleGenerateStudent}
-              disabled={generating || !genStudentId || !(genSequenceId || genPeriodId)}
+              disabled={generating || genStudentIds.length === 0 || !(genSequenceId || genPeriodId)}
               className="h-10 px-5 rounded-xl text-[12px] font-semibold text-white transition-all hover:scale-105 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-1.5"
               style={{ background: pc }}
             >
@@ -1698,9 +1807,9 @@ export default function ReportCardsPage() {
       {/* ════════════════════════════════════════════ */}
       <ModalBackdrop
         open={genBatchOpen}
-        onClose={() => { setGenBatchOpen(false); setGenClassId(""); setGenBatchPeriodId(""); setGenBatchSequenceId(""); setGenBatchSequences([]); setGenBatchEduSystem(""); }}
-        title={isFr ? "Génération par classe" : "Batch Generation"}
-        subtitle={isFr ? "Générer des bulletins pour tous les élèves d'une classe" : "Generate report cards for every student in a class"}
+        onClose={() => { setGenBatchOpen(false); setGenClassIds([]); setGenBatchPeriodId(""); setGenBatchSequenceId(""); setGenBatchSequences([]); setGenBatchEduSystem(""); }}
+        title={isFr ? "Génération par classe(s)" : "Batch Generation"}
+        subtitle={isFr ? "Générer des bulletins pour tous les élèves des classes sélectionnées" : "Generate report cards for every student in the selected classes"}
         width="max-w-xl"
       >
         <div className="space-y-5">
@@ -1743,36 +1852,86 @@ export default function ReportCardsPage() {
             </div>
           </div>
 
-          {/* ── Step 2: Class Selection ── */}
+          {/* ── Step 2: Class Selection (multi) ── */}
           <div className={`p-4 rounded-xl border-[1.5px] transition-all ${
-            genClassId ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-900/15' : 'border-surface-100 dark:border-surface-700'
+            genClassIds.length > 0 ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-900/15' : 'border-surface-100 dark:border-surface-700'
           }`}>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ background: genClassId ? 'var(--primary-color, #085041)' : '#9CA3AF' }}>
-                {genClassId ? <FiCheckCircle size={12} /> : '2'}
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ background: genClassIds.length > 0 ? 'var(--primary-color, #085041)' : '#9CA3AF' }}>
+                {genClassIds.length > 0 ? <FiCheckCircle size={12} /> : '2'}
               </div>
               <span className="text-[13px] font-bold text-surface-800 dark:text-surface-100">
-                {isFr ? "Choisir une classe" : "Select a class"}
+                {isFr ? "Choisir les classes" : "Select classes"}
               </span>
+              {genClassIds.length > 0 && (
+                <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-bold" style={{
+                  background: 'var(--primary-color, #085041)18',
+                  color: 'var(--primary-color, #085041)',
+                }}>
+                  {genClassIds.length} {isFr ? "classe(s)" : "class(es)"}
+                </span>
+              )}
             </div>
-            <div className="relative">
-              <FiUsers size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
-              <select
-                value={genClassId}
-                onChange={(e) => setGenClassId(e.target.value)}
-                className="w-full h-11 pl-10 pr-9 bg-white dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-xl text-[13px] text-surface-800 dark:text-surface-100 appearance-none cursor-pointer focus:outline-none focus:border-primary-400 transition-all hover:border-surface-300 dark:hover:border-surface-600"
+            {/* Selectable list */}
+            <div className="max-h-56 overflow-y-auto rounded-xl border-[1.5px] border-surface-100 dark:border-surface-700 divide-y divide-surface-50 dark:divide-surface-700/50">
+              {classes.map((c) => {
+                const checked = genClassIds.includes(c.id);
+                return (
+                  <label
+                    key={c.id}
+                    className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-colors ${
+                      checked ? 'bg-primary-50/50 dark:bg-primary-900/15' : 'hover:bg-surface-50 dark:hover:bg-surface-900/30'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => {
+                        setGenClassIds((prev) =>
+                          checked ? prev.filter((id) => id !== c.id) : [...prev, c.id]
+                        );
+                      }}
+                      className="w-4 h-4 rounded accent-[var(--primary-color, #085041)] cursor-pointer"
+                    />
+                    <FiUsers size={14} className="text-surface-400 flex-shrink-0" />
+                    <span className="flex-1 min-w-0 text-[12px] font-semibold text-surface-800 dark:text-surface-100 truncate">
+                      {c.name}
+                    </span>
+                    {c.educationSystemCode && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-surface-100 dark:bg-surface-700 text-surface-500 flex-shrink-0">
+                        {c.educationSystemCode}
+                      </span>
+                    )}
+                  </label>
+                );
+              })}
+              {classes.length === 0 && (
+                <div className="px-3 py-4 text-[11px] text-surface-400">
+                  {isFr ? "Aucune classe disponible" : "No classes available"}
+                </div>
+              )}
+            </div>
+            {/* Select / clear all */}
+            <div className="flex items-center justify-between mt-2">
+              <button
+                type="button"
+                onClick={() => setGenClassIds(classes.map((c) => c.id))}
+                className="text-[11px] font-semibold text-primary-600 dark:text-primary-400 hover:underline"
               >
-                <option value="">{isFr ? "Sélectionnez une classe..." : "Select a class..."}</option>
-                {classes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}{c.educationSystemCode ? ` (${c.educationSystemCode})` : ''}
-                  </option>
-                ))}
-              </select>
-              <FiChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+                {isFr ? "Tout sélectionner" : "Select all"}
+              </button>
+              {genClassIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setGenClassIds([])}
+                  className="text-[11px] font-semibold text-surface-400 hover:text-red-500 hover:underline"
+                >
+                  {isFr ? "Effacer" : "Clear"}
+                </button>
+              )}
             </div>
             {/* ── Info: class system vs chosen system ── */}
-            {genClassId && selectedClass?.educationSystemCode && (
+            {genClassIds.length > 0 && selectedClass?.educationSystemCode && (
               <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-900">
                 <FiBookmark size={12} className="text-surface-400" />
                 <span className="text-[11px] text-surface-500">
@@ -1870,7 +2029,9 @@ export default function ReportCardsPage() {
               <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-primary-50/50 dark:bg-primary-900/20">
                 <FiUsers size={13} className="text-primary-600 dark:text-primary-400" />
                 <span className="text-[11px] font-medium text-primary-700 dark:text-primary-300">
-                  {classes.find(c => c.id === genClassId)?.name || ''} — {periods.find(p => p.id === genBatchPeriodId)?.name || ''}
+                  {genClassIds.length > 0
+                    ? genClassIds.map((id) => classes.find((c) => c.id === id)?.name).filter(Boolean).join(', ')
+                    : ''} — {periods.find(p => p.id === genBatchPeriodId)?.name || ''}
                   <FiChevronRight size={10} className="inline mx-1" />
                   {genBatchSequences.find(s => s.id === genBatchSequenceId)?.libelle || ''}
                 </span>
@@ -1879,19 +2040,19 @@ export default function ReportCardsPage() {
           </div>
 
           {/* ── Info banner ── */}
-          {genClassId && genBatchPeriodId && (
+          {genClassIds.length > 0 && genBatchPeriodId && (
             <div className="flex items-start gap-2.5 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
               <FiAlertCircle size={14} className="text-blue-500 mt-0.5 flex-shrink-0" />
               <p className="text-[12px] text-blue-700 dark:text-blue-300">
                 {isFr
-                  ? "Un bulletin sera généré pour chaque élève actif de la classe. Cette opération peut prendre quelques instants."
-                  : "A report card will be generated for each active student in the class. This may take a moment."}
+                  ? "Un bulletin sera généré pour chaque élève actif des classes sélectionnées. Cette opération peut prendre quelques instants."
+                  : "A report card will be generated for each active student in the selected classes. This may take a moment."}
               </p>
             </div>
           )}
 
           {/* ── Template preview ── */}
-          {genBatchEduSystem && genClassId && genBatchPeriodId && (
+          {genBatchEduSystem && genClassIds.length > 0 && genBatchPeriodId && (
             <div className="p-3 rounded-xl border border-primary-200 dark:border-primary-800 bg-primary-50/30 dark:bg-primary-900/10">
               <div className="flex items-center gap-2">
                 <FiFileText size={14} className="text-primary-500" />
@@ -1908,14 +2069,14 @@ export default function ReportCardsPage() {
           {/* ── Actions ── */}
           <div className="flex items-center justify-end gap-2 pt-1">
             <button
-              onClick={() => { setGenBatchOpen(false); setGenClassId(""); setGenBatchPeriodId(""); setGenBatchSequenceId(""); setGenBatchSequences([]); setGenBatchEduSystem(""); }}
+              onClick={() => { setGenBatchOpen(false); setGenClassIds([]); setGenBatchPeriodId(""); setGenBatchSequenceId(""); setGenBatchSequences([]); setGenBatchEduSystem(""); }}
               className="h-9 px-4 rounded-xl text-[12px] font-semibold text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
             >
               {isFr ? "Annuler" : "Cancel"}
             </button>
             <button
               onClick={handleGenerateBatch}
-              disabled={generating || !genClassId || !(genBatchSequenceId || genBatchPeriodId)}
+              disabled={generating || genClassIds.length === 0 || !(genBatchSequenceId || genBatchPeriodId)}
               className="h-10 px-5 rounded-xl text-[12px] font-semibold text-white transition-all hover:scale-105 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-1.5"
               style={{ background: pc }}
             >

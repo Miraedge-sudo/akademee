@@ -11,40 +11,73 @@ const response = require('../utils/response');
 class ReportCardJobsController {
   /**
    * POST /api/v1/report-card-jobs
-   * Enqueue a batch report card generation job.
+   * Enqueue batch report card generation job(s).
+   *
+   * Accepts a single `classLevelId` (legacy) OR an array `classLevelIds`.
+   * When several classes are given, one background job is created per class
+   * and the response aggregates them as `{ jobs: [...], totalStudents }`.
    */
   async createJob(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user?.schoolId;
       const actorId = req.user?.userId;
-      const { classLevelId, periodStructureId, sequenceId, educationSystemCode } = req.body;
+      const { classLevelId, classLevelIds, periodStructureId, sequenceId, educationSystemCode } = req.body;
 
-      if (!classLevelId || !periodStructureId) {
+      if (!periodStructureId) {
         return res.status(400).json({
           success: false,
-          message: 'classLevelId and periodStructureId are required',
+          message: 'periodStructureId is required',
+        });
+      }
+
+      // Normalize to an array: legacy single class OR explicit multi-class list.
+      // Deduplicate so the same class never produces duplicate jobs.
+      const ids = Array.isArray(classLevelIds)
+        ? [...new Set(classLevelIds.filter(Boolean))]
+        : classLevelId
+          ? [classLevelId]
+          : [];
+
+      if (ids.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'classLevelId (or classLevelIds) and periodStructureId are required',
         });
       }
 
       // Validate that IDs are UUIDs (prevents 500 on malformed input)
       const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!uuidPattern.test(classLevelId) || !uuidPattern.test(periodStructureId)) {
+      const invalid = ids.find((id) => !uuidPattern.test(id));
+      if (invalid || !uuidPattern.test(periodStructureId)) {
         return res.status(400).json({
           success: false,
-          message: 'classLevelId and periodStructureId must be valid UUIDs',
+          message: 'classLevelId(s) and periodStructureId must be valid UUIDs',
         });
       }
 
-      const result = await reportCardQueue.enqueueBatchJob({
-        schoolId,
-        classLevelId,
-        periodStructureId,
-        sequenceId,
-        educationSystemCode,
-        actorId,
-      });
+      // One job per class — the worker is already built around a single class.
+      const jobs = [];
+      let totalStudents = 0;
+      for (const id of ids) {
+        const result = await reportCardQueue.enqueueBatchJob({
+          schoolId,
+          classLevelId: id,
+          periodStructureId,
+          sequenceId,
+          educationSystemCode,
+          actorId,
+        });
+        jobs.push({ ...result, classLevelId: id });
+        totalStudents += result.totalStudents || 0;
+      }
 
-      response.success(res, 'Report card generation job queued', result, 202);
+      // Legacy single-class response shape is preserved so older callers keep working.
+      const payload =
+        jobs.length === 1
+          ? { ...jobs[0], jobs, totalStudents }
+          : { jobs, totalStudents };
+
+      response.success(res, 'Report card generation job(s) queued', payload, 202);
     } catch (err) {
       next(err);
     }
