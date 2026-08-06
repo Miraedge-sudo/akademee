@@ -295,7 +295,7 @@ class StudentService {
 
     // ── Link the parent to this child via guardians ──
     const existingGuardian = await sql`
-      SELECT guardian_id FROM guardians
+      SELECT guardian_id, user_id FROM guardians
       WHERE school_id = ${schoolId} AND student_id = ${studentId}
         AND (user_id = ${parentUser.user_id} OR LOWER(email) = LOWER(${baseEmail || ''}))
       LIMIT 1
@@ -307,6 +307,13 @@ class StudentService {
           ${schoolId}, ${studentId}, ${fullName || 'Parent'},
           ${parentRelationship || 'guardian'}, ${parentPhone || null}, ${baseEmail || null}, ${parentUser.user_id}
         )
+      `;
+    } else if (existingGuardian[0].user_id === null) {
+      // Guardian pre-existed (email match only): link it to the login account so
+      // the parent portal resolves it via user_id once the parent logs in.
+      await sql`
+        UPDATE guardians SET user_id = ${parentUser.user_id}
+        WHERE guardian_id = ${existingGuardian[0].guardian_id} AND user_id IS NULL
       `;
     }
 

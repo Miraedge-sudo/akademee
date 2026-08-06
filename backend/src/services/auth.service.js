@@ -206,6 +206,19 @@ class AuthService {
       WHERE user_id = ${user.user_id}
     `;
 
+    // Link email-matched guardians to this account so pre-existing guardians
+    // (created before parent accounts existed) resolve via user_id in the
+    // parent portal.
+    if (roles.some((r) => String(r.role_code).toUpperCase() === 'PARENT') && user.email) {
+      await sql`
+        UPDATE guardians
+        SET user_id = ${user.user_id}
+        WHERE school_id = ${school.school_id}
+          AND user_id IS NULL
+          AND LOWER(email) = LOWER(${user.email})
+      `;
+    }
+
     const schoolWithTemplate = await sql`
       SELECT s.school_id, s.name, s.subdomain, s.is_active, s.email_verified, s.require_email_verification, s.onboarding_completed,
              s.educational_systems, s.primary_color, s.logo_url, s.hero_image_url,
