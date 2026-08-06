@@ -81,10 +81,8 @@ class GuardianController {
     try {
       const schoolId = req.schoolId || req.user?.schoolId;
       const userEmail = req.user?.email;
-      if (!userEmail) {
-        return response.error(res, 'User email not found', null, 400);
-      }
-      const children = await guardianService.getMyChildren(schoolId, userEmail);
+      const userId = req.user?.userId;
+      const children = await guardianService.getMyChildren(schoolId, { userId, email: userEmail });
       response.success(res, 'Children retrieved', children);
     } catch (error) {
       next(error);

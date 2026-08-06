@@ -12,9 +12,9 @@ export const DEFAULT_GC_TIME = 15 * 60 * 1000;
 // queries under a feature stay in sync when one source of truth changes.
 export const dashboardQueryKeys = {
   all: ['dashboard'],
-  stats: ['dashboard', 'stats'],
-  activities: ['dashboard', 'activities'],
-  revenue: ['dashboard', 'revenue'],
+  stats: (year) => ['dashboard', 'stats', year || 'all'],
+  activities: (year) => ['dashboard', 'activities', year || 'all'],
+  revenue: (year) => ['dashboard', 'revenue', year || 'all'],
 };
 
 /**

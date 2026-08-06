@@ -279,8 +279,13 @@ export default function AdmissionsSection() {
   const [selectedClassId, setSelectedClassId] = useState("");
   const [studentFirstName, setStudentFirstName] = useState("");
   const [studentLastName, setStudentLastName] = useState("");
+  const [parentFirstName, setParentFirstName] = useState("");
+  const [parentLastName, setParentLastName] = useState("");
+  const [parentEmail, setParentEmail] = useState("");
+  const [parentPhone, setParentPhone] = useState("");
   const [gender, setGender] = useState("male");
   const [converting, setConverting] = useState(false);
+  const [parentAccount, setParentAccount] = useState(null);
   const PER_PAGE = 12;
 
   const fetchInquiries = useCallback(async () => {
@@ -312,9 +317,15 @@ export default function AdmissionsSection() {
   };
 
   const openConvertModal = async (inquiry) => {
-    const nameParts = (inquiry.studentName || "").trim().split(" ");
-    setStudentFirstName(nameParts[0] || "");
-    setStudentLastName(nameParts.slice(1).join(" ") || "");
+    const nameParts = (inquiry.parentName || "").trim().split(" ");
+    setParentFirstName(nameParts[0] || "");
+    setParentLastName(nameParts.slice(1).join(" ") || "");
+    setParentEmail(inquiry.parentEmail || "");
+    setParentPhone(inquiry.parentPhone || "");
+    setParentAccount(null);
+    const nameParts2 = (inquiry.studentName || "").trim().split(" ");
+    setStudentFirstName(nameParts2[0] || "");
+    setStudentLastName(nameParts2.slice(1).join(" ") || "");
     setGender("male");
     setSelectedClassId("");
     setConvertModal({ open: true, inquiry });
@@ -328,6 +339,7 @@ export default function AdmissionsSection() {
 
   const closeConvertModal = () => {
     setConvertModal({ open: false, inquiry: null });
+    setParentAccount(null);
   };
 
   const handleConvert = async () => {
@@ -336,7 +348,7 @@ export default function AdmissionsSection() {
     const inquiry = convertModal.inquiry;
     const selectedClass = classes.find((c) => c.id === selectedClassId);
     try {
-      await createStudent({
+      const created = await createStudent({
         firstName: studentFirstName.trim(),
         lastName: studentLastName.trim(),
         email: inquiry.parentEmail,
@@ -346,11 +358,20 @@ export default function AdmissionsSection() {
         gender,
         status: "active",
         feeStatus: "pending",
+        parentFirstName: parentFirstName.trim() || undefined,
+        parentLastName: parentLastName.trim() || undefined,
+        parentEmail: parentEmail.trim() || undefined,
+        parentPhone: parentPhone.trim() || undefined,
+        parentRelationship: "Guardian",
       });
       await updateInquiryStatus(inquiry.id, "enrolled");
       handleStatusChange(inquiry.id, "enrolled");
-      toast.success(t("admissions.convertSuccess"));
-      closeConvertModal();
+      if (created?.parentAccount?.loginEmail) {
+        setParentAccount(created.parentAccount);
+      } else {
+        toast.success(t("admissions.convertSuccess"));
+        closeConvertModal();
+      }
     } catch (err) {
       const msg = err.response?.data?.message || err.message || t("admissions.convertError");
       toast.error(msg);
@@ -584,7 +605,41 @@ export default function AdmissionsSection() {
               </div>
 
               {/* Modal body */}
-              <div className="p-6 space-y-5">
+              <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                {parentAccount ? (
+                  <div className="text-center py-2">
+                    <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                      <FiCheck className="w-8 h-8 text-emerald-600" strokeWidth={2.5} />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                      {t("admissions.convertSuccess")}
+                    </h2>
+                    <p className="text-sm text-gray-500 leading-relaxed mb-5">
+                      {t("admissions.parentCredentialsHint", "The parent account was created automatically. First-login credentials:")}
+                    </p>
+                    <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-left space-y-2.5">
+                      <div>
+                        <p className="text-[11px] font-semibold text-indigo-800">{t("admissions.parentName")}</p>
+                        <p className="text-sm font-bold text-indigo-900 break-all">{parentAccount.name || "Parent"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold text-indigo-800">{t("admissions.parentEmail")}</p>
+                        <p className="text-sm font-bold text-indigo-900 break-all">{parentAccount.loginEmail}</p>
+                      </div>
+                      {parentAccount.password ? (
+                        <div>
+                          <p className="text-[11px] font-semibold text-indigo-800">{t("auth.password", "Password")}</p>
+                          <p className="text-sm font-bold text-indigo-900 break-all">{parentAccount.password}</p>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-indigo-700">
+                          {t("admissions.parentExistingHint", "This parent already had an account — their password is unchanged.")}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <>
                 {/* Student name */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -660,6 +715,56 @@ export default function AdmissionsSection() {
                   )}
                 </div>
 
+                {/* Parent contact */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                      {t("admissions.parentFirstName", "Parent first name")}
+                    </label>
+                    <input
+                      type="text"
+                      value={parentFirstName}
+                      onChange={(e) => setParentFirstName(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-100 outline-none text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                      {t("admissions.parentLastName", "Parent last name")}
+                    </label>
+                    <input
+                      type="text"
+                      value={parentLastName}
+                      onChange={(e) => setParentLastName(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-100 outline-none text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                      {t("admissions.parentEmail")}
+                    </label>
+                    <input
+                      type="email"
+                      value={parentEmail}
+                      onChange={(e) => setParentEmail(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-100 outline-none text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                      {t("admissions.parentPhone", "Parent phone")}
+                    </label>
+                    <input
+                      type="tel"
+                      value={parentPhone}
+                      onChange={(e) => setParentPhone(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-100 outline-none text-sm"
+                    />
+                  </div>
+                </div>
+
                 {/* Inquiry info summary */}
                 {convertModal.inquiry && (
                   <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-500 space-y-1">
@@ -679,10 +784,21 @@ export default function AdmissionsSection() {
                     )}
                   </div>
                 )}
+                  </>
+                )}
               </div>
 
               {/* Modal footer */}
               <div className="flex items-center justify-end gap-3 px-6 pb-6 pt-4 border-t border-gray-100">
+                {parentAccount ? (
+                  <button
+                    onClick={closeConvertModal}
+                    className="h-10 px-6 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold transition-colors cursor-pointer"
+                  >
+                    {t("actions.done", "Done")}
+                  </button>
+                ) : (
+                <>
                 <button
                   onClick={closeConvertModal}
                   className="h-10 px-5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
@@ -706,6 +822,8 @@ export default function AdmissionsSection() {
                     </>
                   )}
                 </button>
+                </>
+                )}
               </div>
             </div>
           </div>

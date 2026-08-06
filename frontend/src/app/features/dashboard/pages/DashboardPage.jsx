@@ -28,6 +28,7 @@ import {
 } from '../../../core/api/dashboardService';
 
 import { useTheme } from '../../../core/hooks/useTheme';
+import { useYearFilter } from '../../../core/hooks/useYearFilter';
 import Spinner from '../../../components/ui/Spinner';
 import Card from '../../../components/ui/Card';
 import { hexToRgba, formatCurrency } from '../../../components/utils/colors';
@@ -226,19 +227,20 @@ export default function DashboardPage() {
   // On a return visit the data is served instantly from the cache; once stale,
   // it revalidates in the background without blocking the UI (no spinner loop).
   // Queries are keyed 'dashboard' so a manual refresh invalidates them all.
-  // Note: loaded WITHOUT academic year filter — global stats show ALL data
-  // (the year filter made teachers/classes show 0 when not linked to a year).
+  // Stats follow the selected academic year (students/classes/teachers/revenue
+  // are scoped to that year on the backend).
+  const { academicYearId } = useYearFilter();
   const statsQuery = useQuery({
-    queryKey: dashboardQueryKeys.stats,
-    queryFn: getDashboardStats,
+    queryKey: dashboardQueryKeys.stats(academicYearId),
+    queryFn: () => getDashboardStats({ academicYearId }),
   });
   const activitiesQuery = useQuery({
-    queryKey: dashboardQueryKeys.activities,
-    queryFn: getRecentActivities,
+    queryKey: dashboardQueryKeys.activities(academicYearId),
+    queryFn: () => getRecentActivities({ academicYearId }),
   });
   const revenueQuery = useQuery({
-    queryKey: dashboardQueryKeys.revenue,
-    queryFn: getRevenueData,
+    queryKey: dashboardQueryKeys.revenue(academicYearId),
+    queryFn: () => getRevenueData({ academicYearId }),
   });
 
   const stats = statsQuery.data;

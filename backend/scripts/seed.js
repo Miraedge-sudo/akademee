@@ -36,6 +36,10 @@ async function seedRoles() {
       role_code: 'GUARDIAN',
     },
     {
+      role_name: 'PARENT',
+      role_code: 'PARENT',
+    },
+    {
       role_name: 'STAFF',
       role_code: 'STAFF',
     },

@@ -160,7 +160,7 @@ export default function UserEditDrawer({ isOpen, onClose, onSuccess, user, role 
     // Student-specific
     classId: "", studentNumber: "", status: "active",
     educationalSystem: "",
-    guardianFn: "", guardianLn: "", guardianRel: "", guardianPhone: "",
+    guardianFn: "", guardianLn: "", guardianEmail: "", guardianRel: "", guardianPhone: "",
     feeAmount: "", feeDeadline: "",
     // Teacher-specific
     empType: "", qualif: "",
@@ -168,6 +168,7 @@ export default function UserEditDrawer({ isOpen, onClose, onSuccess, user, role 
   const [selectedSubjects, setSelectedSubjects] = useState(new Set());
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState(null);
   const [classes, setClasses] = useState([]);
   const [allSubjects, setAllSubjects] = useState([]);
 
@@ -211,6 +212,7 @@ export default function UserEditDrawer({ isOpen, onClose, onSuccess, user, role 
         educationalSystem: user.educationalSystem || "",
         guardianFn: user.guardianFn || "",
         guardianLn: user.guardianLn || "",
+        guardianEmail: user.guardianEmail || "",
         guardianRel: user.guardianRel || "",
         guardianPhone: user.guardianPhone || "",
         feeAmount: user.feeAmount || "",
@@ -225,7 +227,7 @@ export default function UserEditDrawer({ isOpen, onClose, onSuccess, user, role 
         gender: "male", dateOfBirth: "",
         classId: "", studentNumber: "", status: "active",
         educationalSystem: "",
-        guardianFn: "", guardianLn: "", guardianRel: "", guardianPhone: "",
+        guardianFn: "", guardianLn: "", guardianEmail: "", guardianRel: "", guardianPhone: "",
         feeAmount: "", feeDeadline: "",
         empType: "", qualif: "",
       });
@@ -267,6 +269,11 @@ export default function UserEditDrawer({ isOpen, onClose, onSuccess, user, role 
           studentNumber: formData.studentNumber.trim() || null,
           status: formData.status,
           educationalSystem: formData.educationalSystem || null,
+          parentFirstName: formData.guardianFn?.trim() || undefined,
+          parentLastName: formData.guardianLn?.trim() || undefined,
+          parentEmail: formData.guardianEmail?.trim() || undefined,
+          parentPhone: formData.guardianPhone?.trim() || undefined,
+          parentRelationship: formData.guardianRel?.trim() || undefined,
         };
         if (isEditing) {
           // Use studentId if available (from UsersListPage), fall back to user.id (from StudentProfilePage)
@@ -274,7 +281,11 @@ export default function UserEditDrawer({ isOpen, onClose, onSuccess, user, role 
           await updateStudent(studentId, payload);
           toast.success(isFr ? "Élève mis à jour" : "Student updated");
         } else {
-          await createStudent(payload);
+          const created = await createStudent(payload);
+          if (created?.parentAccount?.loginEmail) {
+            setCreatedCredentials(created.parentAccount);
+            return;
+          }
           toast.success(isFr ? "Élève créé" : "Student created");
         }
       } else {
@@ -412,11 +423,20 @@ export default function UserEditDrawer({ isOpen, onClose, onSuccess, user, role 
                     value={formData.guardianLn} onChange={handleChange("guardianLn")} />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                  <FieldInput type="email" placeholder={isFr ? "Email du parent (connexion)" : "Parent email (login)"}
+                    value={formData.guardianEmail} onChange={handleChange("guardianEmail")} />
                   <SelectField value={formData.guardianRel} onChange={handleChange("guardianRel")} placeholder={isFr ? "Lien" : "Relationship"}>
                     <option>Father</option><option>Mother</option><option>Guardian</option><option>Other</option>
                   </SelectField>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                   <FieldInput type="tel" placeholder="+237 6XX XXX XXX"
                     value={formData.guardianPhone} onChange={handleChange("guardianPhone")} />
+                  <div className="flex items-center text-[11px] text-surface-400">
+                    {isFr
+                      ? "Un compte parent sera créé automatiquement à la création de l'élève."
+                      : "A parent account will be created automatically when the student is created."}
+                  </div>
                 </div>
               </div>
             </div>
@@ -530,11 +550,58 @@ export default function UserEditDrawer({ isOpen, onClose, onSuccess, user, role 
 
         {/* ── Body ── */}
         <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-6">
-          {renderDynamicSections()}
+          {createdCredentials ? (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center mx-auto mb-4">
+                <FiCheck className="w-8 h-8 text-emerald-600 dark:text-emerald-400" strokeWidth={2.5} />
+              </div>
+              <h3 className="text-lg font-bold text-surface-800 dark:text-surface-100 mb-1">
+                {isFr ? "Élève créé !" : "Student created!"}
+              </h3>
+              <p className="text-[12.5px] text-surface-400 leading-relaxed mb-5">
+                {isFr
+                  ? "Le compte parent a été créé automatiquement. Voici ses identifiants de première connexion :"
+                  : "The parent account was created automatically. Here are the first-login credentials:"}
+              </p>
+              <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700/50 rounded-xl p-4 text-left space-y-2.5 mb-6">
+                <div>
+                  <p className="text-[11px] font-semibold text-indigo-800 dark:text-indigo-300">{isFr ? "Parent" : "Parent"}</p>
+                  <p className="text-sm font-bold text-indigo-900 dark:text-indigo-100 break-all">{createdCredentials.name || "Parent"}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-indigo-800 dark:text-indigo-300">{isFr ? "Email de connexion" : "Login email"}</p>
+                  <p className="text-sm font-bold text-indigo-900 dark:text-indigo-100 break-all">{createdCredentials.loginEmail}</p>
+                </div>
+                {createdCredentials.password ? (
+                  <div>
+                    <p className="text-[11px] font-semibold text-indigo-800 dark:text-indigo-300">{isFr ? "Mot de passe" : "Password"}</p>
+                    <p className="text-sm font-bold text-indigo-900 dark:text-indigo-100 break-all">{createdCredentials.password}</p>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-indigo-700 dark:text-indigo-400">
+                    {isFr
+                      ? "Ce parent avait déjà un compte — son mot de passe est inchangé."
+                      : "This parent already had an account — their password is unchanged."}
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            renderDynamicSections()
+          )}
         </div>
 
         {/* ── Footer ── */}
         <div className="flex-shrink-0 px-5 sm:px-6 py-4 border-t border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50">
+          {createdCredentials ? (
+            <button
+              onClick={() => { setCreatedCredentials(null); onSuccess?.(); onClose(); }}
+              className="w-full h-[44px] rounded-xl text-white text-[13px] font-bold transition-all shadow-md hover:-translate-y-0.5 active:translate-y-0"
+              style={{ backgroundColor: pc, boxShadow: `0 4px 14px ${pc}38` }}
+            >
+              {isFr ? "Terminé" : "Done"}
+            </button>
+          ) : (
           <div className="flex gap-3">
             <button onClick={onClose}
               className="flex-1 h-[44px] rounded-xl border-2 border-surface-200 dark:border-surface-600
@@ -562,6 +629,7 @@ export default function UserEditDrawer({ isOpen, onClose, onSuccess, user, role 
               )}
             </button>
           </div>
+          )}
         </div>
       </div>
     </div>

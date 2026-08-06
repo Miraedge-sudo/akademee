@@ -55,13 +55,14 @@ class StudentController {
 
   async getAllStudents(req, res, next) {
     try {
-      const { limit = 50, offset = 0, search, status, className } = req.query;
+      const { limit = 50, offset = 0, search, status, className, academicYearId } = req.query;
       const result = await studentService.listStudents(req.schoolId, {
         limit: parseInt(limit, 10) || 50,
         offset: parseInt(offset, 10) || 0,
         search,
         status,
         className,
+        academicYearId,
       });
       response.success(res, 'Students retrieved', result);
     } catch (error) {

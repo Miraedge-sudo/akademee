@@ -5,9 +5,17 @@
 
 const crypto = require('crypto');
 const sql = require('../config/database');
+const bcrypt = require('bcrypt');
 const { generateLoginEmail } = require('../utils/emailGenerator');
 const emailService = require('./email.service');
 const domains = require('../config/domains');
+
+function generateTempPassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let body = '';
+  for (let i = 0; i < 8; i += 1) body += chars[Math.floor(Math.random() * chars.length)];
+  return `Par@${body}`;
+}
 
 class StudentService {
   formatStudent(row) {
@@ -75,6 +83,11 @@ class StudentService {
       status = 'active',
       feeStatus = 'pending',
       educationalSystem,
+      parentFirstName,
+      parentLastName,
+      parentEmail,
+      parentPhone,
+      parentRelationship,
     } = data;
 
     // Get school subdomain and name for email
@@ -98,7 +111,6 @@ class StudentService {
       if (existing.length > 0) {
         user = existing[0];
         // Update the existing user's name/phone/password in case they changed
-        const bcrypt = require('bcrypt');
         const passwordHash = password ? await bcrypt.hash(password, 10) : null;
         await sql`
           UPDATE users SET
@@ -114,8 +126,7 @@ class StudentService {
     }
 
     if (!user) {
-      const bcrypt = require('bcrypt');
-      const passwordHash = await bcrypt.hash(password, 10);
+      const passwordHash = password ? await bcrypt.hash(password, 10) : null;
       const users = await sql`
         INSERT INTO users (school_id, first_name, last_name, email, login_email, password_hash, phone, is_active, created_at)
         VALUES (
@@ -152,13 +163,27 @@ class StudentService {
       RETURNING student_id
     `;
 
+    const studentId = students[0].student_id;
+
     // Optional enrollment when classId UUID is provided
     if (classId) {
       await sql`
         INSERT INTO enrollments (school_id, student_id, class_id, status)
-        VALUES (${schoolId}, ${students[0].student_id}, ${classId}, 'active')
+        VALUES (${schoolId}, ${studentId}, ${classId}, 'active')
       `;
     }
+
+    // ── Auto-create the parent login account ──
+    const parentAccount = await this.ensureParentAccount(schoolId, studentId, {
+      parentFirstName,
+      parentLastName,
+      parentEmail,
+      parentPhone,
+      parentRelationship,
+      schoolName,
+      schoolSubdomain,
+      fallbackEmail: email,
+    });
 
     // Send welcome email with student account details
     try {
@@ -188,10 +213,131 @@ class StudentService {
 
     const rows = await this.studentSelectQuery(
       schoolId,
-      sql`AND st.student_id = ${students[0].student_id}`
+      sql`AND st.student_id = ${studentId}`
     );
 
-    return this.formatStudent(rows[0]);
+    return {
+      ...this.formatStudent(rows[0]),
+      parentAccount,
+    };
+  }
+
+  /**
+   * Create (or reuse) the login account for a student's parent and link it via guardians.
+   * Returns the first-login credentials so they can be shown on screen once.
+   */
+  async ensureParentAccount(schoolId, studentId, {
+    parentFirstName,
+    parentLastName,
+    parentEmail,
+    parentPhone,
+    parentRelationship,
+    schoolName = '',
+    schoolSubdomain = '',
+    fallbackEmail = '',
+  }) {
+    const hasIdentity = parentFirstName || parentLastName || parentEmail;
+    if (!hasIdentity) return null;
+
+    const fullName = `${parentFirstName || ''} ${parentLastName || ''}`.trim();
+    const baseEmail = parentEmail || fallbackEmail || '';
+    const tempPassword = generateTempPassword();
+
+    // Reuse an existing parent user in this school when login_email/email matches
+    let parentUser = null;
+    let isNew = false;
+    if (baseEmail) {
+      const parentLoginEmail = generateLoginEmail(baseEmail, 'PARENT');
+      const existing = await sql`
+        SELECT user_id, first_name, last_name, email, login_email, phone
+        FROM users
+        WHERE (login_email = ${parentLoginEmail} OR email = ${baseEmail}) AND school_id = ${schoolId}
+        LIMIT 1
+      `;
+      if (existing.length > 0) {
+        parentUser = existing[0];
+        await sql`
+          UPDATE users SET
+            first_name = COALESCE(${fullName || null}, first_name),
+            last_name = COALESCE(${parentLastName || null}, last_name),
+            phone = COALESCE(${parentPhone || null}, phone),
+            is_active = true,
+            updated_at = NOW()
+          WHERE user_id = ${parentUser.user_id} AND school_id = ${schoolId}
+        `;
+      }
+    }
+
+    if (!parentUser) {
+      const loginEmail = baseEmail ? generateLoginEmail(baseEmail, 'PARENT') : null;
+      const passwordHash = await bcrypt.hash(tempPassword, 10);
+      const users = await sql`
+        INSERT INTO users (school_id, first_name, last_name, email, login_email, password_hash, phone, is_active, created_at)
+        VALUES (
+          ${schoolId}, ${parentFirstName || null}, ${parentLastName || null},
+          ${baseEmail || null}, ${loginEmail}, ${passwordHash}, ${parentPhone || null}, true, NOW()
+        )
+        RETURNING user_id, first_name, last_name, email, login_email, phone
+      `;
+      parentUser = users[0];
+      isNew = true;
+    }
+
+    // ── Assign PARENT role ──
+    const parentRole = await sql`SELECT role_id FROM roles WHERE role_code = 'PARENT' LIMIT 1`;
+    if (parentRole.length > 0) {
+      await sql`
+        INSERT INTO user_roles (user_id, role_id)
+        VALUES (${parentUser.user_id}, ${parentRole[0].role_id})
+        ON CONFLICT DO NOTHING
+      `;
+    }
+
+    // ── Link the parent to this child via guardians ──
+    const existingGuardian = await sql`
+      SELECT guardian_id FROM guardians
+      WHERE school_id = ${schoolId} AND student_id = ${studentId}
+        AND (user_id = ${parentUser.user_id} OR LOWER(email) = LOWER(${baseEmail || ''}))
+      LIMIT 1
+    `;
+    if (existingGuardian.length === 0) {
+      await sql`
+        INSERT INTO guardians (school_id, student_id, name, relationship, phone, email, user_id)
+        VALUES (
+          ${schoolId}, ${studentId}, ${fullName || 'Parent'},
+          ${parentRelationship || 'guardian'}, ${parentPhone || null}, ${baseEmail || null}, ${parentUser.user_id}
+        )
+      `;
+    }
+
+    // Best-effort parent welcome email
+    if (baseEmail) {
+      try {
+        const protocol = domains.getProtocol();
+        const domain = domains.getActiveTenantDomain();
+        const port = domains.isProduction ? '' : `:${domains.frontendPort}`;
+        const loginUrl = `${protocol}://${schoolSubdomain}.${domain}${port}/login`;
+        await emailService.sendWelcomeEmail({
+          email: baseEmail,
+          loginEmail: parentUser.login_email || generateLoginEmail(baseEmail, 'PARENT'),
+          firstName: parentFirstName || fullName,
+          lastName: parentLastName,
+          password: tempPassword,
+          role: 'Parent',
+          schoolName,
+          loginUrl,
+        });
+      } catch (emailError) {
+        console.error('[StudentService] Failed to send parent welcome email:', emailError.message);
+      }
+    }
+
+    return {
+      name: fullName || 'Parent',
+      email: baseEmail || null,
+      loginEmail: parentUser.login_email || (baseEmail ? generateLoginEmail(baseEmail, 'PARENT') : null),
+      password: isNew ? tempPassword : null,
+    };
   }
 
   async getStudentById(schoolId, studentId) {
@@ -220,10 +366,24 @@ class StudentService {
     return this.formatStudent(rows[0]);
   }
 
-  async listStudents(schoolId, { limit = 50, offset = 0, search, status = 'active', className } = {}) {
+  async listStudents(schoolId, { limit = 50, offset = 0, search, status = 'active', className, academicYearId } = {}) {
     limit = Math.min(Math.max(1, limit), 500);
     offset = Math.max(0, offset);
     const searchTerm = search ? `%${search.toLowerCase()}%` : null;
+    const yearFilter = academicYearId
+      ? sql`AND EXISTS (
+          SELECT 1 FROM enrollments e_ay
+          WHERE e_ay.student_id = st.student_id
+            AND e_ay.academic_year_id = ${academicYearId}
+        )`
+      : sql``;
+    const classIdSubquery = sql`
+      (SELECT e.class_id FROM enrollments e
+       WHERE e.student_id = st.student_id
+         AND e.status = 'active'
+         ${academicYearId ? sql`AND e.academic_year_id = ${academicYearId}` : sql``}
+       LIMIT 1) AS class_id
+    `;
 
     const rows = await sql`
       SELECT
@@ -231,12 +391,13 @@ class StudentService {
         st.date_of_birth, st.gender, st.status, st.photo_url, st.class_label,
         st.fee_status, st.created_at,
         u.first_name, u.last_name, u.email, u.phone,
-        (SELECT e.class_id FROM enrollments e WHERE e.student_id = st.student_id AND e.status = 'active' LIMIT 1) AS class_id
+        ${classIdSubquery}
       FROM students st
       INNER JOIN users u ON st.user_id = u.user_id
       WHERE st.school_id = ${schoolId}
         AND st.status = ${status}
         ${className ? sql`AND st.class_label = ${className}` : sql``}
+        ${yearFilter}
         ${searchTerm
           ? sql`AND (
               LOWER(u.first_name) LIKE ${searchTerm}
@@ -255,6 +416,7 @@ class StudentService {
       WHERE st.school_id = ${schoolId}
         AND st.status = ${status}
         ${className ? sql`AND st.class_label = ${className}` : sql``}
+        ${yearFilter}
         ${searchTerm
           ? sql`AND (
               LOWER(u.first_name) LIKE ${searchTerm}

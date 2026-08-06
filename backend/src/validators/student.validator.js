@@ -16,6 +16,11 @@ const createStudentValidator = [
   body('studentNumber').optional().trim(),
   body('status').optional().isIn(['active', 'inactive', 'graduated', 'transferred', 'suspended']),
   body('feeStatus').optional().isIn(['pending', 'partial', 'paid', 'overdue', 'unpaid']),
+  body('parentFirstName').optional().trim(),
+  body('parentLastName').optional().trim(),
+  body('parentEmail').optional({ values: 'falsy' }).isEmail(),
+  body('parentPhone').optional({ values: 'falsy' }).trim(),
+  body('parentRelationship').optional().trim(),
 ];
 
 const updateStudentValidator = [

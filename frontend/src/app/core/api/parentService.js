@@ -6,10 +6,66 @@ import { API_ENDPOINTS } from "./endpoints";
 
 /**
  * Get the children (students) of the currently logged-in parent
- * The backend matches by the parent's email in the guardians table.
+ * The backend matches by the parent's email or linked user account in the guardians table.
  */
 export async function getMyChildren() {
   const response = await api.get("/api/guardians/me/children");
+  return response.data.data;
+}
+
+/**
+ * Fees for all children (with per-fee breakdown + totals).
+ */
+export async function getMyFees(params = {}) {
+  const response = await api.get("/api/parent/fees", { params });
+  return response.data.data;
+}
+
+/**
+ * Pay a fee for one of the parent's children.
+ */
+export async function payFee(payload) {
+  const response = await api.post("/api/parent/fees/pay", payload);
+  return response.data.data;
+}
+
+/**
+ * Payment history for all children.
+ */
+export async function getMyPayments(params = {}) {
+  const response = await api.get("/api/parent/payments", { params });
+  return response.data.data;
+}
+
+/**
+ * Messages this parent sent to the campus.
+ */
+export async function getMyMessages() {
+  const response = await api.get("/api/parent/messages");
+  return response.data.data;
+}
+
+/**
+ * Full thread for one of the parent's messages.
+ */
+export async function getMyMessageThread(id) {
+  const response = await api.get(`/api/parent/messages/${id}`);
+  return response.data.data;
+}
+
+/**
+ * Send a new message to the campus.
+ */
+export async function sendCampusMessage(payload) {
+  const response = await api.post("/api/parent/messages", payload);
+  return response.data.data;
+}
+
+/**
+ * Reply to one of the parent's message threads.
+ */
+export async function replyToMessage(id, payload) {
+  const response = await api.post(`/api/parent/messages/${id}/reply`, payload);
   return response.data.data;
 }
 

@@ -30,6 +30,9 @@
     "myAttendance": "Mes Présences",
     "myFees": "Mes Frais",
     "myReportCards": "Mes Bulletins",
+    "payFees": "Payer les frais",
+    "contactCampus": "Contacter le campus",
+    "campusMessages": "Messages Campus",
     "applications": "Demandes",
     "parentHome": "Tableau de bord parent",
     "financeReports": "Rapports financiers",
@@ -56,7 +59,9 @@
       "academic_management": "Gestion académique",
       "grades": "Notes & Rapports",
       "finance": "Finance",
-      "system": "Système"
+      "system": "Système",
+      "communication": "Communication",
+      "children": "Enfants"
     }
   },
   "roles": {

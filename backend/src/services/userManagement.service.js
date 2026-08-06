@@ -26,10 +26,35 @@ class UserManagementService {
     };
   }
 
-  async list(schoolId, { limit = 50, offset = 0, search, role, includeInactive = false } = {}) {
+  async list(schoolId, { limit = 50, offset = 0, search, role, includeInactive = false, academicYearId } = {}) {
     limit = Math.min(Math.max(1, limit), 500);
     offset = Math.max(0, offset);
     const searchTerm = search ? `%${search.toLowerCase()}%` : null;
+
+    const yearFilter = academicYearId
+      ? sql`AND (
+          EXISTS (
+            SELECT 1 FROM classes c
+            WHERE c.school_id = u.school_id
+              AND c.class_teacher_id = u.user_id
+              AND c.academic_year_id = ${academicYearId}
+          )
+          OR EXISTS (
+            SELECT 1 FROM class_teachers ct
+            JOIN classes c2 ON c2.class_id = ct.class_id
+            WHERE ct.teacher_id = u.user_id
+              AND c2.school_id = u.school_id
+              AND c2.academic_year_id = ${academicYearId}
+          )
+          OR EXISTS (
+            SELECT 1 FROM subject_teachers st
+            JOIN classes c3 ON c3.class_id = st.class_id
+            WHERE st.teacher_id = u.user_id
+              AND c3.school_id = u.school_id
+              AND c3.academic_year_id = ${academicYearId}
+          )
+        )`
+      : sql``;
 
     const rows = await sql`
       SELECT u.*, COALESCE(
@@ -41,6 +66,7 @@ class UserManagementService {
       LEFT JOIN roles r ON ur.role_id = r.role_id
       WHERE u.school_id = ${schoolId}
         ${!includeInactive ? sql`AND u.is_active = true` : sql``}
+        ${yearFilter}
         ${searchTerm ? sql`AND (LOWER(u.first_name) LIKE ${searchTerm} OR LOWER(u.last_name) LIKE ${searchTerm} OR LOWER(u.email) LIKE ${searchTerm})` : sql``}
         ${role ? sql`AND r.role_code = ${role}` : sql``}
       GROUP BY u.user_id
