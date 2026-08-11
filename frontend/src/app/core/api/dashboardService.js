@@ -34,3 +34,25 @@ export async function getFinanceStats() {
   const response = await api.get(API_ENDPOINTS.DASHBOARD.FINANCE_STATS);
   return response.data.data;
 }
+
+/**
+ * Télécharge le PDF « situation financière du campus » (rendu serveur),
+ * destiné à être remis à l'administration.
+ *
+ * @param {string} [lang] - 'fr' | 'en'
+ * @returns {Promise<{blob: Blob, filename: string}>}
+ */
+export async function downloadFinancialStatementPdf(lang = "fr") {
+  const response = await api.get(API_ENDPOINTS.REPORTS.FINANCIAL_STATEMENT_PDF, {
+    params: { lang },
+    responseType: "blob",
+    timeout: 60000,
+  });
+
+  const disposition = response.headers?.["content-disposition"] || "";
+  let filename = `financial-statement-${new Date().toISOString().slice(0, 10)}.pdf`;
+  const match = disposition.match(/filename="?([^";]+)"?/i);
+  if (match) filename = match[1];
+
+  return { blob: response.data, filename };
+}

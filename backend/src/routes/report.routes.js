@@ -19,7 +19,36 @@ router.get('/class/:id', authMiddleware, roleMiddleware(['admin', 'teacher']), r
 
 router.get('/performance/:studentId', authMiddleware, reportController.getStudentPerformance);
 
+router.get('/financial-statement/pdf', authMiddleware, roleMiddleware(['admin', 'accountant']), reportController.downloadFinancialStatement);
+
 router.get('/export/:reportId', authMiddleware, reportController.exportReport);
+
+/**
+ * @openapi
+ * /api/reports/financial-statement/pdf:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Download the campus financial statement as PDF (admin/accountant)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: lang
+ *         schema:
+ *           type: string
+ *           enum: [fr, en]
+ *         description: Language of the PDF labels
+ *     responses:
+ *       200:
+ *         description: Financial statement PDF downloaded
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       403:
+ *         description: Forbidden for this role
+ */
 
 /**
  * @openapi

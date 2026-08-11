@@ -14,6 +14,22 @@ class ClassSubjectService {
     };
   }
 
+  /**
+   * Mirror a class-subject coefficient into the matching subject_offerings
+   * rows so the v1 grading engine (report cards) and the class UI stay in
+   * sync. The report card engine also COALESCEs from class_subjects at read
+   * time, so this keeps the stored data consistent for other consumers.
+   */
+  async _syncOfferingCoefficient(classId, subjectId, coefficient) {
+    if (coefficient == null) return;
+    await sql`
+      UPDATE subject_offerings
+      SET coefficient = ${coefficient}
+      WHERE class_level_id = ${classId}
+        AND subject_id = ${subjectId}
+    `;
+  }
+
   async assign(schoolId, data) {
     const { classId, subjectId, coefficient, isCompulsory } = data;
     const rows = await sql`
@@ -22,6 +38,7 @@ class ClassSubjectService {
       ON CONFLICT (class_id, subject_id) DO UPDATE SET coefficient = EXCLUDED.coefficient, is_compulsory = EXCLUDED.is_compulsory
       RETURNING *
     `;
+    await this._syncOfferingCoefficient(classId, subjectId, coefficient || 1);
     return this.format(rows[0]);
   }
 
@@ -93,6 +110,15 @@ class ClassSubjectService {
         coefficient = COALESCE(EXCLUDED.coefficient, class_subjects.coefficient)
       RETURNING *
     `;
+
+    // Keep subject_offerings coefficients in sync (only for explicit values;
+    // legacy string arrays leave existing coefficients untouched).
+    for (const v of values) {
+      if (v.coefficient != null) {
+        await this._syncOfferingCoefficient(v.class_id, v.subject_id, v.coefficient);
+      }
+    }
+
     return rows.map(r => this.format(r));
   }
 }
