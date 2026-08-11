@@ -157,7 +157,7 @@ class DashboardService {
   async getRecentActivities(schoolId, { limit = 10, academicYearId } = {}) {
     limit = Math.min(Math.max(1, limit), 50);
 
-    // Resolve the academic year filter first (used by all three queries).
+    // Resolve the active academic year (used to scope the feed by date range).
     if (!academicYearId) {
       const [activeYear] = await sql`
         SELECT academic_year_id FROM academic_years
@@ -167,55 +167,54 @@ class DashboardService {
       academicYearId = activeYear?.academic_year_id || null;
     }
 
-    // ── The three source queries are independent — run them in parallel
-    // (1 round trip instead of 3 sequential ones). ──
-    const [students, payments, grades] = await Promise.all([
-      sql`
-        SELECT CONCAT(u.first_name, ' ', u.last_name) AS name, 'student_created' AS action, st.created_at AS date
-        FROM students st
-        JOIN users u ON st.user_id = u.user_id
-        LEFT JOIN enrollments e ON st.student_id = e.student_id AND e.status = 'active'
-        LEFT JOIN classes c ON e.class_id = c.class_id
-        WHERE st.school_id = ${schoolId}
-          ${academicYearId ? sql`AND c.academic_year_id = ${academicYearId}` : sql``}
-        ORDER BY st.created_at DESC
-        LIMIT ${limit}
-      `,
-      sql`
-        SELECT CONCAT(u.first_name, ' ', u.last_name) AS name, 'payment_received' AS action, p.created_at AS date
-        FROM payments p
-        LEFT JOIN students st ON p.student_id = st.student_id
-        LEFT JOIN users u ON st.user_id = u.user_id
-        WHERE p.school_id = ${schoolId}
-          ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
-        ORDER BY p.created_at DESC
-        LIMIT ${limit}
-      `,
-      sql`
-        SELECT CONCAT(u.first_name, ' ', u.last_name) AS name, 'grade_recorded' AS action, g.created_at AS date
-        FROM grades g
-        LEFT JOIN students st ON g.student_id = st.student_id
-        LEFT JOIN users u ON st.user_id = u.user_id
-        ${academicYearId ? sql`JOIN periods p ON g.period_id = p.period_id AND p.academic_year_id = ${academicYearId}` : sql``}
-        WHERE g.school_id = ${schoolId}
-        ORDER BY g.created_at DESC
-        LIMIT ${limit}
-      `,
-    ]);
+    // Scope the feed to the selected year's date range when one is known.
+    // Dates are compared on the calendar level (::date casts, DB-side +1 day)
+    // so the range is exact regardless of the server's timezone.
+    let yearRange = sql``;
+    if (academicYearId) {
+      const [year] = await sql`
+        SELECT start_date, end_date FROM academic_years
+        WHERE academic_year_id = ${academicYearId} AND school_id = ${schoolId}
+      `;
+      if (year?.start_date) {
+        const startIso = new Date(year.start_date).toISOString().slice(0, 10);
+        const endIso = year.end_date ? new Date(year.end_date).toISOString().slice(0, 10) : null;
+        yearRange = sql`
+          AND al.created_at >= ${startIso}::date
+          AND al.created_at < ${
+            endIso ? sql`${endIso}::date + INTERVAL '1 day'` : sql`CURRENT_DATE + INTERVAL '1 day'`
+          }
+        `;
+      }
+    }
 
-    const all = [...students, ...payments, ...grades]
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, limit);
+    // ── Single source of truth: the audit trail. Every successful write in
+    // the app is logged there with the actor, action, entity and timestamp,
+    // so the feed reflects REAL activity across the whole school. ──
+    const rows = await sql`
+      SELECT
+        al.log_id,
+        al.action,
+        al.table_name,
+        al.record_id,
+        al.details,
+        al.created_at,
+        NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), '') AS actor_name
+      FROM audit_logs al
+      LEFT JOIN users u ON al.user_id = u.user_id
+      WHERE al.school_id = ${schoolId}
+        ${yearRange}
+      ORDER BY al.created_at DESC
+      LIMIT ${limit}
+    `;
 
-    return all.map((a) => ({
-      description:
-        a.action === "student_created"
-          ? `New student "${a.name}" enrolled`
-          : a.action === "payment_received"
-            ? `Payment received from ${a.name || "a student"}`
-            : `Grade recorded for ${a.name || "a student"}`,
-      date: a.date,
-      type: a.action,
+    return rows.map((r) => ({
+      id: r.log_id,
+      action: r.action || null,
+      entity: r.table_name || null,
+      actorName: r.actor_name || null,
+      targetName: r.details || null,
+      date: r.created_at,
     }));
   }
 

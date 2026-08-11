@@ -446,9 +446,9 @@ export default function ProgramsSection() {
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
-            <Input label={isFr ? "Nom du programme" : "Program name"} value={form.name} onChange={setField("name")} placeholder={isFr ? "Licence Informatique" : "BSc Computer Science"} />
+            <Input label={isFr ? "Nom (EN)" : "Name (EN)"} value={form.name} onChange={setField("name")} placeholder="BSc Computer Science" />
           </div>
-          <Input label={isFr ? "Nom (EN)" : "Name (EN)"} value={form.name_fr} onChange={setField("name_fr")} placeholder={isFr ? "BSc Computer Science" : "Licence Informatique"} />
+          <Input label={isFr ? "Nom (FR)" : "Name (FR)"} value={form.name_fr} onChange={setField("name_fr")} placeholder="Licence Informatique" />
           <Input label="Code" value={form.code} onChange={setField("code")} placeholder="LIC-INFO" />
           <Select
             label="Cycle"
