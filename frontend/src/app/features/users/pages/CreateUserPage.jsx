@@ -483,6 +483,13 @@ function GuardianForm({ data, onChange }) {
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+        <FieldInput
+          name="guardianEmail"
+          type="email"
+          placeholder="Parent email (login)"
+          value={data.guardianEmail || ""}
+          onChange={(e) => onChange("guardianEmail", e.target.value)}
+        />
         <SelectField
           value={data.guardianRel || ""}
           onChange={(e) => onChange("guardianRel", e.target.value)}
@@ -493,6 +500,8 @@ function GuardianForm({ data, onChange }) {
           <option>Guardian</option>
           <option>Other</option>
         </SelectField>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
         <FieldInput
           name="guardianPhone"
           type="tel"
@@ -500,6 +509,11 @@ function GuardianForm({ data, onChange }) {
           value={data.guardianPhone || ""}
           onChange={(e) => onChange("guardianPhone", e.target.value)}
         />
+        <div className="flex items-center text-[11px] text-surface-400">
+          {data.guardianEmail
+            ? "Un compte parent sera créé automatiquement."
+            : "Ajoutez l'email du parent pour créer son compte automatiquement."}
+        </div>
       </div>
     </div>
   );
@@ -540,7 +554,7 @@ export default function CreateUserPage() {
     password: "", password2: "", notes: "",
     empType: "", qualif: "",
     studentClass: "", matricule: "", enrollType: "New student", nationality: "",
-    guardianFn: "", guardianLn: "", guardianRel: "", guardianPhone: "",
+    guardianFn: "", guardianLn: "", guardianEmail: "", guardianRel: "", guardianPhone: "",
     feeAmount: "", feeDeadline: "",
     inviteEmail: "", inviteName: "",
     educationalSystem: "",
@@ -759,6 +773,11 @@ export default function CreateUserPage() {
           status: 'active',
           feeStatus: 'pending',
           educationalSystem: formData.educationalSystem || null,
+          parentFirstName: formData.guardianFn?.trim() || undefined,
+          parentLastName: formData.guardianLn?.trim() || undefined,
+          parentEmail: formData.guardianEmail?.trim() || undefined,
+          parentPhone: formData.guardianPhone?.trim() || undefined,
+          parentRelationship: formData.guardianRel?.trim() || undefined,
         });
         // Generate loginEmail for display (student API doesn't return it)
         const emailParts = formData.email.trim().split('@');
@@ -805,7 +824,7 @@ export default function CreateUserPage() {
       password: "", password2: "", notes: "",
       empType: "", qualif: "",
       studentClass: "", matricule: "", enrollType: "New student", nationality: "",
-      guardianFn: "", guardianLn: "", guardianRel: "", guardianPhone: "",
+      guardianFn: "", guardianLn: "", guardianEmail: "", guardianRel: "", guardianPhone: "",
       feeAmount: "", feeDeadline: "",
       inviteEmail: "", inviteName: "",
     });
@@ -1087,6 +1106,35 @@ export default function CreateUserPage() {
                     ? "Cet email doit être utilisé pour se connecter (différent de l'email personnel)"
                     : "Use this email to sign in (different from personal email)"}
                 </p>
+              </div>
+            )}
+            {/* Show parent first-login credentials */}
+            {lastCreatedUser?.parentAccount?.loginEmail && (
+              <div className="mb-5 px-4 py-3 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700/50 text-left">
+                <p className="text-xs font-semibold text-indigo-800 dark:text-indigo-300 mb-1 flex items-center gap-1.5">
+                  <FiUser className="w-3.5 h-3.5" />
+                  {isFr ? "Compte parent (première connexion)" : "Parent account (first login)"}
+                </p>
+                <p className="text-sm text-indigo-900 dark:text-indigo-100 font-medium break-all">
+                  {lastCreatedUser.parentAccount.name || "Parent"}
+                  {lastCreatedUser.parentAccount.email ? ` — ${lastCreatedUser.parentAccount.email}` : ""}
+                </p>
+                <p className="text-sm font-bold text-indigo-900 dark:text-indigo-100 break-all mt-1">
+                  {isFr ? "Connexion : " : "Login: "}
+                  {lastCreatedUser.parentAccount.loginEmail}
+                </p>
+                {lastCreatedUser.parentAccount.password ? (
+                  <p className="text-sm font-bold text-indigo-900 dark:text-indigo-100 mt-1">
+                    {isFr ? "Mot de passe : " : "Password: "}
+                    {lastCreatedUser.parentAccount.password}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-indigo-700 dark:text-indigo-400 mt-1">
+                    {isFr
+                      ? "Ce parent avait déjà un compte — son mot de passe est inchangé."
+                      : "This parent already had an account — their password is unchanged."}
+                  </p>
+                )}
               </div>
             )}
             <div className="flex gap-2 justify-center">

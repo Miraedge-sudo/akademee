@@ -17,8 +17,12 @@ export function YearProvider({ children }) {
       const list = data?.years || [];
       setYears(list);
       if (list.length > 0) {
+        const saved = localStorage.getItem("akademee:selectedYearId");
+        const savedValid = saved && list.some((y) => y.id === saved);
         const current = list.find((y) => y.isCurrent) || list[0];
-        setSelectedYearId((prev) => prev || current.id);
+        const next = savedValid ? saved : current.id;
+        setSelectedYearId((prev) => prev || next);
+        if (savedValid) localStorage.setItem("akademee:selectedYearId", next);
       }
     } catch {
       // Silently fail
@@ -45,9 +49,14 @@ export function YearProvider({ children }) {
     await fetchYears();
   }, [fetchYears]);
 
+  const selectYear = useCallback((id) => {
+    if (id) localStorage.setItem("akademee:selectedYearId", id);
+    setSelectedYearId(id);
+  }, []);
+
   const value = {
     selectedYearId,
-    setSelectedYearId,
+    setSelectedYearId: selectYear,
     years,
     loading,
     hasYears: years.length > 0,

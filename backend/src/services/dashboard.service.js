@@ -4,6 +4,73 @@ class DashboardService {
   async getStats(schoolId, { academicYearId } = {}) {
     // ── Phase 1: resolve active year + run all independent aggregates in
     // parallel (1 round trip instead of 9 sequential ones). ──
+    const studentCountQuery = academicYearId
+      ? sql`
+          SELECT COUNT(DISTINCT st.student_id)::int AS total
+          FROM students st
+          WHERE st.school_id = ${schoolId}
+            AND st.status = 'active'
+            AND EXISTS (
+              SELECT 1 FROM enrollments e
+              WHERE e.student_id = st.student_id
+                AND e.academic_year_id = ${academicYearId}
+            )
+        `
+      : sql`
+          SELECT COUNT(*)::int AS total FROM students WHERE school_id = ${schoolId} AND status = 'active'
+        `;
+
+    const teacherCountQuery = academicYearId
+      ? sql`
+          SELECT COUNT(DISTINCT u.user_id)::int AS total
+          FROM users u
+          JOIN user_roles ur ON ur.user_id = u.user_id
+          JOIN roles r ON ur.role_id = r.role_id
+          WHERE u.school_id = ${schoolId}
+            AND UPPER(r.role_code) = 'TEACHER'
+            AND u.is_active = true
+            AND (
+              EXISTS (
+                SELECT 1 FROM classes c
+                WHERE c.school_id = u.school_id
+                  AND c.class_teacher_id = u.user_id
+                  AND c.academic_year_id = ${academicYearId}
+              )
+              OR EXISTS (
+                SELECT 1 FROM class_teachers ct
+                JOIN classes c2 ON c2.class_id = ct.class_id
+                WHERE ct.teacher_id = u.user_id
+                  AND c2.school_id = u.school_id
+                  AND c2.academic_year_id = ${academicYearId}
+              )
+              OR EXISTS (
+                SELECT 1 FROM subject_teachers st
+                JOIN classes c3 ON c3.class_id = st.class_id
+                WHERE st.teacher_id = u.user_id
+                  AND c3.school_id = u.school_id
+                  AND c3.academic_year_id = ${academicYearId}
+              )
+            )
+        `
+      : sql`
+          SELECT COUNT(*)::int AS total
+          FROM user_roles ur
+          JOIN users u ON ur.user_id = u.user_id
+          JOIN roles r ON ur.role_id = r.role_id
+          WHERE u.school_id = ${schoolId}
+            AND UPPER(r.role_code) = 'TEACHER'
+            AND u.is_active = true
+        `;
+
+    const classCountQuery = academicYearId
+      ? sql`
+          SELECT COUNT(*)::int AS total FROM classes
+          WHERE school_id = ${schoolId} AND academic_year_id = ${academicYearId}
+        `
+      : sql`
+          SELECT COUNT(*)::int AS total FROM classes WHERE school_id = ${schoolId}
+        `;
+
     const [
       activeYearRows,
       studentCount,
@@ -22,21 +89,8 @@ class DashboardService {
             WHERE school_id = ${schoolId} AND is_current = true
             LIMIT 1
           `,
-      sql`
-        SELECT COUNT(*)::int AS total FROM students WHERE school_id = ${schoolId} AND status = 'active'
-      `,
-      // Teacher count: from user_roles (not class_teachers) because teachers may
-      // be assigned via subject_teachers rather than class_teachers. The frontend
-      // explicitly requests stats without academic year filtering.
-      sql`
-        SELECT COUNT(*)::int AS total
-        FROM user_roles ur
-        JOIN users u ON ur.user_id = u.user_id
-        JOIN roles r ON ur.role_id = r.role_id
-        WHERE u.school_id = ${schoolId}
-          AND UPPER(r.role_code) = 'TEACHER'
-          AND u.is_active = true
-      `,
+      studentCountQuery,
+      teacherCountQuery,
       sql`
         SELECT COUNT(*)::int AS total
         FROM user_roles ur
@@ -64,10 +118,7 @@ class DashboardService {
           AND UPPER(r.role_code) = 'ACCOUNTANT'
           AND u.is_active = true
       `,
-      // Class count: ALL classes regardless of academic year.
-      sql`
-        SELECT COUNT(*)::int AS total FROM classes WHERE school_id = ${schoolId}
-      `,
+      classCountQuery,
       sql`
         SELECT COUNT(*)::int AS total FROM users WHERE school_id = ${schoolId} AND is_active = true
       `,

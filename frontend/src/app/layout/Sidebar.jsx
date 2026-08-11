@@ -621,6 +621,10 @@ const BASE_NAV_CONFIG = {
       ],
     },
     {
+      group: "communication",
+      items: [{ key: "campusMessages", path: "/dashboard/campus-messages", icon: "mail" }],
+    },
+    {
       group: "grades",
       items: [
         { key: "reportCards", path: "/dashboard/report-cards", icon: "file" },
@@ -741,6 +745,8 @@ const BASE_NAV_CONFIG = {
           path: "/dashboard/my-report-cards",
           icon: "file",
         },
+        { key: "payFees", path: "/dashboard/pay-fees", icon: "creditcard" },
+        { key: "contactCampus", path: "/dashboard/contact-campus", icon: "mail" },
       ],
     },
   ],
@@ -943,6 +949,18 @@ const ICONS = {
     <>
       <circle cx="12" cy="12" r="10" />
       <polyline points="12 6 12 12 16 14" />
+    </>
+  ),
+  mail: (
+    <>
+      <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
+      <polyline points="22,6 12,13 2,6" />
+    </>
+  ),
+  creditcard: (
+    <>
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+      <line x1="1" y1="10" x2="23" y2="10" />
     </>
   ),
 };

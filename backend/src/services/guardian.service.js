@@ -129,11 +129,10 @@ class GuardianService {
 
   /**
    * Get the children (students) for a parent user.
-   * A parent is linked to students via the guardians table.
-   * This looks up guardians where email matches the current user's email,
-   * then returns the associated students with their class info.
+   * A parent is linked to students via the guardians table (user_id, or email
+   * for legacy guardians created before parent accounts existed).
    */
-  async getMyChildren(schoolId, userEmail) {
+  async getMyChildren(schoolId, { userId, email }) {
     const rows = await sql`
       SELECT
         st.student_id,
@@ -153,7 +152,10 @@ class GuardianService {
       LEFT JOIN enrollments e ON e.student_id = st.student_id AND e.school_id = ${schoolId} AND e.status = 'active'
       LEFT JOIN classes c ON e.class_id = c.class_id
       WHERE g.school_id = ${schoolId}
-        AND LOWER(g.email) = LOWER(${userEmail})
+        AND (
+          ${userId ? sql`g.user_id = ${userId}` : sql`false`}
+          OR (${userId ? sql`false` : sql`true`} AND LOWER(g.email) = LOWER(${email || ''}))
+        )
         AND st.status = 'active'
       ORDER BY u.first_name ASC
     `;

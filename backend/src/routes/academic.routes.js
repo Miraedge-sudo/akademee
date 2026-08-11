@@ -52,6 +52,16 @@ router.post(
   academicYearController.setActiveYear
 );
 
+router.post(
+  '/years/:id/carry-over',
+  authMiddleware,
+  roleMiddleware(['admin']),
+  yearIdParamValidator,
+  validateMiddleware,
+  auditMiddleware('CREATE', 'academic_years'),
+  academicYearController.carryOverAcademicYear
+);
+
 router.delete(
   '/years/:id',
   authMiddleware,

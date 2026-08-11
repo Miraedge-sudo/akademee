@@ -77,6 +77,21 @@ class AcademicYearController {
       next(error);
     }
   }
+
+  async carryOverAcademicYear(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { sourceYearId } = req.body || {};
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const result = await academicYearService.carryOver(schoolId, id, { sourceYearId });
+      response.success(res, 'Academic year data copied', result);
+    } catch (error) {
+      if (['Academic year not found', 'No previous academic year to copy from', 'Source and target years must be different'].includes(error.message)) {
+        return response.error(res, error.message, null, 400);
+      }
+      next(error);
+    }
+  }
 }
 
 module.exports = new AcademicYearController();

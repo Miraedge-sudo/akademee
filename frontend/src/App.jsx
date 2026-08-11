@@ -71,6 +71,9 @@ const MyAttendancePage = lazy(() => import("./app/features/students/pages/MyAtte
 const MyFeesPage = lazy(() => import("./app/features/students/pages/MyFeesPage"));
 const MyReportCardsPage = lazy(() => import("./app/features/students/pages/MyReportCardsPage"));
 const ParentDashboardPage = lazy(() => import("./app/features/parent/pages/ParentDashboardPage"));
+const PayFeesPage = lazy(() => import("./app/features/parent/pages/PayFeesPage"));
+const ContactCampusPage = lazy(() => import("./app/features/parent/pages/ContactCampusPage"));
+const CampusMessagesPage = lazy(() => import("./app/features/messages/pages/CampusMessagesPage"));
 
 // ── Lazy helpers ──
 const page = (Component) => (
@@ -324,6 +327,9 @@ function App() {
             <Route path="my-attendance" element={dashboardPage(MyAttendancePage)} />
             <Route path="my-fees" element={dashboardPage(MyFeesPage)} />
             <Route path="my-report-cards" element={dashboardPage(MyReportCardsPage)} />
+            <Route path="pay-fees" element={dashboardPage(PayFeesPage)} />
+            <Route path="contact-campus" element={dashboardPage(ContactCampusPage)} />
+            <Route path="campus-messages" element={dashboardPage(CampusMessagesPage)} />
           </Route>
 
           {/* Academic year selection standalone */}
