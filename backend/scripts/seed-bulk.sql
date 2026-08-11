@@ -32,7 +32,7 @@ DECLARE
     v_nb_subjects           INT  := 14;   -- matières par école
     v_subjects_per_class    INT  := 10;   -- matières affectées à chaque classe
     v_attendance_days       INT  := 15;   -- jours de présence générés par élève
-    v_payments_per_student  INT  := 3;    -- paiements par élève
+    v_payments_per_student  INT  := 6;    -- paiements par élève (répartis sur ~6 mois)
     v_sequences_for_grades  INT  := 4;    -- nb de séquences notées (2 × T1 + 2 × T2)
     v_prefix                TEXT := 'perf'; -- préfixe des sous-domaines (perf1, perf2…)
     v_password_hash         TEXT := '$2b$10$04DX.gjZspoCi8X1IV6jNOAi.3lC3YricXk2COLxCmDpOHJEVwiY.';
@@ -389,7 +389,9 @@ BEGIN
             (ARRAY['completed','completed','completed','pending'])[1 + floor(random() * 4)::int]::payment_status_enum,
             'RCPT-' || upper(v_school_short) || '-' || lpad(e.student_id::text, 8, '0') || '-' || k,
             e.academic_year_id,
-            NOW() - (k || ' days')::interval
+            -- Répartis sur les ~6 derniers mois (1 paiement/mois) pour que le
+            -- graphique de revenus du dashboard montre une vraie progression.
+            NOW() - ((((v_payments_per_student - k) * 30) + floor(random() * 10)) * interval '1 day')
         FROM enrollments e
         CROSS JOIN generate_series(1, v_payments_per_student) AS k
         WHERE e.school_id = v_school_id;

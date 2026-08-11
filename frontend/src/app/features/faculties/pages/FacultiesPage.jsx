@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   FiPlus,
   FiEdit2,
   FiTrash2,
+  FiEye,
   FiSearch,
   FiX,
   FiHome,
@@ -223,9 +225,14 @@ export default function FacultiesPage() {
                     className="group border-t border-surface-50 dark:border-surface-700/50 hover:bg-surface-50/50 dark:hover:bg-surface-700/20 transition-colors"
                   >
                     <td className="px-4 py-3">
-                      <p className="text-[14px] font-semibold text-surface-800 dark:text-surface-100">
-                        {faculty.name}
-                      </p>
+                      <Link
+                        to={`/dashboard/faculties/${faculty.id}`}
+                        className="hover:text-primary-600 transition-colors"
+                      >
+                        <p className="text-[14px] font-semibold text-surface-800 dark:text-surface-100">
+                          {faculty.name}
+                        </p>
+                      </Link>
                       {faculty.nameFr && (
                         <p className="text-xs text-surface-400 mt-0.5">{faculty.nameFr}</p>
                       )}
@@ -270,6 +277,13 @@ export default function FacultiesPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <Link
+                          to={`/dashboard/faculties/${faculty.id}`}
+                          className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-105 hover:border-primary-200 hover:bg-primary-50 hover:shadow-sm transition-all"
+                          title={isFr ? "Voir le détail" : "View details"}
+                        >
+                          <FiEye className="w-3 h-3 text-surface-500" />
+                        </Link>
                         <button
                           onClick={() => openEdit(faculty)}
                           className="w-7 h-7 rounded-md border border-surface-100 dark:border-surface-600 bg-white dark:bg-surface-800 flex items-center justify-center hover:scale-105 hover:border-primary-200 hover:bg-primary-50 hover:shadow-sm transition-all"
@@ -339,8 +353,8 @@ export default function FacultiesPage() {
         }
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input label={isFr ? "Nom (FR)" : "Name"} value={form.name} onChange={setField("name")} placeholder={isFr ? "Faculté des Sciences" : "Faculty of Sciences"} />
-          <Input label={isFr ? "Nom (EN)" : "Name (EN)"} value={form.name_fr} onChange={setField("name_fr")} placeholder={isFr ? "Faculty of Sciences" : "Faculté des Sciences"} />
+          <Input label={isFr ? "Nom (EN)" : "Name (EN)"} value={form.name} onChange={setField("name")} placeholder="Faculty of Sciences" />
+          <Input label={isFr ? "Nom (FR)" : "Name (FR)"} value={form.name_fr} onChange={setField("name_fr")} placeholder="Faculté des Sciences" />
           <Input label="Code" value={form.code} onChange={setField("code")} placeholder="FST" />
           <Input label={isFr ? "Doyen" : "Dean"} value={form.dean_name} onChange={setField("dean_name")} placeholder={isFr ? "Nom du doyen" : "Dean name"} />
           <Input label="Email" type="email" value={form.email} onChange={setField("email")} placeholder="decanat@uni.edu" />

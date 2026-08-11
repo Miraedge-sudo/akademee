@@ -56,6 +56,7 @@ const AdmissionsSection = lazy(() => import("./app/features/admissions/pages/Adm
 const StudentsListPage = lazy(() => import("./app/features/students/pages/StudentsListPage"));
 const StudentProfilePage = lazy(() => import("./app/features/students/pages/StudentProfilePage"));
 const FacultiesPage = lazy(() => import("./app/features/faculties/pages/FacultiesPage"));
+const FacultyDetailPage = lazy(() => import("./app/features/faculties/pages/FacultyDetailPage"));
 const DepartmentsPage = lazy(() => import("./app/features/faculties/pages/DepartmentsPage"));
 const ResearchPage = lazy(() => import("./app/features/research/pages/ResearchPage"));
 const PublicationsPage = lazy(() => import("./app/features/research/pages/PublicationsPage"));
@@ -253,6 +254,7 @@ function App() {
             <Route path="programs/master" element={dashboardPage(ProgramsSection)} />
             <Route path="programs/doctorate" element={dashboardPage(ProgramsSection)} />
             <Route path="faculties" element={dashboardPage(FacultiesPage)} />
+            <Route path="faculties/:id" element={dashboardPage(FacultyDetailPage)} />
             <Route path="departments" element={dashboardPage(DepartmentsPage)} />
             <Route path="research" element={dashboardPage(ResearchPage)} />
             <Route path="publications" element={dashboardPage(PublicationsPage)} />

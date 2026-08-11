@@ -9,6 +9,7 @@ const roleMiddleware = require('../middleware/role.middleware');
 const tenantMiddleware = require('../middleware/tenant.middleware');
 const { initiatePaymentValidator, confirmPaymentValidator } = require('../validators/payment.validator');
 const validateMiddleware = require('../middleware/validate.middleware');
+const auditMiddleware = require('../middleware/audit.middleware');
 const { invalidateCache } = require('../middleware/cache.middleware');
 
 const router = express.Router();
@@ -19,6 +20,9 @@ router.post(
   authMiddleware,
   initiatePaymentValidator,
   validateMiddleware,
+  auditMiddleware('CREATE', 'payments', (req) =>
+    req.body?.amount ? `${Number(req.body.amount).toLocaleString('fr-FR')} FCFA` : null
+  ),
   paymentController.initiatePayment
 );
 
@@ -33,6 +37,7 @@ router.post(
   authMiddleware,
   confirmPaymentValidator,
   validateMiddleware,
+  auditMiddleware('CONFIRM', 'payments'),
   paymentController.confirmPayment
 );
 

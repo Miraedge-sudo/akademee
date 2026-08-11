@@ -5,6 +5,8 @@ import { queryClient, dashboardQueryKeys } from '../../../core/api/queryClient';
 import {
   FiUsers,
   FiUser,
+  FiUserPlus,
+  FiUserCheck,
   FiBook,
   FiDollarSign,
   FiPlus,
@@ -16,10 +18,18 @@ import {
   FiTrendingUp,
   FiClock,
   FiCheckCircle,
+  FiCheckSquare,
   FiShield,
   FiBookOpen,
   FiLayers,
   FiRefreshCw,
+  FiBell,
+  FiEdit,
+  FiList,
+  FiMail,
+  FiMap,
+  FiGrid,
+  FiSearch,
 } from 'react-icons/fi';
 import {
   getDashboardStats,
@@ -27,41 +37,129 @@ import {
   getRevenueData,
 } from '../../../core/api/dashboardService';
 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+
 import { useTheme } from '../../../core/hooks/useTheme';
 import { useYearFilter } from '../../../core/hooks/useYearFilter';
 import Spinner from '../../../components/ui/Spinner';
 import Card from '../../../components/ui/Card';
-import { hexToRgba, formatCurrency } from '../../../components/utils/colors';
+import { formatCurrency } from '../../../components/utils/colors';
 
 // ── Month name short mapping ──
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-// ── Activity icon/color mapping ──
-const ACTIVITY_CONFIG = {
-  student_created: {
-    icon: FiUser,
-    bg: 'bg-blue-100 dark:bg-blue-900/30',
-    text: 'text-blue-600 dark:text-blue-400',
-  },
-  payment_received: {
-    icon: FiDollarSign,
-    bg: 'bg-green-100 dark:bg-green-900/30',
-    text: 'text-green-600 dark:text-green-400',
-  },
-  grade_recorded: {
-    icon: FiStar,
-    bg: 'bg-purple-100 dark:bg-purple-900/30',
-    text: 'text-purple-600 dark:text-purple-400',
-  },
+// ── Activity icon/color mapping by entity (real data comes from the audit trail) ──
+const ACTIVITY_ENTITY = {
+  students: { icon: FiUser, bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400' },
+  users: { icon: FiUserPlus, bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400' },
+  classes: { icon: FiBook, bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400' },
+  payments: { icon: FiDollarSign, bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400' },
+  grades: { icon: FiStar, bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-600 dark:text-purple-400' },
+  announcements: { icon: FiBell, bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400' },
+  enrollments: { icon: FiUserCheck, bg: 'bg-teal-100 dark:bg-teal-900/30', text: 'text-teal-600 dark:text-teal-400' },
+  subjects: { icon: FiBookOpen, bg: 'bg-sky-100 dark:bg-sky-900/30', text: 'text-sky-600 dark:text-sky-400' },
+  academic_years: { icon: FiCalendar, bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400' },
+  periods: { icon: FiClock, bg: 'bg-cyan-100 dark:bg-cyan-900/30', text: 'text-cyan-600 dark:text-cyan-400' },
+  sequences: { icon: FiList, bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-600 dark:text-orange-400' },
+  fees: { icon: FiCreditCard, bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400' },
+  student_fees: { icon: FiCreditCard, bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400' },
+  attendance: { icon: FiCheckSquare, bg: 'bg-lime-100 dark:bg-lime-900/30', text: 'text-lime-600 dark:text-lime-400' },
+  exams: { icon: FiEdit, bg: 'bg-rose-100 dark:bg-rose-900/30', text: 'text-rose-600 dark:text-rose-400' },
+  exam_registrations: { icon: FiEdit, bg: 'bg-rose-100 dark:bg-rose-900/30', text: 'text-rose-600 dark:text-rose-400' },
+  class_subjects: { icon: FiLayers, bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400' },
+  subject_teachers: { icon: FiUsers, bg: 'bg-sky-100 dark:bg-sky-900/30', text: 'text-sky-600 dark:text-sky-400' },
+  class_teachers: { icon: FiUsers, bg: 'bg-sky-100 dark:bg-sky-900/30', text: 'text-sky-600 dark:text-sky-400' },
+  guardians: { icon: FiUsers, bg: 'bg-teal-100 dark:bg-teal-900/30', text: 'text-teal-600 dark:text-teal-400' },
+  invites: { icon: FiMail, bg: 'bg-pink-100 dark:bg-pink-900/30', text: 'text-pink-600 dark:text-pink-400' },
+  system_levels: { icon: FiLayers, bg: 'bg-violet-100 dark:bg-violet-900/30', text: 'text-violet-600 dark:text-violet-400' },
+  system_series: { icon: FiList, bg: 'bg-violet-100 dark:bg-violet-900/30', text: 'text-violet-600 dark:text-violet-400' },
+  faculties: { icon: FiMap, bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400' },
+  departments: { icon: FiGrid, bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400' },
+  programs: { icon: FiBookOpen, bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-600 dark:text-purple-400' },
+  research_projects: { icon: FiSearch, bg: 'bg-cyan-100 dark:bg-cyan-900/30', text: 'text-cyan-600 dark:text-cyan-400' },
+  publications: { icon: FiFileText, bg: 'bg-rose-100 dark:bg-rose-900/30', text: 'text-rose-600 dark:text-rose-400' },
+  roles: { icon: FiShield, bg: 'bg-slate-100 dark:bg-slate-700/40', text: 'text-slate-600 dark:text-slate-300' },
+  user_roles: { icon: FiShield, bg: 'bg-slate-100 dark:bg-slate-700/40', text: 'text-slate-600 dark:text-slate-300' },
+  role_permissions: { icon: FiShield, bg: 'bg-slate-100 dark:bg-slate-700/40', text: 'text-slate-600 dark:text-slate-300' },
 };
 
-// ── Fallback icon for unknown activity types ──
+// ── Fallback icon for unknown activity entities ──
 const FALLBACK_ACTIVITY = {
   icon: FiCalendar,
   bg: 'bg-surface-100 dark:bg-surface-700',
   text: 'text-surface-600 dark:text-surface-400',
 };
+
+// ── Action → localized verb ──
+const ACTIVITY_VERBS = {
+  create: { fr: 'a créé', en: 'created' },
+  update: { fr: 'a modifié', en: 'updated' },
+  delete: { fr: 'a supprimé', en: 'deleted' },
+  publish: { fr: 'a publié', en: 'published' },
+  unpublish: { fr: 'a dépublié', en: 'unpublished' },
+  enroll: { fr: 'a inscrit', en: 'enrolled' },
+  transfer: { fr: 'a transféré', en: 'transferred' },
+  remove_student: { fr: 'a retiré', en: 'removed' },
+  assign: { fr: 'a assigné', en: 'assigned' },
+  remove: { fr: 'a retiré', en: 'removed' },
+  activate: { fr: 'a activé', en: 'activated' },
+  confirm: { fr: 'a confirmé', en: 'confirmed' },
+  register: { fr: 'a enregistré', en: 'registered' },
+  record_result: { fr: 'a enregistré un résultat', en: 'recorded a result' },
+  send_invite: { fr: 'a envoyé une invitation', en: 'sent an invite' },
+  bulk_create: { fr: 'a enregistré en masse', en: 'bulk recorded' },
+  bulk_assign: { fr: 'a assigné en masse', en: 'bulk assigned' },
+  assign_role: { fr: 'a assigné le rôle', en: 'assigned the role' },
+  remove_role: { fr: 'a retiré le rôle', en: 'removed the role' },
+  assign_permission: { fr: 'a assigné une permission', en: 'assigned a permission' },
+  remove_permission: { fr: 'a retiré une permission', en: 'removed a permission' },
+};
+const DEFAULT_VERB = { fr: 'a effectué une action sur', en: 'performed an action on' };
+
+// ── Entity → localized label ──
+const ACTIVITY_ENTITY_LABEL = {
+  students: { fr: "l'élève", en: 'the student' },
+  users: { fr: "l'utilisateur", en: 'the user' },
+  classes: { fr: 'la classe', en: 'the class' },
+  payments: { fr: 'le paiement', en: 'the payment' },
+  grades: { fr: 'la note', en: 'the grade' },
+  announcements: { fr: "l'annonce", en: 'the announcement' },
+  enrollments: { fr: "l'inscription", en: 'the enrollment' },
+  subjects: { fr: 'la matière', en: 'the subject' },
+  academic_years: { fr: "l'année académique", en: 'the academic year' },
+  periods: { fr: 'la période', en: 'the period' },
+  sequences: { fr: 'la séquence', en: 'the sequence' },
+  fees: { fr: 'les frais', en: 'the fee' },
+  student_fees: { fr: 'les frais', en: 'the fee' },
+  attendance: { fr: "l'assiduité", en: 'attendance' },
+  exams: { fr: 'les examens', en: 'the exam' },
+  exam_registrations: { fr: "une inscription d'examen", en: 'an exam registration' },
+  class_subjects: { fr: 'les matières de classe', en: 'class subjects' },
+  subject_teachers: { fr: 'une affectation de matière', en: 'a subject assignment' },
+  class_teachers: { fr: 'un professeur principal', en: 'a class teacher' },
+  guardians: { fr: 'un parent/tuteur', en: 'a guardian' },
+  invites: { fr: 'une invitation', en: 'an invite' },
+  system_levels: { fr: 'un niveau', en: 'a level' },
+  system_series: { fr: 'une série', en: 'a series' },
+  faculties: { fr: 'une faculté', en: 'a faculty' },
+  departments: { fr: 'un département', en: 'a department' },
+  programs: { fr: 'un programme', en: 'a program' },
+  research_projects: { fr: 'un projet de recherche', en: 'a research project' },
+  publications: { fr: 'une publication', en: 'a publication' },
+  roles: { fr: 'un rôle', en: 'a role' },
+  user_roles: { fr: 'un rôle', en: 'a role' },
+  role_permissions: { fr: 'une permission', en: 'a permission' },
+};
+const DEFAULT_ENTITY_LABEL = { fr: 'un élément', en: 'an item' };
 
 // ── Relative time helper ──
 function timeAgo(dateStr, lang) {
@@ -136,7 +234,7 @@ function StaffRow({ label, count, total, color }) {
   );
 }
 
-// ── Revenue bar chart ──
+// ── Revenue bar chart (Recharts BarChart) ──
 function RevenueChart({ data, loading, lang, pc = '#085041' }) {
   const months = lang === 'fr' ? MONTHS_FR : MONTHS_EN;
 
@@ -157,44 +255,83 @@ function RevenueChart({ data, loading, lang, pc = '#085041' }) {
     );
   }
 
-  const maxValue = Math.max(...data.map((d) => d.total), 1);
+  // Transform API rows ({ month: 'YYYY-MM-01T...', total }) into
+  // Recharts-friendly points with localized month labels.
+  const chartData = data.map((item) => {
+    const date = new Date(item.month);
+    return {
+      name: months[date.getMonth()] || String(item.month || '').slice(0, 7),
+      total: Number(item.total) || 0,
+    };
+  });
 
   return (
-    <div className="h-64 flex items-end justify-between gap-1.5">
-      {data.map((item, idx) => {
-        const date = new Date(item.month);
-        const monthLabel = months[date.getMonth()];
-        const heightPct = (item.total / maxValue) * 100;
-        const isMax = item.total === maxValue;
-
-        return (
-          <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 group">
-            <span className="text-[10px] font-semibold text-surface-500 dark:text-surface-400 opacity-0 group-hover:opacity-100 transition-opacity">
-              {formatCurrency(item.total)}
-            </span>
-            <div
-              className="w-full rounded-t-md transition-all duration-300 group-hover:brightness-110"
-              style={{
-                height: `${Math.max(heightPct, 4)}%`,
-                background: isMax
-                  ? `linear-gradient(180deg, ${pc}, ${hexToRgba(pc, 0.53)})`
-                  : `linear-gradient(180deg, ${hexToRgba(pc, 0.53)}, ${hexToRgba(pc, 0.27)})`,
-              }}
-            />
-            <span className="text-[10px] text-surface-500 dark:text-surface-400 font-medium">
-              {monthLabel}
-            </span>
-          </div>
-        );
-      })}
+    <div className="h-64 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={chartData} margin={{ top: 8, right: 4, bottom: 0, left: -14 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+          <XAxis
+            dataKey="name"
+            tick={{ fontSize: 11, fill: '#9CA3AF' }}
+            tickLine={false}
+            axisLine={{ stroke: '#e5e7eb' }}
+            interval="preserveStartEnd"
+          />
+          <YAxis
+            tick={{ fontSize: 11, fill: '#9CA3AF' }}
+            tickLine={false}
+            axisLine={false}
+            width={42}
+            tickFormatter={(v) =>
+              v >= 1000000 ? `${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`
+            }
+          />
+          <Tooltip
+            cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+            content={({ active, payload, label }) => {
+              if (!active || !payload || payload.length === 0) return null;
+              return (
+                <div className="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl shadow-xl px-3 py-2">
+                  <div className="text-[11px] font-semibold text-surface-500 dark:text-surface-400 mb-0.5">
+                    {label}
+                  </div>
+                  <div className="text-[13px] font-bold" style={{ color: pc }}>
+                    {formatCurrency(payload[0].value)}
+                  </div>
+                </div>
+              );
+            }}
+          />
+          <Bar
+            dataKey="total"
+            fill={pc}
+            radius={[6, 6, 0, 0]}
+            maxBarSize={42}
+            animationDuration={700}
+            animationEasing="ease-out"
+          />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }
 
-// ── Activity item ──
+// ── Activity item (real data from the audit trail, localized) ──
 function ActivityItem({ activity, lang }) {
-  const config = ACTIVITY_CONFIG[activity.type] || FALLBACK_ACTIVITY;
+  const isFr = lang === 'fr';
+  const entity = String(activity.entity || '').toLowerCase();
+  const action = String(activity.action || '').toLowerCase();
+
+  const config = ACTIVITY_ENTITY[entity] || FALLBACK_ACTIVITY;
   const Icon = config.icon;
+  const verb = ACTIVITY_VERBS[action] || DEFAULT_VERB;
+  const entityLabel = ACTIVITY_ENTITY_LABEL[entity] || DEFAULT_ENTITY_LABEL;
+  const actor = activity.actorName || (isFr ? "Quelqu'un" : 'Someone');
+  const target = activity.targetName ? ` — ${activity.targetName}` : '';
+
+  const text = isFr
+    ? `${actor} ${verb.fr} ${entityLabel.fr}${target}`
+    : `${actor} ${verb.en} ${entityLabel.en}${target}`;
 
   return (
     <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-900/50 transition-colors">
@@ -204,8 +341,8 @@ function ActivityItem({ activity, lang }) {
         <Icon className="w-4 h-4" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-surface-800 dark:text-surface-100 truncate">
-          {activity.description}
+        <p className="text-sm font-medium text-surface-800 dark:text-surface-100 truncate" title={text}>
+          {text}
         </p>
         <p className="text-xs text-surface-500 dark:text-surface-400 mt-0.5">
           {timeAgo(activity.date, lang)}

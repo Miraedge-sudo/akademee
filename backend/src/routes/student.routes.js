@@ -10,6 +10,7 @@ const roleMiddleware = require('../middleware/role.middleware');
 const { createStudentValidator, updateStudentValidator } = require('../validators/student.validator');
 const { param } = require('express-validator');
 const validateMiddleware = require('../middleware/validate.middleware');
+const auditMiddleware = require('../middleware/audit.middleware');
 const { invalidateCache } = require('../middleware/cache.middleware');
 
 const router = express.Router();
@@ -32,6 +33,9 @@ router.post(
   roleMiddleware(['admin', 'teacher']),
   createStudentValidator,
   validateMiddleware,
+  auditMiddleware('CREATE', 'students', (req) =>
+    `${req.body?.firstName || ''} ${req.body?.lastName || ''}`.trim() || null
+  ),
   studentController.createStudent
 );
 
@@ -54,6 +58,7 @@ router.put(
   roleMiddleware(['admin', 'teacher']),
   updateStudentValidator,
   validateMiddleware,
+  auditMiddleware('UPDATE', 'students'),
   studentController.updateStudent
 );
 
@@ -62,6 +67,7 @@ router.delete(
   roleMiddleware(['admin']),
   uuidParam,
   validateMiddleware,
+  auditMiddleware('DELETE', 'students'),
   studentController.deleteStudent
 );
 

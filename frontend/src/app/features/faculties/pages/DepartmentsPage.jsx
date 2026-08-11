@@ -346,8 +346,8 @@ export default function DepartmentsPage() {
               onChange={setField("faculty_id")}
             />
           </div>
-          <Input label={isFr ? "Nom (FR)" : "Name"} value={form.name} onChange={setField("name")} placeholder={isFr ? "Informatique" : "Computer Science"} />
-          <Input label={isFr ? "Nom (EN)" : "Name (EN)"} value={form.name_fr} onChange={setField("name_fr")} placeholder={isFr ? "Computer Science" : "Informatique"} />
+          <Input label={isFr ? "Nom (EN)" : "Name (EN)"} value={form.name} onChange={setField("name")} placeholder="Computer Science" />
+          <Input label={isFr ? "Nom (FR)" : "Name (FR)"} value={form.name_fr} onChange={setField("name_fr")} placeholder="Informatique" />
           <Input label="Code" value={form.code} onChange={setField("code")} placeholder="INFO" />
           <Input label={isFr ? "Chef de département" : "Department head"} value={form.head_name} onChange={setField("head_name")} placeholder={isFr ? "Nom du chef" : "Head name"} />
           <Input label="Email" type="email" value={form.email} onChange={setField("email")} placeholder="dept@uni.edu" />

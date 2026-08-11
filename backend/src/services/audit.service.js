@@ -1,10 +1,10 @@
 const sql = require('../config/database');
 
 class AuditService {
-  async log(schoolId, userId, action, tableName, recordId) {
+  async log(schoolId, userId, action, tableName, recordId, details = null) {
     await sql`
-      INSERT INTO audit_logs (school_id, user_id, action, table_name, record_id)
-      VALUES (${schoolId || null}, ${userId || null}, ${action}, ${tableName || null}, ${recordId || null})
+      INSERT INTO audit_logs (school_id, user_id, action, table_name, record_id, details)
+      VALUES (${schoolId || null}, ${userId || null}, ${action}, ${tableName || null}, ${recordId || null}, ${details || null})
     `;
     return { logged: true };
   }
@@ -39,6 +39,7 @@ class AuditService {
         action: r.action,
         tableName: r.table_name,
         recordId: r.record_id,
+        details: r.details || null,
         createdAt: r.created_at,
       })),
       total: countRows[0].total,

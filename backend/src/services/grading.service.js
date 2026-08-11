@@ -370,10 +370,13 @@ class GradingService {
       SELECT g.*,
              s.name AS subject_name, s.code AS subject_code,
              ac.type AS component_type, ac.weight_percent, ac.max_score,
-             so.class_level_id, so.period_structure_id, so.coefficient, so.credits
+             so.class_level_id, so.period_structure_id,
+             COALESCE(cs.coefficient, so.coefficient, 1) AS coefficient, so.credits
       FROM grades g
       JOIN assessment_components ac ON g.assessment_component_id = ac.assessment_component_id
       JOIN subject_offerings so ON ac.subject_offering_id = so.subject_offering_id
+      LEFT JOIN class_subjects cs
+        ON cs.class_id = so.class_level_id AND cs.subject_id = so.subject_id
       JOIN subjects s ON so.subject_id = s.subject_id
       WHERE TRUE
         ${studentId ? sql`AND g.student_id = ${studentId}` : sql``}
@@ -455,9 +458,16 @@ class GradingService {
       throw new Error('Student is not actively enrolled in any class');
     }
 
+    // The class-level coefficient set in the Classes UI (class_subjects) is the
+    // source of truth; it overrides the subject_offering's coefficient so report
+    // cards always show what the school assigned for that class.
     const offerings = await sql`
-      SELECT so.*, s.name AS subject_name, s.name_fr, s.name_en, s.code, s.category
+      SELECT so.*,
+             COALESCE(cs.coefficient, so.coefficient, 1) AS effective_coefficient,
+             s.name AS subject_name, s.name_fr, s.name_en, s.code, s.category
       FROM subject_offerings so
+      LEFT JOIN class_subjects cs
+        ON cs.class_id = so.class_level_id AND cs.subject_id = so.subject_id
       JOIN subjects s ON so.subject_id = s.subject_id
       WHERE so.period_structure_id = ${periodStructureId}
         AND so.class_level_id = ${classLevelId}
@@ -472,8 +482,8 @@ class GradingService {
       for (const offering of offerings) {
         const { average, reason } = await this.computeSubjectAverage(studentId, offering.subject_offering_id, { sequenceId });
         if (average != null) {
-          weightedSum += average * Number(offering.coefficient);
-          coefficientSum += Number(offering.coefficient);
+          weightedSum += average * Number(offering.effective_coefficient);
+          coefficientSum += Number(offering.effective_coefficient);
         }
         subjectResults.push({
           subjectOfferingId: offering.subject_offering_id,
@@ -483,7 +493,7 @@ class GradingService {
           nameEn: offering.name_en,
           code: offering.code,
           category: offering.category,
-          coefficient: Number(offering.coefficient),
+          coefficient: Number(offering.effective_coefficient),
           credits: Number(offering.credits),
           average,
           reason,
@@ -534,9 +544,16 @@ class GradingService {
     const studentIds = students.map((s) => s.student_id);
 
     // 2. Offerings for this class + period (1 query)
+    // The class-level coefficient set in the Classes UI (class_subjects) is the
+    // source of truth; it overrides the subject_offering's coefficient so report
+    // cards always show what the school assigned for that class.
     const offerings = await sql`
-      SELECT so.*, s.name AS subject_name, s.name_fr, s.name_en, s.code, s.category
+      SELECT so.*,
+             COALESCE(cs.coefficient, so.coefficient, 1) AS effective_coefficient,
+             s.name AS subject_name, s.name_fr, s.name_en, s.code, s.category
       FROM subject_offerings so
+      LEFT JOIN class_subjects cs
+        ON cs.class_id = so.class_level_id AND cs.subject_id = so.subject_id
       JOIN subjects s ON so.subject_id = s.subject_id
       WHERE so.period_structure_id = ${periodStructureId}
         AND so.class_level_id = ${classLevelId}
@@ -621,8 +638,8 @@ class GradingService {
         }
 
         if (average != null) {
-          weightedSum += average * Number(offering.coefficient);
-          coefficientSum += Number(offering.coefficient);
+          weightedSum += average * Number(offering.effective_coefficient);
+          coefficientSum += Number(offering.effective_coefficient);
         }
         subjectResults.push({
           subjectOfferingId: offering.subject_offering_id,
@@ -632,7 +649,7 @@ class GradingService {
           nameEn: offering.name_en,
           code: offering.code,
           category: offering.category,
-          coefficient: Number(offering.coefficient),
+          coefficient: Number(offering.effective_coefficient),
           credits: Number(offering.credits),
           average,
           reason,

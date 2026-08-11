@@ -199,6 +199,7 @@ export const API_ENDPOINTS = {
     CLASS_SIMPLE: (id) => `/api/reports/class/${id}`,
     PERFORMANCE: (studentId) => `/api/reports/performance/${studentId}`,
     EXPORT: (reportId) => `/api/reports/export/${reportId}`,
+    FINANCIAL_STATEMENT_PDF: "/api/reports/financial-statement/pdf",
   },
 
   // Notifications

@@ -1,5 +1,6 @@
 const response = require('../utils/response');
 const reportService = require('../services/report.service');
+const financialStatementService = require('../services/financialStatement.service');
 
 class ReportController {
   async generateBulletin(req, res, next) {
@@ -89,6 +90,29 @@ class ReportController {
       const pdfBuffer = await reportService.generateBulletinPdf(schoolId, id, null);
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=bulletin-${id}.pdf`);
+      res.send(pdfBuffer);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /api/reports/financial-statement/pdf
+   * Stream a professional "financial state of the campus" PDF for the
+   * accountant to print / hand over to the administration.
+   */
+  async downloadFinancialStatement(req, res, next) {
+    try {
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const lang = req.query.lang === 'en' || req.query.lang === 'fr'
+        ? req.query.lang
+        : (req.headers['accept-language'] || 'fr').startsWith('fr')
+          ? 'fr'
+          : 'en';
+      const pdfBuffer = await financialStatementService.generatePdf(schoolId, { lang });
+      const filename = `financial-statement-${new Date().toISOString().slice(0, 10)}.pdf`;
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
       res.send(pdfBuffer);
     } catch (error) {
       next(error);

@@ -9,6 +9,7 @@ const roleMiddleware = require('../middleware/role.middleware');
 const uploadMiddleware = require('../middleware/upload.middleware');
 const { recordGradeValidator, updateGradeValidator } = require('../validators/grade.validator');
 const validateMiddleware = require('../middleware/validate.middleware');
+const auditMiddleware = require('../middleware/audit.middleware');
 const gradeCalculationController = require('../controllers/gradeCalculation.controller');
 const { invalidateCache } = require('../middleware/cache.middleware');
 
@@ -21,6 +22,9 @@ router.post(
   roleMiddleware(['admin', 'teacher']),
   recordGradeValidator,
   validateMiddleware,
+  auditMiddleware('CREATE', 'grades', (req) =>
+    req.body?.score !== null && req.body?.score !== undefined ? `Score ${req.body.score}` : null
+  ),
   gradeController.recordGrade
 );
 
@@ -42,16 +46,24 @@ router.put(
   roleMiddleware(['admin', 'teacher']),
   updateGradeValidator,
   validateMiddleware,
+  auditMiddleware('UPDATE', 'grades'),
   gradeController.updateGrade
 );
 
-router.delete('/:id', authMiddleware, roleMiddleware(['admin']), gradeController.deleteGrade);
+router.delete(
+  '/:id',
+  authMiddleware,
+  roleMiddleware(['admin']),
+  auditMiddleware('DELETE', 'grades'),
+  gradeController.deleteGrade
+);
 
 router.post(
   '/bulk-upload',
   authMiddleware,
   roleMiddleware(['admin', 'teacher']),
   uploadMiddleware,
+  auditMiddleware('BULK_CREATE', 'grades'),
   gradeController.bulkUploadGrades
 );
 
