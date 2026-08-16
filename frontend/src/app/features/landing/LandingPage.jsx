@@ -13,13 +13,12 @@ import {
   FiGlobe,
   FiMapPin,
   FiMessageCircle,
-  FiSend,
   FiShield,
   FiSmartphone,
   FiUserCheck,
 } from "react-icons/fi";
 import ThemeLangToggles from "../../layout/ThemeLangToggles";
-import akademeeLogo from "../../../assets/Logo.png";
+import { useBrandLogo } from "../../core/hooks/useBrandLogo";
 
 // ── Photos libres (Wikimedia Commons, CC BY-SA 4.0) : vrais élèves camerounais ──
 // WikiChallenge African Schools 2021 – Cameroon (écoles numériques)
@@ -254,6 +253,7 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState(0);
   const { t, i18n } = useTranslation("landing");
   const isFr = i18n.language === "fr";
+  const akademeeLogo = useBrandLogo();
 
   useEffect(() => {
     const revealElements = document.querySelectorAll(".reveal");
@@ -287,10 +287,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <img src={akademeeLogo} alt="Akademee" className="h-11 w-auto object-contain" />
-              <span className="hidden sm:inline-flex items-center gap-1 ml-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
-                🇨🇲 {isFr ? "Cameroun" : "Cameroon"}
-              </span>
+              <img src={akademeeLogo} alt="Akademee" className="h-14 w-auto object-contain" />
             </div>
 
             <div className="hidden md:flex items-center gap-8">
@@ -976,7 +973,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <img src={akademeeLogo} alt="Akademee" className="h-12 w-auto object-contain" />
+                <img src={akademeeLogo} alt="Akademee" className="h-14 w-auto object-contain" />
               </div>
               <p className="text-surface-600 dark:text-surface-400 text-base leading-relaxed">
                 {isFr
@@ -986,7 +983,7 @@ export default function LandingPage() {
               <div className="flex flex-col gap-2 mt-5 text-sm text-surface-600 dark:text-surface-400">
                 <span className="inline-flex items-center gap-2">
                   <FiMapPin className="w-4 h-4 text-emerald-600" />
-                  {isFr ? "Yaoundé • Douala, Cameroun" : "Yaoundé • Douala, Cameroon"}
+                  {isFr ? "Yaoundé, Cameroun" : "Yaoundé, Cameroon"}
                 </span>
                 <a
                   href={WHATSAPP_URL}
@@ -997,10 +994,15 @@ export default function LandingPage() {
                   <FiMessageCircle className="w-4 h-4 text-emerald-600" />
                   +237 676 51 44 28
                 </a>
-                <span className="inline-flex items-center gap-2">
-                  <FiSend className="w-4 h-4 text-emerald-600" />
-                  contact@akademee.cm
-                </span>
+                <a
+                  href="https://miraedge.tech"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
+                >
+                  <FiGlobe className="w-4 h-4 text-emerald-600" />
+                  miraedge.tech
+                </a>
               </div>
             </div>
             <div>

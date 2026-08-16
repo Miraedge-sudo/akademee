@@ -90,6 +90,9 @@ const PRINT_CSS = `
   .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; page-break-inside: avoid; break-inside: avoid; }
   .sum-box { border: 1px solid #1c1c1a; padding: 9px 10px; text-align: center; }
   .sum-label { font-size: 9.5px; text-transform: uppercase; letter-spacing: .04em; color: #4a4a45; }
+  .general-remark { border: 1px solid #1c1c1a; padding: 10px 12px; margin: 16px 0; page-break-inside: avoid; break-inside: avoid; }
+  .general-remark .sum-label { margin-bottom: 4px; }
+  .general-remark-text { font-size: 12px; line-height: 1.55; }
   .sum-value { font-size: 17px; font-weight: 700; margin-top: 3px; }
   .sum-value-sm { font-size: 13px; font-weight: 700; margin-top: 3px; }
 
@@ -425,6 +428,15 @@ function buildSummary(payload) {
   </div>`;
 }
 
+function buildGeneralRemark(payload) {
+  const fr = payload.education_system_config?.lang === 'fr';
+  const remark = payload.summary?.general_remark;
+  return `<div class="general-remark">
+    <div class="sum-label">${fr ? 'Appréciation générale' : 'General remark'}</div>
+    <div class="general-remark-text">${remark ? esc(remark) : '—'}</div>
+  </div>`;
+}
+
 function buildAttendance(payload) {
   const attendance = payload.attendance;
   if (!attendance || (!attendance.total && !attendance.excused && !attendance.absent)) return '';
@@ -517,6 +529,7 @@ function buildBulletinBlock(payload, options = {}) {
       ${buildIdentity(payload, eduConfig)}
       ${buildSubjectTable(payload, eduConfig, periodType)}
       ${buildSummary(payload)}
+      ${buildGeneralRemark(payload)}
       ${buildAttendance(payload)}
       ${buildDecision(periodType, eduConfig)}
       ${buildSignatures(eduConfig)}

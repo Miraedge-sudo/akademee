@@ -352,6 +352,18 @@ class GradingController {
     }
   }
 
+  async updateReportCardRemark(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { remark } = req.body;
+      const schoolId = req.schoolId || req.user?.schoolId;
+      const updated = await gradingService.updateReportCardRemark(id, schoolId, remark);
+      response.success(res, 'Report card remark updated', updated);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async downloadReportCardPdf(req, res, next) {
     try {
       const { id } = req.params;

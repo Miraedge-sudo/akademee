@@ -57,9 +57,11 @@ function initials(name) {
 export default function GradeEntryPage() {
   const { user } = useAuth();
   const { primaryColor } = useTheme();
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation('common');
   const { isOnline, syncQueue } = useOffline();
   const pc = primaryColor || "#085041";
+  const isFr = i18n.language === "fr";
+  const dateLocale = isFr ? "fr-FR" : "en-GB";
 
   // ── State ──
   const [loading, setLoading] = useState(true);
@@ -93,6 +95,8 @@ export default function GradeEntryPage() {
   const [loadingGrades, setLoadingGrades] = useState(false);
 
   // ── Check date / status warnings for selected sequence ──
+  // sequenceDateWarning = { kind: 'future'|'ended', text } — le style dépend du
+  // type (avant début = bleu, période terminée = rouge), pas du texte (traduit).
   useEffect(() => {
     if (!selectedSequenceId) {
       setSequenceDateWarning(null);
@@ -106,13 +110,13 @@ export default function GradeEntryPage() {
     // Status check
     if (seq.statut !== "OUVERTE") {
       const statusLabels = {
-        EN_ATTENTE: "En attente",
-        OUVERTE: "Ouverte",
-        FERMEE: "Fermée",
-        VERROUILLEE: "Vérouillée",
+        EN_ATTENTE: t('teacher.gradeEntry.statusPending'),
+        OUVERTE: t('teacher.gradeEntry.statusOpen'),
+        FERMEE: t('teacher.gradeEntry.statusClosed'),
+        VERROUILLEE: t('teacher.gradeEntry.statusLocked'),
       };
       setSequenceStatusWarning(
-        `Cette séquence est « ${statusLabels[seq.statut] || seq.statut} ». Les notes ne peuvent être saisies que dans une séquence ouverte.`
+        t('teacher.gradeEntry.sequenceClosedStatus', { status: statusLabels[seq.statut] || seq.statut })
       );
       setSequenceManualOpenInfo(null);
     } else {
@@ -129,9 +133,7 @@ export default function GradeEntryPage() {
     if (seq.statut === "OUVERTE" && start && today < start) {
       // L'admin a ouvert cette séquence avant sa date → message d'info vert
       setSequenceDateWarning(null);
-      setSequenceManualOpenInfo(
-        `Ouverture manuelle par l'administration — la saisie est autorisée`
-      );
+      setSequenceManualOpenInfo(t('teacher.gradeEntry.manualOpenInfo'));
     } else {
       setSequenceManualOpenInfo(null);
 
@@ -139,19 +141,25 @@ export default function GradeEntryPage() {
         start.setHours(0, 0, 0, 0);
         end.setHours(23, 59, 59, 999);
         if (today < start) {
-          setSequenceDateWarning(
-            `La saisie débutera le ${start.toLocaleDateString('fr-FR')}`
-          );
+          setSequenceDateWarning({
+            kind: 'future',
+            text: t('teacher.gradeEntry.sequenceStartsOn', {
+              date: start.toLocaleDateString(dateLocale),
+            }),
+          });
         } else if (today > end) {
-          setSequenceDateWarning(
-            `La période de saisie est terminée (fin le ${end.toLocaleDateString('fr-FR')})`
-          );
+          setSequenceDateWarning({
+            kind: 'ended',
+            text: t('teacher.gradeEntry.sequenceEnded', {
+              date: end.toLocaleDateString(dateLocale),
+            }),
+          });
         } else {
           setSequenceDateWarning(null);
         }
       }
     }
-  }, [selectedSequenceId, sequences]);
+  }, [selectedSequenceId, sequences, t, dateLocale]);
 
   // ── Load teacher's classes & subjects + periods ──
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
@@ -187,10 +195,10 @@ export default function GradeEntryPage() {
       }
     } catch (err) {
       console.error("Failed to load data:", err);
-      setError("Failed to load your classes and subjects");
+      setError(t('teacher.gradeEntry.loadError'));
     }
     setLoading(false);
-  }, [user?.id]);
+  }, [user?.id, t]);
 
   useEffect(() => { loadInitial(); }, [loadInitial]);
 
@@ -363,7 +371,7 @@ export default function GradeEntryPage() {
         setOfflineQueued(true);
         setSuccess(true);
       } catch (qErr) {
-        setError("Erreur lors de la mise en file d'attente. Veuillez réessayer.");
+        setError(t('teacher.gradeEntry.queueError'));
       }
       setSaving(false);
       return;
@@ -424,7 +432,7 @@ export default function GradeEntryPage() {
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error("Failed to save grades:", err);
-      setError(err.response?.data?.message || err.message || "Failed to save grades");
+      setError(err.response?.data?.message || err.message || t('teacher.gradeEntry.saveFailFallback'));
     }
     setSaving(false);
   };
@@ -528,8 +536,8 @@ export default function GradeEntryPage() {
             {periods.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.isCurrent ? '★ ' : ''}{p.name}
-                {p.startDate ? ` (${new Date(p.startDate).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })}` : ''}
-                {p.endDate ? ` - ${new Date(p.endDate).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })})` : ''}
+                {p.startDate ? ` (${new Date(p.startDate).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' })}` : ''}
+                {p.endDate ? ` - ${new Date(p.endDate).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' })})` : ''}
                 {p.isCurrent ? ` — ${t('teacher.gradeEntry.currentPeriod')}` : ''}
               </option>
             ))}
@@ -550,7 +558,11 @@ export default function GradeEntryPage() {
             {sequences.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.libelle}
-                {s.statut === 'OUVERTE' ? ' (Ouverte)' : s.statut === 'FERMEE' ? ' (Fermée)' : s.statut === 'VERROUILLEE' ? ' (Verrouillée)' : ''}
+                {s.statut === 'OUVERTE' ? ` (${t('teacher.gradeEntry.statusOpen')})`
+                  : s.statut === 'FERMEE' ? ` (${t('teacher.gradeEntry.statusClosed')})`
+                    : s.statut === 'VERROUILLEE' ? ` (${t('teacher.gradeEntry.statusLocked')})`
+                      : s.statut === 'EN_ATTENTE' ? ` (${t('teacher.gradeEntry.statusPending')})`
+                        : ''}
               </option>
             ))}
           </select>
@@ -621,12 +633,12 @@ export default function GradeEntryPage() {
           )}
           {sequenceDateWarning && (
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-medium" style={{
-              background: sequenceDateWarning.startsWith('La période') ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)',
-              border: `1.5px solid ${sequenceDateWarning.startsWith('La période') ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.2)'}`,
-              color: sequenceDateWarning.startsWith('La période') ? '#EF4444' : '#3B82F6',
+              background: sequenceDateWarning.kind === 'ended' ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)',
+              border: `1.5px solid ${sequenceDateWarning.kind === 'ended' ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.2)'}`,
+              color: sequenceDateWarning.kind === 'ended' ? '#EF4444' : '#3B82F6',
             }}>
               <Clock size={14} className="flex-shrink-0" />
-              <span>{sequenceDateWarning}</span>
+              <span>{sequenceDateWarning.text}</span>
             </div>
           )}
           {sequenceStatusWarning && (
@@ -704,7 +716,7 @@ export default function GradeEntryPage() {
                   />
                 </div>
                 <p className="text-sm font-medium text-surface-400 animate-pulse">
-                  Chargement des notes…
+                  {t('teacher.gradeEntry.loadingGrades')}
                 </p>
               </div>
             ) : filteredStudents.length === 0 ? (
@@ -795,7 +807,7 @@ export default function GradeEntryPage() {
                 <span className="text-[12px] font-medium text-teal-600 flex items-center gap-1">
                   <CheckCircle2 size={13} />
                   {offlineQueued
-                    ? "Notes mises en attente — synchronisation automatique au retour en ligne"
+                    ? t('teacher.gradeEntry.queuedOffline')
                     : t('teacher.gradeEntry.savedSuccess')}
                 </span>
               )}
@@ -845,7 +857,7 @@ export default function GradeEntryPage() {
             {t('teacher.gradeEntry.selectPeriod')}
           </h3>
           <p className="text-sm text-surface-400 max-w-sm">
-            Sélectionnez une période et une séquence pour commencer la saisie des notes.
+            {t('teacher.gradeEntry.selectPeriodHint')}
           </p>
         </div>
       )}

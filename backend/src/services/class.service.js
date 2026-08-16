@@ -27,11 +27,30 @@ class ClassService {
     };
   }
 
+  /**
+   * Résout l'année scolaire à rattacher à une classe : celle explicitement
+   * fournie, sinon l'année active (is_current, auto-dérivée des dates), sinon
+   * la plus récente. Évite de créer des classes sans année (academic_year_id
+   * NULL) qui disparaissent des filtres par année.
+   */
+  async resolveActiveYear(schoolId, academicYearId) {
+    if (academicYearId) return academicYearId;
+    const [row] = await sql`
+      SELECT academic_year_id
+      FROM academic_years
+      WHERE school_id = ${schoolId}
+      ORDER BY is_current DESC, start_date DESC NULLS LAST
+      LIMIT 1
+    `;
+    return row?.academic_year_id || null;
+  }
+
   async create(schoolId, data) {
     const { name, classTeacherId, academicYearId, capacity, levelId, seriesId, educationSystemId } = data;
+    const yearId = await this.resolveActiveYear(schoolId, academicYearId);
     const rows = await sql`
       INSERT INTO classes (school_id, name, class_teacher_id, academic_year_id, capacity, level_id, series_id, education_system_id)
-      VALUES (${schoolId}, ${name}, ${classTeacherId || null}, ${academicYearId || null}, ${capacity || null}, ${levelId || null}, ${seriesId || null}, ${educationSystemId || null})
+      VALUES (${schoolId}, ${name}, ${classTeacherId || null}, ${yearId}, ${capacity || null}, ${levelId || null}, ${seriesId || null}, ${educationSystemId || null})
       RETURNING *
     `;
     return this.formatClass(rows[0]);
@@ -65,6 +84,16 @@ class ClassService {
     limit = Math.min(Math.max(1, limit), 500);
     offset = Math.max(0, offset);
 
+    // Les classes sans année (academic_year_id NULL — créées avant la
+    // sélection automatique d'année) restent visibles dans TOUTES les années :
+    // on les inclut quand un filtre année est actif au lieu de les masquer.
+    const yearFilter = academicYearId
+      ? sql`AND (c.academic_year_id = ${academicYearId} OR c.academic_year_id IS NULL)`
+      : sql``;
+    const yearCountFilter = academicYearId
+      ? sql`AND (academic_year_id = ${academicYearId} OR academic_year_id IS NULL)`
+      : sql``;
+
     const rows = await sql`
       SELECT c.*,
         u.first_name AS teacher_first_name,
@@ -82,14 +111,14 @@ class ClassService {
       LEFT JOIN system_series s ON c.series_id = s.series_id
       LEFT JOIN education_systems es ON c.education_system_id = es.education_system_id
       WHERE c.school_id = ${schoolId}
-        ${academicYearId ? sql`AND c.academic_year_id = ${academicYearId}` : sql``}
+        ${yearFilter}
       ORDER BY c.name ASC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
     const countRows = await sql`
       SELECT COUNT(*)::int AS total FROM classes WHERE school_id = ${schoolId}
-        ${academicYearId ? sql`AND academic_year_id = ${academicYearId}` : sql``}
+        ${yearCountFilter}
     `;
 
     return {

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useEducationalSystems } from "../../../core/context/EducationalSystemContext";
-import akademeeLogo from "../../../../assets/Logo.png";
+import { useBrandLogo } from "../../../core/hooks/useBrandLogo";
 import {
   FiBook,
   FiCheck,
@@ -105,6 +105,7 @@ export default function EducationalSystemSelectionPage() {
   const [localSelected, setLocalSelected] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const akademeeLogo = useBrandLogo();
 
   useEffect(() => {
     if (!loading && selectedSystems) {
@@ -150,7 +151,7 @@ export default function EducationalSystemSelectionPage() {
           <img
             src={akademeeLogo}
             alt="Akademee"
-            className="w-7 h-7 object-contain"
+            className="w-10 h-10 object-contain"
           />
           <span className="font-display text-base font-semibold text-surface-800 dark:text-surface-100">
             Akademee

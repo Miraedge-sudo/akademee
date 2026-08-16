@@ -82,9 +82,13 @@ export async function getMonthlyTrends(params = {}) {
 
 /**
  * Get attendance records for a specific student (per-day)
+ * Fetches ALL records (backend clamps to 500) so calendars and history
+ * lists can show every recorded day, not just the first page of 10.
  * @param {string} studentId
  */
 export async function getStudentAttendance(studentId) {
-  const response = await api.get(API_ENDPOINTS.ATTENDANCE.STUDENT(studentId));
+  const response = await api.get(API_ENDPOINTS.ATTENDANCE.STUDENT(studentId), {
+    params: { limit: 500, offset: 0 },
+  });
   return response.data.data;
 }

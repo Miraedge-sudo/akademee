@@ -31,7 +31,7 @@ const SubjectsListPage = lazy(() => import("./app/features/subjects/pages/Subjec
 const ClassSubjectsPage = lazy(() => import("./app/features/subjects/pages/ClassSubjectsPage"));
 const GradesPage = lazy(() => import("./app/features/grades/pages/GradesPage"));
 const ReportCardsPage = lazy(() => import("./app/features/grades/pages/ReportCardsPage"));
-const GradingConfigPage = lazy(() => import("./app/features/grades/pages/GradingConfigPage"));
+const TimetablePage = lazy(() => import("./app/features/timetable/pages/TimetablePage"));
 const SubjectOfferingsPage = lazy(() => import("./app/features/grades/pages/SubjectOfferingsPage"));
 const AttendancePage = lazy(() => import("./app/features/attendance/pages/AttendancePage"));
 const FinancePage = lazy(() => import("./app/features/finance/pages/FinancePage"));
@@ -65,6 +65,8 @@ const AnnouncementsAdminPage = lazy(() => import("./app/features/announcements/p
 const TeacherDashboardPage = lazy(() => import("./app/features/teachers/pages/TeacherDashboardPage"));
 const MyClassesPage = lazy(() => import("./app/features/teachers/pages/MyClassesPage"));
 const GradeEntryPage = lazy(() => import("./app/features/teachers/pages/GradeEntryPage"));
+const MyTimetablePage = lazy(() => import("./app/features/teachers/pages/MyTimetablePage"));
+const StudentTimetablePage = lazy(() => import("./app/features/students/pages/StudentTimetablePage"));
 const AccountantDashboardPage = lazy(() => import("./app/features/accountant/pages/AccountantDashboardPage"));
 const StudentDashboardPage = lazy(() => import("./app/features/students/pages/StudentDashboardPage"));
 const MyGradesPage = lazy(() => import("./app/features/students/pages/MyGradesPage"));
@@ -88,6 +90,14 @@ const dashboardPage = (Component) => (
     <Component />
   </Suspense>
 );
+
+// ── « Mon emploi du temps » : enseignant (grille personnelle) ou élève (grille de sa classe) ──
+function MyTimetableRouter() {
+  const { user } = useAuth();
+  const roles = user?.roles || [];
+  const isStudent = roles.includes("STUDENT");
+  return isStudent ? <StudentTimetablePage /> : <MyTimetablePage />;
+}
 
 // ── Role-based dashboard router ──
 function RoleDashboardRouter() {
@@ -238,12 +248,12 @@ function App() {
             <Route path="grades/anglophone" element={dashboardPage(GradesPage)} />
             <Route path="grades/francophone" element={dashboardPage(GradesPage)} />
             <Route path="report-cards" element={dashboardPage(ReportCardsPage)} />
-            <Route path="grading-config" element={dashboardPage(GradingConfigPage)} />
             <Route path="subject-offerings" element={dashboardPage(SubjectOfferingsPage)} />
             <Route path="attendance" element={dashboardPage(AttendancePage)} />
+            <Route path="timetable" element={<RoleRoute allowedRoles={["ADMIN", "SECRETARY"]}>{dashboardPage(TimetablePage)}</RoleRoute>} />
 
-            {/* Finance */}
-            <Route path="finance" element={dashboardPage(FinancePage)} />
+            {/* Finance — le dashboard financier est réservé au comptable */}
+            <Route path="finance" element={<RoleRoute allowedRoles={["ACCOUNTANT"]}>{dashboardPage(FinancePage)}</RoleRoute>} />
             <Route path="fees" element={<RoleRoute allowedRoles={["ADMIN"]}>{dashboardPage(FeesManagementPage)}</RoleRoute>} />
             <Route path="fees/assign" element={<RoleRoute allowedRoles={["ADMIN"]}>{dashboardPage(FeesAssignmentPage)}</RoleRoute>} />
             <Route path="payments" element={dashboardPage(PaymentsPage)} />
@@ -320,6 +330,14 @@ function App() {
               element={
                 <RoleRoute allowedRoles={["TEACHER"]}>
                   {dashboardPage(GradeEntryPage)}
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="my-timetable"
+              element={
+                <RoleRoute allowedRoles={["TEACHER", "STUDENT"]}>
+                  {dashboardPage(MyTimetableRouter)}
                 </RoleRoute>
               }
             />

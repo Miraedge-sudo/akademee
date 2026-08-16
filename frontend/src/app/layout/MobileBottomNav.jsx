@@ -10,7 +10,7 @@ const BOTTOM_CONFIG = {
     { key: "dashboard", path: "/dashboard", icon: "grid" },
     { key: "users", path: "/dashboard/users", icon: "users" },
     { key: "gradeReports", path: "/dashboard/grades", icon: "barchart" },
-    { key: "finance", path: "/dashboard/finance", icon: "dollar" },
+    { key: "receipts", path: "/dashboard/receipts", icon: "dollar" },
   ],
   TEACHER: [
     { key: "dashboard", path: "/dashboard", icon: "grid" },
@@ -26,9 +26,9 @@ const BOTTOM_CONFIG = {
   ],
   ACCOUNTANT: [
     { key: "dashboard", path: "/dashboard", icon: "grid" },
+    { key: "finance", path: "/dashboard/finance", icon: "dollar" },
     { key: "payments", path: "/dashboard/payments", icon: "dollar" },
-    { key: "fees", path: "/dashboard/fees", icon: "dollar" },
-    { key: "financeReports", path: "/dashboard/finance/reports", icon: "barchart" },
+    { key: "receipts", path: "/dashboard/receipts", icon: "file" },
   ],
 };
 

@@ -3,7 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../core/hooks/useAuth";
 import { getPrimaryRole } from "../core/utils/roleUtils";
-import akademeeLogo from "../../assets/Logo.png";
+import akademeeLogo from "../../assets/LogoWhite.png";
 
 // ── Educational System Types ──
 const EDUCATIONAL_SYSTEMS = {
@@ -618,6 +618,7 @@ const BASE_NAV_CONFIG = {
         { key: "academicYears", path: "/dashboard/academic-years", icon: "calendar" },
         { key: "periods", path: "/dashboard/periods", icon: "layers" },
         { key: "sequences", path: "/dashboard/sequences", icon: "clock" },
+        { key: "timetable", path: "/dashboard/timetable", icon: "timetable" },
       ],
     },
     {
@@ -655,12 +656,6 @@ const BASE_NAV_CONFIG = {
           path: "/dashboard/receipts",
           icon: "file",
         },
-        {
-          key: "finance",
-          path: "/dashboard/finance",
-          icon: "dollar",
-          badge: 3,
-        },
       ],
     },
     {
@@ -685,6 +680,7 @@ const BASE_NAV_CONFIG = {
       group: "academic",
       items: [
         { key: "myClasses", path: "/dashboard/my-classes", icon: "classes" },
+        { key: "myTimetable", path: "/dashboard/my-timetable", icon: "timetable" },
         { key: "gradeEntry", path: "/dashboard/grade-entry", icon: "barchart" },
         { key: "attendance", path: "/dashboard/attendance", icon: "calendar" },
       ],
@@ -699,6 +695,7 @@ const BASE_NAV_CONFIG = {
       group: "academic",
       items: [
         { key: "myGrades", path: "/dashboard/my-grades", icon: "barchart" },
+        { key: "myTimetable", path: "/dashboard/my-timetable", icon: "timetable" },
         {
           key: "myAttendance",
           path: "/dashboard/my-attendance",
@@ -721,9 +718,9 @@ const BASE_NAV_CONFIG = {
     {
       group: "finance",
       items: [
+        { key: "finance", path: "/dashboard/finance", icon: "dollar" },
         { key: "payments", path: "/dashboard/payments", icon: "dollar" },
         { key: "receipts", path: "/dashboard/receipts", icon: "file" },
-        { key: "financeReports", path: "/dashboard/finance/reports", icon: "barchart" },
       ],
     },
   ],
@@ -951,6 +948,16 @@ const ICONS = {
       <polyline points="12 6 12 12 16 14" />
     </>
   ),
+  timetable: (
+    <>
+      <rect x="3" y="4" width="18" height="17" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <circle cx="12" cy="15.5" r="2.3" />
+      <polyline points="12 13.8 12 15.5 13.4 16.4" />
+    </>
+  ),
   mail: (
     <>
       <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
@@ -1017,10 +1024,13 @@ function SystemSectionRenderer({ systemId, groups, collapsed: sidebarCollapsed, 
 
   return (
     <div className="relative mb-1">
-      {/* System header button — matching regular group header style */}
+      {/* System header button — matching regular group header style.
+          Toute la ligne est cliquable (pas seulement le chevron) :
+          curseur pointeur + fond au survol pour le rendre évident. */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase text-primary-400/60 px-5 pt-3 pb-1 whitespace-nowrap transition-opacity hover:text-primary-300"
+        aria-expanded={isOpen}
+        className="w-full flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase text-primary-400/60 px-5 pt-3 pb-1 whitespace-nowrap transition-colors hover:text-primary-300 hover:bg-white/[0.06] cursor-pointer"
       >
         <svg
           viewBox="0 0 24 24"
@@ -1104,16 +1114,17 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
     `${user?.firstName?.[0] || ""}${user?.lastName?.[0] || ""}`.toUpperCase();
 
   // ── Collapsible group state ──
-  const [collapsedGroups, setCollapsedGroups] = useState(() => {
-    // Start with all multi-item groups collapsed except overview
-    const initial = {};
-    navGroups.forEach((g) => {
-      if (!g.divider && g._type !== "system_section" && g.group !== "overview" && g.items?.length > 0) {
-        initial[g.group] = true;
-      }
-    });
-    return initial;
-  });
+  // Default (not in state) = collapsed, EXCEPT overview and the group
+  // containing the current route (auto-expanded). Once the user toggles,
+  // their choice is stored explicitly.
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+
+  const isGroupCollapsed = (g) => {
+    if (g.divider || g._type === "system_section" || g.group === "overview" || !g.items?.length) return false;
+    const containsActive = g.items.some((item) => location.pathname === item.path);
+    if (containsActive) return false;
+    return collapsedGroups[g.group] !== false;
+  };
 
   const toggleGroup = (groupKey) => {
     setCollapsedGroups((prev) => ({
@@ -1151,7 +1162,7 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
           <img
             src={akademeeLogo}
             alt="Akademee"
-            className="w-8 h-8 object-contain flex-shrink-0"
+            className="w-10 h-10 object-contain flex-shrink-0"
           />
           <span
             className={`font-display text-lg text-primary-100 whitespace-nowrap transition-opacity ${collapsed ? "lg:opacity-0 lg:w-0 lg:hidden" : "opacity-100"}`}
@@ -1230,13 +1241,15 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
 
             // Regular group — collapsible
             const groupKey = group._groupKey || group.group;
-            const isCollapsed = collapsedGroups[groupKey] === true;
+            const isCollapsed = isGroupCollapsed(group);
             return (
               <div key={groupKey}>
-                {/* Group header — clickable toggle */}
+                {/* Group header — clickable toggle. Toute la ligne est
+                    cliquable (texte inclus), pas seulement le chevron. */}
                 <button
                   onClick={() => toggleGroup(groupKey)}
-                  className={`w-full flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase text-primary-400/60 px-5 pt-3 pb-1 whitespace-nowrap transition-opacity hover:text-primary-300 ${collapsed ? "lg:opacity-0 lg:hidden lg:pointer-events-none" : "opacity-100"}`}
+                  aria-expanded={!isCollapsed}
+                  className={`w-full flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase text-primary-400/60 px-5 pt-3 pb-1 whitespace-nowrap transition-colors hover:text-primary-300 hover:bg-white/[0.06] cursor-pointer ${collapsed ? "lg:opacity-0 lg:hidden lg:pointer-events-none" : "opacity-100"}`}
                 >
                   <svg
                     viewBox="0 0 24 24"

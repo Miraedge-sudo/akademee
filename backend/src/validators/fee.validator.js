@@ -18,10 +18,13 @@ const assignFeesValidator = [
     .trim()
     .notEmpty()
     .withMessage('Class ID is required'),
+  // replace=false → au moins un frais ; replace=true → tableau peut être vide
+  // (décocher tous les frais de la classe). Vérifié dans le contrôleur.
   body('feeIds')
-    .isArray({ min: 1 })
-    .withMessage('At least one fee must be selected'),
+    .isArray()
+    .withMessage('feeIds must be an array'),
   body('feeIds.*')
+    .optional()
     .trim()
     .notEmpty()
     .withMessage('Fee ID cannot be empty'),
@@ -30,6 +33,10 @@ const assignFeesValidator = [
     .trim()
     .notEmpty()
     .withMessage('Academic year ID cannot be empty'),
+  body('replace')
+    .optional()
+    .isBoolean()
+    .withMessage('replace must be a boolean'),
 ];
 
 module.exports = { createFeeValidator, updateFeeValidator, assignFeesValidator };

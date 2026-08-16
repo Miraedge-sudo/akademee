@@ -83,6 +83,7 @@ router.post('/report-card-exports', authMiddleware, roleMiddleware(['admin', 'te
 router.get('/report-card-exports/:id/progress', authMiddleware, roleMiddleware(['admin', 'teacher']), gradingController.streamExportProgress);
 router.get('/report-card-exports/:id/file', authMiddleware, roleMiddleware(['admin', 'teacher']), gradingController.downloadExportFile);
 router.get('/report-cards/:id/payload', authMiddleware, roleMiddleware(['admin', 'teacher', 'student', 'parent']), gradingController.getReportCardPayload);
+router.patch('/report-cards/:id/remark', authMiddleware, roleMiddleware(['admin', 'teacher']), gradingController.updateReportCardRemark);
 router.get('/report-cards/:id/pdf', authMiddleware, roleMiddleware(['admin', 'teacher', 'student', 'parent']), gradingController.downloadReportCardPdf);
 router.post('/report-cards/:id/publish', authMiddleware, roleMiddleware(['admin']), gradingController.publishReportCard);
 router.post('/report-cards/:id/revise', authMiddleware, roleMiddleware(['admin']), gradingController.reviseReportCard);

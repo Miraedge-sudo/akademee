@@ -451,6 +451,7 @@ function SummaryGrid({ summary, eduConfig }) {
   const fr = eduConfig?.lang === "fr";
 
   return (
+    <>
     <div style={{
       display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "10px", margin: "16px 0",
     }}>
@@ -486,7 +487,19 @@ function SummaryGrid({ summary, eduConfig }) {
           {summary?.mention || "—"}
         </div>
       </div>
+
     </div>
+
+    {/* Appréciation générale — auto-générée selon la moyenne, modifiable par le prof */}
+    <div style={{ border: "1px solid #1c1c1a", padding: "10px 12px", margin: "16px 0" }}>
+      <div style={{ fontSize: "9.5px", textTransform: "uppercase", letterSpacing: "0.04em", color: "#4a4a45", marginBottom: "4px" }}>
+        {fr ? "Appréciation générale" : "General remark"}
+      </div>
+      <div style={{ fontSize: "12px", lineHeight: "1.55" }}>
+        {summary?.general_remark || "—"}
+      </div>
+    </div>
+    </>
   );
 }
 

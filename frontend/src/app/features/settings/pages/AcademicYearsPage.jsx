@@ -5,7 +5,7 @@ import { useTheme } from "../../../core/hooks/useTheme";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useEducationalSystems } from "../../../core/context/EducationalSystemContext";
 import { YearContext } from "../../../core/context/YearContext";
-import { getAcademicYears, createAcademicYear, deleteAcademicYear } from "../../../core/api/academicYearService";
+import { getAcademicYears, createAcademicYear, updateAcademicYear, deleteAcademicYear } from "../../../core/api/academicYearService";
 import {
   FiCalendar,
   FiBookOpen,
@@ -29,14 +29,22 @@ import toast from "react-hot-toast";
 function transformYear(raw) {
   if (!raw) return null;
   const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const start = raw.startDate ? new Date(raw.startDate) : null;
   const end = raw.endDate ? new Date(raw.endDate) : null;
-  
-  // Derive status: isCurrent=true → active, end date in past → archive, else → future
-  let status = raw.status;
-  if (!status) {
-    if (raw.isCurrent) status = "active";
-    else if (end && end < now) status = "archive";
-    else status = "future";
+
+  // ── Status is AUTOMATIC, derived from the dates:
+  //    end < today → archive · start > today → future · today within [start, end] → active.
+  //    isCurrent is only a fallback when dates are missing.
+  let status;
+  if (start && end) {
+    if (end < today) status = "archive";
+    else if (start > today) status = "future";
+    else status = "active";
+  } else if (raw.isCurrent) {
+    status = "active";
+  } else {
+    status = "future";
   }
   // Normalize: backend might send "current" instead of "active"
   if (status === "current") status = "active";
@@ -86,6 +94,152 @@ function transformYear(raw) {
 }
 
 
+
+// ── Edit Year Modal ──
+// Permet à l'admin de corriger le nom et les dates d'une année existante
+// (ex: "jun" au lieu de "feb"). Pas de blocage des dates passées : il s'agit
+// de corriger une erreur de saisie, pas de créer une année.
+function EditYearModal({ open, year, onClose, onSaved }) {
+  const { t, i18n } = useTranslation("common");
+  const isFr = i18n.language === "fr";
+  const [form, setForm] = useState({ name: "", startDate: "", endDate: "" });
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open && year) {
+      setForm({
+        name: year.name || "",
+        startDate: year.startDate ? String(year.startDate).slice(0, 10) : "",
+        endDate: year.endDate ? String(year.endDate).slice(0, 10) : "",
+      });
+    }
+  }, [open, year]);
+
+  if (!open || !year) return null;
+
+  const update = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
+
+  const handleSubmit = async () => {
+    if (!form.name || !form.startDate || !form.endDate) {
+      toast.error(isFr ? "Veuillez remplir tous les champs" : "Please fill all fields");
+      return;
+    }
+    if (new Date(form.endDate) <= new Date(form.startDate)) {
+      toast.error(isFr ? "La date de fin doit être après la date de début" : "End date must be after start date");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const saved = await updateAcademicYear(year.id, {
+        name: form.name.trim(),
+        startDate: form.startDate,
+        endDate: form.endDate,
+      });
+      onSaved(transformYear(saved));
+      toast.success(isFr ? "Année scolaire modifiée !" : "Academic year updated!");
+      onClose();
+    } catch {
+      toast.error(isFr ? "Erreur lors de la modification" : "Error updating academic year");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const inputClass = "w-full h-[46px] px-3.5 border-[1.5px] border-surface-200 dark:border-surface-600 rounded-[10px] font-sans text-sm text-surface-800 dark:text-surface-100 bg-white dark:bg-surface-800 outline-none transition-all duration-200 focus:border-primary-600";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-[480px] bg-white dark:bg-surface-800 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-surface-100 dark:border-surface-700">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
+              <FiEdit3 className="w-5 h-5 text-primary-900 dark:text-primary-100" />
+            </div>
+            <div>
+              <h2 className="font-display text-lg font-bold text-surface-800 dark:text-surface-100">
+                {isFr ? "Modifier l'année scolaire" : "Edit Academic Year"}
+              </h2>
+              <p className="text-xs text-surface-400">
+                {isFr ? "Corrigez le nom ou les dates" : "Fix the name or the dates"}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors">
+            <FiX className="w-4 h-4 text-surface-400" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          <div>
+            <label className="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">
+              {isFr ? "Nom de l'année" : "Year name"}
+            </label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => update("name", e.target.value)}
+              placeholder="2025 – 2026"
+              className={inputClass}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">
+                {isFr ? "Date de début" : "Start date"}
+              </label>
+              <input
+                type="date"
+                value={form.startDate}
+                onChange={(e) => update("startDate", e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">
+                {isFr ? "Date de fin" : "End date"}
+              </label>
+              <input
+                type="date"
+                value={form.endDate}
+                onChange={(e) => update("endDate", e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-surface-100 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50">
+          <button
+            onClick={onClose}
+            className="h-[44px] px-5 rounded-xl border-2 border-surface-200 dark:border-surface-600 text-sm font-semibold text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-all"
+          >
+            {isFr ? "Annuler" : "Cancel"}
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="inline-flex items-center gap-2 h-[44px] px-6 rounded-xl bg-primary-900 text-white text-sm font-bold hover:bg-primary-700 transition-all disabled:opacity-50"
+          >
+            {submitting ? (
+              <>
+                <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                {isFr ? "Enregistrement..." : "Saving..."}
+              </>
+            ) : (
+              <>
+                <FiCheck className="w-4 h-4" strokeWidth={2.5} />
+                {isFr ? "Enregistrer" : "Save"}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── Create Year Modal ──
 function CreateYearModal({ open, onClose, onCreated }) {
@@ -379,7 +533,7 @@ function CreateYearModal({ open, onClose, onCreated }) {
 
 // ── Sub-components ──
 
-function YearCard({ year, selected, onSelect, onDelete, isFr: isFrProp }) {
+function YearCard({ year, selected, onSelect, onDelete, onEdit, isFr: isFrProp }) {
   const Icon = year.icon;
   const labelColor = year.status === "future" ? year.iconColor : undefined;
   const selBorderColor = year.status === "active" ? "#085041" : year.status === "archive" ? "#F59E0B" : "#3B82F6";
@@ -504,6 +658,22 @@ function YearCard({ year, selected, onSelect, onDelete, isFr: isFrProp }) {
               )}
             </div>
 
+            {/* Edit button — always available so the admin can fix name/dates */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onEdit) onEdit(year);
+              }}
+              title={isFrProp ? "Modifier" : "Edit"}
+              className="group flex flex-col items-center justify-center px-3 sm:px-4 py-2.5 rounded-lg border border-surface-200 dark:border-surface-600 
+                hover:bg-surface-50 dark:hover:bg-surface-700 transition-all min-w-[56px]"
+            >
+              <FiEdit3 className="w-[18px] h-[18px] text-surface-400 group-hover:text-primary-600 transition-colors" />
+              <span className="text-[10px] text-surface-400 group-hover:text-primary-600 font-medium mt-0.5 transition-colors">
+                {isFrProp ? "Modifier" : "Edit"}
+              </span>
+            </button>
+
             {/* Radio button */}
             <div
               className={`w-[22px] h-[22px] rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-250 self-center ${
@@ -583,6 +753,7 @@ export default function AcademicYearsPage() {
   const [loading, setLoading] = useState(true);
   const [entering, setEntering] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editYear, setEditYear] = useState(null);
 
   // ── Load years from real backend API ──
   useEffect(() => {
@@ -638,6 +809,11 @@ export default function AcademicYearsPage() {
 
   const handleYearCreated = (newYear) => {
     setYears((prev) => [newYear, ...prev]);
+  };
+
+  const handleYearUpdated = (updated) => {
+    setYears((prev) => prev.map((y) => (y.id === updated.id ? updated : y)));
+    if (refreshYears) refreshYears(); // keep the global YearContext in sync
   };
 
   const handleDeleteYear = async (yearId, yearName) => {
@@ -816,7 +992,7 @@ export default function AcademicYearsPage() {
               </span>
             </div>
             {activeYears.map((year) => (
-              <YearCard key={year.id} year={year} selected={selectedId === year.id} onSelect={handleSelect} />
+              <YearCard key={year.id} year={year} selected={selectedId === year.id} onSelect={handleSelect} onEdit={setEditYear} />
             ))}
           </>
         )}
@@ -833,7 +1009,7 @@ export default function AcademicYearsPage() {
               </span>
             </div>
             {archiveYears.map((year) => (
-              <YearCard key={year.id} year={year} selected={selectedId === year.id} onSelect={handleSelect} />
+              <YearCard key={year.id} year={year} selected={selectedId === year.id} onSelect={handleSelect} onEdit={setEditYear} />
             ))}
           </>
         )}
@@ -847,7 +1023,7 @@ export default function AcademicYearsPage() {
               </span>
             </div>
             {futureYears.map((year) => (
-              <YearCard key={year.id} year={year} selected={selectedId === year.id} onSelect={handleSelect} onDelete={handleDeleteYear} isFr={isFr} />
+              <YearCard key={year.id} year={year} selected={selectedId === year.id} onSelect={handleSelect} onDelete={handleDeleteYear} onEdit={setEditYear} isFr={isFr} />
             ))}
           </>
         )}
@@ -896,6 +1072,14 @@ export default function AcademicYearsPage() {
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onCreated={handleYearCreated}
+      />
+
+      {/* Edit Year Modal */}
+      <EditYearModal
+        open={!!editYear}
+        year={editYear}
+        onClose={() => setEditYear(null)}
+        onSaved={handleYearUpdated}
       />
     </div>
   );

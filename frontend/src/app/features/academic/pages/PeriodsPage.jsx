@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useContext } from "react";
 import { useTranslation } from "react-i18next";
+import { YearContext } from "../../../core/context/YearContext";
 import {
   FiPlus,
   FiEdit2,
@@ -77,6 +78,9 @@ export default function PeriodsPage() {
   const { i18n } = useTranslation("common");
   const isFr = i18n.language === "fr";
 
+  // ── Année académique globale (active par défaut, switch possible) ──
+  const { selectedYearId, setSelectedYearId } = useContext(YearContext);
+
   const [periods, setPeriods] = useState([]);
   const [years, setYears] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -115,6 +119,16 @@ export default function PeriodsPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // ── Sélection automatique de l'année active ──
+  // Toute opération doit porter sur une année scolaire : on pré-sélectionne
+  // l'année choisie globalement (active par défaut) dès qu'elle est connue,
+  // sans écraser un choix explicite de l'admin (filtre ≠ "all").
+  useEffect(() => {
+    if (!selectedYearId || years.length === 0) return;
+    if (!years.some((y) => y.id === selectedYearId)) return;
+    setYearFilter((prev) => (prev === "all" ? selectedYearId : prev));
+  }, [selectedYearId, years]);
 
   // ── Filtered & sorted data ──
   const filtered = useMemo(() => {
@@ -372,6 +386,7 @@ export default function PeriodsPage() {
               key={y.id}
               onClick={() => {
                 setYearFilter(y.id);
+                setSelectedYearId(y.id); // switch global : toute l'app suit
                 setShowAdd(false);
               }}
               className={`px-3 py-1.5 rounded-lg text-[12.5px] font-semibold border transition-all duration-200 ${
@@ -398,66 +413,83 @@ export default function PeriodsPage() {
       )}
 
       {showAdd && (
-        <div className="flex flex-wrap items-end gap-3 mb-5 p-4 bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm animate-fadeInUp">
-          <div>
-            <label className="block text-[10px] font-semibold tracking-wider uppercase text-surface-400 mb-1.5">
-              {isFr ? "Nom" : "Name"}
-            </label>
-            <input
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder={isFr ? "Ex: Term 1" : "e.g. Term 1"}
-              className="h-10 px-3 rounded-lg border border-surface-200 dark:border-surface-600 text-sm bg-transparent outline-none focus:border-primary-600 dark:focus:border-primary-400 text-surface-800 dark:text-surface-100 transition-all duration-200 w-full min-w-[140px]"
-              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-              autoFocus
-            />
+        <div className="mb-5 p-4 bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm animate-fadeInUp">
+          {/* Titre du formulaire */}
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <h3 className="text-[13px] font-bold text-surface-800 dark:text-surface-100">
+              {isFr ? "Nouvelle période" : "New period"}
+            </h3>
+            {activeYear && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-surface-500 bg-surface-100 dark:bg-surface-700/50 px-2 py-0.5 rounded-full">
+                <FiCalendar className="w-3 h-3" />
+                {activeYear.name}
+              </span>
+            )}
           </div>
-          <div>
-            <label className="block text-[10px] font-semibold tracking-wider uppercase text-surface-400 mb-1.5">
-              {isFr ? "Début" : "Start"}
-            </label>
-            <input
-              type="date"
-              value={newStart}
-              onChange={(e) => setNewStart(e.target.value)}
-              className="h-10 px-3 rounded-lg border border-surface-200 dark:border-surface-600 text-sm bg-transparent outline-none focus:border-primary-600 dark:focus:border-primary-400 text-surface-800 dark:text-surface-100 transition-all duration-200 w-full min-w-[140px]"
-            />
-          </div>
-          <div>
-            <label className="block text-[10px] font-semibold tracking-wider uppercase text-surface-400 mb-1.5">
-              {isFr ? "Fin" : "End"}
-            </label>
-            <input
-              type="date"
-              value={newEnd}
-              onChange={(e) => setNewEnd(e.target.value)}
-              className="h-10 px-3 rounded-lg border border-surface-200 dark:border-surface-600 text-sm bg-transparent outline-none focus:border-primary-600 dark:focus:border-primary-400 text-surface-800 dark:text-surface-100 transition-all duration-200 w-full min-w-[140px]"
-            />
-          </div>
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={handleAdd}
-              disabled={adding}
-              className="h-10 px-4 rounded-lg bg-primary-600 text-white text-xs font-bold hover:bg-primary-700 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 inline-flex items-center gap-1.5"
-            >
-              {adding ? (
-                <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-              ) : (
-                <FiCheck className="w-3.5 h-3.5" strokeWidth={3} />
-              )}
-              {isFr ? "Créer" : "Create"}
-            </button>
-            <button
-              onClick={() => {
-                setShowAdd(false);
-                setNewName("");
-                setNewStart("");
-                setNewEnd("");
-              }}
-              className="h-10 w-10 flex items-center justify-center rounded-lg border border-surface-200 dark:border-surface-600 text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 transition-all duration-200"
-            >
-              <FiX className="w-4 h-4" />
-            </button>
+
+          {/* Champs en grille : 1 col mobile / 2 cols tablette / 4 cols desktop */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+            <div>
+              <label className="block text-[10px] font-semibold tracking-wider uppercase text-surface-400 mb-1.5">
+                {isFr ? "Nom" : "Name"}
+              </label>
+              <input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder={isFr ? "Ex: Term 1" : "e.g. Term 1"}
+                className="w-full h-10 px-3 rounded-lg border border-surface-200 dark:border-surface-600 text-sm bg-transparent outline-none focus:border-primary-600 dark:focus:border-primary-400 text-surface-800 dark:text-surface-100 transition-all duration-200"
+                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-semibold tracking-wider uppercase text-surface-400 mb-1.5">
+                {isFr ? "Début" : "Start"}
+              </label>
+              <input
+                type="date"
+                value={newStart}
+                onChange={(e) => setNewStart(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-surface-200 dark:border-surface-600 text-sm bg-transparent outline-none focus:border-primary-600 dark:focus:border-primary-400 text-surface-800 dark:text-surface-100 transition-all duration-200"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-semibold tracking-wider uppercase text-surface-400 mb-1.5">
+                {isFr ? "Fin" : "End"}
+              </label>
+              <input
+                type="date"
+                value={newEnd}
+                onChange={(e) => setNewEnd(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-surface-200 dark:border-surface-600 text-sm bg-transparent outline-none focus:border-primary-600 dark:focus:border-primary-400 text-surface-800 dark:text-surface-100 transition-all duration-200"
+              />
+            </div>
+            <div className="flex items-center gap-2 lg:justify-end">
+              <button
+                onClick={handleAdd}
+                disabled={adding}
+                className="flex-1 sm:flex-none h-10 px-4 rounded-lg bg-primary-600 text-white text-xs font-bold hover:bg-primary-700 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 inline-flex items-center justify-center gap-1.5"
+              >
+                {adding ? (
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                ) : (
+                  <FiCheck className="w-3.5 h-3.5" strokeWidth={3} />
+                )}
+                {isFr ? "Créer" : "Create"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowAdd(false);
+                  setNewName("");
+                  setNewStart("");
+                  setNewEnd("");
+                }}
+                className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-lg border border-surface-200 dark:border-surface-600 text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 transition-all duration-200"
+                title={isFr ? "Annuler" : "Cancel"}
+              >
+                <FiX className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}

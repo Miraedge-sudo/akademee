@@ -199,6 +199,57 @@ class GradingService {
     return level ? (en ? level.en : level.fr) : null;
   }
 
+  /**
+   * Generate an automatic general remark ("Appréciation générale") from the
+   * overall average (out of 20), following standard Cameroonian secondary
+   * education wording. The language follows the education system
+   * (ANG_* → English, otherwise French). Returns null when there is no
+   * average. Teachers can still override it later.
+   */
+  generateGeneralRemark(average, eduSystemCode = null) {
+    if (average == null) return null;
+    const en = String(eduSystemCode || '').startsWith('ANG');
+    const levels = [
+      {
+        min: 17,
+        fr: 'Excellent trimestre, félicitations ! Continuez sur cette lancée.',
+        en: 'Excellent term, congratulations! Keep up the great work.',
+      },
+      {
+        min: 16,
+        fr: 'Très bon travail, continuez ainsi.',
+        en: 'Very good work, keep it up.',
+      },
+      {
+        min: 14,
+        fr: 'Bon travail, poursuivez vos efforts.',
+        en: 'Good work, keep up your efforts.',
+      },
+      {
+        min: 12,
+        fr: 'Résultats satisfaisants, vous pouvez encore progresser.',
+        en: 'Satisfactory results, you can still improve.',
+      },
+      {
+        min: 10,
+        fr: 'Résultats passables, un travail plus soutenu est nécessaire.',
+        en: 'Passable results, more sustained effort is needed.',
+      },
+      {
+        min: 8,
+        fr: 'Résultats insuffisants, un travail plus sérieux est requis.',
+        en: 'Insufficient results, more serious work is required.',
+      },
+      {
+        min: 0,
+        fr: 'Résultats très faibles, un accompagnement est indispensable.',
+        en: 'Very weak results, support is essential.',
+      },
+    ];
+    const level = levels.find((l) => average >= l.min);
+    return level ? (en ? level.en : level.fr) : null;
+  }
+
   // ------------------------------------------------------------------
   // Report Card Config
   // ------------------------------------------------------------------
@@ -959,6 +1010,7 @@ class GradingService {
         class_rank, partial_ranking, class_size, class_average,
         mention, grading_scale_version_id, threshold_set_id, report_card_config_id,
         education_system_code,
+        general_remark,
         computed_at
       ) VALUES (
         ${studentId}, ${actualPeriodStructureId}, ${originalSequenceId}, 'DRAFT', 1, ${generalAverage},
@@ -966,6 +1018,7 @@ class GradingService {
         ${cohortRanks.classSize}, ${cohortRanks.classAverage},
         ${mention}, ${scaleId}, ${thresholdSetId}, ${config.report_card_config_id},
         ${eduSystemCode},
+        ${this.generateGeneralRemark(generalAverage, eduSystemCode)},
         now()
       )
       RETURNING *
@@ -1336,6 +1389,7 @@ class GradingService {
         class_average: report.class_average != null ? Number(report.class_average) : null,
         partial_ranking: report.partial_ranking,
         mention: report.mention,
+        general_remark: report.general_remark || null,
         pass_mark: report.pass_mark != null ? Number(report.pass_mark) : null,
       },
       attendance,
@@ -1350,6 +1404,42 @@ class GradingService {
     await sql`UPDATE report_cards SET payload = ${JSON.stringify(payload)} WHERE report_card_id = ${reportCardId}`;
 
     return payload;
+  }
+
+  /**
+   * Override the automatic general remark on a report card. Scoped to the
+   * requester's school. Also refreshes the cached payload JSON so the web
+   * view and PDF reflect the change immediately.
+   */
+  async updateReportCardRemark(reportCardId, schoolId, remark) {
+    const existing = await sql`
+      SELECT rc.* FROM report_cards rc
+      JOIN students st ON st.student_id = rc.student_id
+      WHERE rc.report_card_id = ${reportCardId} AND st.school_id = ${schoolId}
+    `;
+    if (existing.length === 0) throw new Error('Report card not found');
+
+    const normalized = remark == null || String(remark).trim() === '' ? null : String(remark).trim();
+    await sql`
+      UPDATE report_cards
+      SET general_remark = ${normalized}, updated_at = now()
+      WHERE report_card_id = ${reportCardId}
+    `;
+
+    // Refresh the cached payload JSON (kept in sync so PDFs/web use the new remark)
+    if (existing[0].payload) {
+      try {
+        const payload = typeof existing[0].payload === 'string' ? JSON.parse(existing[0].payload) : existing[0].payload;
+        if (payload?.summary) {
+          payload.summary.general_remark = normalized;
+          await sql`UPDATE report_cards SET payload = ${JSON.stringify(payload)} WHERE report_card_id = ${reportCardId}`;
+        }
+      } catch (err) {
+        // Ignore corrupt payload — the value itself is already persisted
+      }
+    }
+
+    return { report_card_id: reportCardId, general_remark: normalized };
   }
 
   async publishReportCard(reportCardId, actorId) {
@@ -1383,6 +1473,7 @@ class GradingService {
         class_rank, partial_ranking, class_size, class_average,
         mention, grading_scale_version_id, threshold_set_id, report_card_config_id,
         education_system_code,
+        general_remark,
         computed_at
       ) VALUES (
         ${existing[0].student_id}, ${existing[0].period_structure_id}, ${existing[0].sequence_id || null}, 'DRAFT', ${newVersion},
@@ -1390,6 +1481,7 @@ class GradingService {
         ${existing[0].class_size}, ${existing[0].class_average}, ${existing[0].mention},
         ${existing[0].grading_scale_version_id}, ${existing[0].threshold_set_id},
         ${existing[0].report_card_config_id}, ${existing[0].education_system_code || null},
+        ${existing[0].general_remark || this.generateGeneralRemark(existing[0].general_average, existing[0].education_system_code || null)},
         now()
       )
       RETURNING *

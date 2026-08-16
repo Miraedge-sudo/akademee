@@ -8,7 +8,7 @@ import {
   saveOnboardingData,
   uploadMedia,
 } from "../../../core/api/websiteService";
-import akademeeLogo from "../../../../assets/Logo.png";
+import akademeeLogo from "../../../../assets/LogoWhite.png";
 import { ThemeContext } from "../../../core/context/ThemeContext";
 import { useEducationalSystems } from "../../../core/context/EducationalSystemContext";
 import toast from "react-hot-toast";
@@ -2866,7 +2866,7 @@ export default function OnboardingPage() {
             <img
               src={akademeeLogo}
               alt="Akademee"
-              className="w-8 h-8 object-contain"
+              className="w-10 h-10 object-contain"
             />
             <span className="font-display text-lg text-white/90">Akademee</span>
           </div>

@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../core/hooks/useTheme';
 import { useAuth } from '../../../core/hooks/useAuth';
 import { getDashboardStats } from '../../../core/api/dashboardService';
 import { getTeacherClasses } from '../../../core/api/classService';
 import { getTeacherSubjects } from '../../../core/api/subjectService';
-import { getClassAttendanceAll } from '../../../core/api/attendanceService';
+import { getClassAttendanceAll, getClassAttendanceByDate } from '../../../core/api/attendanceService';
 import TeacherGreeting from '../components/TeacherGreeting';
 import TeacherStatCards from '../components/TeacherStatCards';
 import TeacherAssignedClasses from '../components/TeacherAssignedClasses';
@@ -17,6 +18,8 @@ import UpcomingAssessments from '../components/UpcomingAssessments';
 import TeacherNotifications from '../components/TeacherNotifications';
 
 export default function TeacherDashboardPage() {
+  const { i18n } = useTranslation('common');
+  const isFr = i18n.language === 'fr';
   const { primaryColor } = useTheme();
   const { user } = useAuth();
   const pc = primaryColor || '#085041';
@@ -27,6 +30,9 @@ export default function TeacherDashboardPage() {
   // ── Store full class data for the assigned-classrooms section ──
   const [teacherClasses, setTeacherClasses] = useState([]);
   const [teacherSubjects, setTeacherSubjects] = useState([]);
+
+  // ── Tâches réelles (notes à saisir, appels à faire) ──
+  const [pendingTasks, setPendingTasks] = useState([]);
 
   // ── Fetch real data ──
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
@@ -54,6 +60,42 @@ export default function TeacherDashboardPage() {
       // Store for the TeacherAssignedClasses section
       setTeacherClasses(myClasses);
       setTeacherSubjects(teacherSubjectsList);
+
+      // ── Tâches réelles pour le bloc « Pending tasks » ──
+      // 1) Saisie de notes : une tâche par (matière × classe) assignée.
+      const gradeTasks = teacherSubjectsList
+        .filter((s) => s.subjectName && s.className)
+        .slice(0, 5)
+        .map((s) => ({
+          type: 'grades',
+          subjectName: s.subjectName,
+          className: s.className,
+          href: '/dashboard/grade-entry',
+        }));
+
+      // 2) Appel du jour : classes sans présence enregistrée aujourd'hui.
+      const attendanceTasks = [];
+      try {
+        const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+        const results = await Promise.allSettled(
+          myClasses.slice(0, 6).map((cls) =>
+            getClassAttendanceByDate(cls.id, today).catch(() => [])
+          )
+        );
+        results.forEach((res, i) => {
+          const cls = myClasses[i];
+          const records = Array.isArray(res.value) ? res.value : [];
+          if (records.length === 0 && cls?.name) {
+            attendanceTasks.push({
+              type: 'attendance',
+              className: cls.name,
+              href: '/dashboard/attendance',
+            });
+          }
+        });
+      } catch { /* ignore attendance errors */ }
+
+      setPendingTasks([...gradeTasks, ...attendanceTasks.slice(0, 3)]);
 
       const teacherStudents = myClasses.reduce(
         (sum, c) => sum + (c.studentCount || 0), 0
@@ -86,7 +128,7 @@ export default function TeacherDashboardPage() {
       setStats({
         classes: myClasses.length || dashboardData?.totalClasses || 0,
         students: teacherStudents || dashboardData?.totalStudents || 0,
-        pendingGrades: (myClasses.length * 5) || 0,
+        pendingGrades: gradeTasks.length || 0,
         attendanceRate: dashboardData?.activeAcademicYear ? 85 : 0,
         attendanceIssues: recentAttendanceIssues,
       });
@@ -97,6 +139,7 @@ export default function TeacherDashboardPage() {
       });
       setTeacherClasses([]);
       setTeacherSubjects([]);
+      setPendingTasks([]);
     }
     setLoading(false);
   }, [user?.id]);
@@ -137,7 +180,22 @@ export default function TeacherDashboardPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <TodaySchedule />
-            <PendingTasks />
+            <PendingTasks
+              tasks={pendingTasks.map((task, i) => ({
+                id: `${task.type}-${task.className}-${task.subjectName || i}`,
+                text:
+                  task.type === 'grades'
+                    ? (isFr
+                        ? `Saisir les notes — ${task.subjectName} · ${task.className}`
+                        : `Enter grades — ${task.subjectName} · ${task.className}`)
+                    : (isFr
+                        ? `Faire l'appel — ${task.className}`
+                        : `Take attendance — ${task.className}`),
+                priority: task.type === 'grades' ? '#EF4444' : '#F59E0B',
+                href: task.href,
+              }))}
+              loading={loading}
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">

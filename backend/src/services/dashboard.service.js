@@ -1,9 +1,31 @@
 const sql = require("../config/database");
 
 class DashboardService {
+  /**
+   * Resolve the academic year to scope dashboard data to. Priority:
+   *   1. an explicit year id (from the frontend's selected year),
+   *   2. the year flagged is_current (auto-derived from dates by
+   *      academicYearService.syncCurrentFromDates),
+   *   3. the most recent year as a last resort — so the dashboard NEVER
+   *      silently falls back to school-wide aggregates that mix all years.
+   */
+  async resolveYear(schoolId, academicYearId) {
+    if (academicYearId) return academicYearId;
+    const [row] = await sql`
+      SELECT academic_year_id
+      FROM academic_years
+      WHERE school_id = ${schoolId}
+      ORDER BY is_current DESC, start_date DESC NULLS LAST
+      LIMIT 1
+    `;
+    return row?.academic_year_id || null;
+  }
+
   async getStats(schoolId, { academicYearId } = {}) {
     // ── Phase 1: resolve active year + run all independent aggregates in
     // parallel (1 round trip instead of 9 sequential ones). ──
+    academicYearId = await this.resolveYear(schoolId, academicYearId);
+
     const studentCountQuery = academicYearId
       ? sql`
           SELECT COUNT(DISTINCT st.student_id)::int AS total
@@ -13,7 +35,10 @@ class DashboardService {
             AND EXISTS (
               SELECT 1 FROM enrollments e
               WHERE e.student_id = st.student_id
-                AND e.academic_year_id = ${academicYearId}
+                -- Les inscriptions héritées SANS année (academic_year_id NULL,
+                -- créées avant le scoping par année) comptent pour l'année
+                -- courante — sinon l'effectif affiché tombe à 0.
+                AND (e.academic_year_id = ${academicYearId} OR e.academic_year_id IS NULL)
             )
         `
       : sql`
@@ -72,7 +97,7 @@ class DashboardService {
         `;
 
     const [
-      activeYearRows,
+      activeYearCheck,
       studentCount,
       teacherCount,
       secretaryCount,
@@ -80,15 +105,10 @@ class DashboardService {
       accountantCount,
       classCount,
       userCount,
-      activeYearCheck,
     ] = await Promise.all([
-      academicYearId
-        ? Promise.resolve([])
-        : sql`
-            SELECT academic_year_id FROM academic_years
-            WHERE school_id = ${schoolId} AND is_current = true
-            LIMIT 1
-          `,
+      sql`
+        SELECT COUNT(*)::int AS total FROM academic_years WHERE school_id = ${schoolId} AND is_current = true
+      `,
       studentCountQuery,
       teacherCountQuery,
       sql`
@@ -127,15 +147,19 @@ class DashboardService {
       `,
     ]);
 
-    // Resolve the academic year used by the revenue query.
-    academicYearId = academicYearId || activeYearRows[0]?.academic_year_id || null;
-
     // ── Phase 2: revenue depends on the resolved academic year. ──
+    // Les paiements hérités SANS année (academic_year_id NULL) sont inclus
+    // dans l'année courante — sinon le total affiché tombe à 0 alors que
+    // l'école a bien encaissé (même règle que pour les élèves / frais).
     const [revenueData] = await sql`
       SELECT COALESCE(SUM(amount), 0)::numeric AS total
       FROM payments
       WHERE school_id = ${schoolId} AND status = 'completed'
-        ${academicYearId ? sql`AND academic_year_id = ${academicYearId}` : sql``}
+        ${
+          academicYearId
+            ? sql`AND (academic_year_id = ${academicYearId} OR academic_year_id IS NULL)`
+            : sql``
+        }
     `;
 
     // The `postgres` driver always returns rows as an ARRAY, so each COUNT
@@ -158,14 +182,7 @@ class DashboardService {
     limit = Math.min(Math.max(1, limit), 50);
 
     // Resolve the active academic year (used to scope the feed by date range).
-    if (!academicYearId) {
-      const [activeYear] = await sql`
-        SELECT academic_year_id FROM academic_years
-        WHERE school_id = ${schoolId} AND is_current = true
-        LIMIT 1
-      `;
-      academicYearId = activeYear?.academic_year_id || null;
-    }
+    academicYearId = await this.resolveYear(schoolId, academicYearId);
 
     // Scope the feed to the selected year's date range when one is known.
     // Dates are compared on the calendar level (::date casts, DB-side +1 day)
@@ -220,12 +237,7 @@ class DashboardService {
 
   async getFinanceStats(schoolId) {
     // If no academicYearId provided, use the active academic year
-    const [activeYear] = await sql`
-      SELECT academic_year_id FROM academic_years
-      WHERE school_id = ${schoolId} AND is_current = true
-      LIMIT 1
-    `;
-    const academicYearId = activeYear?.academic_year_id || null;
+    const academicYearId = await this.resolveYear(schoolId, null);
 
     // 1. Monthly collections (last 7 months aggregated by month)
     const monthlyData = await sql`
@@ -238,7 +250,7 @@ class DashboardService {
       WHERE p.school_id = ${schoolId}
         AND p.status = 'completed'
         AND p.created_at >= NOW() - INTERVAL '7 months'
-        ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
+        ${academicYearId ? sql`AND (p.academic_year_id = ${academicYearId} OR p.academic_year_id IS NULL)` : sql``}
       GROUP BY DATE_TRUNC('month', p.created_at), EXTRACT(MONTH FROM p.created_at), EXTRACT(YEAR FROM p.created_at)
       ORDER BY year ASC, month_num ASC
     `;
@@ -259,7 +271,7 @@ class DashboardService {
       WHERE p.school_id = ${schoolId}
         AND p.status = 'completed'
         AND p.created_at >= NOW() - INTERVAL '7 months'
-        ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
+        ${academicYearId ? sql`AND (p.academic_year_id = ${academicYearId} OR p.academic_year_id IS NULL)` : sql``}
       GROUP BY DATE_TRUNC('month', p.created_at), EXTRACT(MONTH FROM p.created_at), EXTRACT(YEAR FROM p.created_at), c.name
       ORDER BY year ASC, month_num ASC, class_name ASC
     `;
@@ -275,7 +287,7 @@ class DashboardService {
       LEFT JOIN enrollments e ON c.class_id = e.class_id AND e.status = 'active'
       LEFT JOIN student_fees sf ON e.student_id = sf.student_id
       LEFT JOIN payments p ON e.student_id = p.student_id AND p.status = 'completed'
-        ${academicYearId ? sql`AND p.academic_year_id = ${academicYearId}` : sql``}
+        ${academicYearId ? sql`AND (p.academic_year_id = ${academicYearId} OR p.academic_year_id IS NULL)` : sql``}
       WHERE c.school_id = ${schoolId}
       GROUP BY c.class_id, c.name
       HAVING COALESCE(SUM(sf.amount_due), 0) > 0
@@ -364,32 +376,24 @@ class DashboardService {
   }
 
   async getRevenueData(schoolId, { months = 6, academicYearId } = {}) {
-    // Single combined query: resolve the active year inline so the revenue
-    // aggregation happens in ONE round trip instead of two sequential ones.
-    // Semantics preserved exactly:
-    //  - explicit academicYearId → filter by it
-    //  - no year but an active year exists → filter by the active year
+    // Resolve the academic year robustly (explicit → is_current → most recent).
+    academicYearId = await this.resolveYear(schoolId, academicYearId);
+
+    // Single combined query. Semantics preserved exactly:
+    //  - explicit academicYearId → filter by it (y compris les paiements
+    //    hérités sans année, sinon le graphique mensuel tombe à 0)
     //  - no year and no active year → fall back to the last N months
     const rows = await sql`
       SELECT
         DATE_TRUNC('month', p.created_at) AS month,
         COALESCE(SUM(p.amount), 0)::numeric AS total
       FROM payments p
-      -- At most ONE current year per school (DISTINCT ON mirrors the original
-      -- LIMIT 1 lookup and prevents the join from multiplying payment rows).
-      LEFT JOIN (
-        SELECT DISTINCT ON (school_id) school_id, academic_year_id
-        FROM academic_years
-        WHERE is_current = true AND school_id = ${schoolId}
-        ORDER BY school_id, academic_year_id
-      ) ay ON ay.school_id = p.school_id
       WHERE p.school_id = ${schoolId}
         AND p.status = 'completed'
         AND (
           ${academicYearId
-            ? sql`p.academic_year_id = ${academicYearId}`
-            : sql`(ay.academic_year_id IS NOT NULL AND p.academic_year_id = ay.academic_year_id)
-                   OR (ay.academic_year_id IS NULL AND p.created_at >= NOW() - INTERVAL '1 month' * ${months})`}
+            ? sql`(p.academic_year_id = ${academicYearId} OR p.academic_year_id IS NULL)`
+            : sql`p.created_at >= NOW() - INTERVAL '1 month' * ${months}`}
         )
       GROUP BY DATE_TRUNC('month', p.created_at)
       ORDER BY month ASC

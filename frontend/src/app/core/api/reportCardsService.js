@@ -300,6 +300,16 @@ export async function getReportCardPayload(id, lang = "EN") {
 }
 
 /**
+ * Override the automatic general remark of a report card.
+ * @param {string} id - report_card_id
+ * @param {string} remark - new general remark (empty to reset to auto)
+ */
+export async function updateReportCardRemark(id, remark) {
+  const response = await api.patch(API_ENDPOINTS.REPORT_CARDS_V1.REMARK(id), { remark });
+  return response.data.data;
+}
+
+/**
  * Publish a report card (DRAFT/COMPLETE → PUBLISHED).
  * @param {string} id - report_card_id
  */

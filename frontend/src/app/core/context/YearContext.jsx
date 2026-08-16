@@ -16,13 +16,34 @@ export function YearProvider({ children }) {
       const data = await getAcademicYears();
       const list = data?.years || [];
       setYears(list);
+
       if (list.length > 0) {
+        // A year only counts as "usable" when it actually has data — otherwise
+        // the dashboard filters on an empty year and shows 0 everywhere
+        // (while totalUsers stays global, which looks like a bug).
+        const hasData = (y) => (y.students || 0) + (y.teachers || 0) + (y.classes || 0) > 0;
         const saved = localStorage.getItem("akademee:selectedYearId");
-        const savedValid = saved && list.some((y) => y.id === saved);
-        const current = list.find((y) => y.isCurrent) || list[0];
-        const next = savedValid ? saved : current.id;
-        setSelectedYearId((prev) => prev || next);
-        if (savedValid) localStorage.setItem("akademee:selectedYearId", next);
+        const savedYear = saved ? list.find((y) => y.id === saved) : null;
+        const current = list.find((y) => y.isCurrent) || null;
+        const dataYear = list.find(hasData) || null;
+
+        // Priority: the ACTIVE year is always selected automatically (the
+        // dashboard must show the active year's data). Fallbacks only kick in
+        // when no year is flagged active: saved explicit choice (if usable) →
+        // any year with data → first year. The admin can still switch to
+        // another year at runtime via the year selector.
+        let next = null;
+        if (current && hasData(current)) next = current.id;
+        else if (current) next = current.id;
+        else if (savedYear && hasData(savedYear)) next = savedYear.id;
+        else if (dataYear) next = dataYear.id;
+        else if (list.length > 0) next = list[0].id;
+
+        setSelectedYearId(next);
+        if (next) localStorage.setItem("akademee:selectedYearId", next);
+        else localStorage.removeItem("akademee:selectedYearId");
+      } else {
+        setSelectedYearId(null);
       }
     } catch {
       // Silently fail
