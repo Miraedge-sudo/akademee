@@ -10,7 +10,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.png'],
       manifest: {
         name: 'Akademee — Système de Gestion Scolaire',
         short_name: 'Akademee',
@@ -67,14 +67,16 @@ export default defineConfig({
             },
           },
           {
-            // StaleWhileRevalidate: serve the last cached response instantly,
-            // then refresh it in the background — no more waiting up to 5s for
-            // a slow API before the cache kicks in (TanStack Query also keeps
-            // the same data warm client-side).
+            // API : NetworkFirst — TOUJOURS revalider auprès du serveur avant de
+            // servir une réponse en cache. StaleWhileRevalidate causait des
+            // données périmées (ex: un frais retiré qui « réapparaissait » après
+            // actualisation car le GET assigned-fees venait du cache 12 h).
+            // Le cache ne sert ici que de filet de secours hors-ligne.
             urlPattern: /\/api\/.*/i,
-            handler: 'StaleWhileRevalidate',
+            handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
+              networkTimeoutSeconds: 4,
               expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 12 },
               cacheableResponse: { statuses: [0, 200] },
             },

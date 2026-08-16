@@ -69,7 +69,14 @@ export default function Button({
       ) : icon ? (
         <span className="w-4 h-4 flex-shrink-0">{icon}</span>
       ) : null}
-      {children && <span>{children}</span>}
+      {/* Le span doit rester un conteneur flex : sans cela, l'icône SVG
+          (display:block via le preflight Tailwind) passe à la ligne et le
+          texte se retrouve en dessous de l'icône au lieu d'être à côté. */}
+      {children && (
+        <span className="inline-flex items-center justify-center gap-2 min-w-0">
+          {children}
+        </span>
+      )}
     </button>
   );
 }

@@ -143,17 +143,29 @@ export default function FeesAssignmentPage() {
 
     setSubmitting(true);
     try {
+      // replace=true : la liste cochée EST la liste complète voulue → les frais
+      // décochés (retirés) sont supprimés de la classe côté backend.
       const result = await assignFeesToClass({
         classId: selectedClassId,
         feeIds: Array.from(selectedFeeIds),
         academicYearId: selectedYearId || undefined,
+        replace: true,
       });
       const count = Array.isArray(result) ? result.length : 0;
-      toast.success(
-        isFr
-          ? `${count} frais assignés à la classe avec succès !`
-          : `${count} fees assigned to the class successfully!`
-      );
+      const removedCount = totalAssigned - totalSelected;
+      if (removedCount > 0) {
+        toast.success(
+          isFr
+            ? `${count} frais assignés · ${removedCount} retiré(s)`
+            : `${count} fees assigned · ${removedCount} removed`
+        );
+      } else {
+        toast.success(
+          isFr
+            ? `${count} frais assignés à la classe avec succès !`
+            : `${count} fees assigned to the class successfully!`
+        );
+      }
       // Reload assigned fees
       const assigned = await getClassAssignedFees(selectedClassId, selectedYearId || undefined);
       setAssignedFeeIds(new Set(assigned.map((a) => a.feeId)));
@@ -371,12 +383,16 @@ export default function FeesAssignmentPage() {
                         style={{ borderLeftColor: changed ? pc : "transparent", animationDelay: `${0.07 + idx * 0.02}s` }}
                         onClick={() => toggleFee(fee.id)}
                       >
-                        {/* Checkbox */}
+                        {/* Checkbox — visuel uniquement : toute la ligne (onClick
+                            ci-dessous) gère le toggle. Sans onChange, cliquer la
+                            case ne déclenche qu'UN seul toggle (évite le
+                            double-toggle qui annulait le clic). */}
                         <div className="w-10 flex justify-center">
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => toggleFee(fee.id)}
+                            readOnly
+                            tabIndex={-1}
                             className="w-4 h-4 rounded border-gray-300 cursor-pointer"
                             style={{ accentColor: pc }}
                           />

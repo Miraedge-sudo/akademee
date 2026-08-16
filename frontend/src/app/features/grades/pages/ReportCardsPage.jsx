@@ -14,6 +14,7 @@
  */
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "../../../core/hooks/useAuth";
+import { getPrimaryRole } from "../../../core/utils/roleUtils";
 import { useTheme } from "../../../core/hooks/useTheme";
 import { useTranslation } from "react-i18next";
 import { getClasses } from "../../../core/api/classService";
@@ -25,6 +26,7 @@ import {
   listReportCards,
   generateReportCard,
   getReportCardPayload,
+  updateReportCardRemark,
   publishReportCard,
   reviseReportCard,
   lockReportCard,
@@ -41,6 +43,7 @@ import {
 import toast from "react-hot-toast";
 import {
   FiFileText,
+  FiCheck,
   FiPlus,
   FiUsers,
   FiSearch,
@@ -151,6 +154,9 @@ export default function ReportCardsPage() {
   const [payloadModal, setPayloadModal] = useState(null); // report card object
   const [payloadData, setPayloadData] = useState(null);
   const [payloadLoading, setPayloadLoading] = useState(false);
+  const [remarkDraft, setRemarkDraft] = useState("");
+  const [remarkSaving, setRemarkSaving] = useState(false);
+  const canEditRemark = ["ADMIN", "TEACHER"].includes(getPrimaryRole(user?.roles));
 
   // ── Form states ──
   const [genStudentIds, setGenStudentIds] = useState([]); // multi-select students
@@ -581,10 +587,28 @@ export default function ReportCardsPage() {
     try {
       const data = await getReportCardPayload(reportCard.report_card_id);
       setPayloadData(data);
+      setRemarkDraft(data?.summary?.general_remark || "");
     } catch (err) {
       toast.error(err.response?.data?.message || (isFr ? "Échec du chargement" : "Failed to load payload"));
     }
     setPayloadLoading(false);
+  };
+
+  // ── Save the (auto or manual) general remark ──
+  const handleSaveRemark = async () => {
+    if (!payloadData) return;
+    setRemarkSaving(true);
+    try {
+      const updated = await updateReportCardRemark(payloadData.report_card_id, remarkDraft);
+      setPayloadData((prev) => prev
+        ? { ...prev, summary: { ...prev.summary, general_remark: updated?.general_remark || null } }
+        : prev);
+      toast.success(isFr ? "Appréciation enregistrée !" : "Remark saved!");
+    } catch (err) {
+      toast.error(err.response?.data?.message || (isFr ? "Échec de l'enregistrement" : "Failed to save remark"));
+    } finally {
+      setRemarkSaving(false);
+    }
   };
 
   // ── Publish ──
@@ -2271,6 +2295,38 @@ export default function ReportCardsPage() {
             <div id="report-card-payload">
               <BulletinTemplate payload={payloadData} schoolName={user?.schoolName} />
             </div>
+
+            {/* ── Appréciation générale — éditable (admin / prof) ── */}
+            {canEditRemark && (
+              <div className="no-print rounded-xl border border-surface-100 dark:border-surface-700 bg-surface-50 dark:bg-surface-900 p-4">
+                <label className="block text-[12px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">
+                  {isFr ? "Appréciation générale (modifiable)" : "General remark (editable)"}
+                </label>
+                <textarea
+                  value={remarkDraft}
+                  onChange={(e) => setRemarkDraft(e.target.value)}
+                  rows={2}
+                  className="w-full rounded-lg border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-800 dark:text-surface-100 text-sm p-3 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-colors resize-y"
+                  placeholder={isFr ? "Écrivez l'appréciation générale…" : "Write the general remark…"}
+                />
+                <div className="flex justify-end mt-2">
+                  <button
+                    onClick={handleSaveRemark}
+                    disabled={remarkSaving}
+                    className="h-9 px-4 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-[12px] font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {remarkSaving ? (
+                      <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    ) : (
+                      <FiCheck size={13} />
+                    )}
+                    {remarkSaving
+                      ? (isFr ? "Enregistrement…" : "Saving…")
+                      : (isFr ? "Enregistrer l'appréciation" : "Save remark")}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* ── Actions ── */}
             <div className="flex justify-end gap-2 no-print">

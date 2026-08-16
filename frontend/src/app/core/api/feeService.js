@@ -10,6 +10,22 @@ export async function getFees(params = {}) {
 }
 
 /**
+ * Archive a fee (hides it from the lists; keeps payment history intact)
+ */
+export async function archiveFee(id) {
+  const response = await api.post(`${API_ENDPOINTS.FINANCE.FEES}/${id}/archive`);
+  return response.data.data;
+}
+
+/**
+ * Restore an archived fee
+ */
+export async function unarchiveFee(id) {
+  const response = await api.post(`${API_ENDPOINTS.FINANCE.FEES}/${id}/unarchive`);
+  return response.data.data;
+}
+
+/**
  * Get a single fee by ID
  */
 export async function getFeeById(id) {

@@ -6,6 +6,8 @@ const express = require('express');
 const notificationController = require('../controllers/notification.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 const roleMiddleware = require('../middleware/role.middleware');
+const validateMiddleware = require('../middleware/validate.middleware');
+const { sendNotificationValidator } = require('../validators/notification.validator');
 
 const router = express.Router();
 
@@ -21,6 +23,8 @@ router.post(
   '/send',
   authMiddleware,
   roleMiddleware(['admin']),
+  sendNotificationValidator,
+  validateMiddleware,
   notificationController.sendNotification
 );
 

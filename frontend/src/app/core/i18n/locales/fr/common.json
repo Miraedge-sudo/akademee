@@ -2,6 +2,8 @@
   "navbar": {
     "dashboard": "Tableau de bord",
     "search": "Recherche rapide",
+    "notifications": "Notifications",
+    "unread": "non lue(s)",
     "profile": "Profil",
     "settings": "Paramètres généraux",
     "settingsGroup": "Paramètres",
@@ -25,6 +27,7 @@
     "attendance": "Présences",
     "finance": "Finance",
     "myClasses": "Mes Classes",
+    "myTimetable": "Mon emploi du temps",
     "gradeEntry": "Saisie des notes",
     "myGrades": "Mes Notes",
     "myAttendance": "Mes Présences",
@@ -44,6 +47,7 @@
     "academicYears": "Années scolaires",
     "periods": "Périodes",
     "sequences": "Séquences",
+    "timetable": "Emploi du temps",
     "subjectAssignment": "Affectation matières",
     "teacherAssignment": "Affectation enseignants",
     "fees": "Frais",
@@ -120,7 +124,7 @@
     "updateError": "Échec de la mise à jour de l'annonce",
     "deleteError": "Échec de la suppression de l'annonce",
     "publishError": "Échec du changement de statut de publication",
-    "showing": "Affichage de {from}–{to} sur {total}",
+    "showing": "Affichage de {{from}}–{{to}} sur {{total}}",
     "everyone": "Tout le monde",
     "teachers": "Enseignants",
     "students": "Élèves",
@@ -137,9 +141,9 @@
       "greetingMorning": "Bonjour",
       "greetingAfternoon": "Bon après-midi",
       "greetingEvening": "Bonsoir",
-      "classesToday": "Vous avez {count} cours aujourd'hui",
+      "classesToday": "Vous avez {{count}} cours aujourd'hui",
       "and": "et",
-      "pendingGrades": "{count} notes en attente de saisie",
+      "pendingGrades": "{{count}} notes en attente de saisie",
       "noPendingGrades": "aucune note en attente"
     },
     "statCards": {
@@ -172,7 +176,7 @@
     },
     "myClasses": {
       "title": "Mes Classes",
-      "subtitle": "Vous êtes assigné à {count} classe(s) — {students} élève(s) au total",
+      "subtitle": "Vous êtes assigné à {{count}} classe(s) — {{students}} élève(s) au total",
       "noClasses": "Aucune classe assignée",
       "noClassesDesc": "Vous n'avez pas encore été assigné à des classes. Contactez l'administration de votre école.",
       "refresh": "Actualiser",
@@ -198,11 +202,15 @@
     "schedule": {
       "title": "Emploi du temps du jour",
       "fullTimetable": "Voir tout",
-      "noClasses": "Aucun cours prévu aujourd'hui."
+      "noClasses": "Aucun cours prévu aujourd'hui.",
+      "notPublished": "Votre emploi du temps n'a pas encore été publié",
+      "notPublishedHint": "Il apparaîtra ici dès que l'administration l'aura configuré.",
+      "todayIs": "Aujourd'hui :"
     },
     "pendingTasks": {
       "title": "Tâches en attente",
-      "remaining": "restante(s)"
+      "remaining": "restante(s)",
+      "allDone": "Tout est à jour — aucune tâche en attente 🎉"
     },
     "performance": {
       "title": "Performances de la classe — Séquence 3",
@@ -228,7 +236,9 @@
       "title": "Évaluations à venir"
     },
     "notifications": {
-      "title": "Notifications"
+      "title": "Notifications",
+      "empty": "Aucune notification",
+      "delete": "Supprimer"
     },
     "gradeEntry": {
       "title": "Saisie des notes",
@@ -259,7 +269,17 @@
       "statusOpen": "Ouverte",
       "statusClosed": "Fermée",
       "statusLocked": "Verrouillée",
-      "statusPending": "En attente"
+      "statusPending": "En attente",
+      "loadingGrades": "Chargement des notes…",
+      "loadError": "Échec du chargement de vos classes et matières",
+      "queueError": "Erreur lors de la mise en file d'attente. Veuillez réessayer.",
+      "saveFailFallback": "Échec de l'enregistrement des notes",
+      "queuedOffline": "Notes mises en attente — synchronisation automatique au retour en ligne",
+      "selectPeriodHint": "Sélectionnez une période et une séquence pour commencer la saisie des notes.",
+      "sequenceStartsOn": "La saisie débutera le {{date}}",
+      "sequenceEnded": "La période de saisie est terminée (fin le {{date}})",
+      "sequenceClosedStatus": "Cette séquence est « {{status}} ». Les notes ne peuvent être saisies que dans une séquence ouverte.",
+      "manualOpenInfo": "Ouverture manuelle par l'administration — la saisie est autorisée"
     }
   },
   "actions": {
@@ -387,7 +407,7 @@
     "statusUpdated": "Statut mis à jour avec succès !",
     "statusError": "Échec de la mise à jour du statut",
     "loadError": "Échec du chargement des demandes",
-    "showing": "Affichage de {from}–{to} sur {total}",
+    "showing": "Affichage de {{from}}–{{to}} sur {{total}}",
     "convertBtn": "Convertir en élève",
     "convertModalTitle": "Convertir la demande en élève",
     "convertModalDesc": "Créer un compte élève et l'inscrire dans une classe.",
@@ -409,7 +429,7 @@
   "classes": {
     "title": "Classes",
     "subtitle": "Gérer les niveaux et les classes",
-    "subtitleWithCount": "{count} classe(s) · {students} élève(s)",
+    "subtitleWithCount": "{{count}} classe(s) · {{students}} élève(s)",
     "newClass": "Nouvelle classe",
     "editClass": "Modifier la classe",
     "deleteClass": "Supprimer la classe",
@@ -508,7 +528,11 @@
     "assignBtn": "Assigner",
     "selectClass": "Sélectionner une classe *",
     "classPlaceholder": "Choisir une classe...",
-    "selectFees": "Sélectionner les frais *"
+    "selectFees": "Sélectionner les frais *",
+    "deleteBlockedTitle": "Ce frais ne peut pas être supprimé",
+    "deleteBlockedDesc": "Des élèves ont déjà payé ce frais : on ne peut pas le supprimer sans perdre l'historique des paiements.",
+    "archiveSuggestion": "Vous pouvez l'archiver à la place : il n'apparaîtra plus dans les listes, mais l'historique sera conservé.",
+    "archiveBtn": "Archiver ce frais"
   },
   "feesAssignment": {
     "title": "Assignation des frais",
@@ -539,7 +563,7 @@
     "selectAtLeastOne": "Sélectionnez au moins un frais",
     "pleaseSelectClass": "Veuillez sélectionner une classe",
     "loadError": "Échec du chargement",
-    "assignSuccess": "{count} frais assignés à la classe avec succès !",
+    "assignSuccess": "{{count}} frais assignés à la classe avec succès !",
     "assignFailed": "Échec de l'assignation"
   },
   "receipts": {
@@ -585,7 +609,7 @@
     "selectFeeError": "Sélectionnez un frais",
     "enterValidAmount": "Entrez un montant valide",
     "recordFailed": "Échec de l'enregistrement",
-    "recordSuccess": "Paiement de {amount} FCFA enregistré ! Réf : {ref}"
+    "recordSuccess": "Paiement de {{amount}} FCFA enregistré ! Réf : {{ref}}"
   },
   "student": {
     "grades": {
@@ -621,7 +645,17 @@
       "rate": "Taux",
       "records": "enregistrements",
       "noData": "Aucune donnée de présence disponible",
-      "loadError": "Échec du chargement"
+      "loadError": "Échec du chargement",
+      "history": "Historique des présences",
+      "historyDesc": "Tous vos jours enregistrés, du plus récent au plus ancien",
+      "day": "Jour",
+      "date": "Date",
+      "status": "Statut",
+      "noRecords": "Aucune présence enregistrée pour le moment",
+      "noRecordsDesc": "Vos présences apparaîtront ici dès que vos enseignants les auront marquées.",
+      "prevMonth": "Mois précédent",
+      "nextMonth": "Mois suivant",
+      "today": "Aujourd'hui"
     },
     "fees": {
       "title": "Mes Frais",

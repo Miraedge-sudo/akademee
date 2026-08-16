@@ -1,5 +1,6 @@
 const response = require('../utils/response');
 const subjectService = require('../services/subject.service');
+const classSubjectService = require('../services/classSubject.service');
 
 class SubjectController {
   async createSubject(req, res, next) {
@@ -30,9 +31,14 @@ class SubjectController {
   async getClassSubjects(req, res, next) {
     try {
       const schoolId = req.schoolId || req.user?.schoolId;
-      const { limit, offset } = req.query;
-      const result = await subjectService.listBySchool(schoolId, { limit, offset });
-      response.success(res, 'Subjects retrieved', result);
+      const { classId } = req.params;
+      if (!classId) {
+        return response.error(res, 'classId is required', null, 400);
+      }
+      // Matières réellement assignées à la classe, avec le coefficient
+      // renseigné dans class_subjects (pas le coefficient par défaut du sujet).
+      const result = await classSubjectService.listByClass(schoolId, classId);
+      response.success(res, 'Class subjects retrieved', result);
     } catch (error) {
       next(error);
     }

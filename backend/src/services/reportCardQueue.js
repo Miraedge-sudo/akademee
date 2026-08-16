@@ -387,8 +387,14 @@ function startWorker() {
   });
 
   worker.on('error', (err) => {
-    // BullMQ errors are expected (e.g. connection issues) — don't crash
-    logger.error(`[ReportCardQueue] Worker error:`, err.message);
+    // BullMQ errors are expected (e.g. connection issues) — don't crash.
+    // Log the FULL error (some Redis errors have an empty .message).
+    logger.error(`[ReportCardQueue] Worker error:`, {
+      name: err?.name || null,
+      code: err?.code || null,
+      message: err?.message || null,
+      stack: err?.stack || String(err),
+    });
   });
 
   logger.info(`[ReportCardQueue] Worker started (concurrency: ${concurrency})`);

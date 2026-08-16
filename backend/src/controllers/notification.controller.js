@@ -53,9 +53,17 @@ class NotificationController {
 
   async sendNotification(req, res, next) {
     try {
-      const { userId, title, message, type } = req.body;
+      // Diffusion : audience = user | all | role | class
+      const { audience = 'user', userId, role, classId, message, type } = req.body;
       const { schoolId } = req;
-      const result = await notificationService.send(schoolId, { userId, title, message, type });
+      const result = await notificationService.sendBroadcast(schoolId, {
+        audience,
+        userId,
+        role,
+        classId,
+        message,
+        type,
+      });
       response.success(res, 'Notification sent', result, 201);
     } catch (error) {
       next(error);

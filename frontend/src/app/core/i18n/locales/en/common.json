@@ -2,6 +2,8 @@
   "navbar": {
     "dashboard": "Dashboard",
     "search": "Quick Search",
+    "notifications": "Notifications",
+    "unread": "unread",
     "profile": "Profile",
     "settings": "General Settings",
     "settingsGroup": "Settings",
@@ -25,6 +27,7 @@
     "attendance": "Attendance",
     "finance": "Finance",
     "myClasses": "My Classes",
+    "myTimetable": "My Timetable",
     "gradeEntry": "Grade Entry",
     "myGrades": "My Grades",
     "myAttendance": "My Attendance",
@@ -44,6 +47,7 @@
     "academicYears": "Academic Years",
     "periods": "Periods",
     "sequences": "Sequences",
+    "timetable": "Timetable",
     "subjectAssignment": "Subject Assignment",
     "teacherAssignment": "Teacher Assignments",
     "fees": "Fees",
@@ -120,7 +124,7 @@
     "updateError": "Failed to update announcement",
     "deleteError": "Failed to delete announcement",
     "publishError": "Failed to toggle publish status",
-    "showing": "Showing {from}–{to} of {total}",
+    "showing": "Showing {{from}}–{{to}} of {{total}}",
     "everyone": "Everyone",
     "teachers": "Teachers",
     "students": "Students",
@@ -137,11 +141,11 @@
       "greetingMorning": "Good morning",
       "greetingAfternoon": "Good afternoon",
       "greetingEvening": "Good evening",
-      "classesToday": "You have {count} class today",
-      "classesToday_plural": "You have {count} classes today",
+      "classesToday": "You have {{count}} class today",
+      "classesToday_plural": "You have {{count}} classes today",
       "and": "and",
-      "pendingGrades": "{count} grade pending entry",
-      "pendingGrades_plural": "{count} grades pending entry",
+      "pendingGrades": "{{count}} grade pending entry",
+      "pendingGrades_plural": "{{count}} grades pending entry",
       "noPendingGrades": "no grades pending"
     },
     "statCards": {
@@ -174,8 +178,8 @@
     },
     "myClasses": {
       "title": "My Classes",
-      "subtitle": "You are assigned to {count} class — {students} total students",
-      "subtitle_plural": "You are assigned to {count} classes — {students} total students",
+      "subtitle": "You are assigned to {{count}} class — {{students}} total students",
+      "subtitle_plural": "You are assigned to {{count}} classes — {{students}} total students",
       "noClasses": "No classes assigned",
       "noClassesDesc": "You haven't been assigned to any classes yet. Contact your school administrator.",
       "refresh": "Refresh",
@@ -201,11 +205,15 @@
     "schedule": {
       "title": "Today's schedule",
       "fullTimetable": "Full timetable",
-      "noClasses": "No classes scheduled today."
+      "noClasses": "No classes scheduled today.",
+      "notPublished": "Your timetable has not been published yet",
+      "notPublishedHint": "It will appear here once the administration sets it up.",
+      "todayIs": "Today:"
     },
     "pendingTasks": {
       "title": "Pending tasks",
-      "remaining": "remaining"
+      "remaining": "remaining",
+      "allDone": "All caught up — no pending tasks 🎉"
     },
     "performance": {
       "title": "Class performance — Sequence 3",
@@ -231,7 +239,9 @@
       "title": "Upcoming assessments"
     },
     "notifications": {
-      "title": "Notifications"
+      "title": "Notifications",
+      "empty": "No notifications",
+      "delete": "Delete"
     },
     "gradeEntry": {
       "title": "Grade Entry",
@@ -262,7 +272,17 @@
       "statusOpen": "Open",
       "statusClosed": "Closed",
       "statusLocked": "Locked",
-      "statusPending": "Pending"
+      "statusPending": "Pending",
+      "loadingGrades": "Loading grades…",
+      "loadError": "Failed to load your classes and subjects",
+      "queueError": "Error while queuing the grades. Please try again.",
+      "saveFailFallback": "Failed to save grades",
+      "queuedOffline": "Grades queued — they will sync automatically when you're back online",
+      "selectPeriodHint": "Select a period and a sequence to start entering grades.",
+      "sequenceStartsOn": "Grade entry starts on {{date}}",
+      "sequenceEnded": "The entry period is over (ended on {{date}})",
+      "sequenceClosedStatus": "This sequence is « {{status}} ». Grades can only be entered in an open sequence.",
+      "manualOpenInfo": "Manually opened by the administration — entry is allowed"
     }
   },
   "actions": {
@@ -390,7 +410,7 @@
     "statusUpdated": "Status updated successfully!",
     "statusError": "Failed to update status",
     "loadError": "Failed to load inquiries",
-    "showing": "Showing {from}–{to} of {total}",
+    "showing": "Showing {{from}}–{{to}} of {{total}}",
     "convertBtn": "Convert to Student",
     "convertModalTitle": "Convert Inquiry to Student",
     "convertModalDesc": "Create a student account and enroll them in a class.",
@@ -412,7 +432,7 @@
   "classes": {
     "title": "Classes",
     "subtitle": "Manage class levels and sections",
-    "subtitleWithCount": "{count} classes · {students} students",
+    "subtitleWithCount": "{{count}} classes · {{students}} students",
     "newClass": "New class",
     "editClass": "Edit class",
     "deleteClass": "Delete class",
@@ -511,7 +531,11 @@
     "assignBtn": "Assign",
     "selectClass": "Select a class *",
     "classPlaceholder": "Choose a class...",
-    "selectFees": "Select fees *"
+    "selectFees": "Select fees *",
+    "deleteBlockedTitle": "This fee cannot be deleted",
+    "deleteBlockedDesc": "Students have already paid this fee, so it cannot be deleted without losing the payment history.",
+    "archiveSuggestion": "You can archive it instead: it will no longer appear in the lists, but the history will be kept.",
+    "archiveBtn": "Archive this fee"
   },
   "feesAssignment": {
     "title": "Fee Assignment",
@@ -542,7 +566,7 @@
     "selectAtLeastOne": "Select at least one fee",
     "pleaseSelectClass": "Please select a class",
     "loadError": "Failed to load data",
-    "assignSuccess": "{count} fees assigned to the class successfully!",
+    "assignSuccess": "{{count}} fees assigned to the class successfully!",
     "assignFailed": "Failed to assign fees"
   },
   "receipts": {
@@ -588,7 +612,7 @@
     "selectFeeError": "Select a fee",
     "enterValidAmount": "Enter a valid amount",
     "recordFailed": "Failed to record payment",
-    "recordSuccess": "Payment of {amount} FCFA recorded! Ref: {ref}"
+    "recordSuccess": "Payment of {{amount}} FCFA recorded! Ref: {{ref}}"
   },
   "student": {
     "grades": {
@@ -624,7 +648,17 @@
       "rate": "Rate",
       "records": "records",
       "noData": "No attendance data available",
-      "loadError": "Failed to load"
+      "loadError": "Failed to load",
+      "history": "Attendance History",
+      "historyDesc": "All your recorded days, most recent first",
+      "day": "Day",
+      "date": "Date",
+      "status": "Status",
+      "noRecords": "No attendance records yet",
+      "noRecordsDesc": "Your attendance will appear here once your teachers have marked it.",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "today": "Today"
     },
     "fees": {
       "title": "My Fees",

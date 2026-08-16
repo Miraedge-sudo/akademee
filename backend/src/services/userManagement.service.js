@@ -68,7 +68,7 @@ class UserManagementService {
         ${!includeInactive ? sql`AND u.is_active = true` : sql``}
         ${yearFilter}
         ${searchTerm ? sql`AND (LOWER(u.first_name) LIKE ${searchTerm} OR LOWER(u.last_name) LIKE ${searchTerm} OR LOWER(u.email) LIKE ${searchTerm})` : sql``}
-        ${role ? sql`AND r.role_code = ${role}` : sql``}
+        ${role ? sql`AND UPPER(r.role_code) = UPPER(${role})` : sql``}
       GROUP BY u.user_id
       ORDER BY u.created_at DESC
       LIMIT ${limit} OFFSET ${offset}

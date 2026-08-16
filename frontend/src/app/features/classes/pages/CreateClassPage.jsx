@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useContext } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../core/hooks/useTheme";
 import { useAuth } from "../../../core/hooks/useAuth";
+import { YearContext } from "../../../core/context/YearContext";
 import {
   FiCheck,
   FiChevronLeft,
@@ -32,6 +33,7 @@ export default function CreateClassPage() {
   const navigate = useNavigate();
   const { primaryColor } = useTheme();
   const { user } = useAuth();
+  const { selectedYearId } = useContext(YearContext);
   const isFr = i18n.language === "fr";
   const pc = primaryColor || "#085041";
   const isEditing = !!id;
@@ -175,6 +177,8 @@ export default function CreateClassPage() {
         capacity: form.capacity,
         classTeacherId: form.classTeacherId || null,
         educationSystemId: form.educationSystemId || null,
+        // Toute classe créée est rattachée à l'année scolaire active (sélectionnée)
+        academicYearId: selectedYearId || null,
       };
 
       // Convert empty strings to null for optional fields

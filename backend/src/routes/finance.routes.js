@@ -49,6 +49,22 @@ router.delete(
 );
 
 router.post(
+  '/fees/:id/archive',
+  authMiddleware,
+  roleMiddleware(['admin']),
+  auditMiddleware('ARCHIVE', 'fees'),
+  feeController.archiveFeeStructure
+);
+
+router.post(
+  '/fees/:id/unarchive',
+  authMiddleware,
+  roleMiddleware(['admin']),
+  auditMiddleware('ARCHIVE', 'fees'),
+  feeController.unarchiveFeeStructure
+);
+
+router.post(
   '/fees/assign',
   authMiddleware,
   roleMiddleware(['admin']),

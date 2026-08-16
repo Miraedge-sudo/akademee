@@ -25,9 +25,13 @@ import {
   FiChevronRight,
   FiXCircle,
   FiUsers,
+  FiArchive,
+  FiRotateCcw,
 } from "react-icons/fi";
-import { getFees, createFee, updateFee, deleteFee, assignFeesToClass } from "../../../core/api/feeService";
+import { getFees, createFee, updateFee, deleteFee, assignFeesToClass, archiveFee, unarchiveFee } from "../../../core/api/feeService";
 import { getClasses } from "../../../core/api/classService";
+import { getAcademicYears } from "../../../core/api/academicYearService";
+import { getClassAssignedFees } from "../../../core/api/feeCalculationService";
 
 const INITIAL_FORM = {
   name: "",
@@ -155,33 +159,67 @@ function FormModal({ isOpen, onClose, onSubmit, initialData, loading, t }) {
   );
 }
 
-function DeleteModal({ isOpen, onClose, onConfirm, loading, feeName, t }) {
+function DeleteModal({ isOpen, onClose, onConfirm, onArchive, loading, feeName, t, blocked }) {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
-            <FiTrash2 className="w-6 h-6 text-red-500" />
-          </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">{t("fees.deleteTitle") || "Supprimer le frais"}</h3>
-          <p className="text-sm text-gray-500 mb-1">
-            {t("fees.deleteDesc") || "Êtes-vous sûr de vouloir supprimer ce frais ? Cette action est irréversible."}
-          </p>
-          <p className="text-sm font-medium text-gray-700 mb-6">&ldquo;{feeName}&rdquo;</p>
-          <div className="flex items-center justify-center gap-3">
-            <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-all cursor-pointer">
-              {t("actions.cancel") || "Annuler"}
-            </button>
-            <button
-              onClick={onConfirm}
-              disabled={loading}
-              className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-2"
-            >
-              {loading ? <FiRefreshCw className="w-4 h-4 animate-spin" /> : <FiTrash2 className="w-4 h-4" />}
-              {t("fees.deleteBtn") || "Supprimer"}
-            </button>
-          </div>
+          {blocked ? (
+            <>
+              <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
+                <FiArchive className="w-6 h-6 text-amber-500" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                {t("fees.deleteBlockedTitle") || "Ce frais ne peut pas être supprimé"}
+              </h3>
+              <p className="text-sm text-gray-500 mb-1">
+                {t("fees.deleteBlockedDesc") || "Des élèves ont déjà payé ce frais : on ne peut pas le supprimer sans perdre l'historique des paiements."}
+              </p>
+              <p className="text-sm text-gray-500 mb-6">
+                {t("fees.archiveSuggestion") || "Vous pouvez l'archiver : il n'apparaîtra plus dans les listes, mais l'historique sera conservé."}
+              </p>
+              <p className="text-sm font-medium text-gray-700 mb-6">&ldquo;{feeName}&rdquo;</p>
+              <div className="flex items-center justify-center gap-3">
+                <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-all cursor-pointer">
+                  {t("actions.cancel") || "Annuler"}
+                </button>
+                <button
+                  onClick={onArchive}
+                  disabled={loading}
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-2"
+                  style={{ background: "#F59E0B" }}
+                >
+                  {loading ? <FiRefreshCw className="w-4 h-4 animate-spin" /> : <FiArchive className="w-4 h-4" />}
+                  {t("fees.archiveBtn") || "Archiver ce frais"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                <FiTrash2 className="w-6 h-6 text-red-500" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">{t("fees.deleteTitle") || "Supprimer le frais"}</h3>
+              <p className="text-sm text-gray-500 mb-1">
+                {t("fees.deleteDesc") || "Êtes-vous sûr de vouloir supprimer ce frais ? Cette action est irréversible."}
+              </p>
+              <p className="text-sm font-medium text-gray-700 mb-6">&ldquo;{feeName}&rdquo;</p>
+              <div className="flex items-center justify-center gap-3">
+                <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-all cursor-pointer">
+                  {t("actions.cancel") || "Annuler"}
+                </button>
+                <button
+                  onClick={onConfirm}
+                  disabled={loading}
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-2"
+                >
+                  {loading ? <FiRefreshCw className="w-4 h-4 animate-spin" /> : <FiTrash2 className="w-4 h-4" />}
+                  {t("fees.deleteBtn") || "Supprimer"}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -189,19 +227,65 @@ function DeleteModal({ isOpen, onClose, onConfirm, loading, feeName, t }) {
 }
 
 function AssignModal({ isOpen, onClose, onSubmit, loading, fees, t }) {
+  const { i18n } = useTranslation("common");
+  const isFr = i18n.language === "fr";
   const [classes, setClasses] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedFeeIds, setSelectedFeeIds] = useState([]);
+  const [assignedFeeIds, setAssignedFeeIds] = useState([]); // déjà assignés à la classe
+  const [loadingAssigned, setLoadingAssigned] = useState(false);
+  const [selectedYearId, setSelectedYearId] = useState("");
+  const [academicYears, setAcademicYears] = useState([]);
 
   useEffect(() => {
     if (isOpen) {
       getClasses({ limit: 200 })
         .then((data) => setClasses(data?.classes || []))
         .catch(() => setClasses([]));
+      getAcademicYears()
+        .then((data) => {
+          const years = Array.isArray(data) ? data : data?.years || [];
+          setAcademicYears(years);
+          const current = years.find((y) => y.isCurrent);
+          if (current) setSelectedYearId(current.id);
+        })
+        .catch(() => setAcademicYears([]));
       setSelectedClassId("");
       setSelectedFeeIds([]);
+      setAssignedFeeIds([]);
+      setSelectedYearId("");
     }
   }, [isOpen]);
+
+  // ── Quand une classe est choisie : charge les frais déjà assignés ──
+  // pour les pré-cocher et les signaler clairement à l'utilisateur.
+  useEffect(() => {
+    if (!isOpen || !selectedClassId) {
+      setAssignedFeeIds([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingAssigned(true);
+    getClassAssignedFees(selectedClassId, selectedYearId || undefined)
+      .then((assigned) => {
+        if (cancelled) return;
+        const ids = assigned.map((a) => a.feeId);
+        setAssignedFeeIds(ids);
+        // Pré-coche les frais déjà assignés (on les garde cochés par défaut)
+        setSelectedFeeIds((prev) => {
+          const merged = new Set(prev);
+          ids.forEach((id) => merged.add(id));
+          return Array.from(merged);
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setAssignedFeeIds([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingAssigned(false);
+      });
+    return () => { cancelled = true; };
+  }, [isOpen, selectedClassId, selectedYearId]);
 
   const toggleFee = (feeId) => {
     setSelectedFeeIds((prev) =>
@@ -213,7 +297,9 @@ function AssignModal({ isOpen, onClose, onSubmit, loading, fees, t }) {
     e.preventDefault();
     if (!selectedClassId) return toast.error(t("fees.selectClassRequired") || "Veuillez sélectionner une classe");
     if (selectedFeeIds.length === 0) return toast.error(t("fees.selectFeesRequired") || "Veuillez sélectionner au moins un frais");
-    onSubmit({ classId: selectedClassId, feeIds: selectedFeeIds });
+    // replace=true : la liste cochée EST la liste complète voulue → décocher un
+    // frais déjà assigné le retire réellement de la classe.
+    onSubmit({ classId: selectedClassId, feeIds: selectedFeeIds, academicYearId: selectedYearId || undefined, replace: true });
   };
 
   if (!isOpen) return null;
@@ -238,6 +324,21 @@ function AssignModal({ isOpen, onClose, onSubmit, loading, fees, t }) {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">{t("fees.selectYear") || "Année académique"}</label>
+            <select
+              value={selectedYearId}
+              onChange={(e) => setSelectedYearId(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-teal-700 focus:ring-2 focus:ring-teal-100 outline-none transition-all text-sm"
+            >
+              {academicYears.map((y) => (
+                <option key={y.id} value={y.id}>
+                  {y.name || y.label}{y.isCurrent ? ` (${t("fees.currentYear") || "Actuelle"})` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">{t("fees.selectClass") || "Sélectionner une classe *"}</label>
             <select
               value={selectedClassId}
@@ -252,10 +353,22 @@ function AssignModal({ isOpen, onClose, onSubmit, loading, fees, t }) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">{t("fees.selectFees") || "Sélectionner les frais *"}</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm font-semibold text-gray-700">{t("fees.selectFees") || "Sélectionner les frais *"}</label>
+              {selectedClassId && (
+                <span className="text-[11px] text-gray-400">
+                  {loadingAssigned
+                    ? (isFr ? "Chargement..." : "Loading...")
+                    : (isFr
+                        ? `${assignedFeeIds.length} déjà assigné(s) à cette classe`
+                        : `${assignedFeeIds.length} already assigned to this class`)}
+                </span>
+              )}
+            </div>
             <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-2">
               {fees.map((fee) => {
                 const isSelected = selectedFeeIds.includes(fee.id);
+                const isAssigned = assignedFeeIds.includes(fee.id);
                 return (
                   <label
                     key={fee.id}
@@ -270,7 +383,17 @@ function AssignModal({ isOpen, onClose, onSubmit, loading, fees, t }) {
                       className="w-4 h-4 rounded border-gray-300 text-teal-700 focus:ring-teal-500"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900">{fee.name}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">{fee.name}</span>
+                        {isAssigned && (
+                          <span
+                            className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            style={{ background: hexToRgba("#085041", 0.1), color: "#085041" }}
+                          >
+                            {isFr ? "Déjà assigné" : "Already assigned"}
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-gray-500">{Number(fee.amount).toLocaleString('en')} FCFA</div>
                     </div>
                     <span className="text-xs font-semibold" style={{ color: "#085041" }}>
@@ -280,6 +403,13 @@ function AssignModal({ isOpen, onClose, onSubmit, loading, fees, t }) {
                 );
               })}
             </div>
+            {selectedClassId && assignedFeeIds.length > 0 && (
+              <p className="text-[11px] text-gray-400 mt-1.5">
+                {isFr
+                  ? "Les frais déjà assignés sont pré-cochés. Décochez un frais pour le retirer de la classe."
+                  : "Already assigned fees are pre-checked. Uncheck a fee to remove it from the class."}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
@@ -314,12 +444,17 @@ export default function FeesManagementPage() {
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [deleteItem, setDeleteItem] = useState(null);
+  const [deleteBlocked, setDeleteBlocked] = useState(false);
+  const [view, setView] = useState("active"); // "active" | "archived"
   const [showAssign, setShowAssign] = useState(false);
 
   const fetchFees = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getFees({ limit: 500 });
+      // includeArchived: on charge tout pour pouvoir afficher l'onglet
+      // « Archivés » et restaurer un frais. Les listes d'assignation, elles,
+      // ne reçoivent que les frais actifs (voir activeFees ci-dessous).
+      const data = await getFees({ limit: 500, includeArchived: true });
       setFees(data?.fees || []);
     } catch {
       toast.error(isFr ? "Échec du chargement des frais" : "Failed to load fees");
@@ -369,8 +504,44 @@ export default function FeesManagementPage() {
       toast.success(isFr ? "Frais supprimé !" : "Fee deleted!");
       setDeleteItem(null);
       fetchFees();
-    } catch {
-      toast.error(isFr ? "Échec de la suppression" : "Failed to delete fee");
+    } catch (err) {
+      // 409 = le frais a été payé par des élèves : on ne peut pas le supprimer,
+      // la modale bascule en mode « archivage » (message + action Archiver).
+      if (err?.response?.status === 409) {
+        setDeleteBlocked(true);
+      } else {
+        toast.error(err?.response?.data?.message || (isFr ? "Échec de la suppression" : "Failed to delete fee"));
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleArchive = async (fee) => {
+    if (!fee) return;
+    setSubmitting(true);
+    try {
+      await archiveFee(fee.id);
+      toast.success(isFr ? "Frais archivé !" : "Fee archived!");
+      setDeleteItem(null);
+      setDeleteBlocked(false);
+      fetchFees();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || (isFr ? "Échec de l'archivage" : "Failed to archive fee"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRestore = async (fee) => {
+    if (!fee) return;
+    setSubmitting(true);
+    try {
+      await unarchiveFee(fee.id);
+      toast.success(isFr ? "Frais restauré !" : "Fee restored!");
+      fetchFees();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || (isFr ? "Échec de la restauration" : "Failed to restore fee"));
     } finally {
       setSubmitting(false);
     }
@@ -389,7 +560,13 @@ export default function FeesManagementPage() {
     }
   };
 
-  const filtered = fees.filter((f) =>
+  // Onglet actif vs archivé. Les frais archivés n'apparaissent plus dans les
+  // listes d'assignation (modale + page dédiée) — seulement dans l'onglet
+  // « Archivés » de cette page, où on peut les restaurer.
+  const activeFees = fees.filter((f) => !f.isArchived);
+  const archivedFees = fees.filter((f) => f.isArchived);
+  const visibleFees = view === "archived" ? archivedFees : activeFees;
+  const filtered = visibleFees.filter((f) =>
     !search || f.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -446,7 +623,7 @@ export default function FeesManagementPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-6">
-        {/* Search */}
+        {/* Search + onglet actif/archivé */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
           <div className="flex items-center gap-3">
             <div className="relative flex-1 min-w-[200px]">
@@ -459,6 +636,28 @@ export default function FeesManagementPage() {
                 className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 focus:border-teal-700 focus:ring-2 focus:ring-teal-100 outline-none text-sm"
               />
             </div>
+            <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => setView("active")}
+                className={`px-3 py-2 text-xs font-semibold transition-colors cursor-pointer ${
+                  view === "active" ? "text-white" : "text-gray-500 hover:bg-gray-50"
+                }`}
+                style={view === "active" ? { background: "#085041" } : {}}
+              >
+                {isFr ? "Actifs" : "Active"}
+              </button>
+              <button
+                onClick={() => setView("archived")}
+                className={`px-3 py-2 text-xs font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
+                  view === "archived" ? "text-white" : "text-gray-500 hover:bg-gray-50"
+                }`}
+                style={view === "archived" ? { background: "#085041" } : {}}
+              >
+                <FiArchive className="w-3.5 h-3.5" />
+                {isFr ? "Archivés" : "Archived"}
+                {archivedFees.length > 0 && <span className="opacity-80">({archivedFees.length})</span>}
+              </button>
+            </div>
             <button
               onClick={fetchFees}
               className="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors cursor-pointer"
@@ -469,12 +668,12 @@ export default function FeesManagementPage() {
         </div>
 
         {/* Stats cards */}
-        {!loading && fees.length > 0 && (
+        {!loading && visibleFees.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             {[
-              { label: isFr ? "Total frais" : "Total Fees", value: fees.length, color: "#3B82F6" },
-              { label: isFr ? "Montant total" : "Total Amount", value: `${fees.reduce((s, f) => s + Number(f.amount || 0), 0).toLocaleString('en')} FCFA`, color: "#085041" },
-              { label: isFr ? "Moyenne" : "Average", value: `${Math.round(fees.reduce((s, f) => s + Number(f.amount || 0), 0) / fees.length).toLocaleString('en')} FCFA`, color: "#8B5CF6" },
+              { label: view === "archived" ? (isFr ? "Total archivés" : "Total Archived") : (isFr ? "Total frais" : "Total Fees"), value: visibleFees.length, color: "#3B82F6" },
+              { label: isFr ? "Montant total" : "Total Amount", value: `${visibleFees.reduce((s, f) => s + Number(f.amount || 0), 0).toLocaleString('en')} FCFA`, color: "#085041" },
+              { label: isFr ? "Moyenne" : "Average", value: `${Math.round(visibleFees.reduce((s, f) => s + Number(f.amount || 0), 0) / Math.max(1, visibleFees.length)).toLocaleString('en')} FCFA`, color: "#8B5CF6" },
               { label: isFr ? "Filtrés" : "Filtered", value: filtered.length, color: "#F59E0B" },
             ].map((stat, idx) => (
               <div key={idx} className="fm-fade bg-white rounded-xl border border-gray-200 p-4 shadow-sm" style={{ animationDelay: `${0.02 * idx}s` }}>
@@ -494,17 +693,23 @@ export default function FeesManagementPage() {
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">
               <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
-                <FiDollarSign className="w-8 h-8 text-gray-300" />
+                {view === "archived" ? <FiArchive className="w-8 h-8 text-gray-300" /> : <FiDollarSign className="w-8 h-8 text-gray-300" />}
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                {search ? (isFr ? "Aucun résultat" : "No results") : (isFr ? "Aucun frais" : "No fees")}
+                {search
+                  ? (isFr ? "Aucun résultat" : "No results")
+                  : (view === "archived"
+                      ? (isFr ? "Aucun frais archivé" : "No archived fees")
+                      : (isFr ? "Aucun frais" : "No fees"))}
               </h3>
               <p className="text-sm text-gray-500 mb-6">
                 {search
                   ? (isFr ? "Aucun frais ne correspond à votre recherche" : "No fees match your search")
-                  : (isFr ? "Créez votre premier frais de scolarité" : "Create your first school fee")}
+                  : (view === "archived"
+                      ? (isFr ? "Les frais que vous archivez apparaîtront ici" : "Fees you archive will appear here")
+                      : (isFr ? "Créez votre premier frais de scolarité" : "Create your first school fee"))}
               </p>
-              {!search && (
+              {!search && view === "active" && (
                 <button
                   onClick={() => { setEditItem(null); setShowForm(true); }}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-all cursor-pointer"
@@ -557,6 +762,25 @@ export default function FeesManagementPage() {
                   </div>
 
                   <div className="flex items-center gap-1.5 md:justify-end md:w-24">
+                    {fee.isArchived ? (
+                      <button
+                        onClick={() => handleRestore(fee)}
+                        disabled={submitting}
+                        className="w-9 h-9 rounded-lg hover:bg-amber-50 text-amber-600 flex items-center justify-center transition-colors cursor-pointer"
+                        title={isFr ? "Restaurer" : "Restore"}
+                      >
+                        <FiRotateCcw className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleArchive(fee)}
+                        disabled={submitting}
+                        className="w-9 h-9 rounded-lg hover:bg-amber-50 text-amber-600 flex items-center justify-center transition-colors cursor-pointer"
+                        title={isFr ? "Archiver" : "Archive"}
+                      >
+                        <FiArchive className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => { setEditItem(fee); setShowForm(true); }}
                       className="w-9 h-9 rounded-lg hover:bg-teal-50 flex items-center justify-center transition-colors cursor-pointer"
@@ -566,7 +790,7 @@ export default function FeesManagementPage() {
                       <FiEdit2 className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => setDeleteItem(fee)}
+                      onClick={() => { setDeleteBlocked(false); setDeleteItem(fee); }}
                       className="w-9 h-9 rounded-lg hover:bg-red-50 text-red-500 flex items-center justify-center transition-colors cursor-pointer"
                       title={isFr ? "Supprimer" : "Delete"}
                     >
@@ -591,10 +815,12 @@ export default function FeesManagementPage() {
       />
       <DeleteModal
         isOpen={!!deleteItem}
-        onClose={() => setDeleteItem(null)}
+        onClose={() => { setDeleteItem(null); setDeleteBlocked(false); }}
         onConfirm={handleDelete}
+        onArchive={() => handleArchive(deleteItem)}
         loading={submitting}
         feeName={deleteItem?.name || ""}
+        blocked={deleteBlocked}
         t={t}
       />
       <AssignModal
@@ -602,7 +828,7 @@ export default function FeesManagementPage() {
         onClose={() => setShowAssign(false)}
         onSubmit={handleAssign}
         loading={submitting}
-        fees={fees}
+        fees={activeFees}
         t={t}
       />
     </div>

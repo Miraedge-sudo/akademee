@@ -4,6 +4,7 @@ import { useAuth } from '../core/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { getPrimaryRole } from '../core/utils/roleUtils';
 import ThemeLangToggles from './ThemeLangToggles';
+import NotificationBell from './NotificationBell';
 import InstallPWAButton from '../components/offline/InstallPWAButton';
 import { ROLES } from '../core/constants/roles';
 import { buildSubdomainUrl } from '../core/utils/subdomainHelper';
@@ -128,16 +129,7 @@ export default function Navbar({ onToggleSidebar }) {
       <InstallPWAButton />
 
       {/* Notifications */}
-      <button
-        aria-label="Notifications"
-        className="relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-md text-surface-500 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors shrink-0"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        </svg>
-        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-white dark:border-surface-800" />
-      </button>
+      <NotificationBell />
 
       <div className="hidden md:block w-px h-5 bg-surface-200 dark:bg-surface-600 shrink-0" />
 

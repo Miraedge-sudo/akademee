@@ -199,7 +199,7 @@ const QUICK_ACTIONS = [
     label: 'Record Payment',
     labelFr: 'Enregistrer Paiement',
     icon: FiCreditCard,
-    path: '/dashboard/finance',
+    path: '/dashboard/payments',
     color: 'bg-amber-100 dark:bg-amber-900/30',
     iconColor: 'text-amber-600 dark:text-amber-400',
   },

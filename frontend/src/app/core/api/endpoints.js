@@ -282,6 +282,7 @@ export const API_ENDPOINTS = {
     CREATE: "/api/v1/report-cards",
     BATCH: "/api/v1/report-cards/batch",
     PAYLOAD: (id) => `/api/v1/report-cards/${id}/payload`,
+    REMARK: (id) => `/api/v1/report-cards/${id}/remark`,
     PUBLISH: (id) => `/api/v1/report-cards/${id}/publish`,
     REVISE: (id) => `/api/v1/report-cards/${id}/revise`,
     LOCK: (id) => `/api/v1/report-cards/${id}/lock`,
@@ -302,6 +303,22 @@ export const API_ENDPOINTS = {
     CALC_SUBJECT_AVG: "/api/v1/calculations/subject-average",
     CALC_PERIOD_AVG: "/api/v1/calculations/period-average",
     CALC_COHORT_RANKS: "/api/v1/calculations/cohort-ranks",
+  },
+
+  // Timetable (emploi du temps)
+  TIMETABLE: {
+    PERIODS: "/api/timetable/periods",
+    PERIOD: (id) => `/api/timetable/periods/${id}`,
+    PERIODS_BULK: "/api/timetable/periods/bulk",
+    ROOMS: "/api/timetable/rooms",
+    ROOM: (id) => `/api/timetable/rooms/${id}`,
+    ENTRIES: "/api/timetable/entries",
+    ENTRY: (id) => `/api/timetable/entries/${id}`,
+    CLASS_ENTRIES: (classId) => `/api/timetable/classes/${classId}/entries`,
+    UNAVAILABILITIES: "/api/timetable/unavailabilities",
+    UNAVAILABILITY: (id) => `/api/timetable/unavailabilities/${id}`,
+    GRID: "/api/timetable/grid",
+    TODAY: "/api/timetable/today",
   },
 
   // University Modules (Faculties, Departments, LMD Programs, Research, Publications)
