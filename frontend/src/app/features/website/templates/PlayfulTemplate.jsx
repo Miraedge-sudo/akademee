@@ -381,7 +381,7 @@ export default function PlayfulTemplate({ school }) {
                 className="playful-btn h-9 px-5 rounded-full text-[13px] font-bold text-white no-underline inline-flex items-center gap-1.5 shadow-md"
                 style={{ background: pc, boxShadow: `0 4px 12px ${pcm}` }}
               >
-                <Icon path={PATHS.login} className="w-3.5 h-3.5" /> {t(TRANSLATIONS.nav.portal)}
+                <Icon path={PATHS.login} className="w-3.5 h-3.5" /> {t(TRANSLATIONS.nav.login)}
               </a>
             </div>
 
@@ -413,12 +413,18 @@ export default function PlayfulTemplate({ school }) {
             {t(TRANSLATIONS.nav[item] || { en: item.charAt(0).toUpperCase() + item.slice(1), fr: item.charAt(0).toUpperCase() + item.slice(1) })}
           </a>
         ))}
+        {/* Theme + language toggles (mobile) */}
+        <div className="flex items-center justify-center gap-3 mt-6">
+          <ThemeToggle variant={isDark ? "dark" : "light"} />
+          <LanguageToggle lang={lang} isBilingual={isBilingual} onToggle={toggleLang} variant={isDark ? "dark" : "light"} />
+        </div>
         <a
           href="/login"
-          className="playful-btn mt-6 h-12 flex items-center justify-center rounded-full text-[16px] font-bold text-white no-underline shadow-lg"
+          onClick={() => setMobileOpen(false)}
+          className="playful-btn mt-4 h-12 flex items-center justify-center rounded-full text-[16px] font-bold text-white no-underline shadow-lg"
           style={{ background: pc }}
         >
-          <Icon path={PATHS.login} className="w-5 h-5 mr-2" /> {t(TRANSLATIONS.nav.studentPortal)}
+          <Icon path={PATHS.login} className="w-5 h-5 mr-2" /> {t(TRANSLATIONS.nav.login)}
         </a>
       </div>
 
@@ -921,7 +927,7 @@ export default function PlayfulTemplate({ school }) {
             </div>
             {[
               { title: t(TRANSLATIONS.footer.navigate), links: [{ label: t(TRANSLATIONS.nav.about), href: "#about" }, { label: t(TRANSLATIONS.nav.classes), href: "#classes" }, { label: t(TRANSLATIONS.nav.gallery), href: "#gallery" }, { label: t(TRANSLATIONS.nav.contact), href: "#contact" }] },
-              { title: t(TRANSLATIONS.footer.forYou), links: [{ label: t(TRANSLATIONS.nav.studentPortal), href: "/login" }, { label: t(TRANSLATIONS.nav.parentPortal), href: "/login" }, { label: t(TRANSLATIONS.footer.fees), href: "#" }] },
+              { title: t(TRANSLATIONS.footer.forYou), links: [{ label: t(TRANSLATIONS.nav.login), href: "/login" }, { label: t(TRANSLATIONS.footer.fees), href: "#" }] },
               { title: t(TRANSLATIONS.footer.info), links: [{ label: t(TRANSLATIONS.footer.results), href: "#academics" }, { label: t(TRANSLATIONS.footer.admissions), href: "#contact" }, { label: t(TRANSLATIONS.footer.calendar), href: "#" }] },
             ].map((col, i) => (
               <div key={i}>

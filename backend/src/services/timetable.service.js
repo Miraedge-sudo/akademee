@@ -672,12 +672,14 @@ class TimetableService {
       try {
         const teacherIds = [...new Set(inserted.map((r) => r.teacher_id).filter(Boolean))];
         const message = `Votre emploi du temps a été publié — la grille de la classe ${klass.name} est à jour.`;
+        const messageEn = `Your timetable has been published — the schedule for class ${klass.name} is up to date.`;
         for (const tid of teacherIds) {
           await notificationService.sendBroadcast(schoolId, {
             audience: 'user',
             userId: tid,
             type: 'system',
             message,
+            messageEn,
           });
         }
       } catch {

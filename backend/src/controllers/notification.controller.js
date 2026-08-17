@@ -54,7 +54,7 @@ class NotificationController {
   async sendNotification(req, res, next) {
     try {
       // Diffusion : audience = user | all | role | class
-      const { audience = 'user', userId, role, classId, message, type } = req.body;
+      const { audience = 'user', userId, role, classId, message, messageEn, type } = req.body;
       const { schoolId } = req;
       const result = await notificationService.sendBroadcast(schoolId, {
         audience,
@@ -62,6 +62,7 @@ class NotificationController {
         role,
         classId,
         message,
+        messageEn,
         type,
       });
       response.success(res, 'Notification sent', result, 201);

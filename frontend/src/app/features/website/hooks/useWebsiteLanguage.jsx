@@ -67,8 +67,8 @@ export function useWebsiteLanguage(educationalSystems = []) {
  * Language toggle button component.
  */
 export function LanguageToggle({ lang, isBilingual, onToggle, variant = "light" }) {
-  if (!isBilingual) return null;
-
+  // Toujours proposer la traduction FR/EN sur les sites vitrine, même pour
+  // les écoles monolingues (le visiteur peut consulter le site dans l'autre langue).
   const bg = variant === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)";
   const border = variant === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)";
   const textColor = variant === "dark" ? "#fff" : "#1a1a1a";

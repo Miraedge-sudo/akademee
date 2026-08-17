@@ -55,7 +55,7 @@ function timeAgo(iso, isFr) {
 
 export default function NotificationBell() {
   const { t, i18n } = useTranslation("common");
-  const isFr = i18n.language === "fr";
+  const isFr = i18n.language.startsWith("fr");
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -119,7 +119,7 @@ export default function NotificationBell() {
       <button
         onClick={toggle}
         aria-label={t("navbar.notifications", "Notifications")}
-        className="relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-md text-surface-500 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors shrink-0"
+        className="relative w-9 h-9 flex items-center justify-center rounded-md text-surface-500 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors shrink-0"
       >
         <svg
           viewBox="0 0 24 24"
@@ -141,7 +141,7 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-[340px] sm:w-[380px] bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-600 rounded-lg shadow-xl z-50 overflow-hidden">
+        <div className="fixed inset-x-2 top-14 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-1.5 sm:w-[380px] bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-600 rounded-lg shadow-xl z-50 overflow-hidden">
           {/* En-tête */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-surface-100 dark:border-surface-700">
             <span className="text-[13px] font-bold text-surface-900 dark:text-surface-100">
@@ -201,7 +201,7 @@ export default function NotificationBell() {
                             : "font-semibold text-surface-900 dark:text-surface-100"
                         }`}
                       >
-                        {n.message}
+                        {isFr ? n.message : n.messageEn || n.message}
                       </p>
                       <p className="text-[10.5px] text-surface-400 mt-0.5">
                         {timeAgo(n.createdAt, isFr)}

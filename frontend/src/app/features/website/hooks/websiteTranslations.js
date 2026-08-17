@@ -32,6 +32,7 @@ export const TRANSLATIONS = {
     heritage: { fr: "Histoire", en: "Heritage" },
     academics: { fr: "Académique", en: "Academics" },
     signIn: { fr: "Connexion", en: "Sign in" },
+    login: { fr: "Connexion", en: "Login" },
     portal: { fr: "Portail", en: "Portal" },
     studentPortal: { fr: "Portail Élève", en: "Student Portal" },
     parentPortal: { fr: "Portail Parent", en: "Parent Portal" },

@@ -9,6 +9,7 @@ import {
   FiFileText as FileText,
   FiAward as Award,
 } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 import api from '../../../core/api/axios';
 import { API_ENDPOINTS } from '../../../core/api/endpoints';
 
@@ -21,6 +22,8 @@ const ICON_MAP = {
 };
 
 export default function StudentNotifications() {
+  const { i18n } = useTranslation("common");
+  const isFr = i18n.language.startsWith("fr");
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -96,7 +99,7 @@ export default function StudentNotifications() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] font-semibold text-surface-900 dark:text-surface-100 mb-0.5">
-                    {n.message}
+                    {isFr ? n.message : n.messageEn || n.message}
                   </div>
                   <div className="text-[11.5px] text-surface-400">{timeAgo}</div>
                 </div>

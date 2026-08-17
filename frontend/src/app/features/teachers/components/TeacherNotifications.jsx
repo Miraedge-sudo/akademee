@@ -48,7 +48,7 @@ function timeAgo(iso, isFr) {
 
 export default function TeacherNotifications() {
   const { t, i18n } = useTranslation("common");
-  const isFr = i18n.language === "fr";
+  const isFr = i18n.language.startsWith("fr");
   const queryClient = useQueryClient();
 
   const listQuery = useQuery({
@@ -125,7 +125,7 @@ export default function TeacherNotifications() {
                         : "font-semibold text-surface-900 dark:text-surface-100"
                     }`}
                   >
-                    {n.message}
+                    {isFr ? n.message : n.messageEn || n.message}
                   </div>
                   <div className="text-[11.5px] text-surface-400">
                     {timeAgo(n.createdAt, isFr)}

@@ -9,6 +9,7 @@ const TYPES = ['grade', 'attendance', 'payment', 'discipline', 'system', 'announ
 
 const sendNotificationValidator = [
   body('message').trim().notEmpty().withMessage('Message is required').isLength({ max: 500 }),
+  body('messageEn').optional().trim().isLength({ max: 500 }).withMessage('messageEn must not exceed 500 characters'),
   body('type')
     .optional()
     .isIn(TYPES)

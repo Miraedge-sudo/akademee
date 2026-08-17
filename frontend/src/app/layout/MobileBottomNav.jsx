@@ -9,7 +9,7 @@ const BOTTOM_CONFIG = {
   ADMIN: [
     { key: "dashboard", path: "/dashboard", icon: "grid" },
     { key: "users", path: "/dashboard/users", icon: "users" },
-    { key: "gradeReports", path: "/dashboard/grades", icon: "barchart" },
+    { key: "reportCards", path: "/dashboard/report-cards", icon: "barchart" },
     { key: "receipts", path: "/dashboard/receipts", icon: "dollar" },
   ],
   TEACHER: [

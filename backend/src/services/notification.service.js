@@ -8,6 +8,7 @@ class NotificationService {
       userId: row.user_id,
       type: row.type,
       message: row.message,
+      messageEn: row.message_en || null,
       isRead: row.is_read,
       createdAt: row.created_at,
     };
@@ -126,15 +127,15 @@ class NotificationService {
    * Insère une ligne par destinataire en un seul INSERT bulk.
    * Retourne { sent, recipients }.
    */
-  async sendBroadcast(schoolId, { audience = 'user', userId, role, classId, message, type }) {
+  async sendBroadcast(schoolId, { audience = 'user', userId, role, classId, message, messageEn = null, type }) {
     const recipients = await this._resolveRecipients(schoolId, { audience, userId, role, classId });
     if (recipients.length === 0) {
       return { sent: 0, recipients: [] };
     }
 
-    const rows = recipients.map((uid) => [schoolId, uid, type || 'system', message]);
+    const rows = recipients.map((uid) => [schoolId, uid, type || 'system', message, messageEn]);
     await sql`
-      INSERT INTO notifications (school_id, user_id, type, message)
+      INSERT INTO notifications (school_id, user_id, type, message, message_en)
       VALUES ${sql(rows)}
     `;
     return { sent: recipients.length, recipients };

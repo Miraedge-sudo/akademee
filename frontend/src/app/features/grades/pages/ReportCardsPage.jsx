@@ -1067,18 +1067,18 @@ export default function ReportCardsPage() {
             </div>
 
             {/* Filter selects row */}
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="grid grid-cols-2 sm:flex sm:items-center sm:gap-2 sm:flex-wrap gap-2">
               {/* Status filter */}
-              <div className="relative group">
+              <div className="relative group min-w-0 w-full sm:w-auto">
                 {filterStatus && (
                   <div className="absolute -top-1.5 -right-1.5 z-10 w-3 h-3 rounded-full border-2 border-white dark:border-surface-800" style={{ background: STATUS_CONFIG[filterStatus]?.color || pc }} />
                 )}
-                <div className="flex items-center gap-2 h-9 px-3 bg-surface-50 dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg transition-all group-                    hover:border-surface-300 dark:hover:border-surface-600 dark:group-hover:border-surface-600 focus-within:border-primary-400">
+                <div className="w-full sm:w-auto flex items-center gap-2 h-9 px-3 bg-surface-50 dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg transition-all group-                    hover:border-surface-300 dark:hover:border-surface-600 dark:group-hover:border-surface-600 focus-within:border-primary-400">
                   <FiClock size={13} className="text-surface-400 flex-shrink-0" />
                   <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="bg-transparent text-[12px] text-surface-700 dark:text-surface-200 appearance-none cursor-pointer focus:outline-none min-w-[100px]"
+                    className="bg-transparent flex-1 min-w-0 sm:min-w-[100px] text-[12px] text-surface-700 dark:text-surface-200 appearance-none cursor-pointer focus:outline-none"
                   >
                     <option value="">{isFr ? "Statut" : "Status"}</option>
                     {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
@@ -1090,16 +1090,16 @@ export default function ReportCardsPage() {
               </div>
 
               {/* Class filter */}
-              <div className="relative group">
+              <div className="relative group min-w-0 w-full sm:w-auto">
                 {filterClassId && (
                   <div className="absolute -top-1.5 -right-1.5 z-10 w-3 h-3 rounded-full border-2 border-white dark:border-surface-800" style={{ background: pc }} />
                 )}
-                <div className="flex items-center gap-2 h-9 px-3 bg-surface-50 dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg transition-all group-                    hover:border-surface-300 dark:hover:border-surface-600 dark:group-hover:border-surface-600 focus-within:border-primary-400">
+                <div className="w-full sm:w-auto flex items-center gap-2 h-9 px-3 bg-surface-50 dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg transition-all group-                    hover:border-surface-300 dark:hover:border-surface-600 dark:group-hover:border-surface-600 focus-within:border-primary-400">
                   <FiUsers size={13} className="text-surface-400 flex-shrink-0" />
                   <select
                     value={filterClassId}
                     onChange={(e) => setFilterClassId(e.target.value)}
-                    className="bg-transparent text-[12px] text-surface-700 dark:text-surface-200 appearance-none cursor-pointer focus:outline-none min-w-[110px]"
+                    className="bg-transparent flex-1 min-w-0 sm:min-w-[110px] text-[12px] text-surface-700 dark:text-surface-200 appearance-none cursor-pointer focus:outline-none"
                   >
                     <option value="">{isFr ? "Classe" : "Class"}</option>
                     {classes.map((c) => (
@@ -1111,16 +1111,16 @@ export default function ReportCardsPage() {
               </div>
 
               {/* Period filter */}
-              <div className="relative group">
+              <div className="relative group min-w-0 w-full sm:w-auto">
                 {filterPeriodId && (
                   <div className="absolute -top-1.5 -right-1.5 z-10 w-3 h-3 rounded-full border-2 border-white dark:border-surface-800" style={{ background: pc }} />
                 )}
-                <div className="flex items-center gap-2 h-9 px-3 bg-surface-50 dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg transition-all group-                    hover:border-surface-300 dark:hover:border-surface-600 dark:group-hover:border-surface-600 focus-within:border-primary-400">
+                <div className="w-full sm:w-auto flex items-center gap-2 h-9 px-3 bg-surface-50 dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg transition-all group-                    hover:border-surface-300 dark:hover:border-surface-600 dark:group-hover:border-surface-600 focus-within:border-primary-400">
                   <FiCalendar size={13} className="text-surface-400 flex-shrink-0" />
                   <select
                     value={filterPeriodId}
                     onChange={(e) => setFilterPeriodId(e.target.value)}
-                    className="bg-transparent text-[12px] text-surface-700 dark:text-surface-200 appearance-none cursor-pointer focus:outline-none min-w-[110px]"
+                    className="bg-transparent flex-1 min-w-0 sm:min-w-[110px] text-[12px] text-surface-700 dark:text-surface-200 appearance-none cursor-pointer focus:outline-none"
                   >
                     <option value="">{isFr ? "Période" : "Period"}</option>
                     {periods.map((p) => (
@@ -1131,16 +1131,16 @@ export default function ReportCardsPage() {
                 </div>
               </div>
               {/* Education system filter */}
-              <div className="relative group">
+              <div className="relative group min-w-0 w-full sm:w-auto">
                 {filterEduSystem && (
                   <div className="absolute -top-1.5 -right-1.5 z-10 w-3 h-3 rounded-full border-2 border-white dark:border-surface-800" style={{ background: getEduSystemColor(filterEduSystem) }} />
                 )}
-                <div className="flex items-center gap-2 h-9 px-3 bg-surface-50 dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg transition-all group-                    hover:border-surface-300 dark:hover:border-surface-600 dark:group-hover:border-surface-600 focus-within:border-primary-400">
+                <div className="w-full sm:w-auto flex items-center gap-2 h-9 px-3 bg-surface-50 dark:bg-surface-900 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-lg transition-all group-                    hover:border-surface-300 dark:hover:border-surface-600 dark:group-hover:border-surface-600 focus-within:border-primary-400">
                   <FiBookmark size={13} className="text-surface-400 flex-shrink-0" />
                   <select
                     value={filterEduSystem}
                     onChange={(e) => setFilterEduSystem(e.target.value)}
-                    className="bg-transparent text-[12px] text-surface-700 dark:text-surface-200 appearance-none cursor-pointer focus:outline-none min-w-[130px]"
+                    className="bg-transparent flex-1 min-w-0 sm:min-w-[130px] text-[12px] text-surface-700 dark:text-surface-200 appearance-none cursor-pointer focus:outline-none"
                   >
                     <option value="">{isFr ? "Système" : "System"}</option>
                     {educationSystems.map((sys) => (
@@ -1157,7 +1157,7 @@ export default function ReportCardsPage() {
               {(filterStatus || filterClassId || filterPeriodId || filterEduSystem) && (
                 <button
                   onClick={() => { setFilterStatus(""); setFilterClassId(""); setFilterPeriodId(""); setFilterEduSystem(""); }}
-                  className="h-9 w-9 rounded-lg flex items-center justify-center transition-all hover:bg-red-50 dark:hover:bg-red-900/20 text-surface-400 hover:text-red-500"
+                  className="h-9 w-9 rounded-lg flex items-center justify-center transition-all hover:bg-red-50 dark:hover:bg-red-900/20 text-surface-400 hover:text-red-500 col-span-2 sm:col-span-auto"
                   title={isFr ? "Effacer les filtres" : "Clear filters"}
                 >
                   <FiX size={13} />
@@ -1250,7 +1250,7 @@ export default function ReportCardsPage() {
                           return (
                             <div key={cls.id}>
                               {/* Class Header */}
-                              <div className="w-full flex items-center gap-2 px-5 py-2.5 pl-12 hover:bg-surface-50 dark:hover:bg-surface-900/20 transition-colors">
+                              <div className="w-full flex items-center gap-2 px-4 lg:px-5 py-2.5 pl-4 lg:pl-12 hover:bg-surface-50 dark:hover:bg-surface-900/20 transition-colors">
                                 <button
                                   onClick={() => toggleClass(cls.id)}
                                   className="flex-1 min-w-0 flex items-center gap-3 text-left cursor-pointer"
@@ -1308,7 +1308,7 @@ export default function ReportCardsPage() {
                               {isClassOpen && (
                                 <div className="border-t border-surface-50 dark:border-surface-700/50">
                                   {/* Mini table header */}
-                                  <div className="hidden lg:grid grid-cols-10 gap-2 px-5 py-2 pl-16 bg-surface-50/50 dark:bg-surface-900/20 text-[10px] font-semibold tracking-wider uppercase text-surface-400">
+                                  <div className="hidden lg:grid grid-cols-10 gap-2 px-4 lg:px-5 py-2 lg:pl-16 bg-surface-50/50 dark:bg-surface-900/20 text-[10px] font-semibold tracking-wider uppercase text-surface-400">
                                     <div className="col-span-1 flex items-center">
                                       <input
                                         type="checkbox"
@@ -1342,7 +1342,7 @@ export default function ReportCardsPage() {
                                     return (
                                       <div
                                         key={rc.report_card_id}
-                                        className="grid grid-cols-1 lg:grid-cols-10 gap-2 px-5 py-2.5 pl-16 hover:bg-surface-50 dark:hover:bg-surface-900/20 transition-colors items-center"
+                                        className="grid grid-cols-[auto_1fr_auto] lg:grid-cols-10 gap-x-2 gap-y-1.5 px-4 lg:px-5 py-3 lg:py-2.5 pl-4 lg:pl-16 hover:bg-surface-50 dark:hover:bg-surface-900/20 transition-colors items-center"
                                         style={{
                                           background: selectedIds.has(rc.report_card_id)
                                             ? 'rgba(var(--primary-rgb, 8,80,65), 0.03)'
@@ -1355,7 +1355,7 @@ export default function ReportCardsPage() {
                                             type="checkbox"
                                             checked={selectedIds.has(rc.report_card_id)}
                                             onChange={() => toggleSelect(rc.report_card_id)}
-                                            className="w-3.5 h-3.5 cursor-pointer"
+                                            className="w-4 h-4 lg:w-3.5 lg:h-3.5 cursor-pointer"
                                           />
                                         </div>
 
@@ -1406,11 +1406,11 @@ export default function ReportCardsPage() {
                                           </span>
                                         </div>
 
-                                        {/* Actions */}
-                                        <div className="lg:col-span-1 flex items-center justify-end gap-1">
+                                        {/* Actions (top-right on mobile, last column on desktop) */}
+                                        <div className="col-start-3 row-start-1 lg:col-span-1 lg:col-start-10 lg:row-start-1 flex items-center justify-end gap-1">
                                           <button
                                             onClick={() => handleViewPayload(rc)}
-                                            className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors text-surface-400 hover:text-surface-700 dark:hover:text-surface-200"
+                                            className="w-7 h-7 lg:w-6 lg:h-6 rounded-md flex items-center justify-center hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors text-surface-400 hover:text-surface-700 dark:hover:text-surface-200"
                                             title={isFr ? 'Voir' : 'View'}
                                           >
                                             <FiEye size={11} />
@@ -1418,7 +1418,7 @@ export default function ReportCardsPage() {
                                           {actions.includes('publish') && (
                                             <button
                                               onClick={() => handlePublish(rc)}
-                                              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-green-600"
+                                              className="w-7 h-7 lg:w-6 lg:h-6 rounded-md flex items-center justify-center hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-green-600"
                                               title={isFr ? 'Publier' : 'Publish'}
                                             >
                                               <FiSend size={10} />
@@ -1427,7 +1427,7 @@ export default function ReportCardsPage() {
                                           {actions.includes('revise') && (
                                             <button
                                               onClick={() => setReviseModal(rc)}
-                                              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors text-purple-600"
+                                              className="w-7 h-7 lg:w-6 lg:h-6 rounded-md flex items-center justify-center hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors text-purple-600"
                                               title={isFr ? 'Réviser' : 'Revise'}
                                             >
                                               <FiRefreshCw size={10} />
@@ -1436,7 +1436,7 @@ export default function ReportCardsPage() {
                                           {actions.includes('lock') && (
                                             <button
                                               onClick={() => handleLock(rc)}
-                                              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors text-amber-600"
+                                              className="w-7 h-7 lg:w-6 lg:h-6 rounded-md flex items-center justify-center hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors text-amber-600"
                                               title={isFr ? 'Verrouiller' : 'Lock'}
                                             >
                                               <FiLock size={10} />
@@ -1445,7 +1445,7 @@ export default function ReportCardsPage() {
                                           {actions.includes('unlock') && (
                                             <button
                                               onClick={() => handleUnlock(rc)}
-                                              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-blue-600"
+                                              className="w-7 h-7 lg:w-6 lg:h-6 rounded-md flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-blue-600"
                                               title={isFr ? 'Déverrouiller' : 'Unlock'}
                                             >
                                               <FiUnlock size={10} />
@@ -1454,7 +1454,7 @@ export default function ReportCardsPage() {
                                           {actions.includes('delete') && (
                                             <button
                                               onClick={() => setDeleteModal(rc)}
-                                              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-red-500"
+                                              className="w-7 h-7 lg:w-6 lg:h-6 rounded-md flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-red-500"
                                               title={isFr ? 'Supprimer' : 'Delete'}
                                             >
                                               <FiTrash2 size={10} />
@@ -1484,8 +1484,8 @@ export default function ReportCardsPage() {
 
       {/* ── Floating Batch Action Bar ── */}
       {selectedIds.size > 0 && (
-        <div className="rc-fade fixed bottom-6 left-1/2 -translate-x-1/2 z-50" style={{ animationDelay: "0s" }}>
-          <div className="bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-2xl shadow-2xl px-5 py-3.5 flex items-center gap-4 backdrop-blur-sm bg-white/95 dark:bg-surface-800/95">
+        <div className="rc-fade fixed bottom-4 sm:bottom-6 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50" style={{ animationDelay: "0s" }}>
+          <div className="bg-white dark:bg-surface-800 border-[1.5px] border-surface-100 dark:border-surface-700 rounded-2xl shadow-2xl px-4 sm:px-5 py-3 sm:py-3.5 flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-4 backdrop-blur-sm bg-white/95 dark:bg-surface-800/95 w-full sm:w-fit">
             {/* Count */}
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${pc}15` }}>
@@ -1497,7 +1497,7 @@ export default function ReportCardsPage() {
               </div>
             </div>
 
-            <div className="w-px h-8 bg-surface-100 dark:bg-surface-700" />
+            <div className="w-px h-8 bg-surface-100 dark:bg-surface-700 hidden sm:block" />
 
             {/* Action buttons */}
             <div className="flex items-center gap-2">
@@ -1527,7 +1527,7 @@ export default function ReportCardsPage() {
               </button>
             </div>
 
-            <div className="w-px h-8 bg-surface-100 dark:bg-surface-700" />
+            <div className="w-px h-8 bg-surface-100 dark:bg-surface-700 hidden sm:block" />
 
             {/* Deselect */}
             <button

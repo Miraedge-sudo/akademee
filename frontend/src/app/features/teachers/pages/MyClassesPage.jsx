@@ -504,8 +504,7 @@ export default function MyClassesPage() {
                 <stat.icon size={16} style={{ color: stat.color }} />
               </div>
               <div
-                className="text-[20px] font-extrabold leading-none mb-0.5"
-                style={{ color: "#1A1F1B" }}
+                className="text-[20px] font-extrabold leading-none mb-0.5 text-surface-900 dark:text-surface-100"
               >
                 {stat.value}
               </div>
