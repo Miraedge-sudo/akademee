@@ -8,7 +8,7 @@ import {
   saveOnboardingData,
   uploadMedia,
 } from "../../../core/api/websiteService";
-import akademeeLogo from "../../../../assets/LogoWhite.png";
+import { useBrandLogo } from "../../../core/hooks/useBrandLogo";
 import { ThemeContext } from "../../../core/context/ThemeContext";
 import { useEducationalSystems } from "../../../core/context/EducationalSystemContext";
 import toast from "react-hot-toast";
@@ -594,6 +594,7 @@ export default function OnboardingPage() {
   const { user, refreshUser } = useAuth();
   const { updatePrimaryColor } = useContext(ThemeContext);
   const { updateSelectedSystems } = useEducationalSystems();
+  const akademeeLogo = useBrandLogo();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(true);

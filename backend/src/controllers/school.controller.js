@@ -96,6 +96,18 @@ class SchoolController {
     }
   }
 
+  async checkEmail(req, res, next) {
+    try {
+      const { email } = req.body;
+
+      const result = await schoolService.checkEmail(email);
+
+      response.success(res, 'Email availability checked', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getPlans(req, res, next) {
     try {
       const plans = await schoolService.getPlans();
@@ -130,6 +142,65 @@ class SchoolController {
     try {
       const result = await schoolService.resendVerificationEmail(req.schoolId);
       response.success(res, 'Verification email processed', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /** Upgrade school subscription plan */
+  async upgradePlan(req, res, next) {
+    try {
+      const { planCode } = req.body;
+      const schoolId = req.user?.schoolId || req.schoolId;
+      if (!schoolId) {
+        return response.error(res, 'School not found', null, 400);
+      }
+      if (!planCode) {
+        return response.error(res, 'Plan code is required', null, 400);
+      }
+      const result = await schoolService.upgradePlan(schoolId, planCode);
+      response.success(res, 'Plan upgraded successfully', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /** Check trial status for the authenticated school */
+  async checkTrialStatus(req, res, next) {
+    try {
+      const schoolId = req.user?.schoolId || req.schoolId;
+      if (!schoolId) {
+        return response.error(res, 'School not found', null, 400);
+      }
+      const sql = require('../config/database');
+      const schools = await sql`
+        SELECT subscription_plan, subscription_status, subscription_start_date, subscription_end_date
+        FROM schools WHERE school_id = ${schoolId}
+      `;
+      if (schools.length === 0) {
+        return response.error(res, 'School not found', null, 404);
+      }
+      const school = schools[0];
+      let trialInfo = null;
+      if (school.subscription_status === 'trial' && school.subscription_end_date) {
+        const endDate = new Date(school.subscription_end_date);
+        const now = new Date();
+        const diffMs = endDate.getTime() - now.getTime();
+        const remainingDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+        trialInfo = {
+          plan: school.subscription_plan,
+          status: school.subscription_status,
+          startDate: school.subscription_start_date,
+          endDate: school.subscription_end_date,
+          remainingDays,
+          expired: remainingDays <= 0,
+        };
+      }
+      response.success(res, 'Trial status retrieved', {
+        plan: school.subscription_plan,
+        status: school.subscription_status,
+        trialInfo,
+      });
     } catch (error) {
       next(error);
     }

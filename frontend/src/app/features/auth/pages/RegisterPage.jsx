@@ -1,5 +1,5 @@
-import { FiCheck, FiArrowLeft, FiArrowRight, FiHome, FiGlobe, FiMapPin, FiMail, FiPhone, FiUser, FiLock, FiEye, FiLoader } from "react-icons/fi";
-import { useState, useEffect } from "react";
+import { FiCheck, FiArrowLeft, FiArrowRight, FiHome, FiGlobe, FiMapPin, FiMail, FiPhone, FiUser, FiLock, FiEye, FiLoader, FiAlertCircle, FiInfo } from "react-icons/fi";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
@@ -46,6 +46,20 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+
+  // ── Inline field validation errors ──
+  const [fieldErrors, setFieldErrors] = useState({});
+  // ── Real-time availability checks ──
+  const [subdomainStatus, setSubdomainStatus] = useState(null); // null | 'checking' | {available, ...}
+  const [emailStatus, setEmailStatus] = useState(null);
+  const [adminEmailStatus, setAdminEmailStatus] = useState(null);
+
+  const debounceTimers = useRef({});
+
+  // ── Email regex ──
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+  // ── Subdomain regex ──
+  const SUBDOMAIN_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
   // If user arrived on a school subdomain (e.g. teste.lvh.me:3000/register),
   // redirect to the main domain — registration must be domain-neutral.
   useEffect(() => {
@@ -57,9 +71,129 @@ export default function RegisterPage() {
     }
   }, []);
 
+  // ── Field-level validators ──
+  const validateField = useCallback((name, value) => {
+    switch (name) {
+      case 'schoolName':
+        if (!value.trim()) return 'School name is required';
+        if (value.trim().length > 200) return 'School name must be at most 200 characters';
+        return '';
+      case 'subdomain':
+        if (!value.trim()) return 'Subdomain is required';
+        if (value.trim().length < 3) return 'Subdomain must be at least 3 characters';
+        if (value.trim().length > 63) return 'Subdomain must be at most 63 characters';
+        if (!SUBDOMAIN_REGEX.test(value.trim())) return 'Only lowercase letters, numbers, and hyphens allowed';
+        return '';
+      case 'city':
+        if (!value.trim()) return 'City is required';
+        return '';
+      case 'email':
+        if (!value.trim()) return 'School email is required';
+        if (!EMAIL_REGEX.test(value.trim())) return 'Please enter a valid email address';
+        return '';
+      case 'firstName':
+        if (!value.trim()) return 'First name is required';
+        return '';
+      case 'lastName':
+        if (!value.trim()) return 'Last name is required';
+        return '';
+      case 'adminEmail':
+        if (!value.trim()) return 'Admin email is required';
+        if (!EMAIL_REGEX.test(value.trim())) return 'Please enter a valid email address';
+        return '';
+      case 'password':
+        if (!value) return 'Password is required';
+        if (value.length < 8) return 'Password must be at least 8 characters';
+        return '';
+      case 'confirmPassword':
+        if (!value) return 'Please confirm your password';
+        if (value !== formData.password) return 'Passwords do not match';
+        return '';
+      default:
+        return '';
+    }
+  }, [formData.password]);
+
+  // ── Debounced subdomain check ──
+  const checkSubdomainAvailability = useCallback((subdomain) => {
+    clearTimeout(debounceTimers.current.subdomain);
+    if (!subdomain || subdomain.trim().length < 3 || !SUBDOMAIN_REGEX.test(subdomain.trim())) {
+      setSubdomainStatus(null);
+      return;
+    }
+    setSubdomainStatus('checking');
+    debounceTimers.current.subdomain = setTimeout(async () => {
+      try {
+        const res = await api.post(API_ENDPOINTS.SCHOOLS.CHECK_SUBDOMAIN, { subdomain: subdomain.trim() });
+        setSubdomainStatus(res.data.data);
+      } catch {
+        setSubdomainStatus(null);
+      }
+    }, 500);
+  }, []);
+
+  // ── Debounced email check ──
+  const checkEmailAvailability = useCallback((email, field) => {
+    const timerKey = field === 'email' ? 'schoolEmail' : 'adminEmail';
+    const setter = field === 'email' ? setEmailStatus : setAdminEmailStatus;
+    clearTimeout(debounceTimers.current[timerKey]);
+    if (!email || !EMAIL_REGEX.test(email.trim())) {
+      setter(null);
+      return;
+    }
+    setter('checking');
+    debounceTimers.current[timerKey] = setTimeout(async () => {
+      try {
+        const res = await api.post(API_ENDPOINTS.SCHOOLS.CHECK_EMAIL, { email: email.trim() });
+        setter(res.data.data);
+      } catch {
+        setter(null);
+      }
+    }, 500);
+  }, []);
+
+  // ── Validate a step and return whether it's valid ──
+  const validateStep = useCallback((stepNum) => {
+    const errors = {};
+    if (stepNum === 1) {
+      const fields = ['schoolName', 'subdomain', 'city', 'email'];
+      for (const f of fields) {
+        const err = validateField(f, formData[f]);
+        if (err) errors[f] = err;
+      }
+    } else if (stepNum === 2) {
+      const fields = ['firstName', 'lastName', 'adminEmail', 'password', 'confirmPassword'];
+      for (const f of fields) {
+        const err = validateField(f, formData[f]);
+        if (err) errors[f] = err;
+      }
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [formData, validateField]);
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
     setError("");
+
+    // Inline validation
+    const err = validateField(name, value);
+    setFieldErrors(prev => {
+      if (err) return { ...prev, [name]: err };
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+
+    // Debounced availability checks
+    if (name === 'subdomain') {
+      checkSubdomainAvailability(value);
+    } else if (name === 'email') {
+      checkEmailAvailability(value, 'email');
+    } else if (name === 'adminEmail') {
+      checkEmailAvailability(value, 'adminEmail');
+    }
   };
 
   const handleSchoolNameInput = (e) => {
@@ -75,12 +209,40 @@ export default function RegisterPage() {
       }
       return next;
     });
+    // Validate
+    const err = validateField('schoolName', value);
+    setFieldErrors(prev => {
+      if (err) return { ...prev, schoolName: err };
+      const next = { ...prev };
+      delete next.schoolName;
+      return next;
+    });
+    // Also check auto-generated subdomain
+    if (!formData.subdomain) {
+      const autoSub = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      if (autoSub.length >= 3) {
+        checkSubdomainAvailability(autoSub);
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       setError(t("register.pwdMismatch", "Passwords do not match"));
+      return;
+    }
+    // Block if any availability check has failed
+    if (subdomainStatus && subdomainStatus.available === false) {
+      setError(t("register.subdomainTaken", "This subdomain is already taken"));
+      return;
+    }
+    if (emailStatus && emailStatus.available === false) {
+      setError(t("register.emailTaken", "This school email is already registered"));
+      return;
+    }
+    if (adminEmailStatus && adminEmailStatus.available === false) {
+      setError(t("register.adminEmailTaken", "This admin email is already in use"));
       return;
     }
     setError("");
@@ -112,6 +274,11 @@ export default function RegisterPage() {
   };
 
   const nextStep = () => {
+    if (!validateStep(step)) return; // Don't advance if validation fails
+    // Also block if availability checks show unavailable
+    if (step === 1 && subdomainStatus && subdomainStatus.available === false) return;
+    if (step === 1 && emailStatus && emailStatus.available === false) return;
+    if (step === 2 && adminEmailStatus && adminEmailStatus.available === false) return;
     setStep((s) => Math.min(s + 1, 3));
   };
   const prevStep = () => {
@@ -133,6 +300,53 @@ export default function RegisterPage() {
     lock: <FiLock className="absolute left-3 w-4 h-4 text-surface-400 pointer-events-none" />,
   };
   const Icon = ({ name }) => iconMap[name] || null;
+
+  // ── Inline field error ──
+  const FieldError = ({ field }) => {
+    if (!fieldErrors[field]) return null;
+    return (
+      <p className="flex items-center gap-1 mt-1 text-[11.5px] text-red-500 animate-fadeIn">
+        <FiAlertCircle className="w-3 h-3 flex-shrink-0" />
+        {fieldErrors[field]}
+      </p>
+    );
+  };
+
+  // ── Availability badge (subdomain / email) ──
+  const AvailabilityBadge = ({ status }) => {
+    if (!status || status === 'checking') {
+      return status === 'checking' ? (
+        <p className="flex items-center gap-1 mt-1 text-[11.5px] text-surface-400 animate-fadeIn">
+          <FiLoader className="w-3 h-3 animate-spin" /> Checking availability...
+        </p>
+      ) : null;
+    }
+    if (status.available === false) {
+      return (
+        <p className="flex items-center gap-1 mt-1 text-[11.5px] text-red-500 animate-fadeIn">
+          <FiAlertCircle className="w-3 h-3 flex-shrink-0" />
+          {status.message || 'Already taken'}
+        </p>
+      );
+    }
+    if (status.available === true && status.reason === 'domain_exists') {
+      return (
+        <p className="flex items-center gap-1 mt-1 text-[11.5px] text-amber-600 animate-fadeIn">
+          <FiInfo className="w-3 h-3 flex-shrink-0" />
+          {status.message}
+        </p>
+      );
+    }
+    if (status.available === true) {
+      return (
+        <p className="flex items-center gap-1 mt-1 text-[11.5px] text-teal-600 animate-fadeIn">
+          <FiCheck className="w-3 h-3 flex-shrink-0" />
+          Available
+        </p>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="flex min-h-screen bg-surface-50 dark:bg-surface-900">
@@ -250,6 +464,7 @@ export default function RegisterPage() {
                           className={inputClass}
                         />
                       </div>
+                      <FieldError field="schoolName" />
                     </div>
 
                     <div className="animate-fadeIn" style={staggerItem(1)}>
@@ -271,12 +486,16 @@ export default function RegisterPage() {
                           .akademee.cm
                         </span>
                       </div>
-                      <p className="text-[11.5px] text-surface-400 mt-1.5">
-                        {t("register.school.subdomainHint", "Your campus will be at")}{" "}
-                        <strong className="text-surface-600 dark:text-surface-300">
-                          {(formData.subdomain || "yourschool") + ".akademee.cm"}
-                        </strong>
-                      </p>
+                      <FieldError field="subdomain" />
+                      <AvailabilityBadge status={subdomainStatus} />
+                      {!fieldErrors.subdomain && !subdomainStatus && (
+                        <p className="text-[11.5px] text-surface-400 mt-1.5">
+                          {t("register.school.subdomainHint", "Your campus will be at")}{" "}
+                          <strong className="text-surface-600 dark:text-surface-300">
+                            {(formData.subdomain || "yourschool") + ".akademee.cm"}
+                          </strong>
+                        </p>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 animate-fadeIn" style={staggerItem(2)}>
@@ -296,6 +515,7 @@ export default function RegisterPage() {
                             className={inputClass}
                           />
                         </div>
+                        <FieldError field="city" />
                       </div>
                       <div>
                         <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
@@ -320,10 +540,7 @@ export default function RegisterPage() {
                         {t("register.school.email", "School email")} <span className="text-teal-600">*</span>
                       </label>
                       <div className="relative flex items-center">
-                        <Icon>
-                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                          <polyline points="22,6 12,13 2,6" />
-                        </Icon>
+                        <Icon name="mail" />
                         <input
                           name="email"
                           type="email"
@@ -334,6 +551,8 @@ export default function RegisterPage() {
                           className={inputClass}
                         />
                       </div>
+                      <FieldError field="email" />
+                      <AvailabilityBadge status={emailStatus} />
                     </div>
 
                     <div className="animate-fadeIn" style={staggerItem(4)}>
@@ -411,6 +630,7 @@ export default function RegisterPage() {
                             className={inputClass}
                           />
                         </div>
+                        <FieldError field="firstName" />
                       </div>
                       <div>
                         <label className="block text-[12.5px] font-medium text-surface-600 dark:text-surface-300 mb-1.5">
@@ -428,6 +648,7 @@ export default function RegisterPage() {
                             className={inputClass}
                           />
                         </div>
+                        <FieldError field="lastName" />
                       </div>
                     </div>
 
@@ -447,6 +668,8 @@ export default function RegisterPage() {
                           className={inputClass}
                         />
                       </div>
+                      <FieldError field="adminEmail" />
+                      <AvailabilityBadge status={adminEmailStatus} />
                     </div>
 
                     <div className="animate-fadeIn" style={staggerItem(2)}>
@@ -473,6 +696,7 @@ export default function RegisterPage() {
                           <FiEye className="w-4 h-4" />
                         </button>
                       </div>
+                      <FieldError field="password" />
                     </div>
 
                     <div className="animate-fadeIn" style={staggerItem(3)}>
@@ -499,6 +723,7 @@ export default function RegisterPage() {
                           <FiEye className="w-4 h-4" />
                         </button>
                       </div>
+                      <FieldError field="confirmPassword" />
                     </div>
                   </div>
 

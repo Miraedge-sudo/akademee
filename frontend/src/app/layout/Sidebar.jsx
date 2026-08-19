@@ -3,7 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../core/hooks/useAuth";
 import { getPrimaryRole } from "../core/utils/roleUtils";
-import akademeeLogo from "../../assets/LogoWhite.png";
+import { useBrandLogo } from "../core/hooks/useBrandLogo";
 
 // ── Educational System Types ──
 const EDUCATIONAL_SYSTEMS = {
@@ -1098,6 +1098,7 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
   const { user } = useAuth();
   const location = useLocation();
 
+  const akademeeLogo = useBrandLogo();
   const role = getPrimaryRole(user?.roles);
   const educationalSystems = user?.school?.educationalSystems || [];
   const navGroups = getNavConfig(role, educationalSystems);
@@ -1162,13 +1163,8 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
           <img
             src={akademeeLogo}
             alt="Akademee"
-            className="w-10 h-10 object-contain flex-shrink-0"
+            className={`h-8 object-contain flex-shrink-0 transition-all duration-300 ${collapsed ? "lg:h-7" : "h-8"}`}
           />
-          <span
-            className={`font-display text-lg text-primary-100 whitespace-nowrap transition-opacity ${collapsed ? "lg:opacity-0 lg:w-0 lg:hidden" : "opacity-100"}`}
-          >
-            Akademee
-          </span>
         </div>
 
         {/* School badge */}

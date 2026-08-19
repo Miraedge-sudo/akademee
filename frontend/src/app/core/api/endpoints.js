@@ -16,17 +16,25 @@ export const API_ENDPOINTS = {
   SCHOOLS: {
     REGISTER: "/api/schools/register",
     CHECK_SUBDOMAIN: "/api/schools/check-subdomain",
+    CHECK_EMAIL: "/api/schools/check-email",
     PLANS: "/api/schools/plans",
     TEMPLATES: "/api/schools/templates",
     VERIFY_EMAIL: "/api/schools/verify-email",
     RESEND_VERIFICATION: "/api/schools/resend-verification",
     RESEND_VERIFICATION_REQUEST: "/api/schools/resend-verification-request",
+    TRIAL_STATUS: "/api/schools/trial-status",
     ONBOARDING: "/api/schools/onboarding",
     ONBOARDING_MEDIA: "/api/schools/onboarding/media",
     LIST: "/api/schools",
     CREATE: "/api/schools",
     GET: (id) => `/api/schools/${id}`,
     UPDATE: (id) => `/api/schools/${id}`,
+  },
+
+  // Billing (Fapshi subscription upgrades)
+  BILLING: {
+    INITIATE: "/api/billing/fapshi/initiate",
+    PAYMENT_STATUS: "/api/billing/payment-status",
   },
 
   // Website public (site vitrine)

@@ -61,6 +61,7 @@ const v1GradingRoutes = require('./routes/v1/gradingSystem.routes');
 const reportCardJobsRoutes = require('./routes/reportCardJobs.routes');
 const universityRoutes = require('./routes/v1/university.routes');
 const timetableRoutes = require('./routes/timetable.routes');
+const billingRoutes = require('./routes/billing.routes');
 
 const app = express();
 
@@ -144,6 +145,9 @@ app.use('/api/timetable', timetableRoutes);
 
 // ── Background report card job routes ──
 app.use('/api/v1/report-card-jobs', reportCardJobsRoutes);
+
+// ── Billing (Fapshi subscription upgrades) ──
+app.use('/api/billing', billingRoutes);
 
 // Admin maintenance routes
 app.use('/api/admin', adminRoutes);

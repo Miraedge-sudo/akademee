@@ -3,7 +3,7 @@ import { useTheme } from '../core/hooks/useTheme';
 import { useTranslation } from 'react-i18next';
 
 const btnClass =
-  "w-9 h-9 flex items-center justify-center rounded-md text-surface-500 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors";
+  "w-9 h-9 flex items-center justify-center rounded-md text-surface-500 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-all duration-300";
 
 export default function ThemeLangToggles({ showLang = true, showTheme = true }) {
   const { theme, toggleTheme } = useTheme();
