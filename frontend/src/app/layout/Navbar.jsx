@@ -19,22 +19,19 @@ export default function Navbar({ onToggleSidebar }) {
   const activeYear = years.find((y) => y.id === selectedYearId) || years.find((y) => y.isCurrent) || null;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const dropdownRef = useRef(null);
 
   const role = getPrimaryRole(user?.roles);
 
-  // Settings menu items based on role
+  // Settings menu items — réservé à l'administrateur
   const settingsItems = [];
   if (role === ROLES.ADMIN) {
     settingsItems.push(
       { key: 'settings', path: '/dashboard/settings', icon: 'settings', label: t('navbar.settings', 'Paramètres') },
       { key: 'website', path: '/dashboard/website', icon: 'website', label: t('navbar.siteVitrine', 'Site vitrine') },
       { key: 'announcements', path: '/dashboard/announcements', icon: 'announcements', label: t('navbar.announcements', 'Annonces') },
-    );
-  } else if (role === ROLES.TEACHER) {
-    settingsItems.push(
-      { key: 'settings', path: '/dashboard/settings', icon: 'settings', label: t('navbar.settings', 'Paramètres') },
     );
   }
 
@@ -43,6 +40,7 @@ export default function Navbar({ onToggleSidebar }) {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false);
+        setSettingsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -136,7 +134,7 @@ export default function Navbar({ onToggleSidebar }) {
       {/* User pill with dropdown */}
       <div className="relative shrink-0" ref={dropdownRef}>
         <button
-          onClick={() => setDropdownOpen((prev) => !prev)}
+          onClick={() => { setDropdownOpen((prev) => !prev); setSettingsOpen(false); }}
           className="flex items-center gap-1 sm:gap-2 pl-0.5 pr-1.5 sm:pl-1 sm:pr-2.5 h-8 sm:h-9 rounded-full border border-surface-200 dark:border-surface-600 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
         >
           <div className="w-[24px] h-[24px] sm:w-[26px] sm:h-[26px] rounded-full bg-primary-700 flex items-center justify-center text-[10px] sm:text-[11px] font-semibold text-primary-100">
@@ -169,53 +167,61 @@ export default function Navbar({ onToggleSidebar }) {
               <>
                 <div className="h-px bg-surface-100 dark:bg-surface-700 mx-2" />
 
-                {/* Settings with hover submenu */}
-                <div className="relative group/sub">
-                  <div
-                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors text-left cursor-default"
+                {/* Settings — sous-menu cliquable (fonctionne aussi au survol sur desktop) */}
+                <div
+                  className="relative"
+                  onMouseEnter={() => setSettingsOpen(true)}
+                  onMouseLeave={() => setSettingsOpen(false)}
+                >
+                  <button
+                    onClick={() => setSettingsOpen((prev) => !prev)}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors text-left ${settingsOpen ? "bg-surface-50 dark:bg-surface-700" : ""}`}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-surface-400">
                       <circle cx="12" cy="12" r="3" />
                       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                     </svg>
-                    <span className="flex-1">{t('navbar.settingsGroup', 'Paramètres')}</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3 h-3 text-surface-400">
+                    <span className="flex-1 text-left">{t('navbar.settingsGroup', 'Paramètres')}</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={`w-3 h-3 text-surface-400 transition-transform ${settingsOpen ? "rotate-90" : ""}`}>
                       <polyline points="15 18 9 12 15 6" />
                     </svg>
-                  </div>
+                  </button>
 
-                  {/* Submenu on hover — appears to the left */}
-                  <div className="absolute right-full top-0 mr-1.5 w-48 bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-600 rounded-lg shadow-lg py-1 z-[60] hidden group-hover/sub:block">
-                    {settingsItems.map((item) => (
-                      <button
-                        key={item.key}
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          navigate(item.path);
-                        }}
-                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors text-left"
-                      >
-                        {item.icon === 'website' ? (
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-surface-400">
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="2" y1="12" x2="22" y2="12" />
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                          </svg>
-                        ) : item.icon === 'announcements' ? (
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-surface-400">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                          </svg>
-                        ) : (
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-surface-400">
-                            <circle cx="12" cy="12" r="3" />
-                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                          </svg>
-                        )}
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
+                  {/* Sous-menu — déplié sous la ligne (cliquable, mobile-friendly) */}
+                  {settingsOpen && (
+                    <div className="py-1 bg-surface-50/60 dark:bg-surface-700/40 border-t border-surface-100 dark:border-surface-700 animate-fadeIn">
+                      {settingsItems.map((item) => (
+                        <button
+                          key={item.key}
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            setSettingsOpen(false);
+                            navigate(item.path);
+                          }}
+                          className="w-full flex items-center gap-2.5 pl-9 pr-3.5 py-2 text-[13px] text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors text-left"
+                        >
+                          {item.icon === 'website' ? (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-surface-400">
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="2" y1="12" x2="22" y2="12" />
+                              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                            </svg>
+                          ) : item.icon === 'announcements' ? (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-surface-400">
+                              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                            </svg>
+                          ) : (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-surface-400">
+                              <circle cx="12" cy="12" r="3" />
+                              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                            </svg>
+                          )}
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </>
             )}

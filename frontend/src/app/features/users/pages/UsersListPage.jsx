@@ -62,7 +62,8 @@ const PER_PAGE = 8;
 
 export default function UsersListPage() {
   const { i18n } = useTranslation("common");
-  const { primaryColor } = useTheme();
+  const { theme, primaryColor } = useTheme();
+  const isDark = theme === "dark";
   const isFr = i18n.language === "fr";
   const pc = primaryColor || "#085041";
 
@@ -304,7 +305,7 @@ export default function UsersListPage() {
     <button
       onClick={onClick}
       className={`relative overflow-hidden rounded-xl border-2 p-3.5 sm:p-4 shadow-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md text-left ${
-        active ? "bg-white" : "border-surface-100 dark:border-surface-700 bg-white dark:bg-surface-800"
+        active ? "bg-white dark:bg-surface-800" : "border-surface-100 dark:border-surface-700 bg-white dark:bg-surface-800"
       }`}
       style={active ? { borderColor: pc } : undefined}
     >
@@ -728,7 +729,7 @@ export default function UsersListPage() {
 
       {/* ── KPI chips ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 mb-5">
-        <KpiChip role="all" label={isFr ? "Tous" : "All users"} count={counts.all} icon={FiUser} bgColor="#F7F8F6" textColor="#5C665E" active={roleFilter === "all"} onClick={() => handleRoleFilter("all")} />
+        <KpiChip role="all" label={isFr ? "Tous" : "All users"} count={counts.all} icon={FiUser} bgColor={isDark ? "#1a1f1b" : "#F7F8F6"} textColor={isDark ? "#9ba59c" : "#5C665E"} active={roleFilter === "all"} onClick={() => handleRoleFilter("all")} />
         <KpiChip role="ADMIN" label={isFr ? "Admins" : "Admins"} count={counts.ADMIN} icon={FiShield} bgColor="#E1F5EE" textColor={pc} active={roleFilter === "ADMIN"} onClick={() => handleRoleFilter("ADMIN")} />
         <KpiChip role="TEACHER" label={isFr ? "Enseignants" : "Teachers"} count={counts.TEACHER} icon={FiBookOpen} bgColor="rgba(59,130,246,0.08)" textColor="#3B82F6" active={roleFilter === "TEACHER"} onClick={() => handleRoleFilter("TEACHER")} />
         <KpiChip role="STUDENT" label={isFr ? "Élèves" : "Students"} count={counts.STUDENT} icon={FiAward} bgColor="rgba(139,92,246,0.08)" textColor="#8B5CF6" active={roleFilter === "STUDENT"} onClick={() => handleRoleFilter("STUDENT")} />

@@ -44,9 +44,7 @@ class AuthController {
     } catch (error) {
       if (error.message === 'User account is inactive') {
         return response.error(res, 'Your account is inactive. Please contact your administrator.', null, 401);
-      }
-      if (
-        error.message === 'Invalid email or password' ||
+      }      if (error.message === 'Invalid email or password' ||
         error.message === 'School account is inactive'
       ) {
         return response.error(res, 'Invalid email or password', null, 401);

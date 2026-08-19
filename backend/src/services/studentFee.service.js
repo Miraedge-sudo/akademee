@@ -90,12 +90,16 @@ class StudentFeeService {
         const message = feeNames
           ? `Des frais vous ont été assignés : ${feeNames}. Consultez votre page Frais pour plus de détails.`
           : `Des frais vous ont été assignés. Consultez votre page Frais pour plus de détails.`;
+        const messageEn = feeNames
+          ? `Fees have been assigned to you: ${feeNames}. Check your Fees page for more details.`
+          : `Fees have been assigned to you. Check your Fees page for more details.`;
         if (stu?.user_id) {
           await notificationService.sendBroadcast(schoolId, {
             audience: 'user',
             userId: stu.user_id,
             type: 'payment',
             message,
+            messageEn,
           });
         }
       } catch {
@@ -201,11 +205,15 @@ class StudentFeeService {
         const message = feeNames
           ? `Des frais ont été assignés à votre classe (${klass?.name || '—'}) : ${feeNames}. Consultez votre page Frais pour plus de détails.`
           : `Des frais ont été assignés à votre classe (${klass?.name || '—'}). Consultez votre page Frais pour plus de détails.`;
+        const messageEn = feeNames
+          ? `Fees have been assigned to your class (${klass?.name || '—'}): ${feeNames}. Check your Fees page for more details.`
+          : `Fees have been assigned to your class (${klass?.name || '—'}). Check your Fees page for more details.`;
         await notificationService.sendBroadcast(schoolId, {
           audience: 'class',
           classId,
           type: 'payment',
           message,
+          messageEn,
         });
       } catch {
         // ignore — l'assignation reste valide

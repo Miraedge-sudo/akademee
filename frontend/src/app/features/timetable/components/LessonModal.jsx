@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FiAlertTriangle } from "react-icons/fi";
 import Modal from "../../../components/ui/Modal";
 import Select from "../../../components/ui/Select";
 import Button from "../../../components/ui/Button";
@@ -17,6 +18,8 @@ import { getSubjectColor } from "../utils/subjectColors";
  *   subjects: Array,
  *   teachers: Array,
  *   rooms: Array,
+ *   entries?: Array,          // tous les cours de l'année (vérification de conflits)
+ *   currentClassId?: string,  // classe en cours d'édition (pour exclure ses propres cours)
  *   onSave: (data: { subjectId, teacherId, roomId }) => void,
  *   onDelete?: () => void,
  * }} props
@@ -30,6 +33,8 @@ export default function LessonModal({
   subjects = [],
   teachers = [],
   rooms = [],
+  entries = [],
+  currentClassId = null,
   onSave,
   onDelete,
 }) {
@@ -66,6 +71,26 @@ export default function LessonModal({
     [rooms]
   );
 
+  // ── Vérification de conflits au moment du choix (avant enregistrement) ──
+  // Un enseignant / une salle ne peut pas être sur deux classes au même créneau.
+  // On exclut la classe en cours d'édition (ses cours seront remplacés à la
+  // sauvegarde) et le cours en cours d'édition lui-même.
+  const busyInfo = useMemo(() => {
+    if (!period) return { teacher: null, room: null };
+    const conflict = (e) =>
+      e &&
+      e.classId !== currentClassId &&
+      e.id !== entry?.id;
+    const teacher = entries.find((e) => conflict(e) && e.teacherId === teacherId && e.periodId === period.id) || null;
+    const room = roomId
+      ? entries.find((e) => conflict(e) && e.roomId === roomId && e.periodId === period.id) || null
+      : null;
+    return { teacher, room };
+  }, [entries, period, teacherId, roomId, currentClassId, entry?.id]);
+
+  const busyTeacher = busyInfo.teacher;
+  const busyRoom = busyInfo.room;
+
   if (!isOpen) return null;
 
   const title =
@@ -81,6 +106,20 @@ export default function LessonModal({
   const handleSubmit = () => {
     if (!subjectId) return setError(isFr ? "Choisissez une matière" : "Please choose a subject");
     if (!teacherId) return setError(isFr ? "Choisissez un enseignant" : "Please choose a teacher");
+    if (busyTeacher) {
+      return setError(
+        isFr
+          ? `Cet enseignant donne déjà cours dans une autre classe (${busyTeacher.className || "?"}) à ce créneau. Choisissez un autre enseignant.`
+          : `This teacher is already teaching in another class (${busyTeacher.className || "?"}) at this period. Choose another teacher.`
+      );
+    }
+    if (busyRoom) {
+      return setError(
+        isFr
+          ? `Cette salle est déjà utilisée par une autre classe (${busyRoom.className || "?"}) à ce créneau. Choisissez une autre salle.`
+          : `This room is already used by another class (${busyRoom.className || "?"}) at this period. Choose another room.`
+      );
+    }
     onSave({ subjectId, teacherId, roomId: roomId || null });
   };
 
@@ -147,6 +186,28 @@ export default function LessonModal({
           options={teacherOptions}
           onChange={(e) => setTeacherId(e.target.value)}
         />
+
+        {busyTeacher && (
+          <div className="flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 px-3 py-2.5 text-[12px] font-semibold text-amber-700 dark:text-amber-300">
+            <FiAlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <span>
+              {isFr
+                ? `⚠ Cet enseignant donne déjà cours dans la classe ${busyTeacher.className || "?"} à ce créneau. La sauvegarde sera refusée.`
+                : `⚠ This teacher is already teaching in class ${busyTeacher.className || "?"} at this period. Saving will be rejected.`}
+            </span>
+          </div>
+        )}
+
+        {busyRoom && (
+          <div className="flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 px-3 py-2.5 text-[12px] font-semibold text-amber-700 dark:text-amber-300">
+            <FiAlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <span>
+              {isFr
+                ? `⚠ Cette salle est déjà utilisée par la classe ${busyRoom.className || "?"} à ce créneau. La sauvegarde sera refusée.`
+                : `⚠ This room is already used by class ${busyRoom.className || "?"} at this period. Saving will be rejected.`}
+            </span>
+          </div>
+        )}
 
         <Select
           label={isFr ? "Salle (optionnel)" : "Room (optional)"}

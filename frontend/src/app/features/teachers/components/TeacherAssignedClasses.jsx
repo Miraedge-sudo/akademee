@@ -584,8 +584,7 @@ export default function TeacherAssignedClasses({
                 </div>
                 <div>
                   <span
-                    className="text-[14px] font-extrabold"
-                    style={{ color: '#1A1F1B' }}
+                    className="text-[14px] font-extrabold text-surface-900 dark:text-surface-100"
                   >
                     {stat.value}
                   </span>

@@ -284,7 +284,7 @@ export default function PremiumTemplate({ school }) {
                 className="h-9 px-5 text-[12px] font-semibold text-white no-underline inline-flex items-center gap-1.5 transition-all duration-200 hover:opacity-90"
                 style={{ background: pc, borderRadius: "2px" }}
               >
-                <Icon path={PATHS.login} className="w-3 h-3" /> {t(TRANSLATIONS.nav.portal)}
+                <Icon path={PATHS.login} className="w-3 h-3" /> {t(TRANSLATIONS.nav.login)}
               </a>
             </div>
 
@@ -314,12 +314,18 @@ export default function PremiumTemplate({ school }) {
             {t(TRANSLATIONS.nav[item] || { en: item.charAt(0).toUpperCase() + item.slice(1), fr: item.charAt(0).toUpperCase() + item.slice(1) })}
           </a>
         ))}
+        {/* Theme + language toggles (mobile) */}
+        <div className="flex items-center justify-center gap-3 mt-6">
+          <ThemeToggle variant="light" />
+          <LanguageToggle lang={lang} isBilingual={isBilingual} onToggle={toggleLang} variant="light" />
+        </div>
         <a
           href="/login"
-          className="mt-6 h-12 flex items-center justify-center text-[14px] font-semibold text-white no-underline"
+          onClick={() => setMobileOpen(false)}
+          className="mt-4 h-12 flex items-center justify-center text-[14px] font-semibold text-white no-underline"
           style={{ background: pc, borderRadius: "2px" }}
         >
-          {t(TRANSLATIONS.nav.studentPortal)}
+          {t(TRANSLATIONS.nav.login)}
         </a>
       </div>
 
@@ -783,7 +789,7 @@ export default function PremiumTemplate({ school }) {
             </div>
             {[
               { title: t(TRANSLATIONS.footer.navigate), links: [{ label: t(TRANSLATIONS.nav.about), href: "#about" }, { label: t(TRANSLATIONS.nav.classes), href: "#classes" }, { label: t(TRANSLATIONS.nav.gallery), href: "#gallery" }, { label: t(TRANSLATIONS.nav.contact), href: "#contact" }] },
-              { title: t(TRANSLATIONS.footer.portals), links: [{ label: t(TRANSLATIONS.nav.studentPortal), href: "/login" }, { label: t(TRANSLATIONS.nav.parentPortal), href: "/login" }] },
+              { title: t(TRANSLATIONS.footer.portals), links: [{ label: t(TRANSLATIONS.nav.login), href: "/login" }] },
               { title: t(TRANSLATIONS.footer.academic), links: [{ label: t(TRANSLATIONS.footer.curriculum), href: "#classes" }, { label: t(TRANSLATIONS.footer.results), href: "#academics" }, { label: t(TRANSLATIONS.footer.admissions), href: "#contact" }] },
             ].map((col, i) => (
               <div key={i}>
@@ -810,7 +816,7 @@ export default function PremiumTemplate({ school }) {
           className="flex-1 h-12 flex items-center justify-center text-[13px] font-semibold text-white no-underline"
           style={{ background: pc, borderRadius: "2px" }}
         >
-          {t(TRANSLATIONS.nav.portal)}
+          {t(TRANSLATIONS.nav.login)}
         </a>
         <a
           href="#contact"

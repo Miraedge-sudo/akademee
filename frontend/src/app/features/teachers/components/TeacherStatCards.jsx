@@ -91,8 +91,8 @@ function StatCard({ icon: Icon, iconBg, iconColor, value, suffix = '', label, tr
 
       <div
         ref={valRef}
-        className="text-[clamp(26px,3vw,34px)] font-extrabold leading-none mb-1"
-        style={{ color: valueColor || '#1A1F1B' }}
+        className="text-[clamp(26px,3vw,34px)] font-extrabold leading-none mb-1 text-surface-900 dark:text-surface-100"
+        style={valueColor ? { color: valueColor } : undefined}
       >
         0
       </div>

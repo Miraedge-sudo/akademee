@@ -941,14 +941,14 @@ export default function ClassDetailPage() {
                     return (
                       <button key={t.id}
                         onClick={() => { setAssignModal(true); openSubjectSelection(t); }}
-                        className="w-full flex items-center gap-3.5 p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 hover:shadow-md hover:border-primary-200 dark:hover:border-primary-800 transition-all text-left group"
+                        className="w-full flex flex-wrap items-center gap-x-3.5 gap-y-2.5 p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 hover:shadow-md hover:border-primary-200 dark:hover:border-primary-800 transition-all text-left group"
                       >
                         <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
                           style={{ background: hexToRgba(pc, 0.08), border: `1.5px solid ${hexToRgba(pc, 0.2)}`, color: pc }}>
                           {initials}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-surface-800 dark:text-surface-100">
+                        <div className="flex-1 min-w-0 min-w-[140px]">
+                          <div className="text-sm font-semibold text-surface-800 dark:text-surface-100 truncate">
                             {t.firstName} {t.lastName}
                           </div>
                           <div className="text-xs text-surface-400 truncate">
@@ -973,23 +973,26 @@ export default function ClassDetailPage() {
                             </span>
                           )}
                         </div>
-                        {isMain && (
-                          <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
-                            style={{ background: hexToRgba(pc, 0.08), color: pc, border: `1px solid ${hexToRgba(pc, 0.2)}` }}>
-                            {isFr ? "Titulaire" : "Class teacher"}
-                          </span>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveTeacherClick(t.id, `${t.firstName} ${t.lastName}`);
-                          }}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition-all flex-shrink-0"
-                          title={isFr ? "Retirer cet enseignant" : "Remove teacher"}
-                        >
-                          <FiTrash2 className="w-3.5 h-3.5" />
-                        </button>
-                        <FiChevronRight className="w-4 h-4 text-surface-300 flex-shrink-0" />
+                        {/* Right-side group: wraps to its own row on mobile */}
+                        <div className="w-full sm:w-auto flex items-center justify-end sm:justify-start gap-2 sm:gap-3.5 sm:ml-auto flex-shrink-0">
+                          {isMain && (
+                            <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
+                              style={{ background: hexToRgba(pc, 0.08), color: pc, border: `1px solid ${hexToRgba(pc, 0.2)}` }}>
+                              {isFr ? "Titulaire" : "Class teacher"}
+                            </span>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveTeacherClick(t.id, `${t.firstName} ${t.lastName}`);
+                            }}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition-all flex-shrink-0"
+                            title={isFr ? "Retirer cet enseignant" : "Remove teacher"}
+                          >
+                            <FiTrash2 className="w-3.5 h-3.5" />
+                          </button>
+                          <FiChevronRight className="w-4 h-4 text-surface-300 flex-shrink-0" />
+                        </div>
                       </button>
                     );
                   })}

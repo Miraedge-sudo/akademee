@@ -6,6 +6,7 @@
  *  - Payment receipt detail modal
  *  - Print/PDF download via CSS @media print
  *  - Full i18n support via t()
+ *  - Dark mode support (page chrome adapts; the receipt document stays white for printing)
  *
  * Route: /dashboard/receipts
  */
@@ -75,6 +76,8 @@ function initials(name) {
 }
 
 // ── Receipt Modal ──
+// NB: le document du reçu reste blanc (support imprimable / PDF) même en mode sombre ;
+// seule la coquille (fond, boutons) s'adapte au thème.
 function ReceiptModal({ payment, onClose, t, isFr, schoolName, schoolAddress, pc }) {
   const statusCfg = STATUS_CONFIG[payment?.status] || STATUS_CONFIG.completed;
   const amount = Number(payment?.amount || 0);
@@ -127,7 +130,7 @@ function ReceiptModal({ payment, onClose, t, isFr, schoolName, schoolAddress, pc
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg my-8 overflow-hidden"
+        className="bg-surface-50 dark:bg-surface-900 rounded-2xl shadow-2xl w-full max-w-lg my-8 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         id="receipt-content"
       >
@@ -160,7 +163,7 @@ function ReceiptModal({ payment, onClose, t, isFr, schoolName, schoolAddress, pc
           <div className="receipt-no-print flex items-center justify-between mb-5">
             <button
               onClick={onClose}
-              className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-sm text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 transition-colors cursor-pointer"
             >
               <FiChevronLeft size={16} />
               {t("actions.back", "Back")}
@@ -168,7 +171,7 @@ function ReceiptModal({ payment, onClose, t, isFr, schoolName, schoolAddress, pc
             <div className="flex items-center gap-2">
               <button
                 onClick={handleDownloadPDF}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition-all cursor-pointer hover:bg-gray-50 shadow-sm"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition-all cursor-pointer hover:bg-surface-100 dark:hover:bg-surface-700/60 shadow-sm bg-white dark:bg-surface-800"
                 style={{ borderColor: pc, color: pc }}
               >
                 <FiDownload size={15} />
@@ -185,7 +188,7 @@ function ReceiptModal({ payment, onClose, t, isFr, schoolName, schoolAddress, pc
             </div>
           </div>
 
-          {/* ══════ RECEIPT ══════ */}
+          {/* ══════ RECEIPT (always white — printable document) ══════ */}
           <div id="receipt-inner" className="border border-gray-200 rounded-2xl overflow-hidden bg-white">
             {/* Header */}
             <div className="p-6 text-center border-b border-gray-100" style={{ background: `${hexToRgba(pc, 0.04)}` }}>
@@ -355,7 +358,7 @@ export default function ReceiptsPage() {
   const totalAmount = filtered.reduce((s, p) => s + Number(p.amount || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
       <style>{`
         @keyframes rcFadeUp {
           from { opacity: 0; transform: translateY(12px); }
@@ -365,23 +368,23 @@ export default function ReceiptsPage() {
       `}</style>
 
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="bg-white dark:bg-surface-800 border-b border-surface-200 dark:border-surface-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate("/dashboard")}
-              className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-xl bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 flex items-center justify-center transition-colors cursor-pointer"
             >
-              <FiChevronLeft className="w-5 h-5 text-gray-600" />
+              <FiChevronLeft className="w-5 h-5 text-surface-600 dark:text-surface-300" />
             </button>
             <div>
               <div className="flex items-center gap-2">
                 <FiPrinter className="w-5 h-5" style={{ color: pc }} />
-                <h1 className="text-xl font-bold text-gray-900">
+                <h1 className="text-xl font-bold text-surface-900 dark:text-surface-100">
                   {t("receipts.title", "Payment Receipts")}
                 </h1>
               </div>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-sm text-surface-500 dark:text-surface-400 mt-0.5">
                 {t("receipts.subtitle", "View and print payment receipts")}
               </p>
             </div>
@@ -389,19 +392,19 @@ export default function ReceiptsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-5">
         {/* ── Filters bar ── */}
-        <div className="rc-fade bg-white rounded-xl border border-gray-200 p-4 shadow-sm" style={{ animationDelay: "0.02s" }}>
+        <div className="rc-fade bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-4 shadow-sm" style={{ animationDelay: "0.02s" }}>
           <div className="flex items-center gap-3 flex-wrap">
             {/* Search */}
             <div className="relative flex-1 min-w-[200px]">
-              <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 dark:text-surface-500" size={16} />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={isFr ? "Rechercher un paiement..." : "Search payments..."}
-                className="w-full h-10 pl-10 pr-4 rounded-xl border border-gray-200 focus:border-teal-700 focus:ring-2 focus:ring-teal-100 outline-none text-sm"
+                className="w-full h-10 pl-10 pr-4 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-800 dark:text-surface-100 focus:border-teal-700 focus:ring-2 focus:ring-teal-100 dark:focus:ring-teal-900/40 outline-none text-sm transition-colors"
               />
             </div>
 
@@ -409,7 +412,7 @@ export default function ReceiptsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-10 px-3 rounded-xl border border-gray-200 focus:border-teal-700 focus:ring-2 focus:ring-teal-100 outline-none text-sm bg-white cursor-pointer"
+              className="h-10 px-3 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-800 dark:text-surface-100 focus:border-teal-700 focus:ring-2 focus:ring-teal-100 dark:focus:ring-teal-900/40 outline-none text-sm cursor-pointer transition-colors"
             >
               <option value="">{isFr ? "Tous les statuts" : "All status"}</option>
               <option value="completed">{isFr ? "Complétés" : "Completed"}</option>
@@ -420,7 +423,7 @@ export default function ReceiptsPage() {
             {/* Date toggle */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="inline-flex items-center gap-1.5 h-10 px-3 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 h-10 px-3 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-900 text-sm text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-all cursor-pointer"
             >
               <FiCalendar size={15} />
               {isFr ? "Dates" : "Dates"}
@@ -430,41 +433,41 @@ export default function ReceiptsPage() {
             {/* Refresh */}
             <button
               onClick={fetchPayments}
-              className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all cursor-pointer"
+              className="w-10 h-10 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-900 flex items-center justify-center hover:bg-surface-50 dark:hover:bg-surface-700 transition-all cursor-pointer"
             >
-              <FiRefreshCw className={`w-4 h-4 text-gray-500 ${loading ? "animate-spin" : ""}`} />
+              <FiRefreshCw className={`w-4 h-4 text-surface-500 dark:text-surface-400 ${loading ? "animate-spin" : ""}`} />
             </button>
           </div>
 
           {/* Date range (collapsible) */}
           {showFilters && (
-            <div className="mt-3 flex items-center gap-3 flex-wrap pt-3 border-t border-gray-100">
+            <div className="mt-3 flex items-center gap-3 flex-wrap pt-3 border-t border-surface-100 dark:border-surface-700">
               <div>
-                <label className="block text-[11px] font-semibold text-gray-500 mb-1">
+                <label className="block text-[11px] font-semibold text-surface-500 dark:text-surface-400 mb-1">
                   {isFr ? "Du" : "From"}
                 </label>
                 <input
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="h-9 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:border-teal-700"
+                  className="h-9 px-3 rounded-lg border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-800 dark:text-surface-100 text-sm outline-none focus:border-teal-700 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-gray-500 mb-1">
+                <label className="block text-[11px] font-semibold text-surface-500 dark:text-surface-400 mb-1">
                   {isFr ? "Au" : "To"}
                 </label>
                 <input
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="h-9 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:border-teal-700"
+                  className="h-9 px-3 rounded-lg border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-800 dark:text-surface-100 text-sm outline-none focus:border-teal-700 transition-colors"
                 />
               </div>
               {(dateFrom || dateTo) && (
                 <button
                   onClick={() => { setDateFrom(""); setDateTo(""); }}
-                  className="inline-flex items-center gap-1 text-[12px] text-gray-500 hover:text-red-500 mt-4 cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[12px] text-surface-500 dark:text-surface-400 hover:text-red-500 mt-4 cursor-pointer"
                 >
                   <FiX size={13} />
                   {isFr ? "Effacer" : "Clear"}
@@ -486,8 +489,8 @@ export default function ReceiptsPage() {
                   return p.createdAt?.startsWith(today);
                 }).length, color: "#8B5CF6" },
             ].map((stat, idx) => (
-              <div key={idx} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">{stat.label}</div>
+              <div key={idx} className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-4 shadow-sm">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-surface-400 dark:text-surface-500 mb-1">{stat.label}</div>
                 <div className="text-[18px] font-extrabold" style={{ color: stat.color }}>{stat.value}</div>
               </div>
             ))}
@@ -495,31 +498,31 @@ export default function ReceiptsPage() {
         )}
 
         {/* ── Payments list ── */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden shadow-sm">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <FiRefreshCw className="w-6 h-6 animate-spin" style={{ color: pc }} />
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
-                <FiPrinter className="w-8 h-8 text-gray-300" />
+              <div className="w-16 h-16 rounded-full bg-surface-100 dark:bg-surface-700/60 flex items-center justify-center mx-auto mb-4">
+                <FiPrinter className="w-8 h-8 text-surface-300 dark:text-surface-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+              <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-1">
                 {search || statusFilter || dateFrom
                   ? (isFr ? "Aucun résultat" : "No results")
                   : (isFr ? "Aucun paiement" : "No payments")}
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-surface-500 dark:text-surface-400">
                 {search || statusFilter || dateFrom
                   ? (isFr ? "Aucun paiement ne correspond à votre recherche" : "No payments match your search")
                   : (isFr ? "Les paiements enregistrés apparaîtront ici" : "Recorded payments will appear here")}
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-surface-100 dark:divide-surface-700">
               {/* Table header */}
-              <div className="hidden md:flex items-center gap-4 px-6 py-3 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <div className="hidden md:flex items-center gap-4 px-6 py-3 bg-surface-50 dark:bg-surface-700/40 text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">
                 <div className="w-8" />
                 <div className="flex-1 min-w-0">{isFr ? "Élève" : "Student"}</div>
                 <div className="w-28 text-right">{isFr ? "Montant" : "Amount"}</div>
@@ -536,7 +539,7 @@ export default function ReceiptsPage() {
                 return (
                   <div
                     key={pmt.id || idx}
-                    className="rc-fade flex flex-col md:flex-row md:items-center gap-3 px-4 md:px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="rc-fade flex flex-col md:flex-row md:items-center gap-3 px-4 md:px-6 py-4 hover:bg-surface-50 dark:hover:bg-surface-700/40 transition-colors cursor-pointer"
                     style={{ animationDelay: `${0.03 * idx}s` }}
                     onClick={() => openReceipt(pmt)}
                   >
@@ -553,8 +556,8 @@ export default function ReceiptsPage() {
                         {initials(pmt.studentName)}
                       </div>
                       <div className="flex-1">
-                        <div className="text-sm font-semibold text-gray-800">{pmt.studentName}</div>
-                        <div className="text-xs text-gray-400 flex items-center gap-2">
+                        <div className="text-sm font-semibold text-surface-800 dark:text-surface-100">{pmt.studentName}</div>
+                        <div className="text-xs text-surface-400 dark:text-surface-500 flex items-center gap-2">
                           <span>{isFr ? methodLabel.fr : methodLabel.en}</span>
                           <span>·</span>
                           <span>{formatDate(pmt.createdAt, isFr, "short")}</span>
@@ -573,7 +576,7 @@ export default function ReceiptsPage() {
 
                     {/* Desktop columns */}
                     <div className="hidden md:block flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-gray-800 truncate">{pmt.studentName}</div>
+                      <div className="text-sm font-semibold text-surface-800 dark:text-surface-100 truncate">{pmt.studentName}</div>
                     </div>
 
                     <div className="hidden md:block w-28 text-right">
@@ -583,11 +586,11 @@ export default function ReceiptsPage() {
                     </div>
 
                     <div className="hidden md:block w-28">
-                      <span className="text-xs text-gray-500">{isFr ? methodLabel.fr : methodLabel.en}</span>
+                      <span className="text-xs text-surface-500 dark:text-surface-400">{isFr ? methodLabel.fr : methodLabel.en}</span>
                     </div>
 
                     <div className="hidden md:block w-24">
-                      <span className="text-xs font-mono text-gray-500 truncate block">{pmt.reference || pmt.receiptNumber || "-"}</span>
+                      <span className="text-xs font-mono text-surface-500 dark:text-surface-400 truncate block">{pmt.reference || pmt.receiptNumber || "-"}</span>
                     </div>
 
                     <div className="hidden md:flex w-24 justify-center">
@@ -598,13 +601,13 @@ export default function ReceiptsPage() {
                     </div>
 
                     <div className="hidden md:block w-20">
-                      <span className="text-xs text-gray-500">{formatDate(pmt.createdAt, isFr, "short")}</span>
+                      <span className="text-xs text-surface-500 dark:text-surface-400">{formatDate(pmt.createdAt, isFr, "short")}</span>
                     </div>
 
                     <div className="hidden md:flex w-16 justify-end">
                       <button
                         onClick={(e) => { e.stopPropagation(); openReceipt(pmt); }}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-teal-50 transition-colors cursor-pointer"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors cursor-pointer"
                         title={isFr ? "Voir le reçu" : "View receipt"}
                         style={{ color: pc }}
                       >

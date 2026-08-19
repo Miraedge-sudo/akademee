@@ -308,21 +308,51 @@ export default function BoldTemplate({ school }) {
         /* ─── Light mode overrides ─── */
         .website-light { --bg-card: #ffffff; --bg-section: #f0efea; --text-primary: #1a1a1a; --text-secondary: #6a6a6a; --border-light: #e0ddd8; }
         .website-light .bold-glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(24px); border-color: rgba(0,0,0,0.06); }
-        .website-light .text-white\/40 { color: rgba(26,26,26,0.4) !important; }
-        .website-light .text-white\/50 { color: rgba(26,26,26,0.5) !important; }
-        .website-light .text-white\/45 { color: rgba(26,26,26,0.45) !important; }
-        .website-light .text-white\/70 { color: rgba(26,26,26,0.7) !important; }
-        .website-light .text-white\/80 { color: rgba(26,26,26,0.8) !important; }
-        .website-light .text-white\/30 { color: rgba(26,26,26,0.3) !important; }
-        .website-light .border-white\/10 { border-color: rgba(0,0,0,0.08) !important; }
-        .website-light .border-white\/5 { border-color: rgba(0,0,0,0.05) !important; }
-        .website-light .bg-white\/5 { background: rgba(0,0,0,0.03) !important; }
-        .website-light .bg-white\/10 { background: rgba(0,0,0,0.05) !important; }
-        .website-light .hover\:bg-white\/5:hover { background: rgba(0,0,0,0.03) !important; }
-        .website-light .hover\:bg-white\/10:hover { background: rgba(0,0,0,0.05) !important; }
-        .website-light .hover\:text-white:hover { color: #1a1a1a !important; }
-        .website-light .bg-\[\#0d0d0d\] { background: #f0efea !important; }
-        .website-light .bg-\[\#030303\] { background: #e8e7e2 !important; }
+        .website-light .text-white { color: rgba(26,26,26,1) !important; }
+        .website-light .text-white\\/20 { color: rgba(26,26,26,0.2) !important; }
+        .website-light .text-white\\/25 { color: rgba(26,26,26,0.25) !important; }
+        .website-light .text-white\\/30 { color: rgba(26,26,26,0.3) !important; }
+        .website-light .text-white\\/40 { color: rgba(26,26,26,0.4) !important; }
+        .website-light .text-white\\/45 { color: rgba(26,26,26,0.45) !important; }
+        .website-light .text-white\\/50 { color: rgba(26,26,26,0.5) !important; }
+        .website-light .text-white\\/60 { color: rgba(26,26,26,0.6) !important; }
+        .website-light .text-white\\/70 { color: rgba(26,26,26,0.7) !important; }
+        .website-light .text-white\\/80 { color: rgba(26,26,26,0.8) !important; }
+        .website-light .border-white\\/10 { border-color: rgba(0,0,0,0.08) !important; }
+        .website-light .border-white\\/5 { border-color: rgba(0,0,0,0.05) !important; }
+        .website-light .bg-white\\/5 { background: rgba(0,0,0,0.03) !important; }
+        .website-light .bg-white\\/10 { background: rgba(0,0,0,0.05) !important; }
+        .website-light .hover\\:bg-white\\/5:hover { background: rgba(0,0,0,0.03) !important; }
+        .website-light .hover\\:bg-white\\/10:hover { background: rgba(0,0,0,0.05) !important; }
+        .website-light .hover\\:text-white:hover { color: #1a1a1a !important; }
+        .website-light .bg-\\[\\#0d0d0d\\] { background: #f0efea !important; }
+        .website-light .bg-\\[\\#030303\\] { background: #e8e7e2 !important; }
+
+        /* ─── Always-dark surfaces keep white text in light mode (hero, mobile menu, sticky bar) ─── */
+        .website-light .bold-always-dark .text-white { color: #fff !important; }
+        .website-light .bold-always-dark .text-white\\/20 { color: rgba(255,255,255,0.2) !important; }
+        .website-light .bold-always-dark .text-white\\/25 { color: rgba(255,255,255,0.25) !important; }
+        .website-light .bold-always-dark .text-white\\/30 { color: rgba(255,255,255,0.3) !important; }
+        .website-light .bold-always-dark .text-white\\/40 { color: rgba(255,255,255,0.4) !important; }
+        .website-light .bold-always-dark .text-white\\/45 { color: rgba(255,255,255,0.45) !important; }
+        .website-light .bold-always-dark .text-white\\/50 { color: rgba(255,255,255,0.5) !important; }
+        .website-light .bold-always-dark .text-white\\/60 { color: rgba(255,255,255,0.6) !important; }
+        .website-light .bold-always-dark .text-white\\/70 { color: rgba(255,255,255,0.7) !important; }
+        .website-light .bold-always-dark .text-white\\/80 { color: rgba(255,255,255,0.8) !important; }
+        .website-light .bold-always-dark .border-white\\/10 { border-color: rgba(255,255,255,0.1) !important; }
+        .website-light .bold-always-dark .border-white\\/5 { border-color: rgba(255,255,255,0.05) !important; }
+        .website-light .bold-always-dark .bg-white\\/5 { background: rgba(255,255,255,0.05) !important; }
+        .website-light .bold-always-dark .bg-white\\/10 { background: rgba(255,255,255,0.1) !important; }
+
+        /* ─── Header: transparent (over the always-dark hero) keeps light text; scrolled (bold-glass) goes dark ─── */
+        .website-light header:not(.bold-glass) .text-white { color: #fff !important; }
+        .website-light header:not(.bold-glass) .text-white\\/40 { color: rgba(255,255,255,0.4) !important; }
+        .website-light header:not(.bold-glass) .text-white\\/50 { color: rgba(255,255,255,0.5) !important; }
+        .website-light header:not(.bold-glass) .text-white\\/70 { color: rgba(255,255,255,0.7) !important; }
+        .website-light header:not(.bold-glass) .text-white\\/80 { color: rgba(255,255,255,0.8) !important; }
+
+        /* ─── Text on primary-colored buttons stays white ─── */
+        .website-light .bold-on-primary { color: #fff !important; }
         
         /* ─── Tab active indicator ─── */
         .tab-active { background: var(--p) !important; color: #fff !important; }
@@ -342,7 +372,7 @@ export default function BoldTemplate({ school }) {
             <a href="#" className="flex items-center gap-3 no-underline group">
               <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
                 style={{ background: s.logoUrl ? `url(${s.logoUrl}) center/cover no-repeat` : pc }}>
-                {!s.logoUrl && <span className="text-[13px] font-bold text-white">{initials}</span>}
+                {!s.logoUrl && <span className="bold-on-primary text-[13px] font-bold text-white">{initials}</span>}
               </div>
               <div className="hidden sm:block">
                 <div className="text-[15px] font-semibold text-white leading-tight">            {schoolName}</div>
@@ -376,13 +406,13 @@ export default function BoldTemplate({ school }) {
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-2.5">
-              <ThemeToggle variant="dark" />
-              <LanguageToggle lang={lang} isBilingual={isBilingual} onToggle={toggleLang} variant="dark" />
+              <ThemeToggle variant={scrolled && !isDark ? "light" : "dark"} />
+              <LanguageToggle lang={lang} isBilingual={isBilingual} onToggle={toggleLang} variant={scrolled && !isDark ? "light" : "dark"} />
               <a href="/login" className="h-9 px-4 rounded-xl text-[13px] font-medium text-white/70 no-underline inline-flex items-center transition-colors hover:text-white">
                 {t(TRANSLATIONS.nav.signIn)}
               </a>
-              <a href="/login" className="h-9 px-4 rounded-xl text-[13px] font-semibold text-white no-underline inline-flex items-center gap-1.5 transition-all duration-200 hover:brightness-110" style={{ background: pc }}>
-                <Icon path={PATHS.login} className="w-3.5 h-3.5" /> {t(TRANSLATIONS.nav.portal)}
+              <a href="/login" className="bold-on-primary h-9 px-4 rounded-xl text-[13px] font-semibold text-white no-underline inline-flex items-center gap-1.5 transition-all duration-200 hover:brightness-110" style={{ background: pc }}>
+                <Icon path={PATHS.login} className="w-3.5 h-3.5" /> {t(TRANSLATIONS.nav.login)}
               </a>
             </div>
 
@@ -401,7 +431,7 @@ export default function BoldTemplate({ school }) {
       </header>
 
       {/* Mobile Menu */}
-      <div className={`fixed inset-0 z-40 flex-col pt-20 px-6 pb-8 ${mobileOpen ? "flex" : "hidden"}`} style={{ background: "rgba(8,8,8,0.98)", backdropFilter: "blur(24px)" }}>
+      <div className={`bold-always-dark fixed inset-0 z-40 flex-col pt-20 px-6 pb-8 ${mobileOpen ? "flex" : "hidden"}`} style={{ background: "rgba(8,8,8,0.98)", backdropFilter: "blur(24px)" }}>
         {[...SECTIONS, "academics"].map((item) => (
           <a
             key={item}
@@ -412,15 +442,20 @@ export default function BoldTemplate({ school }) {
             {t(TRANSLATIONS.nav[item] || { en: item.charAt(0).toUpperCase() + item.slice(1), fr: item.charAt(0).toUpperCase() + item.slice(1) })}
           </a>
         ))}
-        <div className="flex flex-col gap-2.5 mt-6">
-          <a href="/login" className="h-12 flex items-center justify-center rounded-xl text-[15px] font-semibold text-white no-underline" style={{ background: pc }}>
-            <Icon path={PATHS.login} className="w-4 h-4 mr-2" /> {t(TRANSLATIONS.nav.studentPortal)}
+        {/* Theme + language toggles (mobile) */}
+        <div className="flex items-center justify-center gap-3 mt-6">
+          <ThemeToggle variant="dark" />
+          <LanguageToggle lang={lang} isBilingual={isBilingual} onToggle={toggleLang} variant="dark" />
+        </div>
+        <div className="flex flex-col gap-2.5 mt-4">
+          <a href="/login" onClick={() => setMobileOpen(false)} className="h-12 flex items-center justify-center rounded-xl text-[15px] font-semibold text-white no-underline" style={{ background: pc }}>
+            <Icon path={PATHS.login} className="w-4 h-4 mr-2" /> {t(TRANSLATIONS.nav.login)}
           </a>
         </div>
       </div>
 
       {/* ════════════════ HERO ════════════════ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      <section className="bold-always-dark relative min-h-screen flex items-center max-md:flex-col overflow-hidden">
         {/* Background layers */}
         <div className="absolute inset-0 z-0">
           {s.heroImageUrl ? (
@@ -455,7 +490,7 @@ export default function BoldTemplate({ school }) {
                     <span
                       key={sys}
                       className="inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-[2px] uppercase px-3 py-1.5 rounded-full border"
-                      style={{ borderColor: pcm, color: pcm }}
+                      style={{ borderColor: "rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.8)" }}
                     >
                       <span className="w-1.5 h-1.5 rounded-full" style={{ background: pc }} />
                       {sys}
@@ -477,7 +512,7 @@ export default function BoldTemplate({ school }) {
                 </div>
               </div>
 
-              <h1 className="text-[clamp(44px,7vw,88px)] font-bold leading-[1.02] tracking-[-2px] mb-6" data-reveal>
+              <h1 className="text-white text-[clamp(44px,7vw,88px)] font-bold leading-[1.02] tracking-[-2px] mb-6" data-reveal>
                 {schoolName}
               </h1>
 
@@ -510,8 +545,8 @@ export default function BoldTemplate({ school }) {
         </div>
 
         {/* Stats Bar */}
-        <div className="absolute bottom-0 left-0 right-0 z-10" style={{ background: "linear-gradient(to top, #080808, transparent)" }}>
-          <div className="max-w-[1280px] mx-auto px-6 pb-8 pt-16">
+        <div className="absolute bottom-0 left-0 right-0 z-10 max-md:static max-md:w-full" style={{ background: "linear-gradient(to top, #080808, transparent)" }}>
+          <div className="max-w-[1280px] mx-auto px-6 pb-8 pt-16 max-md:pb-24">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-md:gap-4">
               {statItems.map((stat, i) => (
                 <div key={i} className="border-l border-white/10 pl-5 max-md:border-l-0 max-md:pl-0 max-md:border-t max-md:pt-4" data-reveal>
@@ -761,7 +796,7 @@ export default function BoldTemplate({ school }) {
                 </div>
                 <p className="text-[clamp(18px,2.5vw,24px)] font-light leading-[1.7] text-white/70 mb-8">&ldquo;{t.quote}&rdquo;</p>
                 <div className="flex items-center justify-center gap-3">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: pc }}>
+                  <div className="bold-on-primary w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: pc }}>
                     {t.author[0]}
                   </div>
                   <div className="text-left">
@@ -904,7 +939,7 @@ export default function BoldTemplate({ school }) {
             <div className="relative" data-reveal>
               <div className="bold-glass rounded-2xl p-8" style={{ borderColor: pcm }}>
                 <EnrollmentForm
-                  variant="dark"
+                  variant={isDark ? "dark" : "light"}
                   primaryColor={pc}
                 />
               </div>
@@ -928,7 +963,7 @@ export default function BoldTemplate({ school }) {
           <div className="flex items-center justify-center gap-4 flex-wrap" data-reveal>
             <MagneticButton
               href="#contact"
-              className="h-[54px] px-8 rounded-xl text-[15px] font-semibold text-white"
+              className="bold-on-primary h-[54px] px-8 rounded-xl text-[15px] font-semibold text-white"
               style={{ background: pc }}
             >
               <Icon path={PATHS.phone} className="w-[18px] h-[18px]" /> {t(TRANSLATIONS.enrolment.contactAdmissions)}
@@ -937,7 +972,7 @@ export default function BoldTemplate({ school }) {
               href="/login"
               className="h-[54px] px-7 rounded-xl text-[15px] font-medium text-white/70 hover:text-white border border-white/10"
             >
-              <Icon path={PATHS.login} className="w-[18px] h-[18px]" /> {t(TRANSLATIONS.nav.studentPortal)}
+              <Icon path={PATHS.login} className="w-[18px] h-[18px]" /> {t(TRANSLATIONS.nav.login)}
             </MagneticButton>
           </div>
         </div>
@@ -998,7 +1033,7 @@ export default function BoldTemplate({ school }) {
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2.5 mb-4">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: pc }}>
-                  <Icon path={PATHS.building} className="w-4 h-4 text-white" />
+                  <Icon path={PATHS.building} className="bold-on-primary w-4 h-4 text-white" />
                 </div>
                 <span className="text-[16px] font-semibold text-white">{schoolName}</span>
               </div>
@@ -1008,7 +1043,7 @@ export default function BoldTemplate({ school }) {
             {/* Nav columns */}
             {[
               { title: t(TRANSLATIONS.footer.navigate), links: [{ label: t(TRANSLATIONS.nav.about), href: "#about" }, { label: t(TRANSLATIONS.nav.classes), href: "#classes" }, { label: t(TRANSLATIONS.nav.gallery), href: "#gallery" }, { label: t(TRANSLATIONS.nav.contact), href: "#contact" }] },
-              { title: t(TRANSLATIONS.footer.portals), links: [{ label: t(TRANSLATIONS.nav.studentPortal), href: "/login" }, { label: t(TRANSLATIONS.nav.parentPortal), href: "/login" }, { label: t(TRANSLATIONS.nav.teacherLogin), href: "/login" }] },
+              { title: t(TRANSLATIONS.footer.portals), links: [{ label: t(TRANSLATIONS.nav.login), href: "/login" }] },
               { title: t(TRANSLATIONS.footer.academic), links: [{ label: t(TRANSLATIONS.footer.results), href: "#academics" }, { label: t(TRANSLATIONS.footer.curriculum), href: "#classes" }, { label: t(TRANSLATIONS.footer.fees), href: "#" }, { label: t(TRANSLATIONS.footer.admissions), href: "#contact" }] },
             ].map((col, i) => (
               <div key={i}>
@@ -1031,8 +1066,8 @@ export default function BoldTemplate({ school }) {
       </footer>
 
       {/* Sticky mobile CTA */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-3 pb-[max(12px,env(safe-area-inset-bottom))] flex gap-2.5" style={{ background: "rgba(8,8,8,0.95)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <a href="/login" className="flex-1 h-12 flex items-center justify-center rounded-xl text-[14px] font-semibold text-white no-underline" style={{ background: pc }}>{t(TRANSLATIONS.nav.studentPortal)}</a>
+      <div className="bold-always-dark md:hidden fixed bottom-0 left-0 right-0 z-40 p-3 pb-[max(12px,env(safe-area-inset-bottom))] flex gap-2.5" style={{ background: "rgba(8,8,8,0.95)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <a href="/login" className="flex-1 h-12 flex items-center justify-center rounded-xl text-[14px] font-semibold text-white no-underline" style={{ background: pc }}>{t(TRANSLATIONS.nav.login)}</a>
         <a href="#contact" className="flex-1 h-12 flex items-center justify-center rounded-xl text-[14px] font-medium text-white/70 no-underline border border-white/10">{t(TRANSLATIONS.nav.contact)}</a>
       </div>
 

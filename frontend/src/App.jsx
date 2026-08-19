@@ -277,11 +277,11 @@ function App() {
             <Route path="admissions/applications" element={dashboardPage(AdmissionsSection)} />
             <Route path="admissions/enrollment" element={dashboardPage(AdmissionsSection)} />
 
-            {/* Settings */}
-            <Route path="settings" element={dashboardPage(SettingsPage)} />
-            <Route path="website" element={dashboardPage(WebsiteSettingsPage)} />
-            <Route path="announcements" element={dashboardPage(AnnouncementsAdminPage)} />
-            <Route path="academic-years" element={dashboardPage(AcademicYearsPage)} />
+            {/* Settings — réservé à l'administrateur */}
+            <Route path="settings" element={<RoleRoute allowedRoles={["ADMIN"]}>{dashboardPage(SettingsPage)}</RoleRoute>} />
+            <Route path="website" element={<RoleRoute allowedRoles={["ADMIN"]}>{dashboardPage(WebsiteSettingsPage)}</RoleRoute>} />
+            <Route path="announcements" element={<RoleRoute allowedRoles={["ADMIN"]}>{dashboardPage(AnnouncementsAdminPage)}</RoleRoute>} />
+            <Route path="academic-years" element={<RoleRoute allowedRoles={["ADMIN"]}>{dashboardPage(AcademicYearsPage)}</RoleRoute>} />
             {/* Role-specific home dashboards */}
             <Route
               path="teacher-home"

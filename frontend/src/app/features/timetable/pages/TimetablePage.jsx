@@ -197,11 +197,14 @@ export default function TimetablePage() {
     if (!dirty) setDraft(serverEntries);
   }, [serverEntries, dirty]);
 
-  // Reset de l'état d'édition quand on change de vue / classe
+  // Reset de l'état d'édition quand on change de vue / classe.
+  // NB: on ne vide PAS le brouillon ici — l'effet de synchronisation
+  // ci-dessus le ré-aligne sur la grille serveur de la nouvelle entité
+  // (setDraft([]) ici écraserait des données déjà fraîches servies par
+  // le cache React Query et laisserait la grille vide sans refresh).
   useEffect(() => {
     setDirty(false);
     setConflicts([]);
-    setDraft([]);
   }, [view, selectedClassId, selectedTeacherId, selectedRoomId]);
 
   const conflictPeriodIds = useMemo(() => new Set(conflicts.map((c) => c.periodId)), [conflicts]);
@@ -949,6 +952,8 @@ export default function TimetablePage() {
         subjects={subjects}
         teachers={teachers}
         rooms={rooms}
+        entries={allEntries}
+        currentClassId={selectedClassId}
         onSave={handleLessonSave}
         onDelete={handleLessonDelete}
       />
