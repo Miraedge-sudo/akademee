@@ -49,8 +49,12 @@ class AuthController {
       ) {
         return response.error(res, 'Invalid email or password', null, 401);
       }
-      // Email verification errors are no longer thrown at login.
-      // The frontend ProtectedRoute redirects to /verify-email instead.
+      if (error.message === 'School email is not verified') {
+        return response.error(res, 'Please verify your school email before starting onboarding.', null, 403);
+      }
+      if (error.message === 'Admin email is not verified') {
+        return response.error(res, 'Please verify your admin email before signing in.', null, 403);
+      }
       next(error);
     }
   }
@@ -109,7 +113,10 @@ class AuthController {
         clearAuthCookies(res);
         return response.error(res, 'Session expired. Please login again.', null, 401);
       }
-      // Email verification errors are no longer thrown at refresh time.
+      if (error.message === 'School email is not verified' || error.message === 'Admin email is not verified') {
+        clearAuthCookies(res);
+        return response.error(res, error.message, null, 403);
+      }
       next(error);
     }
   }

@@ -106,8 +106,13 @@ class AuthService {
 
     const school = schools[0];
 
-    // NOTE: email verification is no longer enforced at token refresh.
-    // The frontend ProtectedRoute handles redirect to /verify-email.
+    if (school.require_email_verification && !school.email_verified) {
+      throw new Error('School email is not verified');
+    }
+
+    if (user.require_email_verification && !user.email_verified) {
+      throw new Error('Admin email is not verified');
+    }
 
     const roleRows = await sql`
       SELECT r.role_code FROM user_roles ur
@@ -180,12 +185,13 @@ class AuthService {
       throw new Error('Invalid email or password');
     }
 
-    // NOTE: email verification is no longer enforced at login time.
-    // The frontend ProtectedRoute reads userVerificationRequired /
-    // schoolVerificationRequired flags and redirects to /verify-email
-    // when the email is not verified.  This avoids trapping users in a
-    // loop where they can neither verify their email (offline page)
-    // nor login to reach the verify page.
+    if (school.require_email_verification && !school.email_verified) {
+      throw new Error('School email is not verified');
+    }
+
+    if (user.require_email_verification && !user.email_verified) {
+      throw new Error('Admin email is not verified');
+    }
 
     const roles = await sql`
       SELECT r.role_code, r.role_name
