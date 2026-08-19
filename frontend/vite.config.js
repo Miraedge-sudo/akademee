@@ -46,8 +46,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,json,woff2}'],
-        navigateFallback: '/offline.html',
-        navigateFallbackAllowlist: [/^\/[^_]*$/],
+        // navigateFallback désactivé : l'ancienne regex matchait toutes les routes SPA
+        // et servait /offline.html même quand l'utilisateur était en ligne.
+        // Le SPA gère la navigation côté client via React Router.
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {

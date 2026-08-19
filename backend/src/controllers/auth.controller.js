@@ -44,19 +44,13 @@ class AuthController {
     } catch (error) {
       if (error.message === 'User account is inactive') {
         return response.error(res, 'Your account is inactive. Please contact your administrator.', null, 401);
-      }
-      if (
-        error.message === 'Invalid email or password' ||
+      }      if (error.message === 'Invalid email or password' ||
         error.message === 'School account is inactive'
       ) {
         return response.error(res, 'Invalid email or password', null, 401);
       }
-      if (error.message === 'School email is not verified') {
-        return response.error(res, 'Please verify your school email before starting onboarding.', null, 403);
-      }
-      if (error.message === 'Admin email is not verified') {
-        return response.error(res, 'Please verify your admin email before signing in.', null, 403);
-      }
+      // Email verification errors are no longer thrown at login.
+      // The frontend ProtectedRoute redirects to /verify-email instead.
       next(error);
     }
   }
@@ -115,10 +109,7 @@ class AuthController {
         clearAuthCookies(res);
         return response.error(res, 'Session expired. Please login again.', null, 401);
       }
-      if (error.message === 'School email is not verified' || error.message === 'Admin email is not verified') {
-        clearAuthCookies(res);
-        return response.error(res, error.message, null, 403);
-      }
+      // Email verification errors are no longer thrown at refresh time.
       next(error);
     }
   }
