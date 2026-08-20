@@ -15,6 +15,7 @@ const {
   updateSchoolValidator,
   registerSchoolValidator,
   checkSubdomainValidator,
+  checkEmailValidator,
   resendVerificationRequestValidator,
   getSchoolValidator,
 } = require('../validators/school.validator');
@@ -56,6 +57,13 @@ router.post(
   checkSubdomainValidator,
   validateMiddleware,
   schoolController.checkSubdomain
+);
+
+router.post(
+  '/check-email',
+  checkEmailValidator,
+  validateMiddleware,
+  schoolController.checkEmail
 );
 
 router.get('/plans', schoolController.getPlans);
@@ -359,4 +367,15 @@ router.put(
  *       200:
  *         description: School updated
  */
+
+// ── Subscription / Trial routes ──
+// NOTE: upgradePlan is NOT exposed as a public route.
+// It is only called internally by the billing service after Fapshi webhook confirmation.
+router.get(
+  '/trial-status',
+  authMiddleware,
+  tenantMiddleware,
+  schoolController.checkTrialStatus
+);
+
 module.exports = router;

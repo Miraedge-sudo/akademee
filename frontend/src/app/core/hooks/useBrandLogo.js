@@ -1,13 +1,13 @@
 import { useTheme } from "./useTheme";
-import akademeeLogo from "../../../assets/Logo.png";
-import akademeeLogoWhite from "../../../assets/LogoWhite.png";
+import logoLight from "../../../assets/logogreenname.png";
+import logoDark from "../../../assets/logowhitename.png";
 
 /**
- * Returns the brand logo matching the current theme:
- * - dark mode  → LogoWhite.png (white logo, readable on dark backgrounds)
- * - light mode → Logo.png
+ * Returns the brand logo with name matching the current theme:
+ * - dark mode  → logowhitename.png (white logo + "Akademee" text)
+ * - light mode → logogreenname.png (green logo + "Akademee" text)
  */
 export function useBrandLogo() {
   const { theme } = useTheme();
-  return theme === "dark" ? akademeeLogoWhite : akademeeLogo;
+  return theme === "dark" ? logoDark : logoLight;
 }

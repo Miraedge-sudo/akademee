@@ -19,6 +19,7 @@ import {
 } from "react-icons/fi";
 import ThemeLangToggles from "../../layout/ThemeLangToggles";
 import { useBrandLogo } from "../../core/hooks/useBrandLogo";
+import { useTheme } from "../../core/hooks/useTheme";
 
 // ── Photos libres (Wikimedia Commons, CC BY-SA 4.0) : vrais élèves camerounais ──
 // WikiChallenge African Schools 2021 – Cameroon (écoles numériques)
@@ -254,6 +255,7 @@ export default function LandingPage() {
   const { t, i18n } = useTranslation("landing");
   const isFr = i18n.language === "fr";
   const akademeeLogo = useBrandLogo();
+  const { theme } = useTheme();
 
   useEffect(() => {
     const revealElements = document.querySelectorAll(".reveal");
@@ -287,7 +289,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <img src={akademeeLogo} alt="Akademee" className="h-14 w-auto object-contain" />
+              <img key={theme} src={akademeeLogo} alt="Akademee" className="h-18 w-auto object-contain animate-fadeInOnly" />
             </div>
 
             <div className="hidden md:flex items-center gap-8">
@@ -694,8 +696,8 @@ export default function LandingPage() {
             </h2>
             <p className="text-xl text-surface-600 dark:text-surface-400 max-w-2xl mx-auto">
               {isFr
-                ? "Choisissez une offre, obtenez votre campus personnalisé. Paiement par Mobile Money."
-                : "Pick a plan, get a branded campus instantly. Mobile Money accepted."}
+                ? "Essai gratuit de 10 jours, puis choisissez une offre. Paiement par Mobile Money."
+                : "Start with a free 10-day trial, then pick a plan. Mobile Money accepted."}
             </p>
             <div className="flex flex-wrap justify-center items-center gap-2 mt-6">
               {paymentBadges.map((badge) => (
@@ -708,8 +710,30 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {[
+              {
+                name: isFr ? "Essai" : "Trial",
+                price: "0",
+                period: isFr ? "10 jours" : "10 days",
+                features: isFr
+                  ? [
+                      "Jusqu’à 50 élèves",
+                      "Académique & notation",
+                      "1 modèle de site web",
+                      "Support email",
+                      "Site web public",
+                    ]
+                  : [
+                      "Up to 50 students",
+                      "Core academics & grading",
+                      "1 website template",
+                      "Email support",
+                      "Public website",
+                    ],
+                popular: false,
+                trial: true,
+              },
               {
                 name: isFr ? "Basic" : "Basic",
                 price: "180 000",
@@ -787,6 +811,11 @@ export default function LandingPage() {
                 }`}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
+                {plan.trial && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white text-sm font-semibold rounded-full shadow-lg">
+                    {isFr ? "Gratuit 10 jours" : "Free 10 days"}
+                  </div>
+                )}
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-emerald-800 to-emerald-700 text-white text-sm font-semibold rounded-full shadow-lg animate-pulse-on-hover">
                     {isFr ? "Le plus populaire" : "Most popular"}
@@ -973,7 +1002,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <img src={akademeeLogo} alt="Akademee" className="h-14 w-auto object-contain" />
+                <img key={theme} src={akademeeLogo} alt="Akademee" className="h-18 w-auto object-contain animate-fadeInOnly" />
               </div>
               <p className="text-surface-600 dark:text-surface-400 text-base leading-relaxed">
                 {isFr

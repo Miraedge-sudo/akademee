@@ -13,6 +13,8 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const { updatePrimaryColor } = useContext(ThemeContext);
   const onboardingCompleted = user?.onboardingCompleted ?? false;
+  const trialInfo = user?.trialInfo ?? null;
+  const trialExpired = trialInfo?.expired ?? (trialInfo?.remainingDays <= 0);
 
   // ── Restore token from localStorage on mount ──
   useEffect(() => {
@@ -168,6 +170,8 @@ export function AuthProvider({ children }) {
         logout,
         refreshUser,
         verifySchool,
+        trialInfo,
+        trialExpired,
       }}
     >
       {children}

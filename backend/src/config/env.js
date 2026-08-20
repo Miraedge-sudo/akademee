@@ -28,6 +28,11 @@ const optionalVars = [
   'TENANT_PROD_DOMAIN',
   'SENTRY_DSN',
   'SENTRY_TRACES_SAMPLE_RATE',
+  'APP_HOST',
+  'FAPSHI_API_USER',
+  'FAPSHI_API_KEY',
+  'FAPSHI_ENV',
+  'FAPSHI_WEBHOOK_SECRET',
 ];
 
 function validateEnv() {

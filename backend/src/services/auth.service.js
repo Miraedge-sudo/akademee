@@ -53,6 +53,22 @@ class AuthService {
     const templateCode = school.template_code || 'bold';
     const urls = buildSchoolUrls(school.subdomain, templateCode);
 
+    // Calculate trial info
+    let trialInfo = null;
+    if (school.subscription_status === 'trial' && school.subscription_end_date) {
+      const endDate = new Date(school.subscription_end_date);
+      const now = new Date();
+      const diffMs = endDate.getTime() - now.getTime();
+      const remainingDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+      trialInfo = {
+        plan: school.subscription_plan,
+        status: school.subscription_status,
+        startDate: school.subscription_start_date,
+        endDate: school.subscription_end_date,
+        remainingDays,
+      };
+    }
+
     return {
       user: {
         id: user.user_id,
@@ -68,6 +84,7 @@ class AuthService {
         userVerificationRequired: user.require_email_verification ?? false,
         schoolVerificationRequired: school.require_email_verification ?? false,
         onboardingCompleted: school.onboarding_completed ?? false,
+        trialInfo,
         school: {
           id: school.school_id,
           name: school.name,
@@ -193,6 +210,32 @@ class AuthService {
       throw new Error('Admin email is not verified');
     }
 
+    // ── Trial expiry check ──
+    const schoolFull = await sql`
+      SELECT subscription_plan, subscription_status, subscription_start_date, subscription_end_date
+      FROM schools WHERE school_id = ${school.school_id}
+    `;
+    const schoolPlan = schoolFull[0];
+    let trialRemainingDays = null;
+    let trialExpired = false;
+
+    if (schoolPlan && schoolPlan.subscription_status === 'trial') {
+      const endDate = new Date(schoolPlan.subscription_end_date);
+      const now = new Date();
+      const diffMs = endDate.getTime() - now.getTime();
+      trialRemainingDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+
+      if (trialRemainingDays <= 0) {
+        trialExpired = true;
+        // Mark the school as expired
+        await sql`
+          UPDATE schools SET subscription_status = 'expired', updated_at = NOW()
+          WHERE school_id = ${school.school_id}
+        `;
+        throw new Error('Your trial period has expired. Please upgrade to a paid plan to continue.');
+      }
+    }
+
     const roles = await sql`
       SELECT r.role_code, r.role_name
       FROM user_roles ur
@@ -222,6 +265,7 @@ class AuthService {
     const schoolWithTemplate = await sql`
       SELECT s.school_id, s.name, s.subdomain, s.is_active, s.email_verified, s.require_email_verification, s.onboarding_completed,
              s.educational_systems, s.primary_color, s.logo_url, s.hero_image_url,
+             s.subscription_plan, s.subscription_status, s.subscription_start_date, s.subscription_end_date,
              wt.template_code
       FROM schools s
       LEFT JOIN website_templates wt ON s.website_template_id = wt.template_id
@@ -281,7 +325,8 @@ class AuthService {
              educational_systems, primary_color, logo_url, hero_image_url,
              hero_image_url_2, tagline, city, region,
              exam_type, exam_pass_rate, ranking, ranking_city,
-             about_photos, classes_config
+             about_photos, classes_config,
+             subscription_plan, subscription_status, subscription_start_date, subscription_end_date
       FROM schools
       WHERE school_id = ${schoolId}
     `;
@@ -306,6 +351,22 @@ class AuthService {
         }
       : null;
 
+    // Calculate trial info
+    let trialInfo = null;
+    if (school?.subscription_status === 'trial' && school?.subscription_end_date) {
+      const endDate = new Date(school.subscription_end_date);
+      const now = new Date();
+      const diffMs = endDate.getTime() - now.getTime();
+      const remainingDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+      trialInfo = {
+        plan: school.subscription_plan,
+        status: school.subscription_status,
+        startDate: school.subscription_start_date,
+        endDate: school.subscription_end_date,
+        remainingDays,
+      };
+    }
+
     return {
       id: user.user_id,
       email: user.email,
@@ -327,6 +388,7 @@ class AuthService {
       userVerificationRequired: user.require_email_verification ?? false,
       schoolVerificationRequired: school?.require_email_verification ?? false,
       onboardingCompleted: school?.onboarding_completed ?? false,
+      trialInfo,
     };
   }
 

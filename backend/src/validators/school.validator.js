@@ -78,6 +78,16 @@ const registerSchoolValidator = [
     .withMessage('Template must be bold, playful, or premium'),
 ];
 
+const checkEmailValidator = [
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Email must be valid')
+    .normalizeEmail(),
+];
+
 const checkSubdomainValidator = [
   body('subdomain')
     .trim()
@@ -133,6 +143,7 @@ const getSchoolValidator = [
 module.exports = {
   registerSchoolValidator,
   checkSubdomainValidator,
+  checkEmailValidator,
   resendVerificationRequestValidator,
   createSchoolValidator,
   updateSchoolValidator,

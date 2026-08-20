@@ -76,16 +76,22 @@ class SchoolService {
     const adminVerificationExpires = onboardingService.verificationExpiryDate(emailConfig.verificationExpiresHours);
 
     const result = await sql.begin(async (tx) => {
+      const trialStartDate = new Date();
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + 10);
+
       const schools = await tx`
         INSERT INTO schools (
           name, email, phone, city, region, subdomain, tagline,
           website_template_id, subscription_plan, subscription_status, is_active,
+          subscription_start_date, subscription_end_date,
           email_verified, require_email_verification, verification_token, verification_token_expires_at, created_at
         )
         VALUES (
           ${schoolName}, ${email}, ${phone || null}, ${city}, ${region || null}, ${normalizedSubdomain},
           ${`Welcome to ${schoolName}`},
-          ${templateId}, ${planId}, 'trial', true,
+          ${templateId}, ${planId || 'trial'}, 'trial', true,
+          ${trialStartDate.toISOString().split('T')[0]}, ${trialEndDate.toISOString().split('T')[0]},
           false, true, ${schoolVerificationToken}, ${schoolVerificationExpires}, NOW()
         )
         RETURNING school_id, name, email, subdomain
@@ -308,6 +314,62 @@ class SchoolService {
   }
 
   /**
+   * Well-known public email providers — multiple schools can legitimately
+   * share these domains, so we skip the domain-level warning for them.
+   */
+  static PUBLIC_EMAIL_DOMAINS = new Set([
+    'gmail.com', 'yahoo.com', 'yahoo.fr', 'hotmail.com', 'hotmail.fr',
+    'outlook.com', 'outlook.fr', 'live.com', 'live.fr',
+    'aol.com', 'icloud.com', 'mail.com', 'protonmail.com',
+    'proton.me', 'zoho.com', 'gmx.com', 'yandex.com',
+    '163.com', '126.com', 'qq.com',
+  ]);
+
+  /**
+   * Check if an email is already used by a school (exact match or same domain)
+   */
+  async checkEmail(email) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const domain = normalizedEmail.split('@')[1];
+
+    // Check if exact email is used by a school
+    const exactMatch = await sql`
+      SELECT school_id, name FROM schools WHERE LOWER(email) = ${normalizedEmail}
+    `;
+    if (exactMatch.length > 0) {
+      return {
+        available: false,
+        reason: 'email_taken',
+        message: 'This school email is already registered',
+        schoolName: exactMatch[0].name,
+      };
+    }
+
+    // Skip domain-level warning for public email providers (gmail.com, etc.)
+    // — many schools legitimately use the same public domain.
+    if (!SchoolService.PUBLIC_EMAIL_DOMAINS.has(domain)) {
+      const domainMatch = await sql`
+        SELECT school_id, name, email FROM schools
+        WHERE LOWER(email) LIKE ${'%' + domain}
+      `;
+      if (domainMatch.length > 0) {
+        return {
+          available: true,
+          reason: 'domain_exists',
+          message: `A school with domain ${domain} is already registered. You may contact them or use a different email domain.`,
+          existingSchools: domainMatch.map(s => ({ name: s.name, email: s.email })),
+        };
+      }
+    }
+
+    return {
+      available: true,
+      reason: 'available',
+      message: 'Email is available',
+    };
+  }
+
+  /**
    * Check if subdomain is available
    */
   async checkSubdomain(subdomain) {
@@ -417,6 +479,63 @@ class SchoolService {
       maxStudents: p.max_students,
       features: p.features || [],
     }));
+  }
+
+  /**
+   * Upgrade a school's subscription plan
+   */
+  async upgradePlan(schoolId, newPlanCode) {
+    // Verify the plan exists and is active
+    const plans = await sql`
+      SELECT plan_id, code, name, price, max_students
+      FROM subscription_plans
+      WHERE code = ${newPlanCode} AND is_active = true
+    `;
+
+    if (plans.length === 0) {
+      throw new Error('Invalid or inactive plan');
+    }
+
+    const plan = plans[0];
+
+    // Verify the school exists
+    const schools = await sql`
+      SELECT school_id, name, subscription_plan, subscription_status
+      FROM schools WHERE school_id = ${schoolId}
+    `;
+
+    if (schools.length === 0) {
+      throw new Error('School not found');
+    }
+
+    const school = schools[0];
+
+    // Update the school's plan
+    const subscriptionStartDate = new Date();
+    const subscriptionEndDate = new Date();
+    subscriptionEndDate.setFullYear(subscriptionEndDate.getFullYear() + 1);
+
+    const updated = await sql`
+      UPDATE schools
+      SET subscription_plan = ${newPlanCode},
+          subscription_status = 'active',
+          subscription_start_date = ${subscriptionStartDate.toISOString().split('T')[0]},
+          subscription_end_date = ${subscriptionEndDate.toISOString().split('T')[0]},
+          updated_at = NOW()
+      WHERE school_id = ${schoolId}
+      RETURNING school_id, name, subscription_plan, subscription_status, subscription_start_date, subscription_end_date
+    `;
+
+    return {
+      schoolId: updated[0].school_id,
+      schoolName: updated[0].name,
+      plan: updated[0].subscription_plan,
+      status: updated[0].subscription_status,
+      startDate: updated[0].subscription_start_date,
+      endDate: updated[0].subscription_end_date,
+      planName: plan.name,
+      price: Number(plan.price),
+    };
   }
 
   async getAllSchools(limit = 10, offset = 0) {

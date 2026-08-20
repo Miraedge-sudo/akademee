@@ -12,7 +12,7 @@ const fs = require("fs");
 const zlib = require("zlib");
 const path = require("path");
 
-const SRC = path.join(__dirname, "..", "src", "assets", "iconapp.png");
+const SRC = path.join(__dirname, "..", "src", "assets", "logogreen.png");
 const OUT = [
   { file: path.join(__dirname, "..", "public", "pwa-512x512.png"), size: 512 },
   { file: path.join(__dirname, "..", "public", "pwa-192x192.png"), size: 192 },

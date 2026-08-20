@@ -20,6 +20,8 @@ const EducationalSystemSelectionPage = lazy(() => import("./app/features/auth/pa
 const ForgotPasswordPage = lazy(() => import("./app/features/auth/pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./app/features/auth/pages/ResetPasswordPage"));
 const VerifyEmailPage = lazy(() => import("./app/features/auth/pages/VerifyEmailPage"));
+const TrialExpiredPage = lazy(() => import("./app/features/auth/pages/TrialExpiredPage"));
+const BillingConfirmPage = lazy(() => import("./app/features/billing/pages/BillingConfirmPage"));
 const OnboardingPage = lazy(() => import("./app/features/onboarding/pages/OnboardingPage"));
 const AcademicYearSetup = lazy(() => import("./app/features/onboarding/components/AcademicYearSetup"));
 const DashboardPage = lazy(() => import("./app/features/dashboard/pages/DashboardPage"));
@@ -144,6 +146,7 @@ function App() {
           <Route path="/forgot-password" element={page(ForgotPasswordPage)} />
           <Route path="/reset-password" element={page(ResetPasswordPage)} />
           <Route path="/verify-email" element={page(VerifyEmailPage)} />
+          <Route path="/billing/confirm" element={page(BillingConfirmPage)} />
           <Route
             path="/onboarding"
             element={
@@ -276,6 +279,9 @@ function App() {
             {/* Admissions */}
             <Route path="admissions/applications" element={dashboardPage(AdmissionsSection)} />
             <Route path="admissions/enrollment" element={dashboardPage(AdmissionsSection)} />
+
+            {/* Trial expired / Upgrade plan — inside AdminLayout for sidebar */}
+            <Route path="trial-expired" element={dashboardPage(TrialExpiredPage)} />
 
             {/* Settings — réservé à l'administrateur */}
             <Route path="settings" element={<RoleRoute allowedRoles={["ADMIN"]}>{dashboardPage(SettingsPage)}</RoleRoute>} />

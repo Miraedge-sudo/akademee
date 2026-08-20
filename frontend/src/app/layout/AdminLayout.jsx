@@ -4,6 +4,7 @@ import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import MobileBottomNav from './MobileBottomNav';
 import ConnectionStatusBanner from '../components/offline/ConnectionStatusBanner';
+import TrialBanner from '../components/ui/TrialBanner';
 
 export default function AdminLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -27,6 +28,7 @@ export default function AdminLayout() {
           }}
         />
         <ConnectionStatusBanner />
+        <TrialBanner />
         <main className="flex-1 overflow-y-auto p-6 pb-[76px] lg:pb-6">
           <Outlet />
         </main>
