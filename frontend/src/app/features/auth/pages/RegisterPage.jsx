@@ -15,12 +15,6 @@ const STEPS = [
   { num: 3, key: "plan" },
 ];
 
-const PLANS = [
-  { id: "free", priceFcfa: "0", badge: null, badgeColor: null },
-  { id: "basic", priceFcfa: "15 000", badge: "popular", badgeColor: "amber" },
-  { id: "premium", priceFcfa: "35 000", badge: "pro", badgeColor: "teal" },
-];
-
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("auth");
@@ -46,6 +40,56 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const isFr = i18n.language === "fr";
+
+  // ── Plans matching the landing page #pricing section ──
+  const plans = [
+    {
+      id: "trial",
+      name: isFr ? "Essai" : "Trial",
+      description: isFr ? "10 jours gratuits" : "Free 10-day trial",
+      price: 0,
+      period: isFr ? "10 jours" : "10 days",
+      popular: false,
+      trial: true,
+      features: isFr
+        ? ["Jusqu'à 50 élèves", "Académique & notation", "1 modèle de site web", "Support email", "Site web public"]
+        : ["Up to 50 students", "Core academics & grading", "1 website template", "Email support", "Public website"],
+    },
+    {
+      id: "basic",
+      name: "Basic",
+      description: isFr ? "Jusqu'à 300 élèves" : "Up to 300 students",
+      price: 180000,
+      period: isFr ? "FCFA / an" : "FCFA / year",
+      popular: false,
+      features: isFr
+        ? ["Jusqu'à 300 élèves", "Académique & notation", "1 modèle de site web", "Support email", "Site web public"]
+        : ["Up to 300 students", "Core academics & grading", "1 website template", "Email support", "Public website"],
+    },
+    {
+      id: "premium",
+      name: "Premium",
+      description: isFr ? "Jusqu'à 1 500 élèves" : "Up to 1,500 students",
+      price: 360000,
+      period: isFr ? "FCFA / an" : "FCFA / year",
+      popular: true,
+      features: isFr
+        ? ["Jusqu'à 1 500 élèves", "Finance & paie complètes", "Les 3 modèles de site web", "Support live chat", "Import en masse (Excel/CSV)", "Identité personnalisée"]
+        : ["Up to 1,500 students", "Finance & payroll suite", "All 3 website templates", "Live chat support", "Bulk import (Excel/CSV)", "Custom branding"],
+    },
+    {
+      id: "professional",
+      name: "Professional",
+      description: isFr ? "Élèves illimités" : "Unlimited students",
+      price: 720000,
+      period: isFr ? "FCFA / an" : "FCFA / year",
+      popular: false,
+      features: isFr
+        ? ["Élèves illimités", "Bibliothèque, transport & internat", "Analyses avancées", "Support prioritaire", "Accès API", "Multi-campus"]
+        : ["Unlimited students", "Library, transport & hostel", "Advanced analytics", "Priority support", "API access", "Multi-campus"],
+    },
+  ];
 
   // ── Inline field validation errors ──
   const [fieldErrors, setFieldErrors] = useState({});
@@ -200,12 +244,13 @@ export default function RegisterPage() {
     const value = e.target.value;
     setFormData((prev) => {
       const next = { ...prev, schoolName: value };
-      // auto-generate subdomain only if user hasn't typed one manually
+      // auto-generate subdomain from FIRST word only if user hasn't typed one manually
       if (!prev.subdomain) {
-        next.subdomain = value
+        const firstWord = value.split(/\s+/)[0] || '';
+        next.subdomain = firstWord
           .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "");
+          .replace(/[^a-z0-9]+/g, '')
+          .substring(0, 50);
       }
       return next;
     });
@@ -219,7 +264,8 @@ export default function RegisterPage() {
     });
     // Also check auto-generated subdomain
     if (!formData.subdomain) {
-      const autoSub = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const firstWord = value.split(/\s+/)[0] || '';
+      const autoSub = firstWord.toLowerCase().replace(/[^a-z0-9]+/g, '');
       if (autoSub.length >= 3) {
         checkSubdomainAvailability(autoSub);
       }
@@ -771,65 +817,66 @@ export default function RegisterPage() {
                   </p>
 
                   <div className="flex flex-col gap-2.5">
-                    {PLANS.map((plan, pi) => {
-                      const selected = formData.planId === plan.id;
-                      return (
-                        <label
-                          key={plan.id}
-                          className={`animate-fadeIn flex items-center gap-3.5 p-4 rounded-lg border-[1.5px] cursor-pointer transition-all duration-200 ${
-                            selected
-                              ? "border-teal-600 bg-teal-50 dark:bg-teal-900/15 shadow-md shadow-teal-500/10 scale-[1.02]"
-                              : "border-surface-200 dark:border-surface-600 hover:border-teal-400 hover:bg-teal-50/50 dark:hover:bg-teal-900/10 hover:scale-[1.01]"
-                          }`}
-                          style={staggerItem(pi)}
-                        >
-                          <span
-                            className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
-                              selected ? "border-teal-600 bg-teal-600 scale-110" : "border-surface-300 dark:border-surface-500"
-                            }`}
-                          >
-                            {selected && <span className="w-1.5 h-1.5 rounded-full bg-white animate-scaleIn" />}
-                          </span>
-                          <span className="flex-1">
-                            <span className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-surface-800 dark:text-surface-100">
-                                {t(`register.plan.${plan.id}.name`, plan.id)}
+                    {plans.map((plan, pi) => {
+                          const selected = formData.planId === plan.id;
+                          const planId = plan.id;
+                          const priceFormatted = plan.price ? Number(plan.price).toLocaleString() : "0";
+                          return (
+                            <label
+                              key={planId}
+                              className={`animate-fadeIn flex items-center gap-3.5 p-4 rounded-lg border-[1.5px] cursor-pointer transition-all duration-200 ${
+                                selected
+                                  ? "border-teal-600 bg-teal-50 dark:bg-teal-900/15 shadow-md shadow-teal-500/10 scale-[1.02]"
+                                  : plan.popular
+                                  ? "border-amber-300 dark:border-amber-600 bg-amber-50/30 dark:bg-amber-900/10 hover:border-amber-400 hover:scale-[1.01]"
+                                  : "border-surface-200 dark:border-surface-600 hover:border-teal-400 hover:bg-teal-50/50 dark:hover:bg-teal-900/10 hover:scale-[1.01]"
+                              }`}
+                              style={staggerItem(pi)}
+                            >
+                              <span
+                                className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
+                                  selected ? "border-teal-600 bg-teal-600 scale-110" : "border-surface-300 dark:border-surface-500"
+                                }`}
+                              >
+                                {selected && <span className="w-1.5 h-1.5 rounded-full bg-white animate-scaleIn" />}
                               </span>
-                              {plan.badge && (
-                                <span
-                                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                                    plan.badgeColor === "amber"
-                                      ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
-                                      : plan.badgeColor === "teal"
-                                      ? "bg-teal-900 text-teal-100"
-                                      : "bg-teal-50 dark:bg-teal-900/20 text-teal-800 dark:text-teal-300"
-                                  }`}
-                                >
-                                  {t(`register.plan.badge.${plan.badge}`, plan.badge)}
+                              <span className="flex-1">
+                                <span className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-surface-800 dark:text-surface-100">
+                                    {plan.name}
+                                  </span>
+                                  {plan.trial && (
+                                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                                      {isFr ? "Gratuit" : "Free"}
+                                    </span>
+                                  )}
+                                  {plan.popular && (
+                                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                                      {isFr ? "Populaire" : "Popular"}
+                                    </span>
+                                  )}
                                 </span>
-                              )}
-                            </span>
-                            <span className="block text-xs text-surface-400 mt-0.5">
-                              {t(`register.plan.${plan.id}.desc`, "")}
-                            </span>
-                          </span>
-                          <span className="text-[15px] font-bold text-teal-700 dark:text-teal-400 whitespace-nowrap">
-                            {plan.priceFcfa}{" "}
-                            <span className="text-[11px] font-normal text-surface-400">
-                              {t("register.plan.perMonth", "FCFA / mo")}
-                            </span>
-                          </span>
-                          <input
-                            type="radio"
-                            name="planId"
-                            value={plan.id}
-                            checked={selected}
-                            onChange={handleChange}
-                            className="sr-only"
-                          />
-                        </label>
-                      );
-                    })}
+                                <span className="block text-xs text-surface-400 mt-0.5">
+                                  {plan.description}
+                                </span>
+                              </span>
+                              <span className="text-[15px] font-bold text-teal-700 dark:text-teal-400 whitespace-nowrap">
+                                {priceFormatted}{' '}
+                                <span className="text-[11px] font-normal text-surface-400">
+                                  {plan.period}
+                                </span>
+                              </span>
+                              <input
+                                type="radio"
+                                name="planId"
+                                value={planId}
+                                checked={selected}
+                                onChange={handleChange}
+                                className="sr-only"
+                              />
+                            </label>
+                          );
+                        })}
                   </div>
 
                   <div className="flex gap-2.5 mt-7 animate-fadeIn" style={staggerItem(4)}>

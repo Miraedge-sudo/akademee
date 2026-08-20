@@ -24,8 +24,8 @@ export default function ProtectedRoute({ children }) {
   }
 
   // Check trial expiry — redirect to expired page if trial has ended
-  if (trialExpired && location.pathname !== "/trial-expired") {
-    return <Navigate to="/trial-expired" replace />;
+  if (trialExpired && location.pathname !== "/dashboard/trial-expired") {
+    return <Navigate to="/dashboard/trial-expired" replace />;
   }
 
   // Check school email verification (if required and not verified)

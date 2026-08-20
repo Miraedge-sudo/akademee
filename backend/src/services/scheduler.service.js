@@ -12,6 +12,7 @@
 const cron = require('node-cron');
 const sql = require('../config/database');
 const logger = require('../utils/logger');
+const trialChecker = require('./trialChecker.service');
 
 /**
  * Refresh all period statuses in one bulk query.
@@ -107,6 +108,10 @@ function startScheduler() {
   cron.schedule('5 0 * * *', async () => {
     logger.info('Scheduler: daily status refresh started (00:05)');
     refreshStatuses();
+    // Run trial expiry checker (sends 3-day warnings + expires overdue trials)
+    trialChecker.runCheck().catch((err) => {
+      logger.error('Scheduler: trialChecker error', { message: err.message });
+    });
   });
 
   // ── Every hour from 8 AM to 8 PM ──

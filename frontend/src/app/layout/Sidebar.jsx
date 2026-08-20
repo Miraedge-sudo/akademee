@@ -3,7 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../core/hooks/useAuth";
 import { getPrimaryRole } from "../core/utils/roleUtils";
-import { useBrandLogo } from "../core/hooks/useBrandLogo";
+import logoWhite from "../../assets/logowhitename.png";
 
 // ── Educational System Types ──
 const EDUCATIONAL_SYSTEMS = {
@@ -1097,11 +1097,24 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
   const { t, i18n } = useTranslation("common");
   const { user } = useAuth();
   const location = useLocation();
+  const isFr = i18n.language === "fr";
 
-  const akademeeLogo = useBrandLogo();
+  const akademeeLogo = logoWhite;
   const role = getPrimaryRole(user?.roles);
   const educationalSystems = user?.school?.educationalSystems || [];
   const navGroups = getNavConfig(role, educationalSystems);
+
+  // Add upgrade link for admins — always visible so admins can upgrade anytime
+  if (role === "ADMIN") {
+    const systemGroup = navGroups.find((g) => g.group === "system");
+    if (systemGroup && !systemGroup.items.some((i) => i.key === "upgradePlan")) {
+      systemGroup.items.unshift({
+        key: "upgradePlan",
+        path: "/dashboard/trial-expired",
+        icon: "creditcard",
+      });
+    }
+  }
 
   const initials = (user?.schoolName || "SC")
     .split(" ")
@@ -1158,12 +1171,12 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
       >
         {/* Logo */}
         <div
-          className={`flex items-center gap-2.5 h-14 border-b border-white/[0.07] flex-shrink-0 overflow-hidden ${collapsed ? "lg:justify-center lg:px-0" : "px-4"}`}
+          className={`flex items-center border-b border-white/[0.07] flex-shrink-0 ${collapsed ? "lg:justify-center lg:p-2 h-14" : "p-3"}`}
         >
           <img
             src={akademeeLogo}
             alt="Akademee"
-            className={`h-8 object-contain flex-shrink-0 transition-all duration-300 ${collapsed ? "lg:h-7" : "h-8"}`}
+            className={`h-auto object-contain flex-shrink-0 transition-all duration-300 ${collapsed ? "lg:w-8 lg:h-8" : "w-full max-h-14"}`}
           />
         </div>
 

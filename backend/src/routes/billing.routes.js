@@ -33,4 +33,13 @@ router.get(
   billingController.getPaymentStatus
 );
 
+// ── Manual confirm (dev only) — verifies pending payment with Fapshi API ──
+router.post(
+  '/confirm-manual',
+  authMiddleware,
+  tenantMiddleware,
+  roleMiddleware(['admin']),
+  billingController.confirmManual
+);
+
 module.exports = router;

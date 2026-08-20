@@ -146,7 +146,6 @@ function App() {
           <Route path="/forgot-password" element={page(ForgotPasswordPage)} />
           <Route path="/reset-password" element={page(ResetPasswordPage)} />
           <Route path="/verify-email" element={page(VerifyEmailPage)} />
-          <Route path="/trial-expired" element={page(TrialExpiredPage)} />
           <Route path="/billing/confirm" element={page(BillingConfirmPage)} />
           <Route
             path="/onboarding"
@@ -280,6 +279,9 @@ function App() {
             {/* Admissions */}
             <Route path="admissions/applications" element={dashboardPage(AdmissionsSection)} />
             <Route path="admissions/enrollment" element={dashboardPage(AdmissionsSection)} />
+
+            {/* Trial expired / Upgrade plan — inside AdminLayout for sidebar */}
+            <Route path="trial-expired" element={dashboardPage(TrialExpiredPage)} />
 
             {/* Settings — réservé à l'administrateur */}
             <Route path="settings" element={<RoleRoute allowedRoles={["ADMIN"]}>{dashboardPage(SettingsPage)}</RoleRoute>} />

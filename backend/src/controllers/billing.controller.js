@@ -37,6 +37,7 @@ class BillingController {
         planName: result.planName,
       });
     } catch (error) {
+      console.error('[BillingController] initiate error:', error.message, error.stack?.split('\n')[1]);
       next(error);
     }
   }
@@ -82,6 +83,25 @@ class BillingController {
         payments,
         subscription,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/billing/confirm-manual
+   * Dev-only: manually verify a pending payment with Fapshi API and upgrade.
+   * Useful when webhook can't reach localhost (no ngrok/cloudflare tunnel).
+   */
+  async confirmManual(req, res, next) {
+    try {
+      const schoolId = req.user?.schoolId || req.schoolId;
+      if (!schoolId) {
+        return response.error(res, 'School not found', null, 400);
+      }
+
+      const result = await billingService.confirmManual(schoolId);
+      response.success(res, 'Payment verified', result);
     } catch (error) {
       next(error);
     }

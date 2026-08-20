@@ -35,6 +35,7 @@ export const API_ENDPOINTS = {
   BILLING: {
     INITIATE: "/api/billing/fapshi/initiate",
     PAYMENT_STATUS: "/api/billing/payment-status",
+    CONFIRM_MANUAL: "/api/billing/confirm-manual",
   },
 
   // Website public (site vitrine)

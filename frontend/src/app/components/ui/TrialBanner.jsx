@@ -57,7 +57,7 @@ export default function TrialBanner() {
         </p>
       </div>
       <a
-        href="/trial-expired"
+        href="/dashboard/trial-expired"
         className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:scale-105 ${
           remaining <= 2
             ? "bg-red-600 hover:bg-red-700 text-white"

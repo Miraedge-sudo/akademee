@@ -314,6 +314,18 @@ class SchoolService {
   }
 
   /**
+   * Well-known public email providers — multiple schools can legitimately
+   * share these domains, so we skip the domain-level warning for them.
+   */
+  static PUBLIC_EMAIL_DOMAINS = new Set([
+    'gmail.com', 'yahoo.com', 'yahoo.fr', 'hotmail.com', 'hotmail.fr',
+    'outlook.com', 'outlook.fr', 'live.com', 'live.fr',
+    'aol.com', 'icloud.com', 'mail.com', 'protonmail.com',
+    'proton.me', 'zoho.com', 'gmx.com', 'yandex.com',
+    '163.com', '126.com', 'qq.com',
+  ]);
+
+  /**
    * Check if an email is already used by a school (exact match or same domain)
    */
   async checkEmail(email) {
@@ -333,18 +345,21 @@ class SchoolService {
       };
     }
 
-    // Check if the domain is already used by another school
-    const domainMatch = await sql`
-      SELECT school_id, name, email FROM schools
-      WHERE LOWER(email) LIKE ${'%' + domain}
-    `;
-    if (domainMatch.length > 0) {
-      return {
-        available: true,
-        reason: 'domain_exists',
-        message: `A school with domain ${domain} is already registered. You may contact them or use a different email domain.`,
-        existingSchools: domainMatch.map(s => ({ name: s.name, email: s.email })),
-      };
+    // Skip domain-level warning for public email providers (gmail.com, etc.)
+    // — many schools legitimately use the same public domain.
+    if (!SchoolService.PUBLIC_EMAIL_DOMAINS.has(domain)) {
+      const domainMatch = await sql`
+        SELECT school_id, name, email FROM schools
+        WHERE LOWER(email) LIKE ${'%' + domain}
+      `;
+      if (domainMatch.length > 0) {
+        return {
+          available: true,
+          reason: 'domain_exists',
+          message: `A school with domain ${domain} is already registered. You may contact them or use a different email domain.`,
+          existingSchools: domainMatch.map(s => ({ name: s.name, email: s.email })),
+        };
+      }
     }
 
     return {

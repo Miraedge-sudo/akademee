@@ -7,16 +7,52 @@
  * - Webhook authenticity is verified via x-wh-secret header
  * - Payment status is double-checked by calling Fapshi API (never trust raw webhook)
  * - Idempotent: duplicate webhooks for the same externalId are ignored
+ *
+ * NOTE: The official fapshi npm SDK hardcodes baseUrl to live.fapshi.com
+ * and does not support sandbox mode. We use direct HTTP calls instead.
  */
 
-const FAPSHI = require('fapshi').default || require('fapshi');
+const axios = require('axios');
 const crypto = require('crypto');
 const sql = require('../config/database');
 const fapshiConfig = require('../config/fapshi');
 const schoolService = require('./school.service');
 
-// Initialize the official Fapshi SDK
-const fapshi = new FAPSHI(fapshiConfig.apiUser, fapshiConfig.apiKey);
+/**
+ * Direct Fapshi API client (replaces the npm SDK which lacks sandbox support)
+ */
+const fapshiApi = {
+  headers: {
+    apiuser: fapshiConfig.apiUser,
+    apikey: fapshiConfig.apiKey,
+    'Content-Type': 'application/json',
+  },
+
+  async initiatePay({ amount, email, userId, externalId, redirectUrl, message }) {
+    const res = await axios.post(
+      `${fapshiConfig.baseUrl}/initiate-pay`,
+      { amount, email, userId, externalId, redirectUrl, message },
+      { headers: this.headers, timeout: 15000 }
+    );
+    return res.data;
+  },
+
+  async paymentStatus(transId) {
+    const res = await axios.get(
+      `${fapshiConfig.baseUrl}/payment-status/${transId}`,
+      { headers: this.headers, timeout: 15000 }
+    );
+    return res.data;
+  },
+
+  async balance() {
+    const res = await axios.get(
+      `${fapshiConfig.baseUrl}/balance`,
+      { headers: this.headers, timeout: 15000 }
+    );
+    return res.data;
+  },
+};
 
 class BillingService {
   /**
@@ -67,14 +103,27 @@ class BillingService {
     const externalId = this.generateExternalId(schoolId, planCode);
 
     // 4. Build redirect URL (frontend billing confirmation page)
-    const protocol = fapshiConfig.environment === 'live' ? 'https' : 'http';
-    const host = process.env.APP_HOST || 'localhost:3000';
-    const redirectUrl = `${protocol}://${host}/billing/confirm`;
+    const isLive = fapshiConfig.environment === 'live';
+    // FRONTEND_URL is the public URL where the frontend is accessible (for Fapshi redirect)
+    // APP_HOST is the backend public URL (for production domain)
+    const frontendUrl = process.env.FRONTEND_URL || process.env.APP_HOST;
+    if (!frontendUrl) {
+      const msg = 'FRONTEND_URL or APP_HOST env var is not set.';
+      if (isLive) throw new Error(msg);
+      console.warn(`[BillingService] ${msg} Falling back to localhost:3000 for sandbox.`);
+    }
+    // Build redirect URL — handle both bare hostnames and full URLs
+    let redirectBase = frontendUrl || 'localhost:3000';
+    if (!redirectBase.startsWith('http://') && !redirectBase.startsWith('https://')) {
+      const protocol = isLive ? 'https' : 'http';
+      redirectBase = `${protocol}://${redirectBase}`;
+    }
+    const redirectUrl = `${redirectBase}/billing/confirm`;
 
-    // 5. Call Fapshi initiatePay via the official SDK
+    // 5. Call Fapshi initiatePay via direct HTTP (SDK doesn't support sandbox)
     let fapshiResponse;
     try {
-      fapshiResponse = await fapshi.initiatePay({
+      fapshiResponse = await fapshiApi.initiatePay({
         amount,
         email: adminEmail || undefined,
         userId: schoolId.toString().replace(/-/g, '').substring(0, 100),
@@ -83,8 +132,9 @@ class BillingService {
         message: `Upgrade ${school.name} to ${plan.name} plan`,
       });
     } catch (err) {
-      console.error('[BillingService] Fapshi initiatePay error:', err);
-      throw new Error('Failed to initiate payment with Fapshi');
+      const errMsg = err.response?.data?.message || err.message;
+      console.error('[BillingService] Fapshi initiatePay error:', errMsg);
+      throw new Error(`Failed to initiate payment: ${errMsg}`);
     }
 
     if (!fapshiResponse || !fapshiResponse.link) {
@@ -164,11 +214,12 @@ class BillingService {
 
     let verifiedStatus;
     try {
-      const statusResponse = await fapshi.paymentStatus(fapshiTransId);
+      const statusResponse = await fapshiApi.paymentStatus(fapshiTransId);
       verifiedStatus = statusResponse?.status;
     } catch (err) {
-      console.error(`[BillingService] Failed to verify status with Fapshi: ${err.message}`);
-      return { processed: false, reason: 'verification_failed', error: err.message };
+      const errMsg = err.response?.data?.message || err.message;
+      console.error(`[BillingService] Failed to verify status with Fapshi: ${errMsg}`);
+      return { processed: false, reason: 'verification_failed', error: errMsg };
     }
 
     console.log(`[BillingService] Fapshi verified status for ${fapshiTransId}: ${verifiedStatus}`);
@@ -235,6 +286,51 @@ class BillingService {
       createdAt: p.created_at,
       updatedAt: p.updated_at,
     }));
+  }
+
+  /**
+   * Manually confirm a pending payment — dev-only fallback when webhook can't reach localhost.
+   * Finds the latest pending payment for the school, verifies with Fapshi API, upgrades if successful.
+   */
+  async confirmManual(schoolId) {
+    const payments = await sql`
+      SELECT * FROM subscription_payments
+      WHERE school_id = ${schoolId} AND status = 'pending'
+      ORDER BY created_at DESC LIMIT 1
+    `;
+
+    if (payments.length === 0) {
+      throw new Error('No pending payment found for this school');
+    }
+
+    const payment = payments[0];
+    const fapshiTransId = payment.fapshi_trans_id;
+
+    if (!fapshiTransId) {
+      throw new Error('Payment has no Fapshi transaction ID');
+    }
+
+    // Verify with Fapshi API
+    let verifiedStatus;
+    try {
+      const statusResponse = await fapshiApi.paymentStatus(fapshiTransId);
+      verifiedStatus = statusResponse?.status;
+    } catch (err) {
+      throw new Error(`Failed to verify with Fapshi: ${err.response?.data?.message || err.message}`);
+    }
+
+    console.log(`[BillingService] Manual confirm: ${fapshiTransId} → ${verifiedStatus}`);
+
+    if (verifiedStatus === 'SUCCESSFUL') {
+      await sql`
+        UPDATE subscription_payments SET status = 'successful', updated_at = NOW()
+        WHERE payment_id = ${payment.payment_id}
+      `;
+      await schoolService.upgradePlan(payment.school_id, payment.plan_code);
+      return { confirmed: true, planCode: payment.planCode, transId: fapshiTransId };
+    }
+
+    return { confirmed: false, status: verifiedStatus, transId: fapshiTransId };
   }
 
   /**

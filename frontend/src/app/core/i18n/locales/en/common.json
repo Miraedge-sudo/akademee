@@ -54,6 +54,7 @@
     "feesAssign": "Fee Assignment",
     "payments": "Payments",
     "receipts": "Receipts",
+    "upgradePlan": "Upgrade Plan",
     "systemConfig": "System Config",
     "gradingConfig": "Grading Config",
     "group": {

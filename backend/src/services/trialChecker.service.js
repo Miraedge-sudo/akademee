@@ -1,7 +1,7 @@
 /**
  * Trial Checker Service
  * Runs periodically to:
- * 1. Send reminder notifications to admins when trial is at day 5 (5 days remaining)
+ * 1. Send reminder notifications to admins when trial is at day 3 (3 days remaining)
  * 2. Expire trials that have passed their end date
  */
 
@@ -43,8 +43,8 @@ class TrialCheckerService {
         `;
         expiredCount++;
         console.log(`[TrialChecker] Expired trial for school: ${school.name} (${school.subdomain})`);
-      } else if (remainingDays <= 5) {
-        // 5 or fewer days remaining — send reminder if not already sent today
+      } else if (remainingDays <= 3) {
+        // 3 or fewer days remaining — send reminder if not already sent today
         const alreadySent = await sql`
           SELECT notification_id FROM notifications
           WHERE school_id = ${school.school_id}
