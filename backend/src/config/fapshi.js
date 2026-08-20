@@ -4,9 +4,9 @@
  */
 
 const fapshiConfig = {
-  apiUser: process.env.FAPSHI_API_USER || '38242789-cf89-4674-8787-9a9fdaaf645c',
-  apiKey: process.env.FAPSHI_API_KEY || 'FAK_TEST_78cc120bb0e8ea84da62',
-  environment: process.env.FAPSHI_ENV || 'sandbox',
+  apiUser: process.env.FAPSHI_API_USER || 'e0474fff-6ab6-47a8-9ba6-7a1362f2ac86',
+  apiKey: process.env.FAPSHI_API_KEY || 'FAK_af10b353c2023c94117c2d709f03abfc',
+  environment: process.env.FAPSHI_ENV || 'live',
   webhookSecret: process.env.FAPSHI_WEBHOOK_SECRET || null,
 
   get baseUrl() {
