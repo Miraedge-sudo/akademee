@@ -324,7 +324,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <img key={theme} src={akademeeLogo} alt="Akademee" className="h-18 w-auto object-contain animate-fadeInOnly" />
+              <img key={theme} src={akademeeLogo} alt="Akademee" className="h-10 w-auto object-contain animate-fadeInOnly" />
             </div>
 
             <div className="hidden md:flex items-center gap-8">
@@ -1037,7 +1037,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <img key={theme} src={akademeeLogo} alt="Akademee" className="h-18 w-auto object-contain animate-fadeInOnly" />
+                <img key={theme} src={akademeeLogo} alt="Akademee" className="h-10 w-auto object-contain animate-fadeInOnly" />
               </div>
               <p className="text-surface-600 dark:text-surface-400 text-base leading-relaxed">
                 {isFr
