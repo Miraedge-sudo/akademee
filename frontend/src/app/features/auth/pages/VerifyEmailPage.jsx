@@ -5,10 +5,12 @@ import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
 import api, { setAccessToken } from "../../../core/api/axios";
 import { API_ENDPOINTS } from "../../../core/api/endpoints";
+import Seo from "../../../components/seo/Seo";
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
-  const { t } = useTranslation("auth");
+  const { t, i18n } = useTranslation("auth");
+  const isFr = i18n.language === "fr";
 
   const token = searchParams.get("token");
   const type = searchParams.get("type") || "school";
@@ -310,6 +312,16 @@ export default function VerifyEmailPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-surface-50 dark:bg-surface-900">
+      <Seo
+        title={isFr ? "Vérification de l'e-mail" : "Email verification"}
+        description={
+          isFr
+            ? "Vérifiez votre adresse e-mail pour activer votre compte Akademee."
+            : "Verify your email address to activate your Akademee account."
+        }
+        path="/verify-email"
+        noindex
+      />
       {/* Top nav */}
       <div className="flex items-center justify-between px-6 lg:px-11 py-5 bg-white dark:bg-surface-800 border-b border-surface-100 dark:border-surface-700">
         <div className="flex items-center gap-2.5">

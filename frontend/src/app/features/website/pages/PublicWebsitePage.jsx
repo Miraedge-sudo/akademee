@@ -5,7 +5,8 @@ import { getPublicWebsite } from "../../../core/api/websiteService";
 import BoldTemplate from "../templates/BoldTemplate";
 import PlayfulTemplate from "../templates/PlayfulTemplate";
 import PremiumTemplate from "../templates/PremiumTemplate";
-import { getSubdomain } from "../../../core/utils/subdomainHelper";
+import { getSubdomain, buildSubdomainUrl } from "../../../core/utils/subdomainHelper";
+import Seo, { DEFAULT_OG_IMAGE } from "../../../components/seo/Seo";
 
 const VALID_TEMPLATES = ["bold", "playful", "premium"];
 
@@ -70,8 +71,33 @@ export default function PublicWebsitePage() {
   const rawCode = school.templateCode || school.template?.code || "bold";
   const templateCode = VALID_TEMPLATES.includes(rawCode) ? rawCode : "bold";
 
+  const subdomain = school.subdomain || getSubdomain();
+  const canonicalUrl = subdomain ? buildSubdomainUrl(subdomain, "/site") : undefined;
+  const schoolDescription =
+    school.websiteDescription?.slice(0, 200) ||
+    school.tagline ||
+    `${school.name} — ${isPreviewMode ? "campus preview" : "school website"} on Akademee.`;
+
   return (
     <>
+      <Seo
+        title={school.name}
+        description={schoolDescription}
+        url={canonicalUrl}
+        image={school.logoUrl || school.heroImageUrl || DEFAULT_OG_IMAGE}
+        noindex={isPreviewMode || !school.websitePublished}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "EducationalOrganization",
+          name: school.name,
+          description: schoolDescription,
+          url: canonicalUrl,
+          ...(school.logoUrl && { logo: school.logoUrl }),
+          ...(school.city && {
+            address: { "@type": "PostalAddress", addressLocality: school.city, addressCountry: "CM" },
+          }),
+        }}
+      />
       {/* Preview banner — shown when accessing via ?preview=1 before publishing */}
       {isPreviewMode && (
         <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-amber-950 px-4 py-2.5 flex items-center justify-center gap-3 text-sm font-medium shadow-lg">

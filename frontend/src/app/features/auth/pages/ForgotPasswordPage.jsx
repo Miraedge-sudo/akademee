@@ -6,9 +6,11 @@ import ThemeLangToggles from "../../../layout/ThemeLangToggles";
 import api from "../../../core/api/axios";
 import { API_ENDPOINTS } from "../../../core/api/endpoints";
 import { getSubdomain } from "../../../core/utils/subdomainHelper";
+import Seo from "../../../components/seo/Seo";
 
 export default function ForgotPasswordPage() {
-  const { t } = useTranslation("auth");
+  const { t, i18n } = useTranslation("auth");
+  const isFr = i18n.language === "fr";
 
   const [formData, setFormData] = useState({
     subdomain: getSubdomain() || "",
@@ -42,6 +44,16 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-surface-50 dark:bg-surface-900">
+      <Seo
+        title={isFr ? "Mot de passe oublié" : "Forgot password"}
+        description={
+          isFr
+            ? "Réinitialisez le mot de passe de votre compte Akademee."
+            : "Reset the password for your Akademee account."
+        }
+        path="/forgot-password"
+        noindex
+      />
       {/* Top nav */}
       <div className="flex items-center justify-between px-6 lg:px-11 py-5 bg-white dark:bg-surface-800 border-b border-surface-100 dark:border-surface-700">
         <div className="flex items-center gap-2.5 lg:hidden">

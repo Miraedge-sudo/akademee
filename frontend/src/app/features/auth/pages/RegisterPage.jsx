@@ -6,6 +6,7 @@ import ThemeLangToggles from "../../../layout/ThemeLangToggles";
 import api from "../../../core/api/axios";
 import { API_ENDPOINTS } from "../../../core/api/endpoints";
 import { useAuth } from "../../../core/hooks/useAuth";
+import Seo from "../../../components/seo/Seo";
 import { getSubdomainFromHostname, saveSubdomain, clearSubdomain } from "../../../core/utils/subdomainHelper";
 import RegisterLeftPanel from "../../../components/features/RegisterLeftPanel";
 
@@ -396,6 +397,15 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen bg-surface-50 dark:bg-surface-900">
+      <Seo
+        title={isFr ? "Créer votre campus" : "Create your campus"}
+        description={
+          isFr
+            ? "Inscrivez votre école sur Akademee : campus personnalisé, site web public, gestion des notes, présences et finances en FCFA."
+            : "Register your school on Akademee: a branded campus, public website, grades, attendance and FCFA finance management."
+        }
+        path="/register"
+      />
 
       <RegisterLeftPanel />
 
