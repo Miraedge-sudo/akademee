@@ -6,6 +6,7 @@ import api from "../../../core/api/axios";
 import { useBrandLogo } from "../../../core/hooks/useBrandLogo";
 import { useTheme } from "../../../core/hooks/useTheme";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
+import Seo from "../../../components/seo/Seo";
 import {
   FiCheckCircle,
   FiLoader,
@@ -174,6 +175,16 @@ export default function BillingConfirmPage() {
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
+      <Seo
+        title={isFr ? "Confirmation de paiement" : "Payment confirmation"}
+        description={
+          isFr
+            ? "Confirmation de votre paiement d'abonnement Akademee."
+            : "Confirmation of your Akademee subscription payment."
+        }
+        path="/billing/confirm"
+        noindex
+      />
       {/* ── Navbar ── */}
       <nav className="bg-white/80 dark:bg-surface-800/80 backdrop-blur-xl border-b border-surface-200/60 dark:border-surface-700/60 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

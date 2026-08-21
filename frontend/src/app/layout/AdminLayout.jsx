@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import MobileBottomNav from './MobileBottomNav';
 import ConnectionStatusBanner from '../components/offline/ConnectionStatusBanner';
 import TrialBanner from '../components/ui/TrialBanner';
+import Seo from '../components/seo/Seo';
 
 export default function AdminLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -12,6 +13,10 @@ export default function AdminLayout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-surface-50 dark:bg-surface-900">
+      {/* Single Helmet instance for the whole dashboard section — individual
+          dashboard pages don't render their own <Seo>, so this doesn't hit
+          the multi-instance duplicate-tag issue seen when nesting two. */}
+      <Seo title="Tableau de bord" description="Espace de gestion Akademee." path="/dashboard" noindex />
       <Sidebar
         collapsed={sidebarCollapsed}
         mobileOpen={mobileOpen}

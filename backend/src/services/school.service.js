@@ -537,18 +537,6 @@ class SchoolService {
       price: Number(plan.price),
     };
   }
-
-  async getAllSchools(limit = 10, offset = 0) {
-    const schools = await sql`
-      SELECT school_id, name, email, phone, city, region, subdomain,
-        is_active, subscription_plan, subscription_status,
-        created_at, updated_at
-      FROM schools
-      ORDER BY created_at DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `;
-    return schools;
-  }
 }
 
 module.exports = new SchoolService();

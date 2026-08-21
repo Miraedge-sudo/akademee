@@ -5,11 +5,13 @@ import ThemeLangToggles from "../../../layout/ThemeLangToggles";
 import api from "../../../core/api/axios";
 import { API_ENDPOINTS } from "../../../core/api/endpoints";
 import { FiHome, FiCheckCircle, FiArrowLeft, FiLock, FiEye, FiEyeOff, FiXCircle, FiLoader } from "react-icons/fi";
+import Seo from "../../../components/seo/Seo";
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { t } = useTranslation("auth");
+  const { t, i18n } = useTranslation("auth");
+  const isFr = i18n.language === "fr";
 
   const token = searchParams.get("token");
   console.log('[ResetPasswordPage] Token from URL:', token);
@@ -72,6 +74,16 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-surface-50 dark:bg-surface-900">
+      <Seo
+        title={isFr ? "Réinitialiser le mot de passe" : "Reset password"}
+        description={
+          isFr
+            ? "Choisissez un nouveau mot de passe pour votre compte Akademee."
+            : "Choose a new password for your Akademee account."
+        }
+        path="/reset-password"
+        noindex
+      />
       {/* Top nav */}
       <div className="flex items-center justify-between px-6 lg:px-11 py-5 bg-white dark:bg-surface-800 border-b border-surface-100 dark:border-surface-700">
         <div className="flex items-center gap-2.5 lg:hidden">

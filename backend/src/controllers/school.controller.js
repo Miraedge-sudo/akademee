@@ -29,6 +29,10 @@ class SchoolController {
     try {
       const { id } = req.params;
 
+      if (id !== req.schoolId) {
+        return response.error(res, 'Access denied.', null, 403);
+      }
+
       const school = await schoolService.getSchool(id);
 
       response.success(res, 'School retrieved successfully', school);
@@ -42,6 +46,10 @@ class SchoolController {
       const { id } = req.params;
       const updateData = req.body;
 
+      if (id !== req.schoolId) {
+        return response.error(res, 'Access denied.', null, 403);
+      }
+
       const school = await schoolService.updateSchool(id, updateData);
 
       response.success(res, 'School updated successfully', school);
@@ -50,13 +58,17 @@ class SchoolController {
     }
   }
 
+  /** Every ADMIN role in this system is school-scoped — there is no platform-wide
+   * admin — so "all schools" for a caller is just their own school. */
   async getAllSchools(req, res, next) {
     try {
-      const { limit = 10, offset = 0 } = req.query;
+      if (!req.schoolId) {
+        return response.error(res, 'School not found', null, 400);
+      }
 
-      const schools = await schoolService.getAllSchools(parseInt(limit), parseInt(offset));
+      const school = await schoolService.getSchool(req.schoolId);
 
-      response.success(res, 'Schools retrieved successfully', schools);
+      response.success(res, 'Schools retrieved successfully', [school]);
     } catch (error) {
       next(error);
     }
