@@ -71,6 +71,10 @@ const Sentry = initSentry(app);
 // Security & parsing
 app.use(helmet());
 app.use(compression());
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date() });
+});
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -155,10 +159,6 @@ app.use('/api/admin', adminRoutes);
 // API documentation
 app.use('/api-docs', swaggerRoutes);
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date() });
-});
 
 // 404 Handler
 app.use((req, res) => {
