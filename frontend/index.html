@@ -6,9 +6,10 @@
     <link rel="icon" type="image/png" href="/logowhite.png" media="(prefers-color-scheme: dark)" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- PWA / SEO meta tags -->
+    <!-- PWA meta tags. Per-route <title>/description/OG tags are set by the
+         Seo component (react-helmet-async) — no static description here to
+         avoid duplicate <meta name="description"> tags in the rendered head. -->
     <meta name="theme-color" content="#085041" />
-    <meta name="description" content="Akademee — Plateforme de gestion scolaire pour établissements d'enseignement au Cameroun" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Akademee" />
@@ -21,7 +22,6 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;700&display=swap"
       rel="stylesheet"
     />
-    <title>Akademee</title>
   </head>
   <body>
     <div id="root"></div>

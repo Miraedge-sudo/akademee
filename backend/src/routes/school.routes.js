@@ -126,9 +126,16 @@ router.post(
   schoolController.createSchool
 );
 
-router.get('/', authMiddleware, schoolController.getAllSchools);
+router.get('/', authMiddleware, tenantMiddleware, schoolController.getAllSchools);
 
-router.get('/:id', authMiddleware, getSchoolValidator, validateMiddleware, schoolController.getSchool);
+router.get(
+  '/:id',
+  authMiddleware,
+  tenantMiddleware,
+  getSchoolValidator,
+  validateMiddleware,
+  schoolController.getSchool
+);
 
 router.put(
   '/:id',

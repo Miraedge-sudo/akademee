@@ -1,5 +1,15 @@
-FROM node:20-alpine AS builder
+FROM node:20 AS builder
 WORKDIR /app
+# `npm run build` runs a post-build prerender step that needs a real
+# Chromium. Installing Debian's own `chromium` package resolves its correct
+# runtime deps automatically (guessing exact versioned lib package names for
+# puppeteer's bundled binary is fragile across Debian releases) — puppeteer
+# is then pointed at it instead of downloading/launching its own copy.
+# This only affects the build stage, not the final nginx:alpine image below.
+RUN apt-get update && apt-get install -y --no-install-recommends chromium \
+    && rm -rf /var/lib/apt/lists/*
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 COPY package*.json ./
 RUN npm ci
 COPY . .

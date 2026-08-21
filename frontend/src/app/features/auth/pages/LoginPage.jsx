@@ -6,11 +6,13 @@ import { useTranslation } from "react-i18next";
 import ThemeLangToggles from "../../../layout/ThemeLangToggles";
 import { getSubdomain, buildSubdomainUrl } from "../../../core/utils/subdomainHelper";
 import LoginLeftPanel from "../../../components/features/LoginLeftPanel";
+import Seo from "../../../components/seo/Seo";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { t } = useTranslation("auth");
+  const { t, i18n } = useTranslation("auth");
+  const isFr = i18n.language === "fr";
 
   const [formData, setFormData] = useState({
     subdomain: getSubdomain() || "",
@@ -82,6 +84,15 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen lg:flex bg-white dark:bg-surface-900">
+      <Seo
+        title={isFr ? "Connexion" : "Login"}
+        description={
+          isFr
+            ? "Connectez-vous à votre campus Akademee pour gérer notes, finances, présences et communications de votre école."
+            : "Sign in to your Akademee campus to manage grades, finance, attendance and communications for your school."
+        }
+        path="/login"
+      />
       <LoginLeftPanel />
 
       <div className="flex-1 flex flex-col min-h-screen lg:min-h-0 bg-white dark:bg-surface-900">

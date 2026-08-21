@@ -20,6 +20,7 @@ import {
 import ThemeLangToggles from "../../layout/ThemeLangToggles";
 import { useBrandLogo } from "../../core/hooks/useBrandLogo";
 import { useTheme } from "../../core/hooks/useTheme";
+import Seo, { SITE_URL } from "../../components/seo/Seo";
 
 // ── Photos libres (Wikimedia Commons, CC BY-SA 4.0) : vrais élèves camerounais ──
 // WikiChallenge African Schools 2021 – Cameroon (écoles numériques)
@@ -282,8 +283,42 @@ export default function LandingPage() {
     { label: "Virement bancaire", cls: "bg-surface-200 dark:bg-surface-700 text-surface-700 dark:text-surface-200" },
   ];
 
+  const seoTitle = isFr
+    ? "Akademee — Gestion scolaire tout-en-un au Cameroun"
+    : "Akademee — All-in-One School Management in Cameroon";
+  const seoDescription = isFr
+    ? "Akademee offre à chaque école son propre campus personnalisé, un site web public et des tableaux de bord pour administrateurs, enseignants, comptables, élèves et parents. Notes, finances en FCFA, Mobile Money."
+    : "Akademee gives every school its own branded campus, public website and dashboards for admins, teachers, accountants, students and parents. Grades, FCFA finance, Mobile Money.";
+
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Akademee",
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Web",
+    url: SITE_URL,
+    description: seoDescription,
+    offers: {
+      "@type": "AggregateOffer",
+      priceCurrency: "XAF",
+      lowPrice: "0",
+    },
+    provider: {
+      "@type": "Organization",
+      name: "Akademee",
+      url: SITE_URL,
+      areaServed: "CM",
+    },
+  };
+
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
+      <Seo
+        title={seoTitle}
+        description={seoDescription}
+        path="/"
+        jsonLd={organizationJsonLd}
+      />
       {/* ══════════ NAVIGATION ══════════ */}
       <nav className="bg-white dark:bg-surface-800 border-b border-surface-200 dark:border-surface-700 sticky top-0 z-40 backdrop-blur-sm bg-opacity-90">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
